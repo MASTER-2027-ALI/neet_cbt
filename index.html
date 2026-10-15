@@ -16,16 +16,29 @@
       <label>Enter Your Passkey</label>
       <input type="password" id="passkeyInput" placeholder="XXXX-XXXX-XXXX" autocomplete="off">
     </div>
-    <button onclick="checkPasskey()" class="btn-login">🔓 Unlock Now</button>
+    <button onclick="checkPasskey()" class="btn-login" id="loginBtn">🔓 Unlock Now</button>
     <div id="errorMsg" class="error-msg"></div>
     <p class="footer-text">© 2027 NEET CBT | All Rights Reserved</p>
   </div>
 </div>
+
 <script src="keys.js"></script>
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Auto-logout listener
+let unsubscribeListener = null;
+
 function checkPasskey() {
   const input = document.getElementById('passkeyInput').value.trim().toUpperCase();
   const errorMsg = document.getElementById('errorMsg');
+  const loginBtn = document.getElementById('loginBtn');
 
   if (!input) {
     errorMsg.textContent = '⚠️ Please enter a passkey';
@@ -49,10 +62,9 @@ function checkPasskey() {
   }
 
   if (user) {
-    localStorage.setItem('cbt_user', JSON.stringify(user));
-    localStorage.setItem('cbt_login_time', new Date().toISOString());
-    errorMsg.style.display = 'none';
-    window.location.href = 'dashboard.html';
+    loginBtn.textContent = '⏳ Logging in...';
+    loginBtn.disabled = true;
+    loginWithFirebase(user);
   } else {
     errorMsg.textContent = '❌ Invalid Passkey. Please try again.';
     errorMsg.style.display = 'block';
@@ -61,8 +73,68 @@ function checkPasskey() {
   }
 }
 
+async function loginWithFirebase(user) {
+  try {
+    // Anonymous login
+    const userCredential = await signInAnonymously(auth);
+    const uid = userCredential.user.uid;
+
+    // Generate unique session ID
+    const mySessionId = Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+
+    // Save session to Firestore
+    const sessionRef = doc(db, "sessions", uid);
+    await setDoc(sessionRef, {
+      sessionId: mySessionId,
+      userName: user.name,
+      userRole: user.role,
+      loginTime: new Date().toISOString()
+    });
+
+    // Save user data to localStorage
+    localStorage.setItem('cbt_user', JSON.stringify({
+      name: user.name,
+      role: user.role,
+      uid: uid,
+      sessionId: mySessionId
+    }));
+    localStorage.setItem('cbt_login_time', new Date().toISOString());
+
+    // Listen for session changes (auto-logout)
+    onSnapshot(sessionRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const remoteSessionId = docSnap.data().sessionId;
+        if (remoteSessionId !== mySessionId) {
+          // Someone else logged in with same passkey
+          alert('⚠️ Aapka account kisi dusre device me login ho gaya hai.\n\nYeh device ab logout ho jayega.');
+          localStorage.removeItem('cbt_user');
+          localStorage.removeItem('cbt_login_time');
+          window.location.href = 'index.html';
+        }
+      }
+    });
+
+    // Redirect to dashboard
+    window.location.href = 'dashboard.html';
+  } catch (error) {
+    console.error('Login error:', error);
+    document.getElementById('errorMsg').textContent = '❌ Login failed. Internet check karein.';
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('loginBtn').textContent = '🔓 Unlock Now';
+    document.getElementById('loginBtn').disabled = false;
+  }
+}
+
 document.getElementById('passkeyInput').addEventListener('keypress', function(e) {
   if (e.key === 'Enter') checkPasskey();
+});
+
+// Check if already logged in
+window.addEventListener('load', function() {
+  const userData = localStorage.getItem('cbt_user');
+  if (userData) {
+    window.location.href = 'dashboard.html';
+  }
 });
 </script>
 </body>
