@@ -8,10 +8,11 @@
 </head>
 <body>
 <div class="dashboard-container">
-  <div class="dash-header">
+ <div class="dash-header">
     <h1>🧬 NEET 2027 CBT</h1>
     <div class="user-info">
       <span class="user-badge" id="userBadge">👤 User</span>
+      <a href="admin.html" class="btn-logout" id="adminBtn" style="display:none; background:rgba(168,85,247,0.15); border-color:rgba(168,85,247,0.4); color:#c4b5fd; text-decoration:none;">👑 Admin Panel</a>
       <button class="btn-logout" onclick="logout()">🚪 Logout</button>
     </div>
   </div>
@@ -45,6 +46,10 @@ if (!userData) {
 const user = JSON.parse(userData);
 document.getElementById('userBadge').textContent = '👤 ' + user.name;
 
+  // Show Admin Panel button only for Master
+if (user.role === 'master') {
+  document.getElementById('adminBtn').style.display = 'inline-block';
+}
 // Chapter list (19 chapters)
 const chapters = [
   { num: 1, name: "The Living World", file: "chapter1.html" },
