@@ -14,7 +14,7 @@
     <p class="subtitle">Class 11 Biology - Complete Test Series</p>
     <div class="input-group">
       <label>Enter Your Passkey</label>
-      <input type="password" id="passkeyInput" placeholder="XXXX-XXXX-XXXX" autocomplete="off">
+      <input type="text" id="passkeyInput" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters">
     </div>
     <button onclick="checkPasskey()" class="btn-login" id="loginBtn">🔓 Unlock Now</button>
     <div id="errorMsg" class="error-msg"></div>
@@ -23,22 +23,15 @@
 </div>
 
 <script src="keys.js"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-// Auto-logout listener
-let unsubscribeListener = null;
-
+<script>
 function checkPasskey() {
   const input = document.getElementById('passkeyInput').value.trim().toUpperCase();
   const errorMsg = document.getElementById('errorMsg');
   const loginBtn = document.getElementById('loginBtn');
+
+  console.log('Login attempt:', input);
+  console.log('MASTER_KEY:', typeof MASTER_KEY, MASTER_KEY);
+  console.log('FRIEND_KEYS:', typeof FRIEND_KEYS, FRIEND_KEYS);
 
   if (!input) {
     errorMsg.textContent = '⚠️ Please enter a passkey';
@@ -47,15 +40,15 @@ function checkPasskey() {
   }
 
   let user = null;
-  let isMaster = false;
 
   if (input === MASTER_KEY) {
-    isMaster = true;
     user = { name: 'Admin', role: 'master' };
+    console.log('Master key matched');
   } else {
     for (const key in FRIEND_KEYS) {
       if (FRIEND_KEYS[key].key === input) {
         user = { name: FRIEND_KEYS[key].name, role: 'friend' };
+        console.log('Friend key matched:', FRIEND_KEYS[key].name);
         break;
       }
     }
@@ -64,7 +57,21 @@ function checkPasskey() {
   if (user) {
     loginBtn.textContent = '⏳ Logging in...';
     loginBtn.disabled = true;
-    loginWithFirebase(user);
+    
+    // Save user data
+    localStorage.setItem('cbt_user', JSON.stringify({
+      name: user.name,
+      role: user.role,
+      uid: 'user_' + Date.now()
+    }));
+    localStorage.setItem('cbt_login_time', new Date().toISOString());
+    
+    console.log('User saved, redirecting...');
+    
+    // Redirect
+    setTimeout(function() {
+      window.location.href = 'dashboard.html';
+    }, 500);
   } else {
     errorMsg.textContent = '❌ Invalid Passkey. Please try again.';
     errorMsg.style.display = 'block';
@@ -73,58 +80,7 @@ function checkPasskey() {
   }
 }
 
-async function loginWithFirebase(user) {
-  try {
-    // Anonymous login
-    const userCredential = await signInAnonymously(auth);
-    const uid = userCredential.user.uid;
-
-    // Generate unique session ID
-    const mySessionId = Date.now() + '_' + Math.random().toString(36).substring(2, 10);
-
-    // Save session to Firestore
-    const sessionRef = doc(db, "sessions", uid);
-    await setDoc(sessionRef, {
-      sessionId: mySessionId,
-      userName: user.name,
-      userRole: user.role,
-      loginTime: new Date().toISOString()
-    });
-
-    // Save user data to localStorage
-    localStorage.setItem('cbt_user', JSON.stringify({
-      name: user.name,
-      role: user.role,
-      uid: uid,
-      sessionId: mySessionId
-    }));
-    localStorage.setItem('cbt_login_time', new Date().toISOString());
-
-    // Listen for session changes (auto-logout)
-    onSnapshot(sessionRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const remoteSessionId = docSnap.data().sessionId;
-        if (remoteSessionId !== mySessionId) {
-          // Someone else logged in with same passkey
-          alert('⚠️ Aapka account kisi dusre device me login ho gaya hai.\n\nYeh device ab logout ho jayega.');
-          localStorage.removeItem('cbt_user');
-          localStorage.removeItem('cbt_login_time');
-          window.location.href = 'index.html';
-        }
-      }
-    });
-
-    // Redirect to dashboard
-    window.location.href = 'dashboard.html';
-  } catch (error) {
-    console.error('Login error:', error);
-    document.getElementById('errorMsg').textContent = '❌ Login failed. Internet check karein.';
-    document.getElementById('errorMsg').style.display = 'block';
-    document.getElementById('loginBtn').textContent = '🔓 Unlock Now';
-    document.getElementById('loginBtn').disabled = false;
-  }
-}
-
+// Enter key support
 document.getElementById('passkeyInput').addEventListener('keypress', function(e) {
   if (e.key === 'Enter') checkPasskey();
 });
