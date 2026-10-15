@@ -568,7 +568,8 @@ window.addEventListener('load', function() {
           const percent = ((marks / totalQ) * 100).toFixed(2);
           
           const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
-          const key = 'chapter' + CHAPTER_NUM;
+          const userName = JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown';
+const key = userName + '_chapter' + CHAPTER_NUM;
           
           const newAttempt = {
             correct: correctCount,
