@@ -140,25 +140,14 @@ if (user.role !== 'master') {
 // CHAPTER NAMES
 // ========================================
 const chapterNames = [
-  "The Living World",
-  "Biological Classification",
-  "Plant Kingdom",
-  "Animal Kingdom",
-  "Morphology of Flowering Plants",
-  "Anatomy of Flowering Plants",
-  "Structural Organisation in Animals",
-  "Cell: The Unit of Life",
-  "Biomolecules",
-  "Cell Cycle and Cell Division",
-  "Photosynthesis in Higher Plants",
-  "Respiration in Plants",
-  "Plant Growth and Development",
-  "Breathing and Exchange of Gases",
-  "Body Fluids and Circulation",
-  "Excretory Products and their Elimination",
-  "Locomotion and Movement",
-  "Neural Control and Coordination",
-  "Chemical Coordination and Integration"
+  "The Living World", "Biological Classification", "Plant Kingdom", "Animal Kingdom",
+  "Morphology of Flowering Plants", "Anatomy of Flowering Plants",
+  "Structural Organisation in Animals", "Cell: The Unit of Life", "Biomolecules",
+  "Cell Cycle and Cell Division", "Photosynthesis in Higher Plants",
+  "Respiration in Plants", "Plant Growth and Development",
+  "Breathing and Exchange of Gases", "Body Fluids and Circulation",
+  "Excretory Products and their Elimination", "Locomotion and Movement",
+  "Neural Control and Coordination", "Chemical Coordination and Integration"
 ];
 
 // ========================================
@@ -177,7 +166,7 @@ let percentCount = 0;
 const historyDiv = document.getElementById('historyTable');
 
 if (Object.keys(results).length === 0) {
-  historyDiv.innerHTML = '<div class="no-data">📭 Abhi tak koi test nahi diya gaya is device par.<br><br>Jab aap ya aapke dost test denge, unke results yahan dikhenge.</div>';
+  historyDiv.innerHTML = '<div class="no-data">📭 Abhi tak koi test nahi diya gaya is device par.</div>';
 } else {
   let tableHTML = `
     <div class="table-scroll">
@@ -199,13 +188,25 @@ if (Object.keys(results).length === 0) {
         <tbody>
   `;
 
-  for (let i = 1; i <= 19; i++) {
-    const r = results['chapter' + i];
+  // Loop through all users and chapters
+  const allKeys = Object.keys(results);
+  const attemptedSet = new Set();
+
+  // Sort keys: by user then by chapter
+  allKeys.sort().forEach(key => {
+    // Key format: "UserName_chapter5"
+    const match = key.match(/^(.+)_chapter(\d+)$/);
+    if (!match) return;
+    
+    const userName = match[1];
+    const chapterNum = parseInt(match[2]);
+    const r = results[key];
+    
     if (r && r.attempts && r.attempts.length > 0) {
-      attemptedChapters++;
+      attemptedSet.add(chapterNum);
       totalAttempts += r.attempts.length;
       
-      // Show all attempts for this chapter (latest first)
+      // Show all attempts (latest first)
       const sortedAttempts = [...r.attempts].reverse();
       sortedAttempts.forEach((attempt, idx) => {
         const scoreClass = attempt.percent >= 50 ? 'score' : 'low';
@@ -221,9 +222,9 @@ if (Object.keys(results).length === 0) {
         
         tableHTML += `
           <tr class="${isBest ? 'best-row' : ''}">
-            <td>Ch ${i}${isBest ? ' 🏆' : ''}</td>
-            <td>${chapterNames[i-1]}</td>
-            <td>${attempt.userName || '-'}</td>
+            <td>Ch ${chapterNum}${isBest ? ' 🏆' : ''}</td>
+            <td>${chapterNames[chapterNum-1] || 'Unknown'}</td>
+            <td><strong>${userName}</strong></td>
             <td class="score">${attempt.correct}</td>
             <td class="low">${attempt.wrong}</td>
             <td>${attempt.total}</td>
@@ -235,7 +236,9 @@ if (Object.keys(results).length === 0) {
         `;
       });
     }
-  }
+  });
+
+  attemptedChapters = attemptedSet.size;
 
   tableHTML += '</tbody></table></div>';
   historyDiv.innerHTML = tableHTML;
@@ -268,6 +271,7 @@ keysTable.innerHTML = keysHTML;
 function logout() {
   localStorage.removeItem('cbt_user');
   localStorage.removeItem('cbt_login_time');
+  // ⚠️ cbt_results NAHI delete karenge - taki results safe rahein
   window.location.href = 'index.html';
 }
 </script>
