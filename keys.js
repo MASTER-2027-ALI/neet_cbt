@@ -20,3 +20,15 @@ const FRIEND_KEYS = {
   "friend11": { key: "NEET-2027-K2P9", name: "Friend 11" },
   "friend12": { key: "NEET-2027-L3O8", name: "Friend 12" }
 };
+// ========================================
+// FIREBASE CONFIGURATION
+// ========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDCqKsgQYEYwFu_hhQ_LYNlsye-GFzW30s",
+  authDomain: "neet-cbt-5ff8b.firebaseapp.com",
+  projectId: "neet-cbt-5ff8b",
+  storageBucket: "neet-cbt-5ff8b.firebasestorage.app",
+  messagingSenderId: "525349633977",
+  appId: "1:525349633977:web:f463e9c5cde95e6f34c068",
+  measurementId: "G-JTS5V3DKJE"
+};
