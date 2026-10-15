@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 6: Anatomy of Flowering Plants - CBT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+  .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+  .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+  .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+  .stat-box .lbl { font-size: 11px; color: #4a5568; }
+  .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+  .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+  .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+  .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+  .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+  .question-box { flex: 1; margin-bottom: 15px; }
+  .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; }
+  .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+  .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+  .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+  .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+  .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+  .option.disabled { pointer-events: none; opacity: 0.8; }
+  .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+  .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+  .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+  .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+  .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+  .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+  .result-item .label { font-size: 12px; color: #4a5568; }
+  .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+  .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+  .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+      <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+      <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+      <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+      <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+      <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+      <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Anatomy of Flowering Plants</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+      <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+      <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+      <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+      <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q: "Which one is correct?", opts: ["Anatomy - Internal morphology, study of internal structure", "Tissue - A group of cells having a common origin and usually performing a common function", "Permanent tissue has more power of mitosis", "a and b"], ans: 3, exp: "a and b." },
+  { q: "Which one produces primary tissues?", opts: ["Apical meristem", "Root apical meristem", "Shoot apical meristem", "Lateral meristem"], ans: 0, exp: "Apical meristem." },
+  { q: "Meristems are present in —", opts: ["Root apex and shoot apex", "Bases of leaves", "Axillary buds", "All"], ans: 3, exp: "All." },
+  { q: "During formation of leaves and elongation of stem, some cells 'left behind' from the shoot apical meristem, constitute —", opts: ["Lateral meristem", "Axillary bud", "Cork cambium", "Fascicular cambium"], ans: 1, exp: "Axillary bud." },
+  { q: "A branch or a flower is developed in the axil of leaves by —", opts: ["Apical bud", "Axillary bud", "Apical meristem", "Shoot apical meristem"], ans: 1, exp: "Axillary bud." },
+  { q: "Which one is correct about intercalary meristem?", opts: ["It occurs between mature tissues", "It occurs in grasses and regenerate parts removed by grazing herbivores", "It is a primary meristem", "All"], ans: 3, exp: "All." },
+  { q: "All are lateral meristems except —", opts: ["Fascicular / vascular cambium", "Interfascicular cambium", "Apical and intercalary meristem", "Phellogen"], ans: 2, exp: "Apical and intercalary meristem." },
+  { q: "Secondary tissues are produced by all except —", opts: ["Fascicular cambium", "Interfascicular cambium", "Apical meristem", "Phellogen"], ans: 2, exp: "Apical meristem." },
+  { q: "Permanent tissue consists of cells having no power of cell division. Such tissues are formed by —", opts: ["Primary meristem", "Cork cambium", "Fascicular and interfascicular cambium", "All"], ans: 3, exp: "All." },
+  { q: "Primary tissues of a plant —", opts: ["Add to the length of roots and shoots", "Add to the diameter of existing roots and shoots", "Are found only in the embryo", "Are found only in the seedling"], ans: 0, exp: "Add to the length of roots and shoots." },
+  { q: "Secondary tissues of a plant —", opts: ["Add to the length of roots and shoots", "Add to the diameter of existing roots and shoots", "Are found only in the embryo", "Are found only in the seedling"], ans: 1, exp: "Add to the diameter of existing roots and shoots." },
+  { q: "Cells of permanent tissues are specialised —", opts: ["Functionally", "Only structurally", "Both structurally and functionally", "For mitosis"], ans: 2, exp: "Both structurally and functionally." },
+  { q: "During the formation of the primary plant body, specific regions of the apical meristem produce —", opts: ["Dermal tissues", "Ground tissues", "Vascular tissues", "All"], ans: 3, exp: "All." },
+  { q: "Apical meristems and intercalary meristem are primary meristem because they —", opts: ["Are disintegrated after primary growth of plant", "Are disintegrated after secondary growth of plant", "Appear early in life of a plant and contribute to the formation of the primary plant body", "None"], ans: 2, exp: "Appear early in life of a plant and contribute to the formation of the primary plant body." },
+  { q: "Meristem helps in —", opts: ["Absorption of water", "Growth of plants", "Absorption of minerals", "Transpiration"], ans: 1, exp: "Growth of plants." },
+  { q: "Grass stem elongates after initial growth due to —", opts: ["Lateral meristem", "Secondary meristem", "Intercalary meristem", "Apical meristem"], ans: 2, exp: "Intercalary meristem." },
+  { q: "Meristematic activity occurs at —", opts: ["Vascular tissue", "Stem apex", "Leaf", "Root hair"], ans: 1, exp: "Stem apex." },
+  { q: "Root apex is subterminal because it is —", opts: ["Covered with root hair", "Covered with root cap", "Covered with epidermis", "Under the soil"], ans: 1, exp: "Covered with root cap." },
+  { q: "Axillary and terminal buds develop by activity of —", opts: ["Lateral meristem", "Intercalary meristem", "Apical meristem", "Parenchyma"], ans: 2, exp: "Apical meristem." },
+  { q: "Which one is secondary lateral meristem?", opts: ["Intercalary", "Cork cambium", "Interfascicular cambium", "Both b and c"], ans: 3, exp: "Both b and c." },
+  { q: "Which one is correct?", opts: ["Permanent tissues having all cells similar in structure and function are simple tissues", "Permanent tissues having different types of cell are complex tissue", "Parenchyma, collenchyma and sclerenchyma are simple tissue", "All"], ans: 3, exp: "All." },
+  { q: "I. Forms major component within organs. II. Cell wall - thin, cellulosic. III. Shape of cells - generally isodiametric. IV. Intercellular space - Present / absent. V. Photosynthetic, storage or secretory in function. The above characters are attributed to —", opts: ["Collenchyma", "Parenchyma", "Sclerenchyma", "Vascular tissue"], ans: 1, exp: "Parenchyma." },
+  { q: "I. Occur as layers or patches. II. Cell wall - Unevenly thickened due to pectocellulosic deposition. III. Cells - Spherical, oval or polygonal. IV. Often has chloroplast. V. Living mechanical tissue. VI. Occur in hypodermis of young dicot stem and petiole. The characters are shown by which of the following tissues —", opts: ["Parenchyma", "Collenchyma", "Sclerenchyma", "Vascular tissue"], ans: 1, exp: "Collenchyma." },
+  { q: "Root hairs are present in —", opts: ["Zone of cell division", "Zone of cell elongation", "Zone of maturation", "Root cap"], ans: 2, exp: "Zone of maturation." },
+  { q: "Dead cells with narrow lumen, lignified cell wall with a few or numerous pits and serving a mechanical function only are called —", opts: ["Collenchyma", "Xylem", "Aerenchyma", "Sclerenchyma"], ans: 3, exp: "Sclerenchyma." },
+  { q: "Fibres and sclereids are the types of —", opts: ["Parenchyma", "Collenchyma", "Sclerenchyma", "Xylem"], ans: 2, exp: "Sclerenchyma." },
+  { q: "The dead, elongated cells having lignified thick cell wall occurring in groups, with tapering ends and serving a mechanical function are called —", opts: ["Fibres", "Vessels", "Tracheids", "Collenchyma"], ans: 0, exp: "Fibres." },
+  { q: "Which of the following statements is incorrect about sclereids (stone cells) —", opts: ["Variously shaped", "Highly thickened + lignified cell wall and lumen is narrow", "Commonly found in the fruits, wall of nuts, seed coats of legumes and leaves", "They are types of parenchyma"], ans: 3, exp: "They are types of sclerenchyma." },
+  { q: "Xylem —", opts: ["Functions as conducting tissue for water and minerals from root to the stem and leaves", "Provides mechanical strength to plant parts", "Both", "Is absent in pteridophytes"], ans: 2, exp: "Both." },
+  { q: "Xylem in angiosperms consists of how many types of elements?", opts: ["4", "3", "2", "1"], ans: 0, exp: "4." },
+  { q: "Angiospermic xylem consists of —", opts: ["Vessels + Tracheids only", "Tracheids + Fibres only", "Vessel, tracheids, fibres and parenchyma", "Parenchyma and fibres only"], ans: 2, exp: "Vessel, tracheids, fibres and parenchyma." },
+  { q: "In pteridophytes and gymnosperms, xylem consists of all except —", opts: ["Vessel", "Tracheid", "Fibre", "Parenchyma"], ans: 0, exp: "Vessel." },
+  { q: "Tracheid, vessel and sclereids are similar in that they all —", opts: ["Lack secondary walls", "Conduct water and minerals", "Function when dead", "Have open ends"], ans: 2, exp: "Function when dead." },
+  { q: "In each vascular bundle, the tissue nearest to the centre of the stem is —", opts: ["Phloem", "Fibres", "Vascular cambium", "Xylem"], ans: 3, exp: "Xylem." },
+  { q: "Conducting cells called ___ elements are the part of xylem where water and minerals are transported —", opts: ["Tracheary", "Vascular", "Vessel", "Phloem"], ans: 0, exp: "Tracheary." },
+  { q: "Unlike tracheids, vessel elements —", opts: ["Function when dead", "Are spindle shaped", "Are found primarily in gymnosperms", "Lose part or all of the end walls"], ans: 3, exp: "Lose part or all of the end walls." },
+  { q: "The ___ is the centermost tissue in a dicot stem.", opts: ["Pith", "Xylem", "Phloem", "Pericycle"], ans: 0, exp: "Pith." },
+  { q: "Tracheids and vessel elements —", opts: ["Die before they become functional", "Are important constituents of all plants", "Are found in the secondary plant body", "Are without lignified cell wall"], ans: 0, exp: "Die before they become functional." },
+  { q: "How many tissues are present within dicot root having cortex, endodermis, pericycle, pith, xylem and phloem?", opts: ["5", "6", "3", "12"], ans: 1, exp: "6." },
+  { q: "I. Multicellular with wide lumen. II. They consist of vertical rows of cells with cross wall dissolved. III. Discontinuous lumen due to presence of end walls. IV. They are dead. V. Cell walls are lignified. VI. Long, cylindrical tube-like structure. VII. Elongated cells with tapering ends. Match the above characters with A. Vessel, B. Tracheid.", opts: ["A-I, II, IV, V, VI; B-III, IV, V, VII", "A-III, IV, V, VII; B-I, II, IV, V, VI", "A-I, IV, V, VII; B-III, II, IV, V, VII", "A-I, II, III, IV; B-II, V, VI, VII"], ans: 0, exp: "A-I, II, IV, V, VI; B-III, IV, V, VII." },
+  { q: "Which of the following is the living element of xylem —", opts: ["Fibre", "Parenchyma", "Tracheid", "Vessel"], ans: 1, exp: "Parenchyma." },
+  { q: "Xylem parenchyma stores —", opts: ["Starch", "Fat", "Tannins", "All"], ans: 3, exp: "All." },
+  { q: "Ray parenchymatous cells —", opts: ["Are living", "Are dead", "Perform radial conduction of water", "a and c"], ans: 3, exp: "a and c." },
+  { q: "In angiosperm phloem —", opts: ["Both the sieve tube elements and companion cells have nuclei", "Sieve tube elements have nuclei but companion cells do not", "The companion cells have nuclei but the sieve tube elements do not", "Neither the companion cells nor sieve tube elements have nuclei"], ans: 2, exp: "The companion cells have nuclei but the sieve tube elements do not." },
+  { q: "Sieve tube members have sieve plates where they join with other sieve tube members. Which of the following best describes the sieve plates?", opts: ["Sieve plates are necessary to allow conduction between sieve tube cells", "Sieve plates allow joining of cytoplasm between adjacent tube cells", "Sieve plates are the perforated end walls of sieve tubes", "All"], ans: 3, exp: "All." },
+  { q: "The living and non-lignified component of vascular bundle is / are —", opts: ["Vessel and tracheids", "Vessel and phloem", "Wood fibre and phloem", "Wood parenchyma and sieve tube"], ans: 3, exp: "Wood parenchyma and sieve tube." },
+  { q: "Match the Column I with Column II: I. Sieve tube, II. Companion cell, III. Albuminous cells, IV. Sieve cell, V. Parenchyma, VI. Fibre. A. Gymnospermic phloem, B. Angiospermic phloem.", opts: ["A = I, II, V, VI; B = III, IV, V, VI", "A = I, III, IV, V, VI; B = II, III, IV, V, VI", "A = III, IV, V, VI; B = I, II, V, VI", "A = I, V, VI; B = II, III, IV"], ans: 2, exp: "A = III, IV, V, VI; B = I, II, V, VI." },
+  { q: "I. Sieve tube or sieve cell is living but enucleate. II. Xylem and phloem constitute the vascular bundle. III. First formed xylem element and phloem element are called metaxylem and metaphloem respectively. IV. Phloem fibres are generally absent in primary phloem. V. Phloem parenchyma is absent in most of the monocots. Which of the above statements is wrong?", opts: ["I, II, V", "III", "IV, V", "III, IV"], ans: 1, exp: "III." },
+  { q: "Which of the following statements is incorrect about companion cell?", opts: ["It is a specialised parenchymatous cell", "Its nucleus controls the function of sieve tube", "It helps in maintaining the pressure gradient in sieve tube", "It is present in all vascular plants having phloem"], ans: 3, exp: "It is present in all vascular plants having phloem." },
+  { q: "Heterogeneous tissues are —", opts: ["vascular and cork cambia", "Xylem and phloem elements", "Dermal layer and ground tissue", "Parenchyma and sclerenchyma"], ans: 1, exp: "Xylem and phloem elements." },
+  { q: "At maturity, sieve tubes do not possess —", opts: ["Cell wall", "Nucleus", "Cytoplasm", "Vacuoles"], ans: 1, exp: "Nucleus." },
+  { q: "Sieve tube is —", opts: ["Multicellular, vessel like structure", "Provided with porous septa", "The main conducting element for translocation of food", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Complex tissue comprises —", opts: ["Xylem and phloem", "Heterogeneous tissue", "Conductive tissue", "All of these"], ans: 3, exp: "All of these." },
+  { q: "Albuminous cells of gymnosperms are equivalent to —", opts: ["Sieve tubes", "Sieve cells", "Companion cells", "Cork cambium"], ans: 2, exp: "Companion cells." },
+  { q: "Companion cells are associated with —", opts: ["Sieve cells", "Sieve tubes", "Albuminous cells", "Vessels"], ans: 1, exp: "Sieve tubes." },
+  { q: "Sieve tubes are best suited for translocation of solutes because —", opts: ["They are much broader than long", "They possess no end wall", "They have higher number of pits", "They possess interconnected lumen"], ans: 3, exp: "They possess interconnected lumen." },
+  { q: "Grittiness of fruit in pears is due to —", opts: ["Presence of Silica", "Presence of stone cells / sclereids", "Presence of raphids", "Formation of cystolith"], ans: 1, exp: "Presence of stone cells / sclereids." },
+  { q: "Which of the following statements about the phloem parenchyma is false?", opts: ["It is an elongated, spindle-shaped, nucleate cell having dense cytoplasm", "Its cell wall is composed of non-cellulosic material", "It has pits through which plasmodesmata connections exist between the cells", "Besides food, it stores resins, tannins, latex etc."], ans: 1, exp: "Its cell wall is composed of non-cellulosic material." },
+  { q: "I. Sclerenchymatous cells. II. Much elongated, unbranched and tapering ends. III. Needle like shape. IV. Cell wall thick. V. Dead cells. VI. Found in secondary phloem. Which of the following cells is defined by the above characters?", opts: ["Sieve tube", "Phloem parenchyma", "Phloem fibre / bast fibre", "Companion or albuminous cell"], ans: 2, exp: "Phloem fibre / bast fibre." },
+  { q: "Which of the following bast fibres is of great commercial value?", opts: ["Jute", "Flax", "Hemp", "All"], ans: 3, exp: "All." },
+  { q: "A mature sieve tube —", opts: ["Possesses a peripheral cytoplasm and no nucleus", "Has a large vacuole", "Is connected with companion cells by pit fields present between their common longitudinal wall", "All"], ans: 3, exp: "All." },
+  { q: "On the basis of location and function, how many types of the tissue system are found in vascular plants —", opts: ["2", "3", "4", "5"], ans: 1, exp: "3." },
+  { q: "Epidermis is derived from —", opts: ["Ground meristem", "Procambium", "Protoderm", "Corpus"], ans: 2, exp: "Protoderm." },
+  { q: "The primary function of epidermis is —", opts: ["Protection", "Photosynthesis", "Conduction of water and solute", "Mechanical support"], ans: 0, exp: "Protection." },
+  { q: "Epidermis consists of ___ and is ____ (layered) —", opts: ["Sclerenchyma, multilayered", "Collenchyma, single layered", "Parenchyma, multilayered", "Parenchyma, single-layered"], ans: 3, exp: "Parenchyma, single-layered." },
+  { q: "Excessive loss of water is prevented by —", opts: ["Epidermis", "Endodermis", "Cortex", "Xylem"], ans: 0, exp: "Epidermis." },
+  { q: "Trichomes, hairs, stomata etc are included under —", opts: ["Ground tissue system", "Vascular tissue system", "Epidermal tissue system", "None"], ans: 2, exp: "Epidermal tissue system." },
+  { q: "Stomata develop from —", opts: ["Dermal tissue", "Ground tissue", "Accessory tissue", "Vascular tissue"], ans: 0, exp: "Dermal tissue." },
+  { q: "Guard cells differ from epidermal cells in having —", opts: ["Specific shape", "Chloroplast", "Heterogeneous nature of cell wall", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following statements is false? I. Epidermal cell has small amount of cytoplasm and a large vacuole. II. Waxy layer cuticle is absent in roots. III. Root hairs are unicellular, while stem hairs / trichomes are multicellular. IV. Trichomes - branched / unbranched, soft / stiff and secretory or transpiration preventive. V. Guard cells are dumbbell-shaped in dicots, and bean-shaped in monocots (e.g. grass).", opts: ["I", "IV", "III", "V"], ans: 3, exp: "V." },
+  { q: "The stomatal apparatus includes —", opts: ["Only stomatal aperture", "Stomatal aperture and guard cells", "Only guard cells", "Stomatal aperture, guard cells and surrounding subsidiary cells"], ans: 3, exp: "Stomatal aperture, guard cells and surrounding subsidiary cells." },
+  { q: "Which one is wrong about the guard cells?", opts: ["They are modified ground tissue", "They are chlorophyllous", "Their outer wall is thin and inner wall is highly thickened", "They regulate stomatal movement for transpiration and gaseous exchange"], ans: 0, exp: "They are modified ground tissue." },
+  { q: "Sometimes a few epidermal cells in the vicinity of guard cells become specialized in their shape and size and are known as —", opts: ["Stomatal aperture", "Trichomal cell", "Subsidiary cells", "Stomata"], ans: 2, exp: "Subsidiary cells." },
+  { q: "How many shoot apical meristematic zones are expected in a twig of a plant possessing 9 branches, 39 leaves?", opts: ["9", "39", "10", "8"], ans: 2, exp: "10." },
+  { q: "Ground / fundamental tissue system is made up of —", opts: ["Parenchyma", "Collenchyma", "Sclerenchyma", "All"], ans: 3, exp: "All." },
+  { q: "Ground tissue includes —", opts: ["Cortex + pericycle", "Pith", "Medullary ray", "All"], ans: 3, exp: "All." },
+  { q: "In leaves, ground tissue consists of —", opts: ["Mesophyll", "Epidermis", "Vascular tissues", "Guard cells"], ans: 0, exp: "Mesophyll." },
+  { q: "Pit pairs allow plasmodesmata to travel through —", opts: ["The primary cell wall", "The secondary cell wall", "Both the primary and secondary cell wall", "Neither primary nor secondary cell wall"], ans: 0, exp: "The primary cell wall." },
+  { q: "One of the primary function of the ground tissue in a plant is —", opts: ["Photosynthesis", "To protect the plant", "To anchor the plant", "Water and sugar conduction"], ans: 0, exp: "Photosynthesis." },
+  { q: "In the development of a root, the protoderm gives rise to the —", opts: ["Cortex", "Root hair", "Endodermis", "Pith"], ans: 1, exp: "Root hair." },
+  { q: "Plant cells that are photosynthetically active are found in the ___ layer of leaf and are ___ cells —", opts: ["Epidermis, Parenchymatous", "Mesophyll, Parenchymatous", "Mesophyll, Sclerenchymatous", "Aerenchyma, Collenchymatous"], ans: 1, exp: "Mesophyll, Parenchymatous." },
+  { q: "Xylem and phloem are present on the same radius, such a vascular bundle is called —", opts: ["Radial", "Bicollateral", "Concentric", "Conjoint"], ans: 3, exp: "Conjoint." },
+  { q: "When xylem and phloem are arranged in an alternate manner on separate radii, such a vascular bundle is called —", opts: ["Radial", "Bicollateral", "Concentric", "Conjoint"], ans: 0, exp: "Radial." },
+  { q: "Vascular bundle having cambium between the xylem and phloem is called —", opts: ["Close vascular bundle", "Open vascular bundle", "Conjoint vascular bundle", "Radial vascular bundle"], ans: 1, exp: "Open vascular bundle." },
+  { q: "Vascular bundle without cambium is called —", opts: ["Close vascular bundle", "Open vascular bundle", "Conjoint vascular bundle", "Radial vascular bundle"], ans: 0, exp: "Close vascular bundle." },
+  { q: "Which one is not the part of stele?", opts: ["Pericycle", "Pith", "Vascular bundle", "Cortex"], ans: 3, exp: "Cortex." },
+  { q: "In dicot root, initiation of lateral root, and vascular cambium during secondary growth takes place from —", opts: ["Cortex", "Epidermis", "Pericycle", "Xylem"], ans: 2, exp: "Pericycle." },
+  { q: "The innermost layer or last layer of cortex is called —", opts: ["Pericycle", "Conjunctive tissue", "Endodermis", "Exodermis"], ans: 2, exp: "Endodermis." },
+  { q: "I. Unicellular hair. II. Endodermis with passage cells. III. Pith-small / inconspicuous. IV. Radial vascular Bundle. V. Xylem-exarch. VI. 2-4 xylem and phloem. The above description refers to which of the following —", opts: ["Monocot root", "Dicot root", "Monocot stem", "Dicot stem"], ans: 1, exp: "Dicot root." },
+  { q: "Monocot root differs from dicot root in having —", opts: ["Polyarch xylem bundles", "Large and well developed pith", "Both", "Radial vascular Bundle and exarch xylem"], ans: 2, exp: "Both." },
+  { q: "In root, the tangential as well as radial walls of the barrel-shaped endodermal cells have a deposition of water impermeable, waxy material-suberin in the form of —", opts: ["Cuticle strips", "Protein strips", "Casparian strips", "Silicious strips"], ans: 2, exp: "Casparian strips." },
+  { q: "In dicot stem —", opts: ["Vascular bundles are conjoint, open and arranged in a ring", "Xylem is endarch", "Collenchymatous hypodermis", "All"], ans: 3, exp: "All." },
+  { q: "Well developed pith is seen in —", opts: ["Monocot root and monocot stem", "Dicot root and dicot stem", "Monocot root and dicot stem", "Dicot root and monocot stem"], ans: 0, exp: "Monocot root and monocot stem." },
+  { q: "Which one is false about monocot stem? I. Vascular bundles - scattered, conjoint, close, surrounded by sclerenchymatous bundle sheath and with water cavity. II. Hypodermis is sclerenchymatous. III. Peripheral vascular bundles - Smaller than centrally placed ones. IV. Ground tissue is differentiated into cortex, pericycle, pith, etc. V. Homogeneous parenchymatous ground tissues.", opts: ["I, III, V", "III, IV", "IV", "V"], ans: 2, exp: "IV." },
+  { q: "Which one is correct about the dicot stem?", opts: ["Pericycle consists of semilunar sclerenchymatous patches above the phloem and few layers of parenchyma alternatively", "It does not show secondary growth", "Endodermis is rich in starch, so this is also called starch sheath", "a and c"], ans: 3, exp: "a and c." },
+  { q: "Column I: I. Leaf is hypostomatic. II. Mesophyll is differentiated into palisade and spongy parenchyma. III. Leaf is amphistomatic. IV. Vascular bundle = conjoint and close. V. Mesophyll consists of only spongy parenchyma. VI. Epidermis is cuticularised. VII. Vascular bundles of different sizes. VIII. Vascular bundle of similar size. Column II: A. Dicotyledonous / Dorsiventral leaf, B. Monocotyledonous / Monocot leaf. Which is correctly matched —", opts: ["A = I, IV, V, VI, VII; B = II, III, IV, VI, VIII", "A = I, II, IV, VI, VII; B = III, IV, V, VI, VIII", "A = III, IV, V, VI, VIII; B = I, II, IV, VI, VII", "A = I, IV, V, VIII; B = II, III, IV, VI, VII"], ans: 1, exp: "A = I, II, IV, VI, VII; B = III, IV, V, VI, VIII." },
+  { q: "In leaves, protoxylem elements —", opts: ["Face towards adaxial side", "Face towards abaxial surface", "Are surrounded by metaxylem", "Are scattered in the middle"], ans: 0, exp: "Face towards adaxial side." },
+  { q: "In dorsiventral leaf, location of palisade tissue and phloem respectively is —", opts: ["Adaxial and abaxial", "Abaxial and adaxial", "Adaxial and adaxial", "Abaxial and abaxial"], ans: 0, exp: "Adaxial and abaxial." },
+  { q: "In stem, starch sheath is equivalent to —", opts: ["Pericycle", "Endodermis", "Bundle sheath", "Bundle cap"], ans: 1, exp: "Endodermis." },
+  { q: "Which one is correct?", opts: ["In dorsiventral leaf, stomata are on lower (abaxial) surface", "Protoxylem disintegrates to produce lacuna (lysigenous) in monocot stem", "Reticulate venation in dicot leaf, parallel venation in monocot leaf", "All"], ans: 3, exp: "All." },
+  { q: "A T.S. of dicot stem is stained with iodine with proper procedure. Which of the following structures are expected to show blue colour —", opts: ["Endodermis", "Cortex", "Pericycle", "Phloem"], ans: 0, exp: "Endodermis." },
+  { q: "In dicot stem lateral branch comes out from —", opts: ["Pericycle", "Cortex", "Pith", "Epidermis"], ans: 0, exp: "Pericycle." },
+  { q: "Which one is correct about bulliform / motor cell?", opts: ["It is seen in grasses", "It is large-sized, thin-walled colourless, vacuolate cells on the adaxial surface", "It helps in rolling of leaf to minimise water loss when it is flaccid", "All"], ans: 3, exp: "All." },
+  { q: "In young dicot stem, cambium is —", opts: ["Single layered", "2 layered", "Multilayered", "Absent"], ans: 0, exp: "Single layered." },
+  { q: "During secondary growth, a complete ring is formed by —", opts: ["Only fascicular cambia", "Only interfascicular cambia", "Fascicular (vascular) cambia and interfascicular cambia", "Fascicular cambia + Phellogen"], ans: 2, exp: "Fascicular (vascular) cambia and interfascicular cambia." },
+  { q: "Interfascicular cambia originate from cells of —", opts: ["Medullary ray", "Cortex", "Endodermis", "Fascicular cambia"], ans: 0, exp: "Medullary ray." },
+  { q: "Vascular cambium forms xylem on the inside and phloem on the outside due to —", opts: ["Differential action of hormones", "Intrafascicular nature", "Shearing force of wind", "Effect of growth"], ans: 0, exp: "Differential action of hormones." },
+  { q: "Secondary xylem is —", opts: ["Exarch", "Endarch", "Mesarch", "None"], ans: 1, exp: "Endarch." },
+  { q: "Secondary growth occurs due to activity of —", opts: ["Cork cambium", "Interfascicular cambium", "Vascular cambium", "Both a and c"], ans: 3, exp: "Both a and c." },
+  { q: "Amount of secondary xylem formed from cambium is —", opts: ["8 times more than phloem", "8-10 times more than phloem", "2 times more than phloem", "Equal to secondary phloem"], ans: 1, exp: "8-10 times more than phloem." },
+  { q: "Which one is correct about the secondary growth?", opts: ["Youngest secondary phloem is just outside the cambium while youngest secondary xylem inside the cambium", "Oldest secondary phloem is just inside the primary phloem while oldest secondary xylem is just above pith", "Secondary medullary ray passes through both secondary xylem and secondary phloem", "All"], ans: 3, exp: "All." },
+  { q: "Which one is a false statement?", opts: ["The 1° and 2° phloem get gradually crushed due to the continued formation and accumulation of 2° xylem", "1° xylem remains more or less intact in or near the centre", "Secondary growth is increase in length of the axis", "None"], ans: 2, exp: "Secondary growth is increase in length of the axis." },
+  { q: "Column I: A. Spring wood or early wood, B. Autumn wood or late wood. Column II: I. Lighter in colour, II. Density high, III. Density low, IV. Darker in colour, V. Larger number of xylary elements, VI. Vessels with wider cavity, VII. Lesser number of xylary elements, VIII. Vessels with small cavity. Which of the following matching is correct?", opts: ["A = II, IV, VII, VIII; B = I, III, V, VI", "A = I, II, VII, VIII; B = III, IV, V, VI", "A = I, III, V, VI; B = II, IV, VII, VIII", "A = I, III, VII, VIII; B = II, IV, V, VI"], ans: 2, exp: "A = I, III, V, VI; B = II, IV, VII, VIII." },
+  { q: "Widening of tree trunk is mostly due to the activity of —", opts: ["Phelloderm", "Fascicular cambium", "1° xylem", "2° phloem"], ans: 1, exp: "Fascicular cambium." },
+  { q: "Moving from the centre of tree trunk outward, the order of vascular tissues is —", opts: ["1° xylem → 2° xylem → vascular cambium → 2° phloem → 1° phloem", "2° xylem → 1° xylem → vascular cambium → 1° phloem → 2° phloem", "1° xylem → 2° phloem → 2° xylem → 2° phloem → vascular cambium", "1° xylem → 1° phloem → vascular cambium → 2° phloem → 2° xylem"], ans: 0, exp: "1° xylem → 2° xylem → vascular cambium → 2° phloem → 1° phloem." },
+  { q: "Which of the following statements regarding the formation of annual ring is false?", opts: ["Annual rings are formed as a result of seasonal environmental conditions", "Tracheids / Vessel elements are larger during periods when water is abundant", "Tracheids / Vessels elements have thicker wall during periods of water deprivation", "Wood formed in the previous years is darker than newer wood"], ans: 3, exp: "Wood formed in the previous years is darker than newer wood." },
+  { q: "The activity of cambium is under the control of —", opts: ["Many physiological factors", "Many environmental factors", "both", "Only photoperiod"], ans: 2, exp: "both." },
+  { q: "One cannot determine the age of a tree by its rings, if that tree is located in which of the following forest —", opts: ["Tropical deciduous", "Tropical evergreen", "Temperate evergreen", "Temperate deciduous"], ans: 2, exp: "Temperate evergreen." },
+  { q: "Annual rings are bands of —", opts: ["Secondary xylem and vascular rays", "Secondary phloem and vascular rays", "Secondary vascular tissues", "Cork and vascular cortex"], ans: 0, exp: "Secondary xylem and vascular rays." },
+  { q: "Annual or growth rings consist of —", opts: ["Alternate rings of heart and early wood", "Alternate rings of sapwood and heart wood", "Alternate rings of early and late wood", "Alternate rings of porous and non-porous wood"], ans: 2, exp: "Alternate rings of early and late wood." },
+  { q: "Autumn wood or late wood is formed —", opts: ["In winter", "In spring", "Throughout the year", "In rainy season"], ans: 0, exp: "In winter." },
+  { q: "Early wood is formed —", opts: ["In winter", "In spring", "Throughout the year", "In Autumn"], ans: 1, exp: "In spring." },
+  { q: "In spring season cambium is ___ active and produces ___ wood.", opts: ["More, late", "More, early", "Less, late", "less, early"], ans: 1, exp: "More, early." },
+  { q: "In winter season, cambium is ___ active and produces ___ wood.", opts: ["More, late", "More, early", "Less, late (autumn)", "less, early"], ans: 2, exp: "Less, late (autumn)." },
+  { q: "Which is true about heart wood / Duramen? (i) It does not help in water + mineral conduction. (ii) It is dark coloured but soft. (iii) It has tracheary elements filled with tannins, resins, gums, oil, etc. (iv) It is a peripheral part. (v) Sensitive to microbes + insects, hence least durable.", opts: ["I, III", "II, III", "IV, V", "III, IV"], ans: 0, exp: "I, III." },
+  { q: "Which is false about sap wood (Alburnum)?", opts: ["It is peripheral part, lighter in colour", "It is involved in ascent of sap", "It is sensitive to microbes + insects as it has no deposition of resins, gum, tannins, etc.", "None"], ans: 3, exp: "None." },
+  { q: "Which one is correct about the cork cambium / phellogen?", opts: ["Usually cortex of stem forms it during secondary growth of stem", "It is a couple of layers thick", "It is made up of thin-walled rectangular cells", "All"], ans: 3, exp: "All." },
+  { q: "Phellogen cuts —", opts: ["Cork / phellogen inside and secondary cortex (phelloderm) outside", "Cork outside and phelloderm inside", "Both cork and phelloderm inside", "Both cork and phelloderm outside"], ans: 1, exp: "Cork outside and phelloderm inside." },
+  { q: "Cork is impervious to water due to —", opts: ["Silica in cell wall", "CaCO₃ in cell wall", "Suberin in cell wall", "Cuticle in cell wall"], ans: 2, exp: "Suberin in cell wall." },
+  { q: "The collective term for phelloderm (secondary cortex), cork cambium (phellogen) and cork (phellem) is —", opts: ["Pericycle", "Periderm", "Protoderm", "Procambium"], ans: 1, exp: "Periderm." },
+  { q: "Annual rings are seen in temperate zone trees because —", opts: ["Xylem cell size varies with season", "Heart wood cells alternate with sap wood cells", "Xylem activity varies with season", "Resin is deposited in the rings in the stem"], ans: 2, exp: "Xylem activity varies with season." },
+  { q: "Bark includes —", opts: ["All tissues exterior to vascular cambium", "Periderm + Secondary phloem", "Both living and dead tissues", "All"], ans: 3, exp: "All." },
+  { q: "Bark includes —", opts: ["Cork + Phellogen + Phelloderm + Secondary phloem", "Periderm only", "Secondary xylem + Secondary phloem", "Secondary xylem + Cambial ring + Secondary phloem"], ans: 0, exp: "Cork + Phellogen + Phelloderm + Secondary phloem." },
+  { q: "At places, the cork contains aerating pores called —", opts: ["Stomata", "Lenticels", "Hydathode", "Pneumatophore"], ans: 1, exp: "Lenticels." },
+  { q: "A lenticel has loosely arranged parenchymatous cells on the outer side. These cells, cut off by phellogen are called —", opts: ["Complimentary cells", "Epithem", "Aerenchyma", "Sclerenchyma"], ans: 0, exp: "Complimentary cells." },
+  { q: "Lenticels are spongy regions on the surface of some woody old stem that function in —", opts: ["Gaseous exchange", "Transpiration", "Both", "Water conservation"], ans: 2, exp: "Both." },
+  { q: "Bark formed early in the season is called ___ bark and towards the end is called ___ bark.", opts: ["hard, soft", "Soft, hard", "Scaly, ring", "ring, scaly"], ans: 1, exp: "Soft, hard." },
+  { q: "In dicot root, the cambium is —", opts: ["Completely primary in origin", "Completely secondary in origin", "Primary as well as secondary in origin", "Derived from endodermis"], ans: 1, exp: "Completely secondary in origin." },
+  { q: "In dicot root showing secondary growth, cork is formed —", opts: ["Inner to endodermis and external to primary phloem", "Outer to endodermis and inner to primary cortex", "Inner to endodermis and outer to pericycle", "external to primary cortex"], ans: 1, exp: "Outer to endodermis and inner to primary cortex." },
+  { q: "When secondary growth in thickness is initiated in a dicot root, which of the following happens first?", opts: ["Portion of conjunctive parenchyma present below the phloem bundle forms cells of vascular cambium", "Portion of pericycle above the protoxylem becomes meristematic and forms vascular cambial cells", "Both", "Cambial initials between the xylem and phloem divide"], ans: 2, exp: "Both." },
+  { q: "In dicot root, cork cambium is formed by —", opts: ["Cortex", "hypodermis", "Pericycle", "Epidermis"], ans: 2, exp: "Pericycle." },
+  { q: "Which sequence correctly illustrates the arrangement of layers from outside to inside in a dicot stem?", opts: ["Hypodermis → Endodermis → Pericycle → Phloem → Xylem", "Endodermis → Hypodermis → Pericycle → Xylem → Phloem", "Hypodermis → Endodermis → Pericycle → Xylem → Phloem", "Endodermis → Hypodermis → Pericycle → Phloem → Xylem"], ans: 2, exp: "Hypodermis → Endodermis → Pericycle → Xylem → Phloem." },
+  { q: "Epidermis is the surface covering of a plant body. Which of the following functions is not performed by the epidermis?", opts: ["Protecting the plant from mechanical injury", "Protecting the plant from invasion by pathogens", "Preventing the loss of water from the plant, along with the cuticle", "Preventing the exchange of gases between the plant and environment"], ans: 3, exp: "Preventing the exchange of gases between the plant and environment." },
+  { q: "I ___ is an example of II ___ meristem that helps in the formation of woody axis in plants. The information in which alternative completes the given statement?", opts: ["I-Apical meristem; II-primary", "I-Apical meristem; II-secondary", "I-Interfascicular cambium; II-primary", "I-Interfascicular cambium; II-secondary"], ans: 3, exp: "I-Interfascicular cambium; II-secondary." },
+  { q: "Dicot stem differs from dicot root in —", opts: ["presence of cortex", "absence of endodermis", "absence of pericycle", "position of protoxylem"], ans: 3, exp: "position of protoxylem." },
+  { q: "As compared to a dicot root, a monocot root has:", opts: ["More abundant secondary xylem", "Many xylem bundles", "Inconspicuous annual rings", "Relatively thicker periderm"], ans: 1, exp: "Many xylem bundles." },
+  { q: "Radial conduction of water takes place by —", opts: ["vessels", "vessels and trachieds", "phloem", "ray parenchyma cells"], ans: 3, exp: "ray parenchyma cells." },
+  { q: "The common bottle cork is a product of:", opts: ["Dermatogen", "Phellogen", "Xylem", "Vascular Cambium"], ans: 1, exp: "Phellogen." },
+  { q: "Companion cells are closely associated with :", opts: ["Sieve elements", "Vessel elements", "Trichomes", "Guard cells"], ans: 0, exp: "Sieve elements." },
+  { q: "Closed vascular bundles lack —", opts: ["Ground tissue", "conjunctive tissue", "Cambium", "Pith"], ans: 2, exp: "Cambium." },
+  { q: "Water containing cavities in vascular bundles are found in :", opts: ["Sunflower", "Maize", "Cycas", "Pinus"], ans: 1, exp: "Maize." },
+  { q: "Fifteen years ago, your parents hung a swing from the lower branch of a large tree growing in your yard. When you go and sit in it today, you realize it is exactly the same height off the ground as it was when you first sat in it 15 years ago. The reason the swing has not grown taller as the tree has grown is that —", opts: ["the tree trunk is showing secondary growth", "the tree trunk is part of the primary growth system of the plant, but elongation is no longer occurring in that part of the tree", "trees lack apical meristems and so do not get taller", "you are hallucinating, because it is impossible for the swing not to have gotten taller as the tree grew"], ans: 1, exp: "the tree trunk is part of the primary growth system of the plant, but elongation is no longer occurring in that part of the tree." },
+  { q: "If you were to relocate the pericycle of a plant root to the epidermal layer, how would it affect root growth?", opts: ["Secondary growth in the mature region of the root would not occur", "The root apical meristem would produce vascular tissue in place of dermal tissue", "Nothing would change, because the pericycle is normally located near the epidermal layer of the root", "Lateral roots would grow from the outer region of the root and fail to connect with the vascular tissue"], ans: 0, exp: "Secondary growth in the mature region of the root would not occur." },
+  { q: "Go through the following statements. I. The word meristem is derived from Greek, meristos meaning divided. II. The stele consists of pericycle, vascular bundle and pith. III. During secondary growth the amount of secondary xylem produced is more than the secondary phloem because the cambium is more active on the inner side. IV. Palm is a monocot plant so it does not increase in girth. V. The Book 'Anatomy of Seed Plants' by Katherine Esau is referred to as Webster's of plant biology. How many of the above statements are correct?", opts: ["One", "Two", "Three", "Four"], ans: 3, exp: "Four." },
+  { q: "Interfascicular cambium develops from the cells of :", opts: ["Medullary rays", "Xylem parenchyma", "Endodermis", "Pericycle"], ans: 0, exp: "Medullary rays." },
+  { q: "Lenticels are involved in :", opts: ["Transpiration", "Gaseous exchange", "Food transport", "Photosynthesis"], ans: 1, exp: "Gaseous exchange." },
+  { q: "Age of a tree can be estimated by :", opts: ["its height and girth", "biomass", "number of annual rings", "diameter of its heartwood"], ans: 2, exp: "number of annual rings." },
+  { q: "You are given a fairly old piece of dicot stem and a dicot root. Which of the following anatomical structures will you use to distinguish between the two?", opts: ["Secondary xylem", "Secondary phloem", "Protoxylem", "Cortical cells"], ans: 2, exp: "Protoxylem." },
+  { q: "Tracheids differ from other tracheary elements in :", opts: ["having casparian strips", "being imperforate", "lacking nucleus", "being lignified"], ans: 1, exp: "being imperforate." },
+  { q: "Which of the following statements is not true for stomatal apparatus?", opts: ["Inner walls of guard cells are thick", "Guard cells invariably possess chloroplasts and mitochondria", "Guard cells are always surrounded by subsidiary cells", "Stomata are involved in gaseous exchange"], ans: 2, exp: "Guard cells are always surrounded by subsidiary cells." },
+  { q: "Meristematic tissue responsible for increase in girth of tree trunk is —", opts: ["Apical meristem", "Intercalary meristem", "Lateral meristem", "Phellogen"], ans: 2, exp: "Lateral meristem." },
+  { q: "A cross section of a plant material shows four xylem patches alternating with same number of phloem patches and in the xylem protoxylem is pointed towards periphery. In the centre of stele a small pith is present. The plant material is —", opts: ["Young dicot stem", "Young dicot root", "Monocot stem", "Monocot root."], ans: 1, exp: "Young dicot root." },
+  { q: "Radial vascular bundle, exarch xylem, large pith, collenchymatous hypodermis. How many of the above items are for a young dicot stem?", opts: ["2", "3", "4", "1"], ans: 3, exp: "1." },
+  { q: "Radial vascular bundle, exarch xylem large pith, passage cell. How many of the above items are for a young dicot root?", opts: ["2", "3", "4", "5"], ans: 3, exp: "4." },
+  { q: "Phloem in angiosperms differs from the phloem of pteridophytes and gymnosperms in having —", opts: ["Tyloses in phloem cells", "Sieve tube", "Sieve cells", "Albuminous cells"], ans: 1, exp: "Sieve tube." },
+  { q: "Select the characters which are not applicable to the anatomy of dicot roots? A. Conjunctive tissue present. B. Presence of protein compounds in the casparian strips. C. Polyarch xylem bundles. D. Presence of pericycle.", opts: ["A and B", "B and D", "C and D", "B and C"], ans: 3, exp: "B and C." },
+  { q: "Match the following: A. Collenchyma - (i) Specialised epidermal cells. B. Subsidiary cells - (ii) Mechanical support for growing plants. C. Casparian strips - (iii) Mesophyll tissue of dicot leaf. D. Spongy parenchyma - (iv) Suberin deposition in the radial walls of endodermis.", opts: ["A-(ii), B-(i), C-(iv), D-(iii)", "A-(ii), B-(iii), C-(iv), D-(i)", "A-(i), B-(ii), C-(iii), D-(iv)", "A-(iv), B-(i), C-(ii), D-(iii)"], ans: 0, exp: "A-(ii), B-(i), C-(iv), D-(iii)." },
+  { q: "Go through the following statements. I. Meristems are / have devoid of thickening in cell wall. II. During the formation of leaves and elongation of stem, some cells are left behind from the shoot apical meristem and they constitute axillary bud. III. Removed parts of grasses by the grazing herbivores are regenerated fast by intercalary meristems. IV. Vascular cambium is completely secondary in origin w.r.t. dicot stem. How many statement(s) is/are wrong?", opts: ["1", "2", "3", "4"], ans: 0, exp: "1." },
+  { q: "Read the given statements and select option representing correct statements. A. Anatomy deals with internal structure but not the functional organisation of plants. B. Tissue arises as a result of interactions among the constituent cells. C. Properties of tissues are present in constituent cells. D. Tissue is a group of ontogenetically and functionally similar cells but structurally may be similar or dissimilar.", opts: ["A and C", "A and D", "B and D", "B and C"], ans: 2, exp: "B and D." },
+  { q: "Mark the correct statement w.r.t. simple permanent tissues.", opts: ["Do not occur below epidermis", "Permanent tissues with structurally different types of cells", "Permanent tissue with structurally and functionally similar cells", "Required for food storage and conduction of sap from root to stems"], ans: 2, exp: "Permanent tissue with structurally and functionally similar cells." },
+  { q: "Which one of the following features is not associated with ground tissue system?", opts: ["It consists of complex permanent tissues", "Made up of living and dead permanent tissues", "Consists of thin walled chloroplast containing cells in leaves", "It does not include epidermis and vascular bundles"], ans: 0, exp: "It consists of complex permanent tissues." },
+  { q: "The tangential as well as radial walls of the endodermal cells have a deposition of water-impermeable waxy materials in —", opts: ["Maize stem", "Mango stem", "China rose root", "Citrus leaf"], ans: 2, exp: "China rose root." },
+  { q: "Interfascicular cambium is — A. Functionally secondary meristem but ontogenetically primary meristem. B. Differentiated medullary cells. C. Dedifferentiated cells adjoining to intrafascicular cambium. D. Lateral meristem formed in steler region. Find out the correct option.", opts: ["A and B", "B and C", "C and D", "A, C and D"], ans: 3, exp: "A, C and D." },
+  { q: "How many of the given function/s can be performed by collenchyma? Mechanical support, Photosynthesis, Secretion, Translocation of organic foods", opts: ["One", "Two", "Three", "Four"], ans: 1, exp: "Two." },
+  { q: "If you are given a piece of young stem of a plant from your school garden, after microscopy of T.S. which of the following anatomical character would you ascertain whether it is a monocot stem or a dicot stem?", opts: ["Polyarch xylem", "Type of vascular bundles", "Endarch xylem", "Secondary permanent tissue"], ans: 1, exp: "Type of vascular bundles." },
+  { q: "A major characteristic of monocot root is the presence of —", opts: ["Vasculature without cambium", "Cambium sandwiched between phloem and xylem along the radius", "Open vascular bundles", "Scattered vascular bundles"], ans: 0, exp: "Vasculature without cambium." },
+  { q: "Vascular bundles in monocotyledons are considered closed because —", opts: ["There are no vessels with perforations", "Xylem is surrounded all around by phloem", "A bundle sheath surrounds each bundle", "Cambium is absent"], ans: 3, exp: "Cambium is absent." },
+  { q: "Read the different components from I to IV in the list given below and tell the correct order of the components with reference to their arrangement from outer side to inner side in a woody dicot stem. I. Secondary cortex, II. Wood, III. Secondary phloem, IV. Phellem. The correct order is —", opts: ["IV, I, III, II", "IV, III, I, II", "III, IV, II, I", "I, II, IV, III"], ans: 0, exp: "IV, I, III, II." },
+  { q: "Sclerenchymatous hypodermis, starch sheath, scattered vascular bundles, presence of water containing cavity in vascular bundles, conjoint vascular bundles, exarch xylem, intrafascicular cambium. Out of these features how many are found in maize stem?", opts: ["3", "4", "2", "6"], ans: 1, exp: "4." },
+  { q: "Specialised epidermal cells surrounding the guard cells are called :", opts: ["Complementary cells", "Subsidiary cells", "Bulliform cells", "Lenticels"], ans: 1, exp: "Subsidiary cells." },
+  { q: "Cortex is the region found between :", opts: ["Endodermis and pith", "Endodermis and vascular bundle", "Epidermis and stele", "Pericycle and endodermis"], ans: 2, exp: "Epidermis and stele." },
+  { q: "The balloon-shaped structures called tyloses :", opts: ["Are extensions of xylem parenchyma cells into vessels", "Are linked to the ascent of sap through xylem vessels", "Originate in the lumen of vessels", "Characterize the sapwood"], ans: 0, exp: "Are extensions of xylem parenchyma cells into vessels." },
+  { q: "The vascular cambium normally gives rise to :", opts: ["Primary phloem", "Secondary xylem", "Periderm", "Phelloderm"], ans: 1, exp: "Secondary xylem." },
+  { q: "Which of the following is made up of dead cells?", opts: ["Collenchyma", "Phellem", "Phloem", "Xylem parenchyma"], ans: 1, exp: "Phellem." },
+  { q: "Identify the wrong statement in context of heartwood:", opts: ["It is highly durable", "It conducts water and minerals efficiently", "It comprises dead elements with highly lignified walls", "Organic compounds are deposited in it"], ans: 1, exp: "It conducts water and minerals efficiently." },
+  { q: "Ram was studing anatomy of young roots of maize, mangolia, pine and money plant. He forgot to label the slides he finds only sieve cells without sieve tubes and companion cells, this slide has to be of:", opts: ["Pine", "Money plant", "magnolia", "Maize"], ans: 0, exp: "Pine." },
+  { q: "Meristematic tissues have all these except :", opts: ["Tubulin", "Aspartine", "Adenine", "Lignin"], ans: 3, exp: "Lignin." },
+  { q: "Stele in a monocot stem —", opts: ["Includes all tissues inner side of endodermis", "Consists internal phloem with parenchyma", "Consist of open vascular bundles", "Does not possess pericycle and pith"], ans: 0, exp: "Includes all tissues inner side of endodermis." },
+  { q: "Axillary bud develop by activity of :", opts: ["Lateral meristem", "Shoot Apical meristem", "Root Apical meristem", "Intercalary meristem"], ans: 1, exp: "Shoot Apical meristem." },
+  { q: "Passage cells are found in —", opts: ["Epidermis", "Hypodermis", "Pericycle", "Endodermis"], ans: 3, exp: "Endodermis." },
+  { q: "What is the most common type of permanent tissue found in almost all plants?", opts: ["Sclerenchyma", "Collenchyma", "Xylem", "Parenchyma"], ans: 3, exp: "Parenchyma." },
+  { q: "Most distinct annual rings are found in the wood of :", opts: ["Deciduous temperate plants", "Evergreen temperature plants", "Deciduous tropical plants", "Evergreen tropical plants"], ans: 0, exp: "Deciduous temperate plants." },
+  { q: "With increase in the total leaf area of a plant, there will be a corresponding increase in the —", opts: ["number of metaxylem vessels", "cross sectional area of phloem", "xylem : phloem ratio", "number of protoxylem vessels"], ans: 1, exp: "cross sectional area of phloem." },
+  { q: "Which of the following statements are the functions of a medullary ray in plants? (i) storage of food, (ii) secondary growth, (iii) transmission of water and food, (iv) seat of origin of inter-fascicular cambium.", opts: ["i, ii and iii", "i, iii and iv", "ii, iii and iv", "only i and iii"], ans: 1, exp: "i, iii and iv." },
+  { q: "Stomata in grass leaf are —", opts: ["Rectangular", "Kidney shaped", "Dumb-bell shaped", "Barrel shaped"], ans: 2, exp: "Dumb-bell shaped." },
+  { q: "Secondary xylem and phloem in dicot stem are produced by —", opts: ["Phellogen", "Vascular cambium", "Apical meristems", "Axillary meristems"], ans: 1, exp: "Vascular cambium." },
+  { q: "Casparian strips occur in —", opts: ["Cortex", "Pericycle", "Epidermis", "Endodermis"], ans: 3, exp: "Endodermis." },
+  { q: "Plants having little or no secondary growth are —", opts: ["Conifers", "Deciduous angiosperms", "Grasses", "Cycads"], ans: 2, exp: "Grasses." },
+  { q: "Go through the following statements. I. Sap-wood is inner nonfunctional part of secondary xylem. II. The best method to determine the age of tree is to measure its diameter. III. Radial vascular bundles occur in stem. IV. Wood is common name of secondary xylem. V. Vascular bundles in dicot stem are open, collateral, endarch. How many of the above statements are correct?", opts: ["One", "Two", "Three", "Four"], ans: 2, exp: "Three." },
+  { q: "A transverse section of stem is stained first with safranin and then with fast green following the usual schedule of double staining for the preparation of a permanent slide. What would be the colour of the stained xylem and phloem?", opts: ["Red and green", "Green and red", "Orange and yellow", "Purple and orange"], ans: 0, exp: "Red and green." },
+  { q: "The youngest layer of secondary xylem lies —", opts: ["Between pith and primary xylem", "Just outside the vascular cambium", "Just inside the vascular cambium", "Just inside the cork cambium"], ans: 2, exp: "Just inside the vascular cambium." },
+  { q: "Grass leaves curl inwards during very dry weather. Select the most appropriate reason from the following :", opts: ["Closure of stomata", "Flaccidity of bulliform cells", "Shrinkage of air spaces in spongy mesophyll", "Tyloses in vessels"], ans: 1, exp: "Flaccidity of bulliform cells." },
+  { q: "Which of the statements given below is not true about formation of Annual Rings in trees?", opts: ["Annual ring is a combination of spring wood and autumn wood produced in a year", "Differential activity of cambium causes light and dark bands of tissue early and late wood respectively", "Activity of cambium depends upon variation in climate", "Annual rings are not prominent in trees of temperate region"], ans: 3, exp: "Annual rings are not prominent in trees of temperate region." },
+  { q: "In the dicot root the vascular cambium originates from :", opts: ["Intrafascicular and interfascicular tissue in a ring", "Tissue located below the phloem bundles and a portion of pericycle tissue above protoxylem", "Cortical region", "Parenchyma between endodermis and pericycle"], ans: 1, exp: "Tissue located below the phloem bundles and a portion of pericycle tissue above protoxylem." },
+  { q: "Regeneration of damaged growing grass following grazing is largely due to :", opts: ["Secondary meristem", "Lateral meristem", "Apical meristem", "Intercalary meristem"], ans: 3, exp: "Intercalary meristem." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+  correctCount = 0; wrongCount = 0; currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 6; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

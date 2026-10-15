@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 4: Animal Kingdom - CBT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+  .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+  .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+  .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+  .stat-box .lbl { font-size: 11px; color: #4a5568; }
+  .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+  .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+  .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+  .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+  .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+  .question-box { flex: 1; margin-bottom: 15px; }
+  .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; }
+  .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+  .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+  .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+  .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+  .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+  .option.disabled { pointer-events: none; opacity: 0.8; }
+  .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+  .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+  .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+  .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+  .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+  .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+  .result-item .label { font-size: 12px; color: #4a5568; }
+  .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+  .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+  .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+      <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+      <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+      <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+      <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+      <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+      <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Animal Kingdom</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+      <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+      <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+      <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+      <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q: "Which one is correct? I. Sponges : Cellular level of organization. II. Cnidaria: Tissue level of organization. III. Platyhelminthes: Organ level of organization. IV. Annelids, Arthropods, Molluscs, Echinoderms and Chordates : Organ system level of organization.", opts: ["All are correct", "II and IV are correct", "II and III are correct", "I and II are correct"], ans: 0, exp: "All are correct." },
+  { q: "Choose the false option —", opts: ["Sponges: Mostly asymmetrical", "Cnidaria, Ctenophora and Adult Echinoderms : Radial symmetry", "Annelids, Arthropods, Molluscs and Chordates : Bilateral symmetry", "None of the above"], ans: 3, exp: "None of the above is false." },
+  { q: "Diploblastic and Triploblastic are terms that describe —", opts: ["The number of invagination during development", "The number of heads during development", "The number of tissue layers during embryonic developments", "The number of cell types during development"], ans: 2, exp: "Number of tissue layers during embryonic development." },
+  { q: "An undifferentiated layer present between ectoderm and endoderm is called —", opts: ["Mesoglea", "Mesoderm", "Mesentery", "Parenchyma"], ans: 0, exp: "Mesoglea." },
+  { q: "Which one is correct? I. Diploblastic: Porifera, Coelenterates. II. Triploblastic: Platyhelminthes to chordates. III. Acoelomata : Porifers, Coelenterates, Platyhelminthes. IV. Pseudocoelomata : Aschelminthes / Round worms. V. Eucoelomata: Annelids to chordates.", opts: ["All are false", "All are correct", "I, II and V are correct", "Only V is correct"], ans: 1, exp: "All are correct." },
+  { q: "Metamerism is the characteristic of —", opts: ["Platyhelminthes", "Mollusca", "Porifera", "Annelida (e.g. earthworm)"], ans: 3, exp: "Annelida." },
+  { q: "Metamerism refers to —", opts: ["Mesoblastic development", "Occurrence of mesoderm", "Segmentation where external divisions correspond to internal divisions", "Metastasis"], ans: 2, exp: "Segmentation where external divisions correspond to internal divisions." },
+  { q: "Which one is correct?", opts: ["Notochord is ectodermal in origin present in some animal", "Notochord is a mesodermally derived rod like structure formed on the dorsal side in embryonic development some animals", "Porifera to Echinodermata are non-chordates", "b and c"], ans: 3, exp: "b and c are correct." },
+  { q: "Water exits from sponges through the —", opts: ["Osculum", "Ostia", "Spicules", "Choanocytes"], ans: 0, exp: "Osculum." },
+  { q: "Sponges are —", opts: ["Mostly asymmetrical and usually marine", "Primitive multicellular with cellular grade of organization", "Members of porifera", "All"], ans: 3, exp: "All." },
+  { q: "I. Tissue absent. II. Internal fertilization. III. Development is indirect (larval stage is present). IV. Spongocoelate with ostia (many) and single osculum and canal system. V. Sexes are hermaphrodite. The above characteristics belong to which of following —", opts: ["Cnidaria", "Porifera (sponges)", "Platyhelminthes", "Ctenophora"], ans: 1, exp: "Porifera." },
+  { q: "Spongocoel and canal are lined by —", opts: ["Porocytes", "Choanocytes / Collar cells", "Spicules", "Amoebocytes"], ans: 1, exp: "Choanocytes." },
+  { q: "Water → Ostia → Spongocoel → Osculum. The above pathway of water helps in —", opts: ["Food gathering", "Respiratory exchange", "Removal of waste", "All"], ans: 3, exp: "All." },
+  { q: "Fresh water sponge is —", opts: ["Sycon (Scypha)", "Spongilla", "Euspongia (Bath sponges)", "All"], ans: 1, exp: "Spongilla." },
+  { q: "Sponges show —", opts: ["Intracellular digestion", "A skeleton made up of spicules or spongia fibres", "Asexual reproduction by fragmentation", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following characteristics is not associated with members of Cnidaria / Coelenterate?", opts: ["Alternation of generation (metagenesis between polyp and Medusa)", "Nematocysts, Gastrovascular cavity, extracellular + intracellular digestion", "Nematocyst / Cnidoblast", "Triploblastic forms"], ans: 3, exp: "Cnidarians are diploblastic." },
+  { q: "Which of the following is not a characteristic of the cnidarians?", opts: ["A central gastrovascular cavity with a single opening, hypostome", "Mostly marine, sessile or free swimming, radially symmetrical", "Show cellular level of organization", "Show tissue level of organization"], ans: 2, exp: "Cnidarians show tissue level, not cellular level." },
+  { q: "Which of the following is true about the cnidoblasts / cnidocytes?", opts: ["They are present on tentacles and the body", "They are used for anchorage, defence and for capture the prey", "They contain stinging capsule or nematocysts", "All"], ans: 3, exp: "All." },
+  { q: "Some cnidarian like coral e.g. Meandrina (Brain Coral) exoskeleton is composed of —", opts: ["Silicious", "CaCO₃", "Chitinous", "Proteinaceous"], ans: 1, exp: "CaCO₃." },
+  { q: "Polyp is cylindrical and sessile. It is seen in —", opts: ["Hydra", "Adamsia", "Both a and b", "Aurelia (Jelly fish)"], ans: 2, exp: "Both a and b." },
+  { q: "Medusa is umbrella shaped and free swimming. Which one has no medusa?", opts: ["Hydra", "Adamsia", "Both a and b", "Aurelia"], ans: 2, exp: "Both a and b." },
+  { q: "The metagenesis is seen in —", opts: ["Hydra", "Adamsia (sea anemone)", "Aurelia", "Obelia"], ans: 3, exp: "Obelia." },
+  { q: "The incorrect match —", opts: ["Portuguese man of war - Physalia", "Pennatula - Sea pen", "Gorgonia - Sea Fan", "Hydra - Sea Cucumber"], ans: 3, exp: "Hydra is not sea cucumber." },
+  { q: "Comb jellies or sea walnuts are placed under —", opts: ["Cnidaria", "Ctenophora", "Echinodermata", "Annelida"], ans: 1, exp: "Ctenophora." },
+  { q: "Select the correct one(s) for ctenophora —", opts: ["They have similarities with cnidaria", "They have 8 external rows of ciliated comb plates for locomotion", "Bioluminescence", "All"], ans: 3, exp: "All." },
+  { q: "I. Extracellular and intracellular digestion. II. Exclusively marine, radially symmetrical, diploblastic, tissue level of organization. III. Bisexual, external fertilization and indirect development. IV. No asexual reproduction. V. Presence of 8 comb plates. The above characters are shown by —", opts: ["Cnidaria", "Porifera", "Ctenophora", "Rotifers"], ans: 2, exp: "Ctenophora." },
+  { q: "Pleurobrachia and Ctenoplana are —", opts: ["Sponges", "Ctenophores", "Flatworms", "Roundworms"], ans: 1, exp: "Ctenophores." },
+  { q: "Platyhelminthes are —", opts: ["Roundworms", "Flatworms", "Blindworms", "Pinworms"], ans: 1, exp: "Flatworms." },
+  { q: "Which of the following is not characteristic to platyhelminthes?", opts: ["Triploblastic", "Acoelomate", "Bilateral symmetry", "Parasitism exclusively"], ans: 3, exp: "Not all are parasites." },
+  { q: "What is common among tapeworms (Taenia), Fasciola (liver fluke) and Planaria?", opts: ["All are coelomate", "All are found in gut", "All have flattened bodies", "All are free living"], ans: 2, exp: "All have flattened bodies." },
+  { q: "Choose the correct option for flatworms —", opts: ["Flame cells are excretory organ and osmoregulatory", "Mostly endoparasites", "Bisexual, internal fertilization, many larval stage", "All"], ans: 3, exp: "All." },
+  { q: "Parasitic adaptations of flatworms is —", opts: ["Hooks and suckers are present", "Absorption of food through body surface", "Both a and b", "Complex digestive system"], ans: 2, exp: "Both a and b." },
+  { q: "Which one is not a Aschelminthes?", opts: ["Ascaris (Roundworm)", "Wuchereria (Filarial worm)", "Ancylostoma (Hookworm)", "Flatworm"], ans: 3, exp: "Flatworm." },
+  { q: "Common character between flatworms, roundworms and earthworms is —", opts: ["Parasitism", "Acoelomate nature", "Triploblastic", "Pseudocoelomate"], ans: 2, exp: "Triploblastic." },
+  { q: "Aschelminthes are —", opts: ["Free-living, aquatic, terrestrial or parasites in animals and plants", "With complete alimentary canal with muscular pharynx; Excretory tube with pore", "Are dioecious; showing sexual dimorphism, internal fertilization, direct or indirect development", "All"], ans: 3, exp: "All." },
+  { q: "All Aschelminthes are called roundworms because —", opts: ["Their larvae are round in shape", "Their body is round like disc", "Their stomach is round shaped", "Their thread like body is circular in cross section"], ans: 3, exp: "Their thread like body is circular in cross section." },
+  { q: "The phylum name Annelida is based on —", opts: ["Nephridia", "Metameres / segments", "Parapodia", "Antenna"], ans: 1, exp: "Metameres / segments." },
+  { q: "True coelom appeared first in the course of evolution of —", opts: ["Aschelminthes", "Chordata", "Echinodermata", "Annelida"], ans: 3, exp: "Annelida." },
+  { q: "Which one is blood sucker —", opts: ["Nereis", "Pheretima (Earthworm)", "Hirudinaria (Leech)", "All"], ans: 2, exp: "Hirudinaria (Leech)." },
+  { q: "Choose the correct option —", opts: ["A closed circular system - Annelida", "Nereis - Aquatic, Dioecious", "Pheretima and Leech - Monoecious", "All"], ans: 3, exp: "All." },
+  { q: "A feature absent in annelids is —", opts: ["Nephridia (Osmoregulatory + excretory organ)", "Lateral swimming appendages in aquatic forms like Nereis", "Longitudinal and circular muscles helping in locomotion", "Pseudocoelom"], ans: 3, exp: "Pseudocoelom." },
+  { q: "Annelids —", opts: ["Are aquatic (marine, freshwater), terrestrial, freeliving and sometimes parasite", "Have neural system which consists of paired ganglia connected by lateral nerves to double ventral nerve cord", "Non-segmented", "a and b"], ans: 3, exp: "a and b." },
+  { q: "Which one is the largest phylum of animalia?", opts: ["Annelida", "Arthropoda", "Chordata", "Mollusca"], ans: 1, exp: "Arthropoda." },
+  { q: "Over 2/3 of all named species on earth belong to —", opts: ["Arthropoda", "Annelida", "Chordata", "Flatworms"], ans: 0, exp: "Arthropoda." },
+  { q: "Economically important insects are —", opts: ["Apis (Honey bee)", "Bombyx (Silkworm)", "Laccifer (Lac insect)", "All"], ans: 3, exp: "All." },
+  { q: "Which mosquito acts as vector?", opts: ["Anopheles", "Culex", "Aedes", "All"], ans: 3, exp: "All." },
+  { q: "Which one is living fossil?", opts: ["Limulus (King crab)", "Locusta (Locust) - a gregarious pest", "Both", "None"], ans: 0, exp: "Limulus." },
+  { q: "Arthropods have sense organs like —", opts: ["Antennae", "Simple and compound eyes", "Statocysts for balance", "All"], ans: 3, exp: "All." },
+  { q: "In Arthropods respiratory organs are —", opts: ["Gills", "Book Gills", "Book lungs or Trachea", "All"], ans: 3, exp: "All." },
+  { q: "You have discovered an animal having following characters like Triploblastic, bilateral symmetry coelomate, chitinous exoskeleton, head + Thorax and abdomen as body parts, jointed appendages. You would like to place the animal under —", opts: ["Tetrapoda", "Arthropoda", "Annelida", "Hemichordata"], ans: 1, exp: "Arthropoda." },
+  { q: "In Arthropods excretion takes place through —", opts: ["General body surface", "Flame cells", "Malpighian tubules", "Nephridia"], ans: 2, exp: "Malpighian tubules." },
+  { q: "Arthropods —", opts: ["Are mostly dioecious", "Are mostly oviparous", "Show usually internal fertilization and direct or indirect development", "All"], ans: 3, exp: "All." },
+  { q: "Which one is the second largest animal phylum?", opts: ["Mollusca", "Arthopoda", "Chordata", "Cnidaria"], ans: 0, exp: "Mollusca." },
+  { q: "In Molluscs mouth contains a file like rasping organ for feeding called —", opts: ["Operculum", "Mantle", "Hump", "Radula"], ans: 3, exp: "Radula." },
+  { q: "Molluscs are —", opts: ["Unsegmented", "Soft bodied", "Shelled", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "The main body parts common to all molluscs are the —", opts: ["Foot, Radula and the Mantle", "Foot, Visceral mass (hump) and mantle", "Visceral mass, Mantle, shell", "Foot, Radula, Visceral mass"], ans: 1, exp: "Foot, Visceral mass (hump) and mantle." },
+  { q: "The space between the visceral hump and dorsal spongy skin is called _____ in which ____ are present in case of molluscs", opts: ["Mantle cavity, gill", "Body cavity and shell", "Viscera and shell", "Shell and Viscera"], ans: 0, exp: "Mantle cavity, gill." },
+  { q: "The precious commercial pearl is produced by —", opts: ["Unio", "Pila", "Oyster (Pinctada)", "Octopus"], ans: 2, exp: "Oyster (Pinctada)." },
+  { q: "Which is a Mollusca?", opts: ["Sea Mouse", "Sea Hare (Aplysia)", "Sea cow", "Sea Horse"], ans: 1, exp: "Sea Hare (Aplysia)." },
+  { q: "The genera of Mollusca with wrong common name is —", opts: ["Dentalium - Tusk Shell", "Sepia - Cuttlefish", "Loligo - Squid", "Pila - Chiton"], ans: 3, exp: "Pila is apple snail, not chiton." },
+  { q: "Which one is false fish?", opts: ["Cuttlefish", "Octopus (Devil fish)", "Myxine (Hag fish)", "All"], ans: 3, exp: "All." },
+  { q: "Which one is false?", opts: ["In molluscs Gills have respiratory and excretory functions", "In molluscs the head has sensory tentacles", "Molluscs are dioecious, oviparous with indirect development", "None"], ans: 3, exp: "None." },
+  { q: "Which one is wrong combination?", opts: ["Mollusca - Pila (Apple snail), Chaetopleura (Chiton)", "Echinodermata - Echinus (Sea urchin), Antedon (Sea lily), Cucumaria (Sea cucumber)", "Echinodermata - Spiny bodied", "None"], ans: 3, exp: "None." },
+  { q: "Which one is exclusively marine?", opts: ["Echinodermata", "Hemichordata", "Protochordates", "All"], ans: 3, exp: "All." },
+  { q: "Water vascular system and tube feet is the characteristic of —", opts: ["Arthropoda", "Echinodermata", "Mollusca", "Bony fishes"], ans: 1, exp: "Echinodermata." },
+  { q: "Spiny skinned animals with radial symmetry in adult and bilateral in larva belong to —", opts: ["Echinodermata", "Arthropoda", "Mollusca", "Annelida"], ans: 0, exp: "Echinodermata." },
+  { q: "The most distinctive feature of Echinodermata is the water vascular system which helps in —", opts: ["Locomotion", "Capture and transport food", "Respiration", "All"], ans: 3, exp: "All." },
+  { q: "The endoskeleton of animals of Echinodermata consists of —", opts: ["Silica", "CaCO₃", "Protein", "Spongin"], ans: 1, exp: "CaCO₃." },
+  { q: "I. Excretory system absent. II. Dioecious, external fertilization, indirect development with free swimming larva. III. Water vascular system is present. IV. Unsegmented body. V. Complete digestive system with ventral mouth and anus on dorsal or upper side. The above characters are associated with animals of —", opts: ["Mollusca", "Hemichordata", "Echinodermata", "Annelida"], ans: 2, exp: "Echinodermata." },
+  { q: "Which one is a link between chordates and nonchordates?", opts: ["Sphenodon", "Balanoglossus", "Crocodilia", "None"], ans: 1, exp: "Balanoglossus." },
+  { q: "The body of Balanoglossus consists of —", opts: ["Proboscis", "A collar", "Trunk", "All"], ans: 3, exp: "All." },
+  { q: "Hemichordates have —", opts: ["Open type of circulatory system", "Respiration by gill", "Proboscis gland / glomerulus as excretory organ", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following statements is correct?", opts: ["Now hemichordate has been placed under nonchordates because of absence of notochord", "Saccoglossus is a hemichordate", "Hemichordate is worm-like marine animal", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following is not found in the phylum chordata?", opts: ["Dorsal hollow nerve chord", "Lateral paired gill slits during development", "Notochord at some stage of development", "An external skeleton"], ans: 3, exp: "An external skeleton." },
+  { q: "Which of the following is not a characteristic unique to all members of phylum chordata?", opts: ["Notochord, a dorsal hollow nerve cord", "Endoskeleton", "A ventral heart", "Vertebrate"], ans: 2, exp: "A ventral heart." },
+  { q: "Which of the following traits is not shared by both the hemichordata and chordata?", opts: ["Notochord", "Gills", "Bilateral symmetry", "Coelomate condition"], ans: 0, exp: "Notochord." },
+  { q: "Chordata includes all except —", opts: ["Urochordata", "Hemichordata", "Cephalochordata", "Vertebrata"], ans: 1, exp: "Hemichordata." },
+  { q: "Protochordates includes —", opts: ["Urochordata + Hemichordata", "Hemichordata + Vertebrata", "Vertebrate + Cephalochordata", "Urochordata + Cephalochordata"], ans: 3, exp: "Urochordata + Cephalochordata." },
+  { q: "Chordates have —", opts: ["Dorsal, hollow and single CNS", "Ventral heart", "Post-anal tail", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following statement is correct? I. In Urochordates like Ascidia, Salpa, Doliolum notochord is present in only larval tail. II. In cephalochordates like Branchiostoma (Amphioxus or Lancelet) notochord extends from head to tail and persistent throughout the life. III. All vertebrates are chordates but all chordates are not vertebrates. IV. Notochord is replaced by vertebral column.", opts: ["All are correct", "Only II and IV are correct", "All are wrong", "Only II is wrong"], ans: 0, exp: "All are correct." },
+  { q: "Choose the correct option in respect of characteristics to respective group. Cyclostomes: I. Sucking mouth, II. Scale absent, III. Marine, IV. 6-15 pairs of gills. Chondrichthyes: Ventral Mouth, Placoid scale, Marine, 5-7 pairs of gills without operculum. Osteichthyes: Terminal mouth, Cycloid / Ctenoid scale, Fresh water / Marine, 4 pairs of gills with operculum.", opts: ["I and II are correct", "I and IV are correct", "All are correct", "Only III is correct"], ans: 2, exp: "All are correct." },
+  { q: "Which of the following characters are correct about the Cyclostomata?", opts: ["All living members of the class Cyclostomata are ectoparasites on some fishes", "Cranium and Vertebral column are cartilaginous", "No paired fins", "All"], ans: 3, exp: "All." },
+  { q: "Which one(s) is not cartilaginous fish?", opts: ["Carcharodon (Great white shark), Trygon (Sting ray)", "Exocoetus (Flying fish), Catla (Katla), Clarias (Magur)", "Scoliodon (Dog fish)", "Pristis (Saw fish)"], ans: 1, exp: "Exocoetus, Catla, Clarias are bony fishes." },
+  { q: "Following are few examples of bony fishes. Find out the marine bony fishes —", opts: ["Flying fish", "Hippocampus (Sea Horse)", "Both a, b", "Labeo (Rohu), Catla, Clarias"], ans: 2, exp: "Both a, b." },
+  { q: "Which of the following you would like to select bony fishes for aquarium?", opts: ["Betta (fighting fish), Pterophyllum (Angel fish)", "Sea horse", "Dog fish", "Saw fish"], ans: 0, exp: "Betta, Pterophyllum." },
+  { q: "Lamprey (Petromyzon) and Myxine (Hag fish) are marine but migrate for spawning to fresh water, after that dies within few day. They belong to —", opts: ["Chondrichthyes", "Osteichthyes", "Agnatha / Cyclostomata", "Amphibia"], ans: 2, exp: "Agnatha / Cyclostomata." },
+  { q: "Column I: A. Cartilaginous fishes, B. Bony fishes. Column II: I. Usually external fertilization, II. Internal fertilization, III. Mostly oviparous, IV. Many are viviparous, V. Direct development. The correct match between column I and II is —", opts: ["A-I, III, V; B-I, II", "A-II, IV; B-I, III, V", "A-III, V; B-I, II, IV", "A-I, II, IV; B-III, V"], ans: 1, exp: "A-II, IV; B-I, III, V." },
+  { q: "Which of the following is not a characteristic of class chondrichthyes?", opts: ["Gill slits are separate and without operculum", "They are predaceous", "Airbladder is present", "Notochord is persistent throughout the life"], ans: 2, exp: "Airbladder is present." },
+  { q: "Shark, Torpedo (Electric ray) and Trygon (Sting ray) are cartilaginous fishes and belong to class —", opts: ["Cyclostomata", "Chondrichthyes", "Osteichthyes", "Amphibia"], ans: 1, exp: "Chondrichthyes." },
+  { q: "Toothed shaped scales are —", opts: ["Cycloid", "Ctenoid", "Ganoid", "Placoid"], ans: 3, exp: "Placoid." },
+  { q: "Bony fishes can stay at any particular depth in water without spending energy due to —", opts: ["Operculum", "Neuromuscles", "Pneumatic bones", "Swim bladder"], ans: 3, exp: "Swim bladder." },
+  { q: "Which one is false?", opts: ["Both cartilaginous and bony fishes are dioecious", "Cartilaginous fishes show sexual dimorphism", "Male cartilaginous fish has claspers", "Female cartilaginous fish has claspers"], ans: 3, exp: "Female cartilaginous fish has claspers." },
+  { q: "Which of the following traits is not characteristic of amphibians?", opts: ["Skin is moist and without scales", "Cloaca is present", "Dioecious, external fertilization, oviparous, indirect development", "Amniotic egg is present"], ans: 3, exp: "Amniotic egg is present." },
+  { q: "Which one is limbless amphibia?", opts: ["Bufo (Toad)", "Rana (Frog)", "Salamandra", "Ichthyophis"], ans: 3, exp: "Ichthyophis." },
+  { q: "Which one is a tree frog?", opts: ["Hyla", "Toad", "Bufo", "Salamander"], ans: 0, exp: "Hyla." },
+  { q: "All are cold blooded animals except —", opts: ["Fishes, Amphibia, reptiles", "Birds and Mammals", "Only mammals", "Only birds"], ans: 1, exp: "Birds and Mammals." },
+  { q: "Amphibia shares with reptiles in all of the following characters except —", opts: ["Tympanum represents the ear", "External fertilization and indirect development", "Dioecious, oviparous", "Cold blooded or poikilotherms"], ans: 1, exp: "External fertilization and indirect development." },
+  { q: "Amphibia — I. Has body - divisible into head and trunk. Tail is present in some amphibians. II. Show respiration by gills, lungs and through skin. III. Has scales in all its members. IV. Can lead dual life (aquatic and terrestrial). V. Has eye lids.", opts: ["All are correct", "I and IV are correct", "Only III is wrong", "Only II is wrong"], ans: 2, exp: "Only III is wrong." },
+  { q: "Reptiles and Aves (Birds) show similarities in all except —", opts: ["Dioecious forms", "Oviparous, internal fertilization", "Creeping / Crawling locomotion", "Direct development"], ans: 2, exp: "Creeping / Crawling locomotion." },
+  { q: "Common trait among reptiles, fishes and amphibia is —", opts: ["Gill", "Scales", "Laying eggs", "Shelled"], ans: 2, exp: "Laying eggs." },
+  { q: "The name (Reptilia) refers to their —", opts: ["Creeping or crawling mode of locomotion", "Scales", "Tympanum", "None"], ans: 0, exp: "Creeping or crawling mode of locomotion." },
+  { q: "Choose the false option —", opts: ["Most reptiles are terrestrial", "Reptiles have 3 or 3.5 chambered heart except crocodile (has 4 chambered heart)", "Snakes and lizards shed their skins as skin cast", "Reptiles are viviparous"], ans: 3, exp: "Reptiles are viviparous." },
+  { q: "I. Body is covered by dry and cornified skin, epidermal scales or scutes. II. They have no external ear. III. Crawling / creeping habit. IV. 3 chambered heart. The above characters are associated with —", opts: ["Reptile", "Bird", "Amphibia", "Mammals"], ans: 0, exp: "Reptile." },
+  { q: "Which is poisonous snake?", opts: ["Naja / Cobra", "Bangarus / Krait", "Vipera / Viper", "All"], ans: 3, exp: "All." },
+  { q: "Pneumatic bone, 4 chambered heart, feathers occur in —", opts: ["Reptiles", "Mammals", "Aves", "Cyclostomata"], ans: 2, exp: "Aves." },
+  { q: "Select the odd number from the list —", opts: ["Corvus (crow)", "Columba (pigeon)", "Bufo", "Neophron (vulture)"], ans: 2, exp: "Bufo is amphibian." },
+  { q: "Select the odd number from the list —", opts: ["Aptenodytes (penguin)", "Pavo (Peacock)", "Calotes", "Psittacula (parrot)"], ans: 2, exp: "Calotes is reptile." },
+  { q: "Vertebrates having air sacs connected to lungs for supplement respiration are —", opts: ["Birds", "Reptiles", "Mammals", "Amphibia"], ans: 0, exp: "Birds." },
+  { q: "In which group are animals more alike?", opts: ["Birds", "Mammals", "Amphibia", "Reptiles"], ans: 1, exp: "Mammals." },
+  { q: "Evidence for the reptilian origin of birds is the occurrence of —", opts: ["Scales", "Beak", "Feathers", "Hairs"], ans: 0, exp: "Scales." },
+  { q: "4 chambered heart is in —", opts: ["All reptiles", "All birds + crocodile + all mammals", "Only Mammals", "Frog"], ans: 1, exp: "All birds + crocodile + all mammals." },
+  { q: "Birds have bipedal locomotion as it —", opts: ["Increases rate of locomotion", "Spare fore limbs for flight", "Reduces weight", "Has no fore limbs"], ans: 1, exp: "Spare fore limbs for flight." },
+  { q: "Which of the following characters does not fit for aves?", opts: ["Skin is dry, without glands except oil / preen glands at the bare of tail", "Alimentary canal has 2 additional chambers, crop and gizzard", "Hind limbs are modified for walking, swimming or clasping. Fore limbs are modified into wings", "Beak has teeth"], ans: 3, exp: "Beak has teeth." },
+  { q: "Which one is flightless bird?", opts: ["Struthio (Ostrich)", "Penguin", "Both", "None"], ans: 2, exp: "Both." },
+  { q: "A trait is found in all mammals —", opts: ["Hair", "Mammary glands", "4 chambered heart", "All"], ans: 3, exp: "All." },
+  { q: "Pinna / external ear is found in —", opts: ["Reptiles", "Mammals", "Aves", "Insects"], ans: 1, exp: "Mammals." },
+  { q: "Go through the following characters: I. Heterodont and Thecodont. II. Homoiothermous. III. Pulmonary respiration. IV. Hairs. V. The most unique character is the presence of mammary glands. VI. Dioecious, internal fertilization mostly viviparous. Above characters are assigned to —", opts: ["Reptiles", "Mammals", "Aves", "Cyclostomes"], ans: 1, exp: "Mammals." },
+  { q: "Which one is the oviparous mammal?", opts: ["Macropus (Kangaroo)", "Panthera", "Ornithorhynchus (Platypus)", "Whale"], ans: 2, exp: "Ornithorhynchus (Platypus)." },
+  { q: "Which is viviparous (give birth to young ones)?", opts: ["Kangaroo, Dolphin (Delphinus), flying fox (Pteropus), Blue whale", "Lion, Bat, whale, ostrich", "Platypus, Penguin, Bat", "Shrew, bat, Cat, Corvus"], ans: 0, exp: "Kangaroo, Dolphin, flying fox, Blue whale." },
+  { q: "Flying mammal is —", opts: ["Ornithorhynchus", "Macropus (Kangaroo)", "Pteropus (Bat)", "Dolphin"], ans: 2, exp: "Pteropus (Bat)." },
+  { q: "Animal A and B show symmetry: A (Bilateral), B (Radial).", opts: ["Bilateral, Asymmetrical respectively", "Radial, Bilateral respectively", "Bilateral, Bilateral respectively", "Radial, Radial respectively"], ans: 0, exp: "Bilateral, Asymmetrical respectively." },
+  { q: "Which one of the following statements is totally wrong about the occurrence of notochord, while the other three are correct?", opts: ["It is present only in larval tail in Ascidians", "It is replaced by a vertebral column in adult frog", "It is absent throughout life in humans from the very beginning", "It is present throughout life in Amphioxus"], ans: 2, exp: "It is absent throughout life in humans from the very beginning." },
+  { q: "Which one of the following groups of animals is correctly matched with its characteristic feature without exception?", opts: ["Reptilia : possess 3-chambered heart with an incompletely divided ventricle", "Chordata : possess a mouth with an upper and a lower jaw", "Chondrichthyes: possess cartilaginous endoskeleton", "Mammalia : give birth to young ones"], ans: 2, exp: "Chondrichthyes: possess cartilaginous endoskeleton." },
+  { q: "Which one of the following animals is correctly matched with its particular taxonomic category?", opts: ["Tiger - tigris, species", "Cuttlefish - molluscs, class", "Humans - primata, family", "Housefly - Musca, order"], ans: 0, exp: "Tiger - tigris, species." },
+  { q: "What will you look for to identify the sex of the following?", opts: ["Female Ascaris - sharply curved posterior end", "Male frog - a copulatory pad on the first digit of the hind limb", "Female cockroach - anal cerci", "Male shark - claspers borne on pelvic fins"], ans: 3, exp: "Male shark - claspers borne on pelvic fins." },
+  { q: "The member of following phylum represent cellular level of organization —", opts: ["Cnidaria", "Porifera", "Protozoa", "Both (a) and (b)"], ans: 1, exp: "Porifera." },
+  { q: "Mark the incorrect statement for the Phyla, platyhelminthes to Echinodermata.", opts: ["All groups represent organ/organ-system level of organization", "All are triploblastic", "All are eukaryote", "None of these"], ans: 3, exp: "None of these." },
+  { q: "When any plane passing through the central axis of the body divides the organism into two identical halves, the organism is called —", opts: ["Radially symmetrical", "Bilaterally symmetrical", "Asymmetrical", "Metamerically segmented"], ans: 0, exp: "Radially symmetrical." },
+  { q: "In Platyhelminthes —", opts: ["The embryonic layers, ectoderm and endoderm, are separated by mesoglea", "The body is asymmetrical", "There is tissue level of organization", "The body cavity is absent"], ans: 3, exp: "The body cavity is absent." },
+  { q: "The organisms belonging to following phylum are (true) coelomate —", opts: ["Arthropoda", "Aschelminthes", "Ctenophora", "Platyhelminthes"], ans: 0, exp: "Arthropoda." },
+  { q: "Comb jellies belong to —", opts: ["Porifera", "Cnidaria", "Ctenophora", "Corals"], ans: 2, exp: "Ctenophora." },
+  { q: "How do coral animals obtain their food?", opts: ["They have tentacles that trap food particles", "They are photosynthetic", "They absorb predigested food through their cell wall from dinoflagellates which are photosynthetic", "Both (a) and (b)"], ans: 0, exp: "They have tentacles that trap food particles." },
+  { q: "Given are the four matches of phyla with their characteristic cells: A. Coelenterata - Nematocytes, B. Porifera - Choanocytes, C. Ctenophora - Solenocytes, D. Platyhelminthes - Nephrocytes. Mark the option that has both correct matches —", opts: ["A, B", "B, C", "C, D", "B, D"], ans: 0, exp: "A, B." },
+  { q: "Which of the following is commonly called 'Pearl oyster' —", opts: ["Limulus", "Pinctada", "Dentalium", "Chaetopleura"], ans: 1, exp: "Pinctada." },
+  { q: "Which of the following has a complete digestive tract (mouth to anus)?", opts: ["roundworms only", "flatworms only", "Both (a) and (b)", "neither (a) nor (b)"], ans: 0, exp: "roundworms only." },
+  { q: "The phenomenon of metagenesis occur in —", opts: ["Taenia", "Aurelia", "Obelia", "Musca"], ans: 2, exp: "Obelia." },
+  { q: "Which of the following organism is correctly matched with its common name?", opts: ["Aurelia - comb jelly", "Adamsia - sea anemone", "Ancylostoma - pin worm", "Aplysia - sea mouse"], ans: 1, exp: "Adamsia - sea anemone." },
+  { q: "The members of following phylum are exclusively marine, radially symmetrical and diploblastic —", opts: ["Porifera", "Echinodermata", "Ctenophora", "Hemichordata"], ans: 2, exp: "Ctenophora." },
+  { q: "Given below are three statements regarding Aschelminthes: A. They are bilaterally symmetrical and triploblastic. B. They are dioecious. C. All are plants or animals' parasites. Mark the option that has both the correct statements —", opts: ["A, B", "A, C", "B, C", "None"], ans: 0, exp: "A, B." },
+  { q: "Which statement regarding Nereis is wrong?", opts: ["It has nephridium for excretion", "It is metamerically segmented", "It is monoecious", "It has parapodia for swimming"], ans: 2, exp: "It is monoecious." },
+  { q: "In chordates the notochord is —", opts: ["Mesodermal and dorsal to nerve cord", "Endodermal and dorsal to nerve cord", "Mesodermal and ventral to nerve cord", "Endodermal and ventral to nerve cord"], ans: 0, exp: "Mesodermal and dorsal to nerve cord." },
+  { q: "Which set has the two members of the same phylum?", opts: ["Cuttle fish and jelly fish", "Tape worm and earthworm", "Dog fish and dolphin", "Sea mouse and sea lion"], ans: 0, exp: "Cuttle fish and jelly fish." },
+  { q: "Following is an oviparous mammal —", opts: ["Delphinus", "Ornithorhynchus", "Macropus", "Elephas"], ans: 1, exp: "Ornithorhynchus." },
+  { q: "Which of the following feature of bony fish is missing in cartilaginous fishes —", opts: ["Operculum", "Placoid scales", "Poikilothermic", "Unpaired fins"], ans: 0, exp: "Operculum." },
+  { q: "Mark the correct match of the animal and its common name —", opts: ["Trygon - dog fish", "Ascidia - lancelet", "Pterophyllum - flying fish", "Myxine - hagfish"], ans: 3, exp: "Myxine - hagfish." },
+  { q: "Chelone is commonly known as —", opts: ["Garden lizard", "Tortoise", "Flying lizard", "Turtle"], ans: 3, exp: "Turtle." },
+  { q: "Which of the following is the exclusive feature of the birds —", opts: ["4 - chambered heart", "Homoeothermic", "Fore limbs modified into wings", "Presence of feathers"], ans: 3, exp: "Presence of feathers." },
+  { q: "Sea horse is —", opts: ["A marine mammal", "A marine fish", "Hippopotamus", "Antelope"], ans: 1, exp: "A marine fish." },
+  { q: "Sharks do not have —", opts: ["Teeth", "Claspers", "Air bladder", "Ventral mouth"], ans: 2, exp: "Air bladder." },
+  { q: "Which of the following animal is cold blooded and has 4 - chambered heart —", opts: ["Salamander", "Ornithorhynchus", "Crocodile", "Calotes"], ans: 2, exp: "Crocodile." },
+  { q: "The following group is not a subphylum of Chordata —", opts: ["Urochordata", "Tetrapoda", "Cephalochordata", "Vertebrata"], ans: 1, exp: "Tetrapoda." },
+  { q: "Salpa and Doliolum belong to —", opts: ["Cephalochordata", "Hemichordata", "Tunicata", "Cyclostomata"], ans: 2, exp: "Tunicata." },
+  { q: "Lamprey is not a fish since it does not have —", opts: ["Closed blood vascular system", "Fins", "Body scales", "Cranium and vertebral column"], ans: 2, exp: "Body scales." },
+  { q: "Following chordata is not a vertebrate —", opts: ["Branchiostoma", "Petromyzon", "Salamander", "Bufo"], ans: 0, exp: "Branchiostoma." },
+  { q: "The scientific name of Ostrich is —", opts: ["Neophron", "Aptenodytes", "Pavo", "Struthio"], ans: 3, exp: "Struthio." },
+  { q: "The members of which group do not exhibit metamerism —", opts: ["Pisces", "Aves", "Arthropoda", "Mollusca"], ans: 3, exp: "Mollusca." },
+  { q: "The cyclostomes are —", opts: ["Marine and non migratory", "Fresh water form and non migratory", "Marine and migrate to fresh water for spawning", "Fresh water form and migrate to sea for spawning"], ans: 2, exp: "Marine and migrate to fresh water for spawning." },
+  { q: "Crocodile and penguin are similar to Whale and Dogfish in which one of the following features?", opts: ["Possess a solid single stranded central nervous system", "Lay eggs and guard them till they hatch", "Possess bony skeleton", "Have gill slits at some stage"], ans: 3, exp: "Have gill slits at some stage." },
+  { q: "Chordates posses all of the following features at some point of development EXCEPT —", opts: ["a dorsal hollow nerve cord", "a notochord", "pharyngeal gill slits", "Amnion"], ans: 3, exp: "Amnion." },
+  { q: "All mammals —", opts: ["Give birth to live young", "Have a thick coat of hairs", "nourish their young ones", "have a uterus"], ans: 2, exp: "nourish their young ones." },
+  { q: "Which of the following is affected by temperature changes in the environment?", opts: ["Struthio", "Balaenoptera", "Camelus", "Ichthyophis"], ans: 3, exp: "Ichthyophis." },
+  { q: "Mark the incorrect match —", opts: ["Placoid scales : Trygon", "Operculum : Labeo", "Airbladder : Torpedo", "Viviparous : Scoliodon"], ans: 2, exp: "Airbladder : Torpedo." },
+  { q: "Which of the following class is incorrectly matched with its general characters?", opts: ["Cyclostomata : Lack jaws and paired fins and body is covered with placoid scales.", "Osteichthyes : Four pairs of gills are covered with an operculum and skin is covered with cycloid scales.", "Reptilia: Tympanum represents ear and fertilisation is internal.", "Aves: Endoskeleton is fully ossified and long bones are hollow with air cavities called as pneumatic bones."], ans: 0, exp: "Cyclostomata : Lack jaws and paired fins and body is covered with placoid scales." },
+  { q: "Which of the following is / are not characteristics of the class Osteichthyes? I. Body is streamlined and mouth is terminal. II. Gills are covered by operculum. III. Skin covered with cycloid and placoid scales. IV. Many of them are viviparous.", opts: ["IV only", "III and IV only", "I, III and IV only", "I and IV only"], ans: 1, exp: "III and IV only." },
+  { q: "Match item in column I with those given in column II. Column I: A. Protochordata, B. Limbless amphibia, C. Oviparous mammal, D. Aquatic mammal, E. Jawless vertebrate. Column II: I. Delphinus, II. Myxine, III. Ornithorhynchus, IV. Doliolum, V. Ichthyophis.", opts: ["A-V, B-IV, C-III, D-I, E-II", "A-IV, B-V, C-III, D-I, E-II", "A-IV, B-V, C-III, D-II, E-I", "A-V, B-III, C-I, D-II, E-IV"], ans: 1, exp: "A-IV, B-V, C-III, D-I, E-II." },
+  { q: "Which of the following can maintain high and constant body temperature? I. Chameleon, II. Struthio, III. Pteropus, IV. Clarias", opts: ["I, II, III and IV", "III only", "II and III only", "II, III and IV only"], ans: 2, exp: "II and III only." },
+  { q: "Which of the following is correct w. r. t. classification of Myxine?", opts: ["Chordata, Agnatha, Pisces, Cyclostomata", "Chordata, Vertebrata, Agnatha, Cyclostomata", "Chordata, Vertebrata, Gnathostomata, Chondrichthyes", "Chordata, Vertebrata, Gnathostomata, tetrapoda"], ans: 1, exp: "Chordata, Vertebrata, Agnatha, Cyclostomata." },
+  { q: "Which one of the following pairs of animals are similar to each other pertaining to the feature stated against them?", opts: ["Pteropus and Ornithorhynchus - Viviparity", "Garden lizard and Crocodile - Three chambered heart", "Ascaris and Ancylostoma - Metameric segmentation", "Sea horse and Flying fish - Cold blooded (poikilothermous)"], ans: 3, exp: "Sea horse and Flying fish - Cold blooded (poikilothermous)." },
+  { q: "Which one of the following categories of animals, is correctly described with no single exception in it?", opts: ["All reptiles possess scales, have a three chambered heart and are cold blooded (poikilothermous)", "All bony fishes have four pairs of gills and an operculum on each side.", "All sponges are marine and have collared cells.", "All mammals are viviparous and possess diaphragm for breathing"], ans: 1, exp: "All bony fishes have four pairs of gills and an operculum on each side." },
+  { q: "An aquatic living fossil, with ancient origin and many primitive characters which respires through book gills is —", opts: ["Limulus", "Cancer", "Lucifer", "Daphnia"], ans: 0, exp: "Limulus." },
+  { q: "Which is the only phylum in the kingdom animalia without any nerve cell?", opts: ["Porifera", "Coelenterate", "Annelids", "Nematode"], ans: 0, exp: "Porifera." },
+  { q: "Which of the following animal belongs to the phylum molluscs?", opts: ["Devil fish", "Dogfish", "Silverfish", "Jellyfish"], ans: 0, exp: "Devil fish." },
+  { q: "In which one of the following the genus name, its two charcters and its phylum are not correctly matched, whereas the remaining three are correct? Genus name: Pila, Asterias, Sycon, Periplaneta. Two characters: (i) Body Segmented; (ii) Mouth with Radula; (i) Spiny Skinned; (ii) Water vascular system; (i) Pore bearing; (ii) Canal system; (i) Jointed appendages; (ii) Chitinous exoskeleton. Phylum: Mollusca, Echinodermata, Porifera, Arthropoda.", opts: ["Pila - Mollusca", "Asterias - Echinodermata", "Sycon - Porifera", "Periplaneta - Arthropoda"], ans: 0, exp: "Pila - Mollusca." },
+  { q: "Match the name of the animal (column I), with on characteristics (column II), and the phylum/class (column III) to which it belongs: (1) Petromyzon - ectoparasite - Cyclostomata; (2) Ichthyophis - terrestrial - Reptilia; (3) Limulus - body covered by chitinous exoskeleton - Pisces; (4) Adamsia - radially symmetrical - Porifera", opts: ["Option (1)", "Option (2)", "Option (3)", "Option (4)"], ans: 0, exp: "Option (1)." },
+  { q: "Which of the following are correctly matched with respect to their taxonomic classification?", opts: ["Flying fish, cuttlefish, silverfish - Pisces", "Centipede, millipede, spider, scorpion - Insecta", "House fly, butterfly, tsetsefly, silverfish - Insecta", "Spiny anteater, sea urchin, sea cucumber - Echinodermata"], ans: 2, exp: "House fly, butterfly, tsetsefly, silverfish - Insecta." },
+  { q: "Which group of animals belong to the same phylum?", opts: ["Malarial parasite, Amoeba, Mosquito", "Earthworm, Pinworm, Tapeworm", "Prawn, Scorpion, Locusta", "Sponge, Sea anemone, Starfish"], ans: 2, exp: "Prawn, Scorpion, Locusta." },
+  { q: "One of the representatives of Phylum Arthropoda is:", opts: ["cuttlefish", "silverfish", "pufferfish", "flying fish"], ans: 1, exp: "silverfish." },
+  { q: "Birds differ from bats in absence of —", opts: ["4-chambered heart and homoiothermy.", "Homoiothermy and ear pinna.", "Diaphragm and mammary gland.", "Trachea and pulmonary gland"], ans: 1, exp: "Homoiothermy and ear pinna." },
+  { q: "Select the Taxon mentioned that represents both marine and fresh water species:", opts: ["Echinoderms", "Ctenophora", "Cephalochordata", "Cnidaria"], ans: 3, exp: "Cnidaria." },
+  { q: "Which one of the following living organisms completely lacks a cell wall?", opts: ["Cyanobacteria", "Sea - fan (Gorgonia)", "Saccharomyces", "Blue-green algae"], ans: 1, exp: "Sea - fan (Gorgonia)." },
+  { q: "Planaria possess high capacity of :", opts: ["Metamorphosis", "Regeneration", "Alternation of generation", "Bioluminescence"], ans: 1, exp: "Regeneration." },
+  { q: "A marine cartilaginous fish that can produce electric current is :", opts: ["Pristis", "Torpedo", "Trygon", "Scoliodon"], ans: 1, exp: "Torpedo." },
+  { q: "The characteristics of class Reptilia are:", opts: ["Body covered with dry and cornified skin, scales over the body are epidermal, they do not have external ears", "Body covered with moist skin which is devoid of scales, the ear is represented by a tympanum, alimentary canal, urinary and reproductive tracts open into a common cloaca", "Fresh water animals with bony endoskeleton, air-bladder to regulate buoyancy", "Marine animals with cartilaginous endoskeleton, body covered with placoid scales"], ans: 0, exp: "Body covered with dry and cornified skin, scales over the body are epidermal, they do not have external ears." },
+  { q: "Which one of the following animals is correctly matched with its one characteristics and the taxon? Animal: Duckbilled platypus, Millipede, Sea Anemone, Silverfish. Characteristic: Oviparous, Ventral nerve cord, Triploblastic, Pectoral and Pelvic fins. Taxon: Mammalian, Mammals, Cnidaria, Chordata.", opts: ["Duckbilled platypus - Oviparous - Mammalian", "Millipede - Ventral nerve cord - Mammals", "Sea Anemone - Triploblastic - Cnidaria", "Silverfish - Pectoral and Pelvic fins - Chordata"], ans: 0, exp: "Duckbilled platypus - Oviparous - Mammalian." },
+  { q: "Which one of the following groups of animals reproduces only by sexual means?", opts: ["Ctenophora", "Cnidaria", "Porifera", "Protozoa"], ans: 0, exp: "Ctenophora." },
+  { q: "Select the option which shows correct matching of animal with excretory organs and excretory product. Animal: Housefly, Labeo (Rohu), Salamander, Peacock. Excretory organs: Renal tubules, Nephridial tubes, Kidney, Kidney. Excretory product: Uric acid, Ammonia, Urea, Urea.", opts: ["Housefly - Renal tubules - Uric acid", "Labeo (Rohu) - Nephridial tubes - Ammonia", "Salamander - Kidney - Urea", "Peacock - Kidney - Urea"], ans: 2, exp: "Salamander - Kidney - Urea." },
+  { q: "Here two basic body forms of cnidarians are given. (a) A and B are free swimming forms, (b) A and B are sessile form, (c) A produce B asexually and B form the A sexually, (d) B produce A asexually and A form the B sexually.", opts: ["A and B are free swimming forms", "A and B are sessile form", "A produce B asexually and B form the A sexually", "B produce A asexually and A form the B sexually"], ans: 2, exp: "A produce B asexually and B form the A sexually." },
+  { q: "How many organisms in the list given below respire through gills: Sponges, Coelenterates, Flatworms, Aquatic arthropods, Molluscs, Fishes, Tadpoles, Reptiles, Aves, Mammals", opts: ["Three", "Six", "Two", "Four"], ans: 1, exp: "Six." },
+  { q: "Which one of the statement is true?", opts: ["All organ system level animals have tube within tube plan", "All blind sac animals contain bigerminal conditions", "Animals having radial symmetry contain blind sac body plan", "All chordates are vertebrates but all vertebrates are not chordates"], ans: 1, exp: "All blind sac animals contain bigerminal conditions." },
+  { q: "How many informations are correct about given animal? (i) Triploblastic, bilateral symmetry, (ii) Metamerically segmented and coelomate animals, (iii) Dioecious, (iv) Closed circulatory systems present, (v) Lateral appendages parapodia present.", opts: ["Five", "Four", "Two", "Three"], ans: 1, exp: "Four." },
+  { q: "Read four statements (I - IV) given below. I. Polyp is sessile and cylindrical form. II. Medusa is free swimming and umbrella shaped. III. Medusae are produced sexually by polyp. IV. Polyps are produced asexually by medusae. How many statements are not incorrect —", opts: ["One", "Two", "Three", "Four"], ans: 2, exp: "Three." },
+  { q: "Some animals are given in the list below: Asterias, Pila, Echinus, Antedon, Pinctada, Cucumaria, Octopus, Loligo, Ophiura, Dentalium. How many animals among these are related to the second largest phylum of animals?", opts: ["Two", "Three", "Four", "Five"], ans: 1, exp: "Three." },
+  { q: "Bird differs from bat in the absence of —", opts: ["Homoiothermy", "Four chambered heart", "Syrinx", "Diaphragm"], ans: 3, exp: "Diaphragm." },
+  { q: "Which of the following pairs are correctly matched: (A) Flame cells - Taenia, Fasciola; (B) Notochord - Balanoglossus; (C) Metagenesis - Physalia and Obelia; (D) Open circulatory system - Apis, Pila and Laccifer.", opts: ["A, B and C", "A and C", "A, C and D", "A and B"], ans: 2, exp: "A, C and D." },
+  { q: "Among the organisms depicted in figure below which of the following character is common to all?", opts: ["Tube within tube body plan", "Triploblastic free living animals", "Respiration by general body surface", "Nerve cord is ventral, double and solid"], ans: 1, exp: "Triploblastic free living animals." },
+  { q: "Identify the given animal and choose the correct option.", opts: ["The skin is tough, containing minute placoid scales", "It has four pairs of gills which are covered by air bladder", "Fertilisation is external and is oviparous", "Mouth is located ventrally and jaws are very powerful"], ans: 0, exp: "The skin is tough, containing minute placoid scales." },
+  { q: "Read the statements regarding echinoderms. (i) All are marine with organ system level of organisation. (ii) Adults are bilaterally symmetrical. (iii) They are dioecious. (iv) Fertilisation is internal and indirect development is observed. (v) Triploblastic and acoelomate animals. Choose the correct option.", opts: ["(i) and (iii) are correct", "(v) alone is correct", "(i), (iii) and (v) are correct", "(i) and (v) are correct"], ans: 0, exp: "(i) and (iii) are correct." },
+  { q: "From the above table find out the missing organ or function - A, B, C, D and E respectively. Organ: Parapodia, B, C, Malpighian tubules, Cnidoblasts. Phylum: Annelida, Ctenophora, Mollusca, Arthropoda, Coelenterata. Function: A, Locomotion, Rasping organ, D, E.", opts: ["A - swimming, B - comb plates, C - radula, D - excretion, E - defense", "A - defense, B - radula, C - comb plates, D - excretion, E - swimming", "A - defense, B - radula, C - comb plates, D - swimming, E - excretion", "A - protection, B - parapodia, C - visceral mass, D - locomotion, E - excretion"], ans: 0, exp: "A - swimming, B - comb plates, C - radula, D - excretion, E - defense." },
+  { q: "Identify the Phylum X. ANIMALIA → TISSUE GRADE → RADIAL → ACOELOMATE → X", opts: ["Hemichordata", "Aschelminthes", "Platyhelminthes", "Ctenophora"], ans: 2, exp: "Platyhelminthes." },
+  { q: "Which one of the following matching pairs is wrong?", opts: ["Mollusca - Pseudocoel", "Cnidaria - Nematocyst", "Annelida - Chloragogen cells", "Echinodermata - Water vascular system"], ans: 0, exp: "Mollusca - Pseudocoel." },
+  { q: "Which one of the following matching pairs is wrong?", opts: ["Shell fish - Pisces", "Silverfish - Arthropoda", "Cuttle fish - Mollusca", "Starfish - Echinodermata"], ans: 0, exp: "Shell fish - Pisces." },
+  { q: "Which one of the following is not a characteristic feature of mammals —", opts: ["Diphyodont tooth", "Ten pairs of cranial nerves", "Seven cervical vertebrae", "Left aortic arch in the circulatory system"], ans: 3, exp: "Left aortic arch in the circulatory system." },
+  { q: "Which of the following endoparasites of humans does show viviparity?", opts: ["Trichinella spiralis", "Ascaris lumbricoides", "Ancylostoma duodenale", "Enterobius vermicularis"], ans: 0, exp: "Trichinella spiralis." },
+  { q: "Which of the following characteristics is mainly responsible for diversification of insects on land?", opts: ["Exoskeleton", "Eyes", "Segmentation", "Bilateral symmetry"], ans: 0, exp: "Exoskeleton." },
+  { q: "Which of the following animals is not viviparous?", opts: ["Platypus", "Whale", "Flying fox (Bat)", "Elephant"], ans: 0, exp: "Platypus." },
+  { q: "Which of the following represents the correct combination without any exception? Characteristics: (a) Sucking and circular mouth; jaws absent, integument without scales; paired appendages - Cyclostomata; (b) Body covered with feathers; skin moist & glandular, fore-limbs form wings; lungs with air sacs - Aves; (c) Mammary gland; hair on body; pinnae; two pairs of limbs - Mammalia; (d) Mouth ventral; gills without operculum; skin with placoid scales; persistent notochord - Chondrichthyes.", opts: ["Cyclostomata", "Aves", "Mammalia", "Chondrichthyes"], ans: 3, exp: "Chondrichthyes." },
+  { q: "Body having meshwork of cells, internal cavities lined with food filtering flagellated cells and indirect development are the characteristics of Phylum.", opts: ["Mollusca", "Protozoa", "Coelenterata", "Porifera"], ans: 3, exp: "Porifera." },
+  { q: "A jawless fish, which lays eggs in fresh water and whose ammocoetes larvae after metamorphosis return to the ocean is —", opts: ["Periplaneta", "Petromyzon", "Eptatretus", "Hydra"], ans: 1, exp: "Petromyzon." },
+  { q: "Which of the following featrues is not present in the Phylum - Arthropoda?", opts: ["Chitinous exoskeleton", "Metameric segmentation", "Parapodia", "Jointed appendages"], ans: 2, exp: "Parapodia." },
+  { q: "Which is the National Aquatic Animal of India ?", opts: ["Gangetic shark", "River dolphin", "Blue whale", "Sea-horse"], ans: 1, exp: "River dolphin." },
+  { q: "Which of the following characteristic features always holds true for the corresponding group of animals?", opts: ["Cartilaginous endoskeleton - Chondrichthyes", "Viviparous - Mammalia", "Possess a mouth with an upper and a lower jaw - Chordata", "3 - chambered heart with one incompletely divided ventricle - Reptilia"], ans: 0, exp: "Cartilaginous endoskeleton - Chondrichthyes." },
+  { q: "Which one of the following characteristics is not shared by birds and mammals ?", opts: ["Ossified endoskeleton", "Breathing using lungs", "Viviparity", "Warm blooded nature"], ans: 2, exp: "Viviparity." },
+  { q: "Match Column - I with Column - II for housefly classification: a. Family - (i) Diptera; b. Order - (ii) Arthropoda; c. Class - (iii) Muscidae; d. Phylum - (iv) Insecta.", opts: ["iv iii ii i", "iv ii i iii", "iii i iv ii", "iii ii iv i"], ans: 2, exp: "iii i iv ii." },
+  { q: "Choose the correct statement.", opts: ["All reptiles have a three-chambered heart.", "All pisces have gills covered by an operculum.", "All mammals are viviparous.", "All cyclostomes do not possess jaws and paired fins."], ans: 3, exp: "All cyclostomes do not possess jaws and paired fins." },
+  { q: "Which one of the following features is common to Earthworm, Butterfly, Spider and Prawn ?", opts: ["Setae", "Antenae", "Ventral nerve cord", "Nephridia"], ans: 2, exp: "Ventral nerve cord." },
+  { q: "Echinococcus is an example of —", opts: ["Nemathelminthes", "Platyhelminthes", "Bacteria", "Protista."], ans: 1, exp: "Platyhelminthes." },
+  { q: "The group Chordata is most closely related evolutionarily to the group —", opts: ["Arthropoda", "Echinodermata", "Mollusca", "Annelida"], ans: 1, exp: "Echinodermata." },
+  { q: "Which of the following is characteristic of the Chondrichthyes?", opts: ["Jaws can open 180 degrees.", "They do not have scales.", "Skeleton is composed mostly of bone", "All of the above"], ans: 0, exp: "Jaws can open 180 degrees." },
+  { q: "The scales found on sharks are known as —", opts: ["Placoid scales", "Ganoid scales", "Ptenoid scales", "None of the above : Sharks don't have scales"], ans: 0, exp: "Placoid scales." },
+  { q: "Most mammals are characterized by —", opts: ["having hair", "nourishing young with milk from mammary glands", "development of offspring within their mother's uterus", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Which characteristic of many different animal groups is associated with bilateral symmetry?", opts: ["Cephalization", "Sessile fife style", "Autotrophy", "Radial body plan"], ans: 0, exp: "Cephalization." },
+  { q: "Which of the following is a key evolutionary innovation of the Insecta?", opts: ["The keratinized cuticle", "Forelimbs developed as wings", "Segmented body form", "Winged flight"], ans: 3, exp: "Winged flight." },
+  { q: "Which of the following is not a character uniting all chordates?", opts: ["Notochord", "Spinal column", "Dorsal, hollow nerve tube", "Pharyngeal slits"], ans: 1, exp: "Spinal column." },
+  { q: "Vertebrates generally have all of the following charactenstics, except —", opts: ["Cephalization", "Spinal columns", "A chitinous endoskeleton", "A closed circulatory system"], ans: 2, exp: "A chitinous endoskeleton." },
+  { q: "The basic adaptation of birds is winged flight. Which one of the following structural changes in birds is not closely related to flight?", opts: ["Good hearing", "Good eyesight", "Good muscular coordination", "Hollow bones"], ans: 0, exp: "Good hearing." },
+  { q: "All mammals have all of the following traits, except —", opts: ["Amnion", "Chorion", "Placenta", "hair"], ans: 2, exp: "Placenta." },
+  { q: "An important characteristic that Hemichordates share with Chordates is :", opts: ["Ventral tubular nerve cord", "Pharynx with gill slits", "Pharynx without gill slits", "Absence of notochord."], ans: 1, exp: "Pharynx with gill slits." },
+  { q: "Which of the following represents order of 'Horse' ?", opts: ["Perissodactyla", "Caballus", "Ferus", "Equidae"], ans: 0, exp: "Perissodactyla." },
+  { q: "In case of poriferans, the spongocoel is lined with flagellated cells called:", opts: ["oscula", "choanocytes", "mesenchymal cells", "ostia"], ans: 1, exp: "choanocytes." },
+  { q: "Choose the correct combination of the animals 1 and 2 with the feature that differentiates them. Animal 1: Lizard, Shark, Tiger, Gorilla. Animal 2: Tiger, Frog, Gorilla, Human. Feature: Amniotic egg, Lungs, Hair, Loss of tail.", opts: ["Lizard - Tiger - Amniotic egg", "Shark - Frog - Lungs", "Tiger - Gorilla - Hair", "Gorilla - Human - Loss of tail"], ans: 0, exp: "Lizard - Tiger - Amniotic egg." },
+  { q: "The set of annelid characters that are share by leeches is: (i) setae for locomotion, (ii) metameric segmentation, (iii) indeterminate number of segments, (iv) presence of clitellum, (v) hermaphroditism.", opts: ["i, ii and iii", "ii, iii and iv", "only iv", "only ii and v"], ans: 3, exp: "only ii and v." },
+  { q: "How many characters in the list given below are true regarding echinodermata. I. Endoskeleton of calcareous ossicles. II. Mostly marine. III. Larva are radially symmetrical. IV. Fertilisation is generally external. V. Mouth is on dorsal side and anus on ventral side. VI. Excretory organ is gills. VII. Development is indirect.", opts: ["Two", "Three", "Four", "Five"], ans: 1, exp: "Three." },
+  { q: "Identify the vertebrate group of animals characterized by crop and gizzard in its digestive system —", opts: ["Aves", "Reptilia", "Amphibia", "Osteichthyes"], ans: 0, exp: "Aves." },
+  { q: "Which one of these animals is not a homeotherm?", opts: ["Camelus", "Chelone", "Macropus", "Psittacula"], ans: 1, exp: "Chelone." },
+  { q: "Which of the following animals does not undergo metamorphosis?", opts: ["Moth", "Tunicate", "Earthworm", "Starfish"], ans: 2, exp: "Earthworm." },
+  { q: "In which disease does mosquito transmitted pathogen cause chronic inflammation of lymphatic vessels?", opts: ["Ringworm disease", "Ascariasis", "Elephantiasis", "Amoebiasis"], ans: 2, exp: "Elephantiasis." },
+  { q: "Select the correct matching. Phylum: Hemichordata, Mollusca, Platyhelminthes, Coelenterata. Character: Notochord, Radula, Coelomate, All marine. Example: Balanoglossus, Dentalium, Dugesia, Hydra.", opts: ["Hemichordata - Notochord - Balanoglossus", "Mollusca - Radula - Dentalium", "Platyhelminthes - Coelomate - Dugesia", "Coelenterata - All marine - Hydra"], ans: 1, exp: "Mollusca - Radula - Dentalium." },
+  { q: "Which of the following option is correct?", opts: ["Osteichthyes - 4 pairs of gill slits covered by operculum", "Chondrichthyes - 6-15 pairs of gill slits", "Arthropoda - Metamerism and excretion by nephridia", "Platyhelminthes - Bilateral symmetry & coelomate e.g., Taenia and Fasciola"], ans: 1, exp: "Chondrichthyes - 6-15 pairs of gill slits." },
+  { q: "Which of the following is correct —", opts: ["Macropus - Ear pinna, body hairs, 4 chambered heart", "Pavo - Long bones ossified, fore limbs modified to wings", "Ichthyophis - Covering on eyelids, Scales present", "Limulus - Chitinous exoskeleton, 3 pair of legs"], ans: 0, exp: "Macropus - Ear pinna, body hairs, 4 chambered heart." },
+  { q: "Which among the following belong to same phyla?", opts: ["Physalia, obelia, Pleurobranchia - Coelenterata", "Bombyx, Palaemon, Limulus - Arthropoda", "Star fish, jelly fish, Sea urchin - Echinodermata", "Cuttle fish, devil fish, Patella - mollusca"], ans: 1, exp: "Bombyx, Palaemon, Limulus - Arthropoda." },
+  { q: "Which is wrong w.r.t figure given below? (Salamandra)", opts: ["Salamandra", "Tympanum", "Anus", "Heart 3-chambered"], ans: 1, exp: "Tympanum." },
+  { q: "Which is true w.r.t figure? (Sea horse)", opts: ["Operculum", "True lungs", "Electric organ", "Poison sting at tail"], ans: 0, exp: "Operculum." },
+  { q: "Select the group of animals in which jointed appandages are found?", opts: ["Limulus, Apis and Laccifer", "Limulus, Neries and Laccifer", "Locust, Flae and Snail", "Apis, Laccifer and Unio"], ans: 0, exp: "Limulus, Apis and Laccifer." },
+  { q: "Which of the following option is correct regarding animal kingdom? Phylum: Coelentrata, Annelida, Platyhelminthes, Mollusca. Symmetry: Bilateral, Bilateral, Bilateral, Radial. Example: Hydra, Ancylostoma, Planaria, Pinctada. Characteristic property: Aquatic, Marine; Hooks and Suckers present; High regeneration capacity; Aquatic.", opts: ["Coelentrata - Bilateral - Hydra - Aquatic, Marine", "Annelida - Bilateral - Ancylostoma - Hooks and Suckers present", "Platyhelminthes - Bilateral - Planaria - High regeneration capacity", "Mollusca - Radial - Pinctada - Aquatic"], ans: 2, exp: "Platyhelminthes - Bilateral - Planaria - High regeneration capacity." },
+  { q: "Which of the following have internal fertilization?", opts: ["Sea urchin", "Platypus", "Frog", "Labeo"], ans: 1, exp: "Platypus." },
+  { q: "Which of the following is correctly matched with its characters? Animal: Planara, Pleurobrachia, Adamsia, Pheretina. Phylum: Platyhelminthes, Cndaria, Annelida, Aschelminthes. Character: Regeneration, Combplate, Cnidoblast, Flame cell.", opts: ["Planara - Platyhelminthes - Regeneration", "Pleurobrachia - Cndaria - Combplate", "Adamsia - Annelida - Cnidoblast", "Pheretina - Aschelminthes - Flame cell"], ans: 0, exp: "Planara - Platyhelminthes - Regeneration." },
+  { q: "Animal of which phylum have hooks and suckers and are endoparasite on other animals —", opts: ["Platyhelminthes", "Annelida", "Aschelminthes", "Arthropoda"], ans: 0, exp: "Platyhelminthes." },
+  { q: "Acoelomate animals with flame cells are :", opts: ["Platyhelminthes", "Annelida", "Aschelminthes", "Arthropoda"], ans: 0, exp: "Platyhelminthes." },
+  { q: "Consider following features: I. Organ system level of organisation. II. Bilateral symmetry. III. True coelomates with segmentation of body. Select the correct option of animal groups which possess all the above characteristics —", opts: ["Annelida, Arthropoda and Chordata", "Annelida, Arthropoda and Mollusca", "Arthropoda, Mollusca and Chordata", "Annelida, Mollusca and Chordata"], ans: 0, exp: "Annelida, Arthropoda and Chordata." },
+  { q: "Which of the following statements is incorrect?", opts: ["Viroids lack a protein coat.", "Viruses are obligate parasites.", "Infective constituent in viruses is the protein coat.", "Prions consist of abnormally folded proteins."], ans: 2, exp: "Infective constituent in viruses is the protein coat." },
+  { q: "Match the following organisms with their respective characteristics : I. Pila - (i) Flame cells, II. Bombyx - (ii) Comb plates, III. Pleurobrachia - (iii) Radula, IV. Taenia - (iv) Malpighian tubules.", opts: ["I-(iii), II-(ii), III-(i), IV-(iv)", "I-(iii), II-(iv), III-(ii), IV-(i)", "I-(ii), II-(iv), III-(iii), IV-(i)", "I-(iii), II-(ii), III-(iv), IV-(i)"], ans: 0, exp: "I-(iii), II-(ii), III-(i), IV-(iv)." },
+  { q: "Match the following genera with their respective phylum : 1. Ophiura - (i) Mollusca, 2. Physalia - (ii) Platyhelminthes, 3. Pinctada - (iii) Echinodermata, 4. Planaria - (iv) Coelenterata.", opts: ["1.-(iii), 2.-(iv), 3.-(ii), 4.-(i)", "1.-(iv), 2.-(i), 3.-(iii), 4.-(ii)", "1.-(iii), 2.-(iv), 3.-(i), 4.-(ii)", "1.-(i), 2.-(iii), 3.-(iv), 4.-(ii)"], ans: 2, exp: "1.-(iii), 2.-(iv), 3.-(i), 4.-(ii)." },
+  { q: "Which of the following animals are true coelomates with bilateral symmetry ?", opts: ["Annelids", "Adult Echinoderms", "Aschelminthes", "Platyhelminthes"], ans: 0, exp: "Annelids." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+  correctCount = 0; wrongCount = 0; currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 4; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 19: Excretory Products and their Elimination - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Excretory Products and their Elimination</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "1. Excretory means -", opts: ["Removal of substances which have never been a part of body", "Removal of substances not required by the body", "Formation of useful substances in the body", "All of the above"], ans: 1, exp: "Removal of substances not required by the body." },
+    { q: "2. Ammonia and urea are waste products derived from the metabolic breakdown of-", opts: ["Lipids", "Carbohydrates", "Proteins", "Sugars"], ans: 2, exp: "Proteins." },
+    { q: "3. Which of the following molecules is the most toxic to the cells?", opts: ["NaCl", "Urea", "Uric acid", "Ammonia"], ans: 3, exp: "Ammonia." },
+    { q: "4. The terms \"ammonotelic\", \"Ureotelic\", and \"Uricotelic\" are used to describe-", opts: ["Modes of excretory system development", "The actions of hormones on the excretory systems", "The types of nitrogenous waste produced by various classes of vertebrates", "Modification of kidney tubules to enhance excretion"], ans: 2, exp: "The types of nitrogenous waste produced by various classes of vertebrates." },
+    { q: "5. Which of the following statements is correct?", opts: ["Many bony fishes, aquatic amphibia and aquatic insects are ammonotelic", "Ammonia is readily soluble", "NH3 is generally excreted by the body surface or through gills (in fishes) as NH4+", "All"], ans: 3, exp: "All are correct." },
+    { q: "6. Which of the following statements is wrong?", opts: ["Kidney does not play any significant role in the removal of ammonia", "Ureotelic animals excrete most of the nitrogenous waste as urea", "Ammonia and urea are the waste products derived from the metabolic breakdown of proteins", "None of the above is wrong"], ans: 3, exp: "All the given statements are correct." },
+    { q: "7. Urea and uric acid are -", opts: ["More toxic than NH3", "Less toxic than NH3", "Equally toxic to NH3", "Non-toxic"], ans: 1, exp: "Less toxic than NH3." },
+    { q: "8. Which of the following group of animals is ureotelic?", opts: ["many terrestrial amphibians", "Mammals", "Marine fishes", "All"], ans: 3, exp: "All are correct." },
+    { q: "9. NH3 is converted into urea in -", opts: ["Kidney", "Liver", "Spleen", "Intestine"], ans: 1, exp: "Liver." },
+    { q: "10. Which of the following groups of animals is uricotelic?", opts: ["Reptiles", "Insects", "Birds and land snail", "All"], ans: 3, exp: "All are correct." },
+    { q: "11. Excretion of nitrogenous products in semisolid forms by -", opts: ["Uricotelic animals", "Ureotelic animals", "Ammonotelic animals", "Amniotes"], ans: 0, exp: "Uricotelic animals." },
+    { q: "12. Least toxic nitrogenous waste is -", opts: ["NH3", "Urea", "Uric acid", "NH3 and urea"], ans: 2, exp: "Uric acid." },
+    { q: "13. Which of following in small amount is retained in kidney matrix of some animals to maintain a desired osmolarity?", opts: ["NH3", "Urea", "Uric acid", "NH3 and uric acid"], ans: 1, exp: "Urea." },
+    { q: "14. Terrestrial organisms must conserve water. The least amount of water is lost with the excretion of which nitrogenous waste product?", opts: ["NH3", "Uric acid", "Urea", "CO2"], ans: 1, exp: "Uric acid." },
+    { q: "15. The less amount of water is lost with the excretion of which nitrogenous product?", opts: ["NH3 and urea", "NH3 and uric acid", "NH3", "Urea and uric acid"], ans: 3, exp: "Urea and uric acid." },
+    { q: "16. Which of the following is correct about protonephridia/flame cells?", opts: ["Protonephridia are the excretory structures in platyhelminthes (e.g Planaria), rotifers and some annelids", "Protonephridia are the excretory structures in the cephalochordates e.g. Amphioxus", "Protonephridia are primarily concerned with ionic and fluid volume regulation i.e. osmoregulation", "All"], ans: 3, exp: "All are correct." },
+    { q: "17. Match the Column I with Column II\nColumn I: A. Nephridia, B. Malpighian tubules, C. Antennal gland or Green glands\nColumn II: I. Crustaceans (Prawn), II. Annelids (Earthworm), III. Insects (Cockroach)", opts: ["A-1, B-11, C-111", "A-111, B-11, C-1", "A-11, B-111, C-1", "A-11, B-1, C-111"], ans: 2, exp: "A-11, B-111, C-1." },
+    { q: "18. Which of the following statements is wrong about the human excretory system?", opts: ["Excretory system consists of one pair of bean shaped kidneys, one pair of ureter, a urinary bladder and a urethra", "Kidneys are situated between the 12th thoracic and 3rd lumbar vertebrae close to the dorsal wall in abdominal cavity", "Right kidney is a little higher level than the left one", "All"], ans: 2, exp: "Right kidney is a little higher level than the left one." },
+    { q: "19. Each kidney of an adult human measures -\nLength | Width | Thickness | Weight", opts: ["10-12 cm | 5-7 cm | 2-3 cm | 120-170 gm", "10-20 cm | 10-12 cm | 6-12 cm | 40-50 gm", "2-6 cm | 10-12 cm | 6-12 cm | 40-50 gm", "10-12 mm | 5-7 mm | 2-3 mm | 120-170 mg"], ans: 0, exp: "10-12 cm | 5-7 cm | 2-3 cm | 120-170 gm." },
+    { q: "20. The part of kidney, gateway for ureter, nerves and blood vessels is-", opts: ["Hilum", "Renal pore", "Minor calyx", "Major calyx"], ans: 0, exp: "Hilum." },
+    { q: "21. Inner to the hilum of kidney is a broad funnel shaped space called :", opts: ["Cortex", "Medulla", "Pelvis", "Calyx"], ans: 2, exp: "Pelvis." },
+    { q: "22. Which of the following statements is false?\nI. Outer cortex and inner medulla are the two zones in kidney\nII. Medulla is divided into about 8 to 18 renal pyramids\nIII. Pyramid projects into calyx\nIV. Inwards extension of cortex between the pyramids is called renal column of Bertini.", opts: ["I and IV", "II and IV", "IV", "None"], ans: 3, exp: "None." },
+    { q: "25. Each kidney has how many nephrons?", opts: ["About 2 millions", "About 1 million", "About 5000", "About 50000"], ans: 1, exp: "About 1 million." },
+    { q: "26. Which one of the following is the structural and functional unit of kidney?", opts: ["Urethra", "Urinary bladder", "Renal column", "Nephron"], ans: 3, exp: "Nephron." },
+    { q: "27. Renal corpuscle or Malpighian body is-", opts: ["Glomerulus only", "Glomerulus along with Bowman's capsule", "Bowman's capsule", "Glomerulus with afferent arteriole"], ans: 1, exp: "Glomerulus along with Bowman's capsule." },
+    { q: "28. Which one of the following is a tube that carries urine from kidney to the urinary bladder?", opts: ["Loop of Henle", "Ureter", "Urethra", "Uvula"], ans: 1, exp: "Ureter." },
+    { q: "29. The bed of capillaries in the vertebrate kidney where water, urea and salts are filtered out of the blood is the -", opts: ["Bowman's capsule", "Collecting duct", "Glomerulus", "Loop of Henle"], ans: 2, exp: "Glomerulus." },
+    { q: "30. All of the following structures are situated in the renal cortex except -", opts: ["Loop of Henle", "Malpighian corpuscle", "PCT", "DCT"], ans: 0, exp: "Loop of Henle." },
+    { q: "31. The DCTs of many nephrons open into a straight tube called -", opts: ["PCT", "Loop of Henle", "Collecting duct", "Bowman's capsule"], ans: 2, exp: "Collecting duct." },
+    { q: "32. Which of the following statements is false?", opts: ["Renal tubule starts with a double walled cup like structure called Bowman's capsule", "In majority of nephrons, the loop of Henle is too short and such nephrons are cortical nephrons", "Juxta medullary nephron has long loop of Henle", "None"], ans: 3, exp: "None." },
+    { q: "33. Which is the correct pathway for passage of urine in humans?", opts: ["Collecting tubule -> ureter -> bladder -> urethra", "Renal vein -> renal ureter -> bladder -> urethra", "Pelvis -> Medulla -> bladder -> urethra", "Cortex -> Medulla -> bladder -> ureter"], ans: 0, exp: "Collecting tubule -> ureter -> bladder -> urethra." },
+    { q: "34. Match the Column I with Column II -\nColumn I: A Delivers blood to glomerulus, B. Carries urine to pelvis, also acts in water reabsorption, C. Collects filtrate from Bowman's capsule, D. Loop of Henle\nColumn II: (I) Ascending and descending limb, (II) Renal artery, (III) Collecting duct, (IV) PCT", opts: ["A - 11, B - 111, C - IV, D - I", "A-1, B - 111, C-11, D- IV", "A - 11, B - IV, C - I, D - 111", "A- IV, B - Ill, C - II, D - I"], ans: 0, exp: "A - 11, B - 111, C - IV, D - I." },
+    { q: "35. Which of the following is correct about juxta medullary nephrons?", opts: ["Vasa recta is prominent", "Loop of Henle is long", "NaCl is returned to the interstitium by ascending limb of vasa recta", "All"], ans: 3, exp: "All are correct." },
+    { q: "36. Which of the following places the region of nephron in their correct sequence with respect to flow of tubular fluid?", opts: ["PCT -> Descending limb of Henle (DLH) -> Ascending limb of Henle (ALH) -> DCT -> Collecting duct (CD)", "PCT -> ALH -> DLH -> DCT -> CD", "ALH -> DLH -> PCT -> DCT -> CD", "DCT -> ALH -> DLH -> PCT -> CD"], ans: 0, exp: "PCT -> Descending limb of Henle (DLH) -> Ascending limb of Henle (ALH) -> DCT -> Collecting duct (CD)." },
+    { q: "37. Vasa recta is -", opts: ["L-shaped", "S-shaped", "U-shaped", "J-shaped"], ans: 2, exp: "U-shaped." },
+    { q: "38. In glomerulus, afferent arteriole -", opts: ["Is wider than efferent arteriole", "Is narrower than efferent arteriole", "And efferent arteriole have similar diameter", "Is narrow than efferent capillaries"], ans: 0, exp: "Is wider than efferent arteriole." },
+    { q: "39. Which of the following is incorrect?", opts: ["Blood vessel leading to glomerulus is called efferent arteriole", "Vasa recta, peritubular capillaries, Glomerulus all have blood", "Cortical nephron has no or highly reduced vasa recta", "Vasa recta runs parallel to the Henle's loop in juxtamedullary nephrons"], ans: 0, exp: "Blood vessel leading to glomerulus is called efferent arteriole." },
+    { q: "40. Urine formation involves-", opts: ["Ultra filtration and reabsorption occurring in different parts of nephron", "Ultrafiltration and reabsorption occurring in same part of nephron", "Ultrafiltration, reabsorption and secretion occurring in different parts of nephron", "Ultrafiltration, reabsorption and secretion occurring in same part of nephron"], ans: 2, exp: "Ultrafiltration, reabsorption and secretion occurring in different parts of nephron." },
+    { q: "41. Match column I with column II -\nColumn I: A PCT, B. DCT, C. Loop of Henle, D. Counter-current mechanism, E. Renal corpuscle\nColumn II: I. Concentrated urine formation, II. Filtration of blood, III. Reabsorption of 70 - 80% electrolytes, IV. Ionic balance, V. Maintenance of cone. gradient in medulla", opts: ["A-111, B-IV, C-V, D-I, E-II", "A-111, B-V, C-IV, D-I, E-II", "A-I, B-111, C-II, D-V, E-IV", "A-111, B-IV, C-I, D-V, E-II"], ans: 0, exp: "A-111, B-IV, C-V, D-I, E-II." },
+    { q: "42. Which of the following statements is correct?\nI. Renal vein take blood away from kidney\nII. Loop of Henle conserves water\nIII. Podocytes occur in inner wall of Bowman's capsule\nIV. Ultrafiltrate/nephric filtrate is plasma minus proteins.", opts: ["I and II", "I and III", "III and IV", "I, II, III, IV"], ans: 3, exp: "I, II, III, IV." },
+    { q: "43. The glomerular capillaries cause filtration of blood through ____ layers -", opts: ["1", "2", "3", "6"], ans: 2, exp: "3." },
+    { q: "44. The layers between the blood in glomerular blood Bowman's space are -", opts: ["Tunica media + Cuboidal epithelium + Basement's membrane", "Endothelium + Epithelium of Bowman's capsule + Basement membrane between the 2 layers", "Endothelium of glomerular blood vessel + Endothelium of Bowman's capsule + Parietal layer of Bowman's", "None"], ans: 1, exp: "Endothelium + Epithelium of Bowman's capsule + Basement membrane between the 2 layers." },
+    { q: "45. On average, _____ ml of blood is filtrated by the kidney per minute which constitute roughly __ of the blood pumped out by each ventricle of heart in a minute", opts: ["125 ml, 1/6th", "100 -125 ml, 1/6th", "1100 -1200 ml, 1/5th", "5 L, 1/10th"], ans: 1, exp: "100 -125 ml, 1/6th." },
+    { q: "46. The amount of the filtrate formed by the kidney/minute is called GFR (Glomerular Filtration Rate). The GFR of a healthy adult is -", opts: ["80 ml/m", "1.25 ml/m", "300 ml/m", "20 ml/m"], ans: 1, exp: "1.25 ml/m." },
+    { q: "47. The GFR/day in a healthy adult is -", opts: ["5 L", "180 L", "200 L", "20 L"], ans: 1, exp: "180 L." },
+    { q: "48. Juxtaglomerular apparatus, a special sensitive cellular region is formed in -", opts: ["PCT and DCT", "PCT and DCT at the location of their contact", "PCT and loop of Henle at the location their contact", "DCT and afferent arteriole at the location of their contact"], ans: 3, exp: "DCT and afferent arteriole at the location of their contact." },
+    { q: "49. Of the filtrate, nearly how many of it is reabsorbed by the renal tubules?", opts: ["5%", "99%", "50%", "25%"], ans: 1, exp: "99%." },
+    { q: "50. Which of following statements is false?", opts: ["The kidney have built in mechanism for regulation of GFR", "Tubular secretion does not play any significant role in urine formation", "The amount of urine output per day in normal adult is about 1.5 L", "During urine formation tubular cells secrete H+, K+ and NH3 in the filtrate"], ans: 1, exp: "Tubular secretion does not play any significant role in urine formation." },
+    { q: "51. Which of the following statements about proximal convoluted tubule (PCT) is false?", opts: ["It is lined by simple cuboidal brush border epithelium which increases the surface area", "Nearly all the essential nutrients, 70 - 80% electrolytes, 70% H2O are reabsorbed by PCT", "PCT is not the site of selective secretion", "PCT helps to maintain the pH and ionic balance of body fluids"], ans: 2, exp: "PCT is not the site of selective secretion." },
+    { q: "52. PCT helps to maintain the pH and ionic balance of body fluids by -", opts: ["Selective secretion of H+, NH3 and K+ ions in filtrate", "Reabsorption of HCO3- from filtrate", "Both a and b", "Secreting regulatory hormone like renin and angiotensinogen"], ans: 2, exp: "Both a and b." },
+    { q: "53. If Loop of Henle were absent from mammalian nephrons, which of the following is to be expected?", opts: ["The urine will be more dilute", "There will be no urine formation", "The urine will be more concentrated", "There will be hardly any change in quality and quantity of urine formed"], ans: 0, exp: "The urine will be more dilute." },
+    { q: "55. I. Reabsorption in this region is minimum.\nII. This region plays a significant role in the maintenance of high osmolarity of intestinal fluid\nIII. Its descending limb is permeable to water but almost impermeable to electrolytes\nIV. Its ascending limb is impermeable to water but allows transport of electrolyte actively or passively\nV. In descending limb filtrate is hypertonic while in ascending limb filtrate is hypotonic\nThe above characteristics are associated with -", opts: ["PCT", "Loop of Henle", "DCT", "Bowman's capsule"], ans: 1, exp: "Loop of Henle." },
+    { q: "56. Which of the following statements is correct?\nI. Reabsorption of water occurs passively in the initial segment of nephron\nII. Nitrogenous waste are absorbed by passive transport\nIII. Conditional reabsorption of Na+ and water takes place in DCT\nIV. DCT reabsorbs HCO3-\nV. DCT is capable of selective secretion of H+, K+ and NH3 to maintain pH and Na+ - K+ balance in blood\nVI. Substances like glucose, amino acids, Na+, etc in the filtrate are reabsorbed actively", opts: ["I and II", "II and III", "IV and V", "All"], ans: 3, exp: "All." },
+    { q: "57. Tubular secretion helps to maintain a proper acid-base balance by removing one of the following from blood -", opts: ["H+ and NH3", "Uric acid", "H+ and urea", "NH3 and creatinine"], ans: 0, exp: "H+ and NH3." },
+    { q: "58. Which of the following statements is false regarding the collecting duct?\nI. Collecting duct is a straight duct\nII. It extends from the cortex to medulla\nIII. Large amount of water could be reabsorbed from it to produce concentrated urine\nIV. Small amount of urea diffuses out from it into the medulla to keep up the osmolarity\nV. It plays a role to maintain pH and ionic balance of blood by the selective secretion of H+ and K+ ions", opts: ["Only I", "Only II", "IV and V", "None"], ans: 3, exp: "None." },
+    { q: "59. Mammals have the ability to produce ______ urine-", opts: ["Hypotonic", "Hypertonic", "Isotonic", "Alkaline"], ans: 1, exp: "Hypertonic." },
+    { q: "60. Which one plays an important role in counter current mechanism?", opts: ["Vasa recta", "PCT", "Loop of Henle", "a and c"], ans: 3, exp: "a and c." },
+    { q: "61. In which of the following counter current operates-", opts: ["In ascending limb of loop of Henle", "In descending limb of loop of Henle", "In ascending limb or descending limb of vasa recta", "Between the 2 limb of Henle's loop and those of vasa recta"], ans: 3, exp: "Between the 2 limb of Henle's loop and those of vasa recta." },
+    { q: "62. Medullary gradient is developed by all the following except -", opts: ["Reabsorption of Na+ from ascending limb of Henle's loop into medullary interstitium", "Reabsorption of Na+ from descending limb of Henle's loop", "Diffusion of small amount of urea from collecting duct into medullary interstitium", "Proximity between Henle's loop and vasa recta as well as the counter current in them"], ans: 1, exp: "Reabsorption of Na+ from descending limb of Henle's loop." },
+    { q: "63. The medullary gradient is mainly caused by -", opts: ["Urea & K+", "H+ and K+", "NaCl and Urea", "Urea and H+"], ans: 2, exp: "NaCl and Urea." },
+    { q: "64. The counter current mechanism helps to maintain a concentration gradient. This gradient helps in -", opts: ["Easy passage of water from medulla to collecting tubule and thereby concentrating urine", "Easy passage of water from collecting tubule and thereby concentrating urine", "Easy passage of water from medullary interstitial fluid to collecting tubule and thereby diluting urine", "Inhibition of passage of water between the collecting tubule and medulla and so isotonic urine is formed"], ans: 1, exp: "Easy passage of water from collecting tubule and thereby concentrating urine." },
+    { q: "65. NaCl is transported by the ascending limb of Henle's loop which is exchanged with -", opts: ["DCT", "PCT", "Ascending limb of vasa recta", "Descending limb of vasa recta"], ans: 3, exp: "Descending limb of vasa recta." },
+    { q: "66. NaCl is returned to the _____ by the ascending limb of vasa recta -", opts: ["Ascending limb of Henle's loop", "DCT", "PCT", "Interstitial fluid of medulla"], ans: 3, exp: "Interstitial fluid of medulla." },
+    { q: "67. Human kidney can produce urine nearly how many times concentrated than the initial filtrate formed?", opts: ["4", "2", "10", "100"], ans: 0, exp: "4." },
+    { q: "68. The high osmolarity of the renal medulla is maintained by all of the following except -\nI. Diffusion of salt from the ascending limb of the loop of Henle\nII. Active transport of salt from the upper region of the ascending limb\nIII. The spatial arrangement of juxtamedullary nephrons\nIV. Diffusion of urea from the collecting duct\nV. Diffusion of salt from the descending limb of the loop of Henle", opts: ["Only I", "Only V", "III and IV", "I and V"], ans: 1, exp: "Only V." },
+    { q: "69. Which one of the following is produced in the kidneys?", opts: ["Rennin", "Renin", "Uricase", "Arginase"], ans: 1, exp: "Renin." },
+    { q: "70. Reabsorption of Na+ is controlled by -", opts: ["Vasopressin or ADH", "Aldosterone", "Renin", "Rennin"], ans: 1, exp: "Aldosterone." },
+    { q: "71. The reabsorption of water in the kidneys is under the control of a hormone -", opts: ["STH", "ACTH", "LH", "ADH/Vasopressin"], ans: 3, exp: "ADH/Vasopressin." },
+    { q: "72. Antidiuretic hormone secretion increases when the hypothalamus is stimulated by -", opts: ["Angiotensin receptors", "glucose receptors", "Osmoreceptors", "Renin receptors"], ans: 2, exp: "Osmoreceptors." },
+    { q: "73. The kidneys help regulate acid-base balance by controlling the level of ____ in the blood-", opts: ["CO2", "H+", "HCO3-", "b and c"], ans: 3, exp: "b and c." },
+    { q: "74. The functioning of the kidneys is efficiently monitored and regulated by hormonal feedback mechanisms involving -", opts: ["Hypothalamus only", "JGA only", "The heart only", "Hypothalamus, JGA and heart (to certain extent)"], ans: 3, exp: "Hypothalamus, JGA and heart (to certain extent)." },
+    { q: "75. Osmoreceptors in the body are activated by changes in -", opts: ["Blood volume but not body fluid volume", "Body fluid volume but not blood volume", "Blood volume and body fluid volume", "Blood volume, body fluid volume and ionic concentration"], ans: 3, exp: "Blood volume, body fluid volume and ionic concentration." },
+    { q: "76. Which of the following sequences is correct for regulation of kidney function?", opts: ["An excess loss of water from body -> Stimulates hypothalamus -> osmoreceptor -> Neurohypophysis -> ADH -> Increases water permeability of DCT and CT -> Prevention of diuresis", "An excess loss of fluid from body -> Osmoreceptors -> Hypothalamus -> Neurohypophysis -> ADH -> Increases water permeability of DCT and CT -> Prevention of diuresis", "An excess loss of fluid from body -> Osmoreceptors -> Hypothalamus -> Neurohypophysis -> Aldosterone -> Water permeability of DCT and CT increases -> Prevention of diuresis", "An excess loss of fluid from body -> osmoreceptor -> Hypothalamus -> Adenohypophysis -> ADH -> Increases water permeability of DCT and CT -> Prevention of diuresis"], ans: 1, exp: "An excess loss of fluid from body -> Osmoreceptors -> Hypothalamus -> Neurohypophysis -> ADH -> Increases water permeability of DCT and CT -> Prevention of diuresis." },
+    { q: "77. Osmoregulation is the function of-", opts: ["Oxytocin", "Prolactin", "Vasopressin (ADH)", "None of the above"], ans: 2, exp: "Vasopressin (ADH)." },
+    { q: "78. ADH is synthesised by _____ , released by _____ and acts on _____ _", opts: ["Hypothalamus, Neurohypophysis, DCT and CT", "Hypothalamus, Neurohypophysis, Loop of Henle", "Hypothalamus, Adenohypophysis, DCT and CT", "Hypothalamus, Adenohypophysis, Loop of Henle"], ans: 0, exp: "Hypothalamus, Neurohypophysis, DCT and CT." },
+    { q: "79. Which of the following sequence is correct?", opts: ["An increase in body fluid volume -> switch off the osmoreceptors -> suppresses the ADH release", "ADH -> Constricting effect on blood vessel -> B. P. high -> Glomerular blood flow more -> GFR more", "Angiotensinogen -> Angiotensin I -> Angiotensin II -> Adrenal cortex -> Aldosterone", "All"], ans: 3, exp: "All." },
+    { q: "80. Which of the following factors can active the JG cells to release renin?", opts: ["A fall in glomerular blood pressure (GBP)", "A fall in glomerular blood flow (GBF)", "A fall in GFR", "A fall in GFR/GBP/GBF"], ans: 3, exp: "A fall in GFR/GBP/GBF." },
+    { q: "81. Which of the following statements is false?", opts: ["Angiotensin II, being a powerful vasoconstrictor, increases glomerular pressure and thereby GFR", "Angiotensin II activates the adrenal cortex to release aldosterone", "Aldosterone promotes reabsorption of Na+ and water from the DCT and CT leading to an increase in B.P. and GFR", "ANF causes vasoconstriction"], ans: 3, exp: "ANF causes vasoconstriction." },
+    { q: "82. RAAS (Renin -Angiotensinogen -Aldosterone System)-", opts: ["Is triggered when the juxtaglomerular cells of JGA releases renin in response to various stimuli", "Is responsible for regulation of kidney function", "Are stimulated when ANF is more in blood", "a and b are correct"], ans: 3, exp: "a and b are correct." },
+    { q: "83. Which of the following is true about Atrial Natriuretic factor (ANF)?", opts: ["An increase in blood volume and B. P. stimulates cardiac atria to release ANF", "ANF promotes vasoconstriction and thereby decrease B.P.", "ANF acts as a check on RAAS", "a and c"], ans: 3, exp: "a and c." },
+    { q: "84. Renin-angiotensin pathway controls -", opts: ["Ultrafiltration", "Blood pressure", "Glucose reabsorption", "Cardia output"], ans: 1, exp: "Blood pressure." },
+    { q: "85. RAAS secretes which of the following hormones?", opts: ["Glucocorticoids", "Renin", "Mineralocorticoids", "All"], ans: 2, exp: "Mineralocorticoids." },
+    { q: "86. The expulsion of urine from the urinary bladder is called -", opts: ["Uricolysis", "Micturition", "Uremia", "Anuria"], ans: 1, exp: "Micturition." },
+    { q: "87. In micturition -", opts: ["Urethra relaxes", "Ureter relaxes", "Ureter contracts", "Urethra contracts"], ans: 0, exp: "Urethra relaxes." },
+    { q: "88. The outline of principal event of urination is given below in unordered manner-\n1. Stretch receptors on the wall of urinary bladder send signal to the CNS\nII. The bladder fills with urine and becomes distended\nIII. Micturition\nIV CNS passes on motor messages to initiate the contraction of smooth muscles of bladder and simultaneous relaxation of urethral Sphincter\nThe correct order of steps for urination is -", opts: ["I -> II -> III -> IV", "IV -> III -> II -> I", "II -> I -> IV -> III", "III -> II -> I -> IV"], ans: 2, exp: "II -> I -> IV -> III." },
+    { q: "89. The neural mechanisms causing urination is called -", opts: ["Scarth reflex", "Withdrawal reflex", "Micturition reflex", "None"], ans: 2, exp: "Micturition reflex." },
+    { q: "90. Average pH of human urine is -", opts: ["6", "9", "3", "7"], ans: 0, exp: "6." },
+    { q: "91. Match the Column I with Column II -\nColumn I: A Uremia, B. Ketonuria, C. Glycosuria, D. Blood dialyser, E. Concentration of urine\nColumn II: I. Henle's loop, II. Ketone bodies in urine, III. Artificial kidney, IV Glucose in urine, V. Accumulation of urea in blood", opts: ["A - V, B - II, C - IV, D - III, E - I", "A- Ill, B - 11, C - IV, D - I, E - V", "A-1, B - II, C - IV, D - Ill, E - V", "A- I, B - II, C - IV, D - V, E - 111"], ans: 0, exp: "A - V, B - II, C - IV, D - III, E - I." },
+    { q: "92. Diabetes mellitus is characterised by -", opts: ["Oligonuria", "Ketonuria and glycosuria", "Anuria", "Haematuria"], ans: 1, exp: "Ketonuria and glycosuria." },
+    { q: "93. How much urea is excreted per day by a normal adult?", opts: ["0 gm", "25 - 30 gm", "50 gm", "1 - 2 gm"], ans: 1, exp: "25 - 30 gm." },
+    { q: "94. Other than kidneys, which of the following also helps in the elimination of excretory wastes?", opts: ["Skin", "Liver", "Lungs", "All"], ans: 3, exp: "All." },
+    { q: "95. How much CO2 is removed per minute by our lungs -", opts: ["18 ml", "200 ml", "1 litre", "8 litres"], ans: 1, exp: "200 ml." },
+    { q: "96. Which of the following statements is false?", opts: ["Micturition is carried out by a reflex", "Cholesterol is excreted in the bile and waxes are excreted in the sebum", "The primary function of sweat is excretion while its cooling function is minor", "Saliva also eliminates small amount of nitrogenous wastes"], ans: 2, exp: "The primary function of sweat is excretion while its cooling function is minor." },
+    { q: "97. Liver (largest gland) is both secretory and excretory organ. It secretes bile. Which of the following are major excretory products of bile?", opts: ["Degraded and steroid hormones", "Vitamins and drugs", "Bilirubin and biliverdin", "Cholesterol"], ans: 2, exp: "Bilirubin and biliverdin." },
+    { q: "98. Most of excretory products of bile ultimately pass out along with -", opts: ["Urine", "Digestive wastes", "Urea", "Sweat"], ans: 1, exp: "Digestive wastes." },
+    { q: "99. I. The human skin possesses sweat and sebaceous glands which eliminate some wastes in their secretion.\nII. Sweat is waxy protective secretion having sterols, hydrocarbons and fatty acids\nIII. Sebum is an aqueous fluid having NaCl, lactic acid, urea, amino acids, glucose\nWhich one of the above statement is correct?", opts: ["Only I", "II and III", "Only II", "I and II"], ans: 0, exp: "Only I." },
+    { q: "100. In uremia, artificial kidney is used for removing accumulated waste products like urea by the process called-", opts: ["Micturition", "Haemolysis", "Ureotelism", "haemodialysis"], ans: 3, exp: "haemodialysis." },
+    { q: "101. In artificial kidney dialysing fluid contains all the constituents as in plasma except -", opts: ["Na+", "Water", "Glucose", "Nitrogenous wastes"], ans: 3, exp: "Nitrogenous wastes." },
+    { q: "102. Kidney stone is produced by -", opts: ["Deposition of sand particles", "Crystallization of Ca-oxalate", "Precipitation of protein", "KCl or NaCl"], ans: 1, exp: "Crystallization of Ca-oxalate." },
+    { q: "103. Bright's disease/Glomerulonephritis is -", opts: ["Glycosuria", "Cystitis", "Inflammation of glomeruli", "Ketonuria"], ans: 2, exp: "Inflammation of glomeruli." },
+    { q: "104. Which of the following statements is correct?", opts: ["Kidney transplantation is the ultimate method at the stage where drug or dialysis do not help", "Close relatives are often used as kidney donors to minimise risk of rejection", "Cyclosporin A is used as immunosuppressive agent in kidney transplant patient", "All"], ans: 3, exp: "All." },
+    { q: "105. Following are the steps of dialysis -\nA Blood is passed into a vein.\nB. Blood is mixed with heparin.\nC. Blood is mixed with anti-heparin.\nD. Blood is drained from convenient artery.\nE. Blood is passed through a coiled and porous cellophane tube bathing in dialysis fluid.\nF. Removal of nitrogenous wastes from blood.\nThe correct sequence of steps is -", opts: ["A -> B -> C -> D -> E -> F", "F -> C -> E -> B -> A -> D", "D -> B -> E -> F -> C -> A", "D -> C -> E -> F -> B -> A"], ans: 2, exp: "D -> B -> E -> F -> C -> A." },
+    { q: "109. Which one of the following is not a part of a renal pyramid?", opts: ["Loops of Henle", "Peritubular capillaries", "Convoluted tubules", "Collecting ducts"], ans: 1, exp: "Peritubular capillaries." },
+    { q: "110. Which one of following correctly explains the function of a specific part of a human nephron?", opts: ["Afferent arteriole : Carries the blood away from the glomerulus towards renal vein", "Podocytes : Create minute spaces (slit pores) for the filtration of blood into the Bowman's capsule", "Henle's loop: Most reabsorption of the major substances from the glomerular filtrate", "Distal convoluted tubule: Reabsorption of K+ ions into the surrounding blood capillaries"], ans: 1, exp: "Podocytes : Create minute spaces (slit pores) for the filtration of blood into the Bowman's capsule." },
+    { q: "111. Uricotelic mode of passing out nitrogenous wastes is found in", opts: ["Insects and Amphibians", "Reptiles and Birds", "Birds and Annelids", "Amphibians and Reptiles"], ans: 1, exp: "Reptiles and Birds." },
+    { q: "112. Which one of the following statements is correct with respect to kidney function regulation?", opts: ["During summer when body loses lot of water by evaporation, the release of ADH is suppressed", "When someone drinks lot of water, ADH release is suppressed", "Exposure to cold temperature stimulates ADH release", "An increase in glomerular blood flow stimulates formation of Angiotensin II"], ans: 1, exp: "When someone drinks lot of water, ADH release is suppressed." },
+    { q: "113. Mark the correct statement", opts: ["Vasa recta is absent or highly reduced in cortical nephrons", "Maximum number of nephrons in kidney are juxta-medullary type", "DCT of only one nephron opens into a collecting tubule always", "All of these"], ans: 0, exp: "Vasa recta is absent or highly reduced in cortical nephrons." },
+    { q: "114. Which of the following hormone is secreted from kidney", opts: ["ANF", "Erythropoetin", "Rennin", "Aldosterone"], ans: 1, exp: "Erythropoetin." },
+    { q: "115. Filtration slits are formed by", opts: ["Endothelial lining of glomerular capillaries", "Inner epithelium of Bowman's capsule", "Basement membrane", "The participation of all of these"], ans: 1, exp: "Inner epithelium of Bowman's capsule." },
+    { q: "116. Juxta glomerular apparatus is formed by cellular modification in the", opts: ["Afferent arteriole and DCT", "Efferent arteriole and PCT", "Afferent arteriole and PCT", "Efferent arteriole and DCT"], ans: 0, exp: "Afferent arteriole and DCT." },
+    { q: "117. The projections of renal pelvis are called", opts: ["Hiluses", "Calyces", "Medullary pyramids", "Renal columns"], ans: 1, exp: "Calyces." },
+    { q: "118. Which of the following is not added to the glomerular filtrate by tubular secretion", opts: ["NH3", "Uric acid", "H+", "Na+"], ans: 3, exp: "Na+." },
+    { q: "119. Glomerular capillaries are", opts: ["Purely arterial", "Purely venous", "Arterial as well as venous", "Portal only"], ans: 0, exp: "Purely arterial." },
+    { q: "120. Which of the following is directly responsible for increasing glomerular blood pressure and hence GFR", opts: ["Aldosterone", "ANF", "Angiotensin II", "Renin"], ans: 2, exp: "Angiotensin II." },
+    { q: "121. Presence of glucose in urine is called", opts: ["Diabetes insipidus", "Diabetes mellitus", "Galactosemia", "None of these"], ans: 1, exp: "Diabetes mellitus." },
+    { q: "122. Which of the following accessory excretory structure eliminates NaCl, Lactic acid and Urea", opts: ["Kidney", "Liver", "Sebaceous gland", "Sweat gland"], ans: 3, exp: "Sweat gland." },
+    { q: "123. Urea from the blood can be removed by", opts: ["Uraemia", "Diuresis", "Dialysis", "Micturition"], ans: 2, exp: "Dialysis." },
+    { q: "124. In which one of the following organism its excretory organs are correctly stated?", opts: ["Humans - Kidneys, sebaceous glands and tear glands", "Earthworm - Pharyngeal, integumentary and septal nephridia", "Cockroach - Malpighian tubules and enteric caeca", "Frog - Kidneys, skin and buccal epithelium"], ans: 1, exp: "Earthworm - Pharyngeal, integumentary and septal nephridia." },
+    { q: "125. Glomerular filtrate consists of _____ _", opts: ["All the constituents of blood", "all the constituents of blood except blood cells", "all the constituents of blood except blood cells and proteins larger then 80Ao", "excess water, waste products and toxic substances"], ans: 2, exp: "all the constituents of blood except blood cells and proteins larger then 80Ao." },
+    { q: "126. Ammonia is a very toxic substance especially to the brain cells. Injection of very dilute solutions of it in the blood can comatose a person. This is because", opts: ["toxic NH4+ ions are formed which penetrate easily through the plasma membrane of brain cells", "neutral molecules of ammonia readily combine with glutamate in the blood to yield toxic glutamine molecules", "molecules of ammonia readily pass through the mitochondrial membranes cells and consume a-ketoglutarate", "NH4+ ions affect the brain cell function by changing the polarity of the cell membranes"], ans: 2, exp: "molecules of ammonia readily pass through the mitochondrial membranes cells and consume a-ketoglutarate." },
+    { q: "127. Which option is correct with respect to blood urea content?", opts: ["hepatic vein - less, renal vein - much", "pulmonary vein- less, hepatic vein- much", "hepatic vein- less, bsu-clavian vein - much", "renal vein - less, hepatic vein - much."], ans: 3, exp: "renal vein - less, hepatic vein - much." },
+    { q: "128. What is the pH difference between C.S.F and Glomerular filtrate?", opts: ["1.2", "1", "0", "1.26"], ans: 2, exp: "0." },
+    { q: "129. 'RAAS' acts against a hormone, chemical nature of which is", opts: ["steroid", "sphingolipid", "polypeptide", "catecholamine"], ans: 2, exp: "polypeptide." },
+    { q: "130. All of the following structures are in direct association with the renal hilus EXCEPT the", opts: ["Renal pelvis", "Renal artery", "Renal corpuscle", "Renal vein"], ans: 2, exp: "Renal corpuscle." },
+    { q: "131. The blood supply to the kidney changes from arterial to venous blood", opts: ["Before the blood enters the glomerular capillaries", "Within the capillaries of the glomerulus", "Upon leaving the glomerular capillaries", "Upon leaving the peritubular capillaries"], ans: 2, exp: "Upon leaving the glomerular capillaries." },
+    { q: "132. Constriction of the afferent arteriole would result in -", opts: ["An increase in blood flow into the efferent arteriole", "A decrease in glomerular filtration", "An increase in hydrostatic (blood) pressure in the glomerulus", "An increase in the protein concentration of the glomerular filtrate."], ans: 1, exp: "A decrease in glomerular filtration." },
+    { q: "133. In response to increased levels of aldosterone, the kidneys produce", opts: ["urine with a lower concentration of sodium ions.", "urine with a lower concentration of potassium ions.", "a larger volume of urine.", "urine with less urea."], ans: 0, exp: "urine with a lower concentration of sodium ions." },
+    { q: "134. Micturition is", opts: ["a reflex", "secretion of acid.", "production of urine.", "a mechanism for concentrating urine."], ans: 0, exp: "a reflex." },
+    { q: "135. One of the roles of the countercurrent mechanism in the nephron is to", opts: ["produce a urea gradient that will promote the diffusion of urea into the collecting tubule.", "produce a glucose gradient that will facilitate the reabsorption of glucose.", "produce a salt gradient that will allow the kidney to retain salt ions.", "produce a concentration gradient that will allow the nephron to concentrate filtrate."], ans: 3, exp: "produce a concentration gradient that will allow the nephron to concentrate filtrate." },
+    { q: "136. The ability to concentrate urine depends on the functions of", opts: ["the collecting duct.", "PCT.", "the renal corpuscle.", "the loop of Henle."], ans: 3, exp: "the loop of Henle." },
+    { q: "137. Which substance below would probably have the lowest reabsorption rate?", opts: ["Glucose", "Amino acids", "Urea", "Potassium"], ans: 2, exp: "Urea." },
+    { q: "138. Which substance would NOT be expected in urine normally?", opts: ["Nitrogenous waste", "Water", "Sodium", "Protein"], ans: 3, exp: "Protein." },
+    { q: "139. Which urine formation process below results in acid elimination?", opts: ["Filtration", "Secretion", "Reabsorption", "Excretion"], ans: 1, exp: "Secretion." },
+    { q: "140. Arrange the following structures in the correct sequence in which urine passes through them to the external environment.\n(1) ureter (2) renal pelvis (3) calyx (4) urinary bladder (5) urethra", opts: ["3, 4, 1, 5, 2", "3, 2, 1, 4, 5", "1, 2, 3, 4, 5", "2, 4, 1, 3, 5."], ans: 1, exp: "3, 2, 1, 4, 5." },
+    { q: "141. If the efferent arteriole constricts while the afferent arteriole remains unchanged, the glomerular filtration rate", opts: ["decreases.", "increases.", "does NOT change.", "cannot be determined."], ans: 1, exp: "increases." },
+    { q: "142. Death of mitochondria in the ascending limb of the loop of Henle would result in", opts: ["decreased Na+ and Cl- ions in the urine output.", "increased Na+ and Cl- ions in the urine output.", "decreased Ca2+ ions in the urine.", "decreased only Cl- ions in the urine."], ans: 1, exp: "increased Na+ and Cl- ions in the urine output." },
+    { q: "143. The reabsorption of amino acids and glucose when filtrate concentration is high is by", opts: ["Filtration.", "active transport.", "facilitated diffusion.", "simple diffusion."], ans: 1, exp: "active transport." },
+    { q: "144. All of the following are layers of the filtration membrane in the Glomerular membrane except the", opts: ["Bowman's membrane.", "fenestrated endothelium.", "basement membrane.", "renal capsule."], ans: 0, exp: "Bowman's membrane." },
+    { q: "145. All of the following functions are carried out in the renal tubules except", opts: ["reabsorption.", "filtration.", "formation of urine.", "secretion."], ans: 1, exp: "filtration." },
+    { q: "146. Which one of the following options gives the correct categorisation of six animals according to the type of nitrogenous wastes (A, B, C), they give out?\nA - AMMONOTELIC | B - UREOTELIC | C - URICOTELIC", opts: ["Pigeon, Humans | Aquatic Amphibia, Lizards | Cockroach, Frog", "Frog, Lizards | Aquatic Amphibia, Humans | Cockroach, Pigeon", "Aquatic Amphibia | Frog, Humans | Pigeon, Lizards, Cockroach", "Aquatic Amphibia | Cockroach, Humans | Frog, Pigeon, Lizards"], ans: 2, exp: "Aquatic Amphibia | Frog, Humans | Pigeon, Lizards, Cockroach." },
+    { q: "147. A fall in glomerular filtration rate (GFR) activates :", opts: ["juxta glomerular cells to release renin", "adrenal cortex to release aldosterone", "adrenal medulla to release adrenaline", "posterior pituitary to release vasopressin"], ans: 0, exp: "juxta glomerular cells to release renin." },
+    { q: "148. Which one of the following characteristics is common both in humans and adult frogs ?", opts: ["Four - chambered heart", "Internal fertilisation", "Nucleated RBCs", "Ureotelic mode of excretion"], ans: 3, exp: "Ureotelic mode of excretion." },
+    { q: "149. The maximum amount of electrolytes and water (70 - 80 percent) from the glomerular filtrate is reabsorbed in which part of the nephron?", opts: ["Ascending limb of loop of Henle", "Distal convoluted tubule", "Proximal convoluted tubule", "Descending limb of loop of Henle"], ans: 2, exp: "Proximal convoluted tubule." },
+    { q: "150. Difference between glomerular filtrate and blood plasma is of", opts: ["proteins", "potassium", "first is white and second is yellow", "first is yellow and second is white"], ans: 0, exp: "proteins." },
+    { q: "151. Go through the following statements.\nI. Least concentration of urea is present in Renal vein.\nII. The highest concentration of urea is found in Hepatic vein.\nIII. Vasa recta is well developed in cortical nephrons.\nIV. Urethra is not the part of kidney.\nV. Liver is the site of urine formation.\nHow many of the above statements are correct?", opts: ["3", "2", "5", "0"], ans: 0, exp: "3." },
+    { q: "152. Under normal conditions which one is completely reabsorbed in the renal tubule?", opts: ["Urea", "Uric acid", "Salts", "Glucose"], ans: 3, exp: "Glucose." },
+    { q: "153. Liquid which collects in the cavity of Bowman's capsule is", opts: ["concentrated urine", "plasma minus blood proteins", "glycogen and water", "sulphates and water"], ans: 1, exp: "plasma minus blood proteins." },
+    { q: "154. Excretion means", opts: ["Removal of useless substances and substances present in excess.", "Formation of those substances which have some role in the body.", "Removal of such substances which have never been part of the body.", "All of these."], ans: 0, exp: "Removal of useless substances and substances present in excess." },
+    { q: "155. Kidneys are not only organs of excretion, their work is supplemented by", opts: ["Liver", "Skin", "Heart", "Large intestine"], ans: 1, exp: "Skin." },
+    { q: "156. The function of kidney in mammals is to excrete", opts: ["Extra urea, extra water and extra amino acids", "Extra urea, extra water and carbohydrate", "Extra urea, salts and excess water", "Extra salts, urea and excess water"], ans: 3, exp: "Extra salts, urea and excess water." },
+    { q: "157. Select the correct statement with respect to locomotion in humans:", opts: ["Accumulation of uric acid crystals in joints causes their inflammation", "The vertebral column has 10 thoracic vertebrae.", "The joint between adjacent vertebrae is a fibrous joint", "The decreased level of progesterone causes osteoporosis in old people"], ans: 0, exp: "Accumulation of uric acid crystals in joints causes their inflammation." },
+    { q: "158. Choose the correctly matched pair :-", opts: ["Inner lining of salivary ducts - Ciliated epithelium", "Moist surface of buccal cavity - Glandular epithelium", "Tubular parts of nephrons - Cuboidal epithelium", "Inner surface of bronchioles - Squamous epithelium"], ans: 2, exp: "Tubular parts of nephrons - Cuboidal epithelium." },
+    { q: "159. Which of the following causes an increase in sodium reabsorption in the distal convoluted tubule?", opts: ["Increase in aldosterone levels", "Increase in antidiuretic hormone levels", "Decrease in aldosterone levels", "Decrease in antidiuretic hormone levels"], ans: 0, exp: "Increase in aldosterone levels." },
+    { q: "160. The shared terminal duct of the reproductive and urinary system in the human male is :", opts: ["Urethra", "Ureter", "Vas deferens", "Vasa efferentia."], ans: 0, exp: "Urethra." },
+    { q: "161. Proximal convoluted tubule of nephron is responsible for", opts: ["Filtration of blood", "Maintenance of Glomerular Filtration Rate", "Selective reabsorption of glucose, amino acid, NaCl and water", "Reabsorption of salts only"], ans: 2, exp: "Selective reabsorption of glucose, amino acid, NaCl and water." },
+    { q: "162. An X-ray of the lower abdomen shows a shadow in the region of the ureter suspected to be an ureteric calculus. A possible clinical symptom would be", opts: ["acute renal failure (ARF)", "anuria and haematuria", "motor aphasia", "chronic renal failure (CRF)"], ans: 1, exp: "anuria and haematuria." },
+    { q: "163. What will happen if one kidney is removed from the body of a human being?", opts: ["Death due to poisoning", "Uremia and death", "Stoppage of urination", "The person will survive"], ans: 3, exp: "The person will survive." },
+    { q: "164. The following is/are removed during hemodialysis.", opts: ["urea", "glucose", "amino acids", "all the above."], ans: 0, exp: "urea." },
+    { q: "165. Which of the following two compounds play main role in maintaining the osmolarity gradient in medulla?", opts: ["NaCl and H+", "K+ and H+", "Ammonia and H+", "NaCl and Urea."], ans: 3, exp: "NaCl and Urea." },
+    { q: "166. Which of the following reasons cannot be attributed to cause of renal failures?", opts: ["Uremia", "Hypertension", "Diabetes mellitus", "Diabetes insipidus"], ans: 3, exp: "Diabetes insipidus." },
+    { q: "167. Choose the incorrect statement.", opts: ["During urine formation tubular cells secrete substances such as H+, K+ and NH4+ into the filtrate", "Glomerular filtration rate is 180 litres per hour in healthy individuals", "Glucose and amino acids are reabsorbed completely in PCT.", "PCT helps to maintain pH and ionic balance of the body fluids by secretion of H+ into the filtrate and reabsorption of HCO3- from it."], ans: 1, exp: "Glomerular filtration rate is 180 litres per hour in healthy individuals." },
+    { q: "168. Which of the following does not favour the formation of large quantities of dilute urine?", opts: ["Renin", "Atrial-natriuretic factor", "Alcohol", "Caffeine"], ans: 0, exp: "Renin." },
+    { q: "169. Removal of proximal convulated tubule from the nephron will result in", opts: ["No change in quality and quantity of urine", "No urine formation", "More diluted urine", "More concentration urine"], ans: 2, exp: "More diluted urine." },
+    { q: "170. Human urine is usually acidic because", opts: ["Potassium and sodium exchange generates acidity", "Hydrogen ions are actively secreted into the filtrate", "The sodium transporter exchanges one hydrogen ions for each sodium ion, in peritubular capillaries", "Excreted plasma proteins are acidic"], ans: 1, exp: "Hydrogen ions are actively secreted into the filtrate." },
+    { q: "171. In which of the following locations is filtrate osmolarity highest?", opts: ["End of Proximal Convulated Tubule", "Tip of the Loop of Henle", "End of Distal Convulated Tubule", "Beginning of Distal Convulated Tubule"], ans: 1, exp: "Tip of the Loop of Henle." },
+    { q: "172. The glomerular capillary blood pressure causes filtration of blood through three layers in a sequence of .", opts: ["Endothelium -> Basement membrane -> Epithelium of Bowman's capsule.", "Epithelium of Bowman's capsule -> Endothelium -> Basement membrane", "Basement membrane -> Endothelium -> Epithelium of Bowman's capsule.", "Epithelium of Bowman's capsule -> Basement membrane -> Endothelium"], ans: 0, exp: "Endothelium -> Basement membrane -> Epithelium of Bowman's capsule." },
+    { q: "173. Renal fluid isotonic to cortical fluid and blood occurs in", opts: ["Distal convulated tubule and ascending limb", "Collecting duct and ascending limb", "PCT and DCT", "Ascending limb and descending limb."], ans: 2, exp: "PCT and DCT." },
+    { q: "174. Which of the following factors decreases renin secretion?\nI. Increased BP\nII. Increased plasma Na+ concentration\nIII. Prostaglandins\nIV. Angiotensin II", opts: ["I, II and IV are correct", "Only III is correct", "All are correct", "All are incorrect"], ans: 2, exp: "All are correct." },
+    { q: "175. In mammals, which blood vessel would normally carry largest amount of urea?", opts: ["Renal Vein", "Dorsal Aorta", "Hepatic Vein", "Hepatic Portal Vein"], ans: 2, exp: "Hepatic Vein." },
+    { q: "176. The part of nephron involved in active reabsorption of sodium is :-", opts: ["Bowman's capsule", "Descending limb of Henle's loop", "Distal convoluted tubule", "Proximal convoluted tubule"], ans: 3, exp: "Proximal convoluted tubule." },
+    { q: "177. Which of the following statements on human kidney is false?", opts: ["Renal plasma flow is normally 660 ml/minute", "Blood flow in the cortex is greater than that in the medulla", "Reabsorption of ions and water occurs mainly in the distal convoluted tubules", "The renal blood flow is decreased in dehydration"], ans: 2, exp: "Reabsorption of ions and water occurs mainly in the distal convoluted tubules." },
+    { q: "178. Where majority of the reabsorption takes place ?", opts: ["Renal capsule", "Proximal convoluted tubule", "Collecting duct", "Ascending limbs of the loop of Henle"], ans: 1, exp: "Proximal convoluted tubule." },
+    { q: "179. Which one of the following is not a zymogen?", opts: ["Trypsinogen", "Pepsinogen", "Angiotensin - II", "Procollagenase"], ans: 2, exp: "Angiotensin - II." },
+    { q: "180. Intake of ORS inhibits the secretion of", opts: ["Vasopressin", "Oxytocin", "Melatonin", "Thyroxine"], ans: 0, exp: "Vasopressin." },
+    { q: "181. The greatest amount of hydrogen ion secreted by the proximal tubule is associated with:", opts: ["excretion of potassium ion", "excretion of hydrogen ion", "reabsorption of calcium ion", "reabsorption of bicarbonate ion"], ans: 3, exp: "reabsorption of bicarbonate ion." },
+    { q: "182. The amount of potassium excreted by the kidney will decreases if :", opts: ["distal tubular flow increases", "circulating aldosterone level increase", "dietary intake of potassium increase", "Na+ reabsorption by the distal nephron decreases"], ans: 1, exp: "circulating aldosterone level increase." },
+    { q: "183. Which of the following statements concerning the composition of the filtrate formed by the renal corpuscle of the human kidney is correct?", opts: ["Blood and filtrate are identical in composition.", "Filtrate has a higher concentration of the waste product urea than blood does.", "The filtrate is similar to blood but without proteins and blood cells.", "The filtrate has a lower concentration of glucose than blood does."], ans: 2, exp: "The filtrate is similar to blood but without proteins and blood cells." },
+    { q: "184. Which of the following represents the primary driving force for the filtration of blood within the renal corpuscle?", opts: ["Pressure within the glomerular capillaries is lower than pressure in Bowman's capsule.", "Pressure within the glomerular capillaries is greater than pressure in Bowman's capsule.", "The collecting duct creates a suction that draws fluid into Bowman's capsule.", "The filtration slits are present in the glomerular capillaries."], ans: 1, exp: "Pressure within the glomerular capillaries is greater than pressure in Bowman's capsule." },
+    { q: "185. Which statement most accurately describes the primary role of the loop of Henle in urine formation?", opts: ["The loop of Henle deposits Na+ and Cl- in the medullary region of the kidney, increasing its osmolarity", "The hormone ADH acts on the loop of Henle to increase water reabsorption.", "The ascending limb of the loop of Henle contributes to the high osmolarity of the medullary region by depositing urea.", "The loop of Henle is responsible for most of the Na+ reabsorbed by the nephron tubule."], ans: 0, exp: "The loop of Henle deposits Na+ and Cl- in the medullary region of the kidney, increasing its osmolarity." },
+    { q: "186. The amount of Na+ excreted in the urine is primarily determined by:", opts: ["the amount of Na+ secreted into the proximal convoluted tubule", "the amount of Na+ reabsorbed by the proximal convoluted tubule", "the amount of ADH released by the posterior pituitary gland", "hormonal regulation of Na+ reabsorption in the distal convoluted tubule"], ans: 3, exp: "hormonal regulation of Na+ reabsorption in the distal convoluted tubule." },
+    { q: "187. Which of the following would result in the production of hypotonic urine?", opts: ["dehydration in an individual", "an increase in the permeability of the collecting duct to water", "a decrease in ADH release by the brain", "a decrease in water reabsorption by the loop of Henle"], ans: 2, exp: "a decrease in ADH release by the brain." },
+    { q: "188. From an evolutionary perspective, which of the following adaptations makes the most sense?", opts: ["long loops of Henle in the kidneys of a river otter", "long loops of Henle in the kidneys of a desert fox", "an extensive Malpighian tubule system in a freshwater beetle", "renal corpuscles that are few in number and small in size in the kidney of a freshwater fish"], ans: 1, exp: "long loops of Henle in the kidneys of a desert fox." },
+    { q: "189. Which of the following nitrogenous wastes requires, hardly any water for its excretion?", opts: ["amino acid", "urea", "uric acid", "ammonia"], ans: 2, exp: "uric acid." },
+    { q: "190. The most concentrated urine is excreted by", opts: ["frogs", "kangaroo rats", "humans", "desert tortoises"], ans: 1, exp: "kangaroo rats." },
+    { q: "191. Which group possess excretory structures known as protonephridia?", opts: ["flatworms", "earthworms", "insects", "vertebrates"], ans: 0, exp: "flatworms." },
+    { q: "192. Which group possess excretory organs known as Malpighian tubules?", opts: ["earthworms", "flatworms", "insects", "jellyfish"], ans: 2, exp: "insects." },
+    { q: "193. The transfer of fluid from the glomerulus to Bowman's capsule", opts: ["results from active transport.", "transfers large molecules as easily as small ones.", "is very selective as to which subprotein sized molecules are transferred.", "is mainly a consequence of blood pressure in the capillaries of the glomerulus"], ans: 3, exp: "is mainly a consequence of blood pressure in the capillaries of the glomerulus." },
+    { q: "194. Which of the following would contain blood in a normally functioning nephron?", opts: ["vasa recta", "Bowman's capsule", "loop of Henle", "proximal tubule"], ans: 0, exp: "vasa recta." },
+    { q: "195. What substance is secreted by the proximal-tubule cells and prevents the pH of urine from becoming too acidic?", opts: ["bicarbonate", "salt", "glucose", "ammonia"], ans: 3, exp: "ammonia." },
+    { q: "196. Which structure passes urine to the renal pelvis?", opts: ["loop of Henle", "collecting duct", "Bowman's capsule", "proximal tubule"], ans: 1, exp: "collecting duct." },
+    { q: "197. Which of the following processes of osmoregulation by the kidney is the least selective?", opts: ["salt pumping to control osmolarity", "H+ pumping to control pH", "reabsorption", "filtration"], ans: 3, exp: "filtration." },
+    { q: "198. Proper functioning of the human kidney requires considerable active transport of sodium in the kidney tubules. If these active transport mechanisms were to stop completely, how would urine production be affected?", opts: ["No urine would be produced.", "A less-than-normal volume of hypoosmotic urine would be produced.", "A greater-than-normal volume of isoosmotic urine would be produced.", "A greater-than-normal volume of hyperosmotic urine would be produced."], ans: 2, exp: "A greater-than-normal volume of isoosmotic urine would be produced." },
+    { q: "199. Which one of the following is extremely important for water conservation in mammals?", opts: ["juxtamedullary nephrons", "Bowman's capsule", "urethra", "podocytes"], ans: 0, exp: "juxtamedullary nephrons." },
+    { q: "200. Processing of filtrate in the proximal and distal tubules accomplishes what important function?", opts: ["sorting plasma proteins according to size", "converting toxic ammonia to less toxic urea", "maintaining a constant pH in body fluids", "regulating the speed of blood flow through the nephron"], ans: 2, exp: "maintaining a constant pH in body fluids." },
+    { q: "201. What is unique about transport epithelial cells in the ascending loop of Henle in humans?", opts: ["They are the largest epithelial cells in the body.", "They are not in contact with interstitial fluid.", "Their membranes are impermeable to water.", "50% of their cell mass is comprised of smooth endoplasmic reticulum."], ans: 2, exp: "Their membranes are impermeable to water." },
+    { q: "202. What is the typical osmolarity of human blood?", opts: ["30 mosm/L", "100 mosm/L", "200 mosm/L", "300 mosm/L"], ans: 3, exp: "300 mosm/L." },
+    { q: "203. Which one of the following, if present in a urine sample, would likely be caused by trauma?", opts: ["amino acids", "glucose", "salts", "erythrocytes"], ans: 3, exp: "erythrocytes." },
+    { q: "204. What would account for increased urine production as a result of drinking alcoholic beverages?", opts: ["increased aldosterone production", "increased blood pressure", "inhibition of antidiuretic hormone secretion (ADH)", "increased reabsorption of water in the proximal tubule"], ans: 2, exp: "inhibition of antidiuretic hormone secretion (ADH)." },
+    { q: "205. Which of the following activities would initiate an osmoregulatory adjustment brought about primarily through the renin-angiotensin-aldosterone system?", opts: ["sleeping", "spending several hours mowing the lawn on a hot day", "eating a bag of potato chips", "eating a pizza with olives and pepperoni"], ans: 1, exp: "spending several hours mowing the lawn on a hot day." },
+    { q: "206. How does ADH function at the cellular level?", opts: ["ADH stimulates the reabsorption of glucose through channel proteins.", "It triggers the synthesis of an enzyme that makes the phospholipid bilayer more permeable to water.", "It causes membranes to include more phospholipids that have unsaturated fatty acids.", "It causes an increase in the number of aquaporin molecules of collecting duct cells."], ans: 3, exp: "It causes an increase in the number of aquaporin molecules of collecting duct cells." },
+    { q: "207. How do ADH and RAAS work together in maintaining osmoregulatory homeostasis?", opts: ["ADH monitors osmolarity of the blood and RAAS regulates blood volume.", "ADH monitors appropriate osmolarity by reabsorption of water, and RAAS maintains osmolarity by stimulating Na+ reabsorption.", "ADH an RAAS work antagonistically; ADH stimulates water reabsorption during dehydration and RAAS removal of water when it is in excess in body fluids.", "Both stimulate the adrenal gland to secrete aldosterone which increases both blood volume and pressure."], ans: 1, exp: "ADH monitors appropriate osmolarity by reabsorption of water, and RAAS maintains osmolarity by stimulating Na+ reabsorption." },
+    { q: "208. Which of the following is not a normal response to increased blood osmolarity in humans?", opts: ["increased permeability of the collecting duct to water", "production of more dilute urine", "release of ADH by the pituitary gland", "increased thirst"], ans: 1, exp: "production of more dilute urine." },
+    { q: "209. The high osmolarity of the renal medulla is maintained by all of the following except", opts: ["diffusion of salt from the thin segment of the ascending limb of the loop of Henle.", "active transport of salt from the upper region of the ascending limb.", "the spatial arrangement of juxtamedullary nephrons.", "diffusion of salt from the descending limb of the loop of Henle."], ans: 3, exp: "diffusion of salt from the descending limb of the loop of Henle." },
+    { q: "210. Which process in the nephron is least selective?", opts: ["filtration", "reabsorption", "active transport", "secretion"], ans: 0, exp: "filtration." },
+    { q: "211. The urine is", opts: ["hypotonic to blood and isotonic to medullary fluid", "hypertonic to blood and isotonic to medullary fluid", "isotonic to blood and hypotonic to medullary fluid", "Isotonic to blood and hypertonic to medullary fluid"], ans: 1, exp: "hypertonic to blood and isotonic to medullary fluid." },
+    { q: "212. Which of the following statements is correct?", opts: ["The descending limb of loop of Henle is impermeable to water.", "The ascending limb of loop of Henle is permeable to water.", "The descending limb of loop of Henle is permeable to electrolytes.", "The ascending limb of loop of Henle is impermeable to water."], ans: 3, exp: "The ascending limb of loop of Henle is impermeable to water." },
+    { q: "213. Fish gills are:", opts: ["only respiratory in function.", "only excretory in function.", "osmoregulatory in function.", "All the three are correct."], ans: 3, exp: "All the three are correct." },
+    { q: "214. Select the incorrect match w.r.t. materials reabsorbed in different parts of the nephron of kidney.\nParts of nephron | Reabsorbed", opts: ["Ascending limb of loop of Henle | NaCl", "Descending limb of loop of Henle | Water and NaCl", "PCT | Glucose, amino acids, vitamin C", "DCT | NaCl, HCO3-"], ans: 1, exp: "Descending limb of loop of Henle | Water and NaCl." },
+    { q: "215. Which of the following reaction is catalysed by renin secreted by juxtaglomerular cells in kidney?", opts: ["Angiotensin II -> Angiotensinogen", "Angiotensin II -> Angiotensin I", "Angiotensinogen -> Angiotensin I", "Angiotensin I -> Angiotensin II"], ans: 2, exp: "Angiotensinogen -> Angiotensin I." },
+    { q: "216. When you feel thirsty or there is dehydration, it results in increase in osmolarity of blood above 300 mos ml-1. It would stimulate the release of all the following, except", opts: ["Increase in osmolarity may also trigger the release of atrial natriuretic hormone", "A lowering of blood volume stimulates the release of renin", "This triggers the release of ADH. ADH causes the walls of the distal convoluted tubules and collecting ducts in the kidney to become more permeable to water", "Aldosterone will stimulate the distal convoluted tubules and collecting ducts to reabsorb Na+."], ans: 0, exp: "Increase in osmolarity may also trigger the release of atrial natriuretic hormone." },
+    { q: "217. Excretion of nitrogenous waste products in semisolid form occur in :", opts: ["Ureotelic animals", "Ammonotelic animals", "Uricotelic animals", "Amniotes"], ans: 2, exp: "Uricotelic animals." },
+    { q: "218. Arrange the following in sequence from upper to lower portions and select the right option.\n1. Kidney\n2. Ureter\n3. Urinary bladder\n4. Urethra", opts: ["1 -> 2 -> 3 -> 4", "4 -> 3 -> 2 -> 1", "1 -> 3 -> 2 -> 4", "1 -> 2 -> 4 -> 3"], ans: 0, exp: "1 -> 2 -> 3 -> 4." },
+    { q: "219. Match the items given in Column I with those in Column II and select the correct option given below :\nColumn I: A. Glycosuria, B. Gout, C. Renal calculi, D. Glomerular nephritis\nColumn II: i. Accumulation of uric acid in joints, ii. Mass of crystallised salts within the kidney, iii. Inflammation in glomeruli, iv. Presence of glucose in urine", opts: ["A-ii, B-iii, C-iv, D-i", "A-ii, B-i, C-iii, D-iv", "A-iii, B-ii, C-iv, D-i", "A-iv, B-i, C-ii, D-iii"], ans: 3, exp: "A-iv, B-i, C-ii, D-iii." },
+    { q: "220. Match the items given in Column I with those in Column II and select the correct option given below:\nColumn I (Function) | Column II (Part of Excretory system)\nA. Ultrafiltration | i. Henle's loop\nB. Concentration of urine | ii. Ureter\nC. Transport of urine | iii. Urinary bladder\nD. Storage of urine | iv. Malpighian corpuscle\nv. Proximal convoluted tubule", opts: ["A-iv, B-i, C-ii, D-iii", "A-v, B-iv, C-i, D-ii", "A-iv, B-v, C-ii, D-iii", "A-v, B-i, C-ii, D-iii"], ans: 0, exp: "A-iv, B-i, C-ii, D-iii." },
+    { q: "221. Which of the following are about 90% absorbed in the nephron?", opts: ["Glucose and amino acids-Active process", "Glucose and amino acids- Passive process", "Cl-, NH3, K+ - Passive process", "Cl-, NH3, K+ -Active process"], ans: 0, exp: "Glucose and amino acids-Active process." },
+    { q: "222. Creatinine is formed by -", opts: ["Urea", "Uric acid", "Breakdown of creatine phosphate in muscle", "Kidney"], ans: 2, exp: "Breakdown of creatine phosphate in muscle." },
+    { q: "223. Which exocrine glands are present in skin?", opts: ["Sweat gland, eccrine", "Sweat gland, merocrine", "Sweat gland, apocrine", "Sweat gland, sebaceous gland"], ans: 3, exp: "Sweat gland, sebaceous gland." },
+    { q: "224. Which of the following hormones coordinate with each other to maintain ideal blood Ca level?", opts: ["Thyrocalcitonin and glucagon", "Parathyroid hormone and cortisol", "Thyrocalcitonin and Thyroxin", "Thyrocalcitonin and Parathyroid hormone"], ans: 3, exp: "Thyrocalcitonin and Parathyroid hormone." },
+    { q: "225. Uric acid forms in body by :", opts: ["Phospholipid", "Glucose", "DNA", "RNA"], ans: 2, exp: "DNA." },
+    { q: "226. In old age persons defects in kidney is due to:-", opts: ["GFR is increased", "ADH is increased", "Nephrons degeneration", "Reabsorption is increased"], ans: 2, exp: "Nephrons degeneration." },
+    { q: "227. During conc. of urine by the human kidneys, NaCl is returned to the medullary interstitium by", opts: ["DL of Loop of Henle", "AL of Loop of Henle", "DL of Vasa recta", "Al of Vasa recta"], ans: 3, exp: "Al of Vasa recta." },
+    { q: "228. Identify the correct statement regarding the excretion of acids by the human kidney.", opts: ["The filtered HCO3- is absorbed by anion transport.", "Intercalated cells of Distal tubule secrete H+ to reabsorbed HCO3- from tubular fluid.", "All the filtered HCO3- ions are normally absorbed in the first half of the distal tubule.", "Urine pH is normally greater than that of plasma."], ans: 1, exp: "Intercalated cells of Distal tubule secrete H+ to reabsorbed HCO3- from tubular fluid." },
+    { q: "229. Blood doping means use of banned substances by athletes that have a favourable effect on erythrocyte count by stimulating the bone marrow. The source of such a hormone can be the human.", opts: ["Spleen", "Heart", "Kidney", "Lung"], ans: 2, exp: "Kidney." },
+    { q: "230. The main disadvantage of urea as an excretory product for animals, it would be", opts: ["Its highly toxic", "Needs lot of water to be eliminated", "It being osmolyte", "Energy expenditure to produce it"], ans: 1, exp: "Needs lot of water to be eliminated." },
+    { q: "231. Juxtaglomerular apparatus is a special sensitive region formed by cellular modifications in the", opts: ["DCT & efferent arteriole at point of their contact", "DCT & afferent arteriole at point of their contact", "PCT & afferent arteriole at point of their contact", "PCT & efferent arteriole at point of their contact"], ans: 1, exp: "DCT & afferent arteriole at point of their contact." },
+    { q: "232. Which of the following statements about the kidneys is incorrect?", opts: ["They consumes over 20% of the oxygen used by the body at rest.", "Approximately 1200 ml of fluid is filtrated by the kidneys each day.", "120 - 125 ml of plasma is forced into the renal tubules each time.", "They compose less than 1 % of the body weight"], ans: 1, exp: "Approximately 1200 ml of fluid is filtrated by the kidneys each day." },
+    { q: "233. Describe urine in relationship to glomerular filtration, tubular reabsorption and tubular secretion.", opts: ["GF - TR - TS", "GF + TR + TS", "GF + TR - TS", "GF - TR + TS"], ans: 3, exp: "GF - TR + TS." },
+    { q: "234. A decrease in blood pressure/volume will not cause the release of :-", opts: ["Renin", "Atrial Natriuretic Factor", "Aldosterone", "ADH"], ans: 1, exp: "Atrial Natriuretic Factor." },
+    { q: "235. A person with a high blood volume than the normal would show-", opts: ["increased renin secretion", "increased aldosterone secretion", "decreased ANF secretion", "increased urinary Na+"], ans: 3, exp: "increased urinary Na+." },
+    { q: "236. Organisms categorized as osmoconformers are most likely", opts: ["Found in fresh water lakes and streams", "Marine", "Found in arid terrestrial environments.", "Found in terrestrial environments with adequate moisture."], ans: 1, exp: "Marine." },
+    { q: "237. The advantage of excreting wastes as urea rather than as ammonia is that", opts: ["Urea can be exchanged for Na+.", "Urea is less toxic than ammonia.", "Urea requires more water for excretion than ammonia.", "Urea does not affect the osmolar gradient."], ans: 1, exp: "Urea is less toxic than ammonia." },
+    { q: "238. What substance is secreted by the proximal-tubule cells and prevents the pH of urine from becoming too acidic?", opts: ["Bicarbonate", "NaOH", "Glucose", "Ammonia"], ans: 3, exp: "Ammonia." },
+    { q: "239. If these active transport mechanisms for sodium ions in human kidney were to stop completely, how would urine production be affected?", opts: ["A less-than-normal volume of hypoosmotic urine would be produced.", "A greater-than-normal volume of isoosmotic urine would be produced.", "A greater-than-normal volume of hyperosmotic urine would be produced.", "A less-than-normal volume of isoosmotic urine would be produced."], ans: 1, exp: "A greater-than-normal volume of isoosmotic urine would be produced." },
+    { q: "240. Processing of filtrate in the proximal and distal tubules accomplishes what important function?", opts: ["Sorting plasma proteins according to size", "Converting toxic ammonia to less toxic urea", "Maintaining a constant pH in body fluids", "Reabsorbing urea to maintain osmotic balance"], ans: 2, exp: "Maintaining a constant pH in body fluids." },
+    { q: "241. Which one of the following, if present in a urine sample, would likely be caused by trauma?", opts: ["Amino acids", "Glucose", "Salts", "Erythrocytes"], ans: 3, exp: "Erythrocytes." },
+    { q: "242. In a laboratory experiment with three groups, one group of people drinks pure water, a second group drinks an equal amount of beer and a third group drinks an equal amount of concentrated salt solution all during the same time period. Their urine production is monitored for several hours. At the end of the measurement period, which group will have produced the greatest volume of urine and which group the least?", opts: ["Beer the most, salt solution the least", "Salt solution the most, water the least", "Water the most, beer the least", "Beer the most, water the least"], ans: 0, exp: "Beer the most, salt solution the least." },
+    { q: "243. What will happen to glomerular filtration rate (GFR) if efferent arteriole smooth muscle is contracted?", opts: ["GFR will increase", "GFR will decrease", "GFR will remain constant", "GFR can either increase or decrease"], ans: 0, exp: "GFR will increase." },
+    { q: "244. Glomerular filtration rate can be determined by calculating renal clearance of", opts: ["Ammonia", "Inulin", "Para-aminohippuric acid.", "Urea"], ans: 1, exp: "Inulin." },
+    { q: "245. The mucosa of the bladder is comprised of:", opts: ["Smooth muscle", "Squamous epithelium", "Transitional epithelium", "Simple columnar epithelium"], ans: 2, exp: "Transitional epithelium." },
+    { q: "246. What causes urine to flow from the kidneys to the bladder?", opts: ["Gravity", "Hydrostatic pressure", "Peristalsis", "Osmotic pressure"], ans: 2, exp: "Peristalsis." },
+    { q: "247. Which of the following statements about the urinary system is INCORRECT?", opts: ["It produces renin, which helps regulate blood pressure.", "It metabolizes vitamin D to its active form.", "It carries out the majority of gluconeogenesis in the body.", "It produces erythropoietin, which stimulates red blood cell formation."], ans: 2, exp: "It carries out the majority of gluconeogenesis in the body." },
+    { q: "248. Peristaltic muscular contractions are important for conveying urine through the excretory system, much like peristalsis in the digestive tract. Peristalsis of the detrusor muscle of the urinary bladder is controlled by:", opts: ["Conscious control of the skeletal muscle", "Sympathetic nervous impulses", "Parasympathetic nervous impulses", "Impulses from the cerebral cortex"], ans: 2, exp: "Parasympathetic nervous impulses." },
+    { q: "249. Aldosterone:", opts: ["is the major mineralocorticoid hormone secreted by the kidney", "promotes the secretion of Na+ in the late distal convoluted tubule and the cortical region of the collecting duct", "stimulates the secretion of K+ from the peritubular blood into the distal convoluted tubule", "is a protein hormone secreted by the adrenal cortex"], ans: 2, exp: "stimulates the secretion of K+ from the peritubular blood into the distal convoluted tubule." },
+    { q: "250. Which of the following statements regarding renal handling of water by the kidneys is correct?", opts: ["In the absence of vasopressin, urine is isoosmotic with plasma.", "In the absence of vasopressin, water cannot be reabsorbed in the proximal tubules.", "In the absence of vasopressin, the cortical collecting ducts have very low permeability to water.", "In the absence of vasopressin, the distal tubules secrete water"], ans: 2, exp: "In the absence of vasopressin, the cortical collecting ducts have very low permeability to water." },
+    { q: "251. If the pH of the blood decreases, the pH of the urine will", opts: ["Decrease.", "Increase", "Be unaffected", "first increase than decrease"], ans: 0, exp: "Decrease." },
+    { q: "252. A blockage in a glomerulus would directly obstruct blood flow into which vessel", opts: ["Afferent arteriole", "Efferent arteriole", "Interlobular artery", "Interlobar artery"], ans: 1, exp: "Efferent arteriole." },
+    { q: "253. Kidneys are not only organs of excretion, their work is supplemented by :", opts: ["Liver", "Skin", "Heart", "Large Intestine"], ans: 1, exp: "Skin." },
+    { q: "254. Which of the following factors is responsible for the formation of concentrated urine?", opts: ["Low levels of antidiuretic hormone", "Maintaining hyperosmolarity towards inner medullary interstitium in the kidneys.", "Secretion of erythropoietin by Juxtaglomerular complex", "Hydrostatic pressure during glomerular filtration"], ans: 1, exp: "Maintaining hyperosmolarity towards inner medullary interstitium in the kidneys." },
+    { q: "255. Use of an artificial kidney during hemodialysis may result in :\nA. Nitrogenous waste build-up in the body\nB. Non-elimination of excess potassium ions\nC. Reduced absorption of calcium ions from gastro-intestinal tract\nD. Reduced RBC production\nWhich of the following options is the most appropriate?", opts: ["A and B are correct", "B and C are correct", "C and D are correct", "A and D are correct"], ans: 2, exp: "C and D are correct." },
+    { q: "256. Match the following parts of a nephron with their function :\n(A) Descending limb of Henle's loop | (i) Reabsorption of salts only\n(B) Proximal convoluted tubule | (ii) Reabsorption of water only\n(C) Ascending limb of Henle's loop | (iii) Conditional reabsorption of sodium ions and water\n(D) Distal convoluted tubule | (iv) Reabsorption of ions, water and organic nutrients\nSelect the correct option from the following :", opts: ["(A)-(iv), (B)-(i), (C)-(iii), (D)-(ii)", "(A)-(i), (B)-(iii), (C)-(ii), (D)-(iv)", "(A)-(ii), (B)-(iv), (C)-(i), (D)-(iii)", "(A)-(i), (B)-(iv), (C)-(iii), (D)-(ii)"], ans: 2, exp: "(A)-(ii), (B)-(iv), (C)-(i), (D)-(iii)." },
+    { q: "257. Match the items in Column-I with those in Column-II\nColumn-I: (A) Podocytes, (B) Protonephridia, (C) Nephridia, (D) Renal calculi\nColumn-II: (i) Crystallised oxalates, (ii) Annelids, (iii) Amphioxus, (iv) Filtration slits\nSelect the correct option from the following :", opts: ["(A)-(iv), (B)-(ii), (C)-(iii), (D)-(i)", "(A)-(iii), (B)-(iv), (C)-(ii), (D)-(i)", "(A)-(iii), (B)-(ii), (C)-(iv), (D)-(i)", "(A)-(iv), (B)-(iii), (C)-(ii), (D)-(i)"], ans: 3, exp: "(A)-(iv), (B)-(iii), (C)-(ii), (D)-(i)." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 16; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

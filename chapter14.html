@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 17: Breathing and Exchange of Gases - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Breathing and Exchange of Gases</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "1. In which of the following gaseous exchange between O2 and CO2 occurs through general body surface?", opts: ["Sponges", "Coelenterates", "Flatworms", "All"], ans: 3, exp: "All these organisms exchange gases through their general body surface." },
+    { q: "2. Match the followings correctly-\nAnimals: A. Earthworms, B. Most aquatic arthropods, C. Fishes, D. Birds/Reptiles, E. Insects\nRespiratory Organs: I. Lungs, II. Trachea, III. Gills, IV. Moist cuticle", opts: ["A-IV, B and C-III, D-I, E-II", "A-IV, B-III, C and D-I, E-III", "A-II, B and C-III, D-I, E-IV", "A-III, B and C-I, D-II, E-IV"], ans: 0, exp: "A-IV, B and C-III, D-I, E-II." },
+    { q: "3. Amphibians e.g. frogs respire -", opts: ["Through moist skin", "Lungs", "Both", "Trachea"], ans: 2, exp: "Both through moist skin and lungs." },
+    { q: "4. Which is the correct sequence of air passages in man?", opts: ["External nostril -> Nasal passage -> Internal nostril -> Pharynx -> Larynx -> Trachea -> Bronchi -> Bronchioles -> Alveoli", "Nose -> Larynx -> Pharynx -> Bronchioles -> Bronchi -> Alveoli", "Nose -> Pharynx -> Trachea -> Larynx -> Bronchi -> Bronchioles -> Alveoli", "Nose -> Larynx -> Bronchi -> Pharynx -> Trachea -> Bronchioles -> Alveoli"], ans: 0, exp: "External nostril -> Nasal passage -> Internal nostril -> Pharynx -> Larynx -> Trachea -> Bronchi -> Bronchioles -> Alveoli." },
+    { q: "5. Which is correct about nasopharynx?", opts: ["Internal nostrils open into nasopharynx", "It is the common passage for both air and food", "It opens through gullet of the larynx region into the trachea", "All"], ans: 3, exp: "All are correct." },
+    { q: "6. Which of the following options is wrong about the larynx (sound box)", opts: ["It is a bony box", "Glottis is the opening into the larynx", "During swallowing of food glottis is covered by epiglottis to prevent food entry into the larynx", "All"], ans: 0, exp: "Larynx is not a bony box; it is made of cartilage." },
+    { q: "7. Trachea divides into right and left primary bronchi at _____ th thoracic vertebra.", opts: ["4", "5", "6", "9"], ans: 1, exp: "5th thoracic vertebra." },
+    { q: "8. Incomplete cartilaginous rings support all of the following except-", opts: ["Trachea", "Primary, secondary and tertiary bronchi", "Respiratory bronchioles", "Initial bronchioles"], ans: 2, exp: "Respiratory bronchioles." },
+    { q: "9. Which of the following has the smallest diameter?", opts: ["Trachea", "Terminal bronchiole", "Tertiary bronchus", "Secondary bronchus"], ans: 1, exp: "Terminal bronchiole." },
+    { q: "10. Lungs are comprised by -", opts: ["Only alveoli", "Pleura", "Different types of bronchi", "Network of bronchi, bronchioles and alveoli"], ans: 3, exp: "Network of bronchi, bronchioles and alveoli." },
+    { q: "11. Sites of gaseous exchange in lungs are -", opts: ["Alveoli", "Tracheoles", "Bronchioles", "Pleura"], ans: 0, exp: "Alveoli." },
+    { q: "12. I. It is double layered and covers the lungs\nII. Fluid between the layers reduces friction on lung-surface\nIII. Outer layer is in contact with thoracic wall\nIV. Inner layer is in contact with lungs\nThe above features refer to -", opts: ["Pericardium", "Peritoneum", "Pleura", "None"], ans: 2, exp: "Pleura." },
+    { q: "13. The part starting with the external nostrils upto the terminal bronchioles constitute the -", opts: ["Respiratory or exchange part of respiratory system", "Inspiratory part", "Conducting part", "Expiratory part"], ans: 2, exp: "Conducting part." },
+    { q: "14. Respiratory or exchange part of the respiratory system consists of-", opts: ["The parts starting with external nostrils upto terminal bronchioles", "Alveoli and their ducts", "All bronchi and terminal bronchioles", "All bronchioles"], ans: 1, exp: "Alveoli and their ducts." },
+    { q: "15. 'The conducting part' of the respiratory system has functions.", opts: ["Filter, warm and moisten the air", "Gaseous exchange", "Filtering the air only", "Warm the air"], ans: 0, exp: "Filter, warm and moisten the air." },
+    { q: "16. The chamber formed dorsally by the vertebral column, ventrally by sternum, laterally by ribs and on the lower side by dome-shaped diaphragm is -", opts: ["Abdominal cavity", "Thoracic cavity", "Pelvic cavity", "Cranial cavity"], ans: 1, exp: "Thoracic cavity." },
+    { q: "17. The lungs expand in inspiration/inhalation because -", opts: ["Diaphragm contracts upward", "The volume of thoracic cavity increases", "External intercostal muscles relax", "Diaphragm relaxes"], ans: 1, exp: "The volume of thoracic cavity increases." },
+    { q: "18. The process of exhalation/expiration is begun mainly due to -", opts: ["The contraction of intercostal muscles", "The contraction of the diaphragm", "The relaxation of muscles", "Low pressure in thoracic cavity"], ans: 2, exp: "The relaxation of muscles." },
+    { q: "19. Which of the following statements about the mechanism of ventilation/breathing is false?", opts: ["As the diaphragm relaxes, air is expelled from the respiratory system", "During inspiration the lungs act as suction pump", "Inspiration is a passive and expiration is an active process", "For quiet breathing external intercostal muscles and diaphragm play an important role"], ans: 2, exp: "Inspiration is active and expiration is passive." },
+    { q: "20. Inspiration occurs when there is a negative pressure in the lungs with respect to atmospheric pressure.' This negative pressure is achieved when -", opts: ["Intrapulmonary pressure is less than the atmospheric pressure", "Intra pulmonary pressure is greater than the atmospheric pressure", "Intrapulmonary pressure is equal to the atmospheric pressure", "Intrapleural pressure becomes more than the intraalveolar pressure"], ans: 0, exp: "Intrapulmonary pressure is less than the atmospheric pressure." },
+    { q: "21. Expiration takes place when the intrapulmonary pressure is -", opts: ["Greater than the atmospheric pressure", "Lesser than the atmospheric pressure", "Equal to atmospheric pressure", "Equal to intrapleural pressure"], ans: 0, exp: "Greater than the atmospheric pressure." },
+    { q: "22. Which of the following sequences is correct to initiate inspiration?\nI. The contraction of external intercostal muscles raises the ribs and sternum\nII. Volume of thorax increases in the dorso-ventral axis\nIII. Intrapulmonary pressure decreases\nIV. Diaphragm contraction\nV. Air rushes into lungs\nVI. Volume of thorax increases in the anterio-posterior axis", opts: ["I, II, IV, V, III, VI", "I, II, III, IV, V", "I, II, IV, VI, III, V", "VI, V, I, II, III, IV"], ans: 2, exp: "I, II, IV, VI, III, V." },
+    { q: "23. Which of the following sequences is correct to initiate expiration?\nI. Relaxation of external intercostal muscles and return of diaphragm and sternum to their normal position\nII. Air expelled from lungs\nIII. Volume of thorax decreases\nIV. Intrapulmonary pressure increases", opts: ["I, III, IV, II", "II, IV, III, I", "IV, III, II, I", "I, II, III, IV"], ans: 0, exp: "I, III, IV, II." },
+    { q: "24. On an average, a healthy human breathes ______ times/minute-", opts: ["20 - 40", "1-6", "12-16", "16-25"], ans: 2, exp: "12-16." },
+    { q: "25. Additional muscles for forceful breathing are -", opts: ["Diaphragm and external intercostal muscles", "Abdominal muscles and internal intercostal muscles", "Diaphragm and abdominal muscles", "External and internal intercostal muscles"], ans: 1, exp: "Abdominal muscles and internal intercostal muscles." },
+    { q: "26. Match the following -\nColumn A: 1. Tidal Volume, 2. Residual volume, 3. Expiratory reserve volume, 4. Inspiratory reserve volume, 5. Inspiratory capacity, 6. Vital capacity\nColumn B: A Tidal volume and inspiratory reserve volume and expiratory reserve volume, B. Additional amount of air inhaled beyond tidal volume when taking a very deep breath, C. Amount of air remaining in lungs after expiratory reserve volume is expelled, D. Tidal volume and inspiratory reserve volume, E. Volume of air in one breath, F. Amount of air exhaled in forced exhalation", opts: ["1 - C, 2 - E, 3 - B, 4 - F, 5 - D, 6 - A", "1 - E, 2 - F, 3 - C, 4 - B, 5 - A, 6 - D", "1 - E, 2 - C, 3 - F, 4 - B, 5 - D, 6 - A", "1 - E, 2 - C, 3 - B, 4 - F, 5 - A, 6 - D"], ans: 2, exp: "1 - E, 2 - C, 3 - F, 4 - B, 5 - D, 6 - A." },
+    { q: "27. Match the columns -\nColumn I: 1. Tidal Volume, 2. Inspiratory reserve volume, 3. Expiratory reserve volume, 4. Residual volume, 5. Vital capacity\nColumn II: A 2500 - 3000 ml of air, B. 1000 ml of air, C. 500 ml of air, D. 3400 - 4800 ml of air, E. 1200 ml of air", opts: ["1 - C, 2 - D, 3 - B, 4 - A, 5 - E", "1 - C, 2 - A, 3 - B, 4 - E, 5 - D", "1 - C, 2 - A, 3 - D, 4 - E, 5 - B", "1 - E, 2 - A, 3 - B, 4 - E, 5 - D"], ans: 1, exp: "1 - C, 2 - A, 3 - B, 4 - E, 5 - D." },
+    { q: "28. Arrange the following in order of increasing volume -\n1. Tidal volume\n2. Residual volume\n3. Expiratory reserve volume\n4. Vital capacity", opts: ["1 < 2 < 3 < 4", "1 < 4 < 3 < 2", "1 < 3 < 2 < 4", "1 < 4 < 2 < 3"], ans: 0, exp: "1 < 2 < 3 < 4." },
+    { q: "29. Air entering lung is -\n1. Warmed\n2. Filtered\n3. Deprived of some oxygen\n4. Enriched with CO2\nWhat is true?", opts: ["1, 2, 3, and 4", "1 and 2", "2 and 4", "2 and 3"], ans: 1, exp: "1 and 2." },
+    { q: "30. Different respiratory volumes are given below-\nI. Tidal Volume = 500 ml\nII. Residual Volume = 1000 ml\nIII. Inspiratory Reserve Volume = 2500 ml\nIV. Expiratory Reserve Volume = 1000 ml\nThe functional residual capacity (FRC) is -", opts: ["3500 ml", "2000 ml", "600 ml", "3000 ml"], ans: 1, exp: "2000 ml." },
+    { q: "31. Expiratory capacity is equal to -", opts: ["TV + ERV", "ERV + IRV", "ERV + RV", "ERV + RV"], ans: 0, exp: "TV + ERV." },
+    { q: "32. A spirometer cannot be used to measure -", opts: ["IC", "RV", "ERV", "IRV"], ans: 1, exp: "RV." },
+    { q: "33. Exchange of gases -", opts: ["Occurs between the alveoli and pulmonary blood capillary", "Occurs between blood and tissues", "By diffusion", "All"], ans: 3, exp: "All are correct." },
+    { q: "34. Which of the following factors affect the diffusion of gases?", opts: ["Partial pressure of diffusing gases", "Solubility of gases", "The thickness of diffusion membrane", "All"], ans: 3, exp: "All are correct." },
+    { q: "35. Which of the following statements about the partial pressure of CO2 is true?", opts: ["It is higher in alveoli than in pulmonary artery", "It is higher in the systemic arteries than in tissues", "It is higher in systemic veins than in systemic arteries", "It is higher in the pulmonary veins than in pulmonary arteries"], ans: 2, exp: "It is higher in systemic veins than in systemic arteries." },
+    { q: "36. The partial pressure of CO2 in the venous blood is -", opts: ["Greater than in the tissue spaces", "Lesser than in the tissue spaces", "Lesser than in the arterial blood", "Less than in alveoli"], ans: 1, exp: "Lesser than in the tissue spaces." },
+    { q: "37. A section of an alveolus with a pulmonary capillary indicates the presence of major layers constituting diffusion membrane-", opts: ["3", "2", "6", "10"], ans: 0, exp: "3." },
+    { q: "38. Partial pressures (in mmHg) of O2 in atmospheric air, alveoli deoxygenated blood, oxygenated blood and tissues are-", opts: ["40, 95, 40, 104, 159", "104, 40, 40, 95, 159", "153, 104, 40, 95, 40", "195, 104, 95, 40, 40"], ans: 2, exp: "153, 104, 40, 95, 40." },
+    { q: "39. Partial pressure (in mm Hg) of CO2 in atmospheric air, alveoli, deoxygenated blood, oxygenated blood and tissues are-", opts: ["0.3, 40, 45, 40, 45", "40, 45, 40, 45, 0.3", "40, 40, 45, 45, 0.3", "0.3, 45, 45, 40, 40"], ans: 0, exp: "0.3, 40, 45, 40, 45." },
+    { q: "41. In comparison to solubility of O2 in blood the solubility of CO2 is -", opts: ["20 - 25 times lesser", "Slightly higher", "Slightly greater", "20 - 25 times higher"], ans: 3, exp: "20 - 25 times higher." },
+    { q: "43. The barrier between the air in alveolus and blood in pulmonary capillary consists of 3 layers and its total thickness", opts: ["1 mm", "more than 1 mm", "much less than 1 mm", "2 mm"], ans: 2, exp: "much less than 1 mm." },
+    { q: "44. Respiration involves following steps -\nA Diffusion of gases O2 and CO2 across alveolar membrane\nB. Transport of gases by blood\nC. Utilization of O2 by cell for catabolic reactions and resultant release of CO2\nD. Pulmonary ventilation by which atmospheric air is drawn in and CO2 rich alveolar air is released out\nE. Diffusion of O2 and CO2 between blood and tissues.\nThe correct sequence of steps is -", opts: ["A -> B -> C -> D -> E", "E -> D -> C -> B -> A", "C -> E -> B -> A -> D", "C -> B -> E -> A -> D"], ans: 3, exp: "C -> B -> E -> A -> D." },
+    { q: "45. Total percentage of O2 transported by haemoglobin or RBC is -", opts: ["3%", "97%", "49%", "100%"], ans: 1, exp: "97%." },
+    { q: "46. Besides RBC blood plasma also carries O2 in solution. The percentage is -", opts: ["3%", "97%", "49%", "25%"], ans: 0, exp: "3%." },
+    { q: "47. CO2 is transported -", opts: ["By RBC", "As bicarbonates", "In a dissolved state through plasma", "All"], ans: 3, exp: "All are correct." },
+    { q: "48. The majority of CO2 is transported as -", opts: ["Carbonates", "Bicarbonates", "Carbaminohaemoglobin", "Dissolved state in blood"], ans: 1, exp: "Bicarbonates." },
+    { q: "49. Blood carries the CO2 in 3 forms. The correct percentages of CO2 in these forms are -\nAs carbinohaemoglobin in RBC | As bicarbonates | Dissolved form in plasma", opts: ["20-25% | 70% | 7%", "70% | 20-25% | 7%", "20-25% | 7% | 70%", "7% | 20-25% | 70%"], ans: 0, exp: "20-25% | 70% | 7%." },
+    { q: "50. Gas exchange in animals always involves -", opts: ["Anaerobic cellular respiration", "Diffusion across membranes", "Active transport of gases", "None"], ans: 1, exp: "Diffusion across membranes." },
+    { q: "51. Each molecule of haemoglobin when fully saturated carries how many molecules of O2 -", opts: ["1", "2", "4", "20"], ans: 2, exp: "4." },
+    { q: "52. Dissociation curve is associated with -", opts: ["Carbonic anhydrase", "CO", "CHCl3", "Oxyhaemoglobin"], ans: 3, exp: "Oxyhaemoglobin." },
+    { q: "53. Binding of O2 with haemoglobin is primarily related to -", opts: ["PO2", "PCO2", "H+ cone.", "None"], ans: 0, exp: "PO2." },
+    { q: "54. Besides PO2 the other factor(s) affecting the binding of O2 with haemoglobin is/are -", opts: ["PCO2", "H+ conc.", "temperature", "All"], ans: 3, exp: "All are correct." },
+    { q: "55. Oxygen dissociation curve is -", opts: ["J-shaped", "S-shaped", "L-shaped", "Zig-zag"], ans: 1, exp: "S-shaped." },
+    { q: "56. Which of the following statements is wrong?", opts: ["O2 binds with haemoglobin in a reversible manner to form oxyhaemoglobin", "Every 100 ml of oxygenated blood can deliver around 5 ml of O2 to the tissue", "Occupational respiratory disorder are characterised by fibrosis (proliferation of fibrous tissues)", "None"], ans: 3, exp: "All the given statements are true." },
+    { q: "57. What will be the PO2 and PCO2 in the atmospheric air compared to those in the alveolar?", opts: ["PO2 lesser, PCO2 higher", "PO2 higher, PCO2 lesser", "PO2 higher, PCO2 higher", "PO2 lesser, PCO2 lesser"], ans: 1, exp: "PO2 higher, PCO2 lesser." },
+    { q: "58. Which of the following would have the same O2 content?", opts: ["Blood entering the lungs - blood leaving the lungs", "Blood entering the right side of the heart - blood leaving the right side of the heart", "Blood entering the right side of the heart - blood leaving the left side of the heart", "Blood entering the tissue capillaries - blood leaving the tissue capillaries"], ans: 1, exp: "Blood entering the right side of the heart - blood leaving the right side of the heart." },
+    { q: "59. When the percentage saturation of haemoglobin with O2 is plotted against the PO2. We get-", opts: ["J-shaped curve", "L-shaped curve", "S-shaped/sigmoid curve", "Rectangular graph"], ans: 2, exp: "S-shaped/sigmoid curve." },
+    { q: "60. CO2 dissociates from carbinohaemoglobin when -", opts: ["PO2 = decrease, PCO2 = decrease", "PO2 = increase, PCO2 = increase", "PO2 = decrease, PCO2 = increase", "PO2 = increase, PCO2 = decrease"], ans: 2, exp: "PO2 = decrease, PCO2 = increase." },
+    { q: "61. Which of the following situations would result in the greatest degree of O2 saturation for haemoglobin, assuming PO2 remains constant -", opts: ["Increased CO2 levels, decreased temperature", "Increased CO2 levels, increased temperature", "Decreased CO2 levels, decreased temperature", "Decreased CO2 levels, increased temperature"], ans: 2, exp: "Decreased CO2 levels, decreased temperature." },
+    { q: "62. Which of the following factors favour the formation of oxyhaemoglobin in lungs?", opts: ["PO2 = decrease, PCO2 = increase, H+ = increase, Temperature = increase", "PO2 = increase, PCO2 = increase, H+ = decrease, Temperature = increase", "PO2 = increase, PCO2 = decrease, pH = increase or H+ = decrease, Temperature = decrease", "PO2 = decrease, PCO2 = increase, pH = increase, Temperature = decrease"], ans: 2, exp: "PO2 = increase, PCO2 = decrease, pH = increase or H+ = decrease, Temperature = decrease." },
+    { q: "63. All of the following favour the dissociation of oxyhaemoglobin to deliver O2 to tissues except-", opts: ["PO2 = increase", "PCO2 = increase or H+ = increase", "Temperature = increase", "PO2 = decrease"], ans: 0, exp: "PO2 = increase." },
+    { q: "64. The transport of CO2 by the blood is primarily dependent on -", opts: ["The solubility of CO2 in blood", "The presence of carbonic anhydrase in RBCs", "The ability of haemoglobin to bind and transport CO2", "The ability of other blood proteins"], ans: 1, exp: "The presence of carbonic anhydrase in RBCs." },
+    { q: "65. Which of the following statements is false?", opts: ["PO2 is the major factor which affects the binding of CO2 with haemoglobin", "PCO2 is low and PO2 is high as in the tissues, more binding of CO2 with Hb occurs", "RBC contains a very high cone. of carbonic anhydrase and minute quantities of the same in the plasma", "Every 100 ml of deoxygenated blood delivers approximately 4 ml of CO2 to the alveoli"], ans: 1, exp: "PCO2 is low and PO2 is high as in the tissues, more binding of CO2 with Hb occurs." },
+    { q: "67. Respiratory process is regulated by certain specialized centres in the brain. One of the following listed centres can reduce the inspiratory duration upon stimulation -", opts: ["Medullary inspiratory centre", "Pneumotaxic centre", "Chemosynthetic centre", "Apneustic centre"], ans: 1, exp: "Pneumotaxic centre." },
+    { q: "68. Pneumotaxic centre is present in -", opts: ["Pons", "Medulla oblongata", "Cerebrum", "Cerebellum"], ans: 0, exp: "Pons." },
+    { q: "69. The largest proportion of CO2 carried by blood is in the form of -", opts: ["Molecular CO2 dissolved in the plasma", "Bicarbonates (HCO3-) carried within RBCs", "HCO3- carried in the plasma", "Molecular CO2 chemically bound to haemoglobin"], ans: 1, exp: "Bicarbonates (HCO3-) carried within RBCs." },
+    { q: "70. Which of the following is NOT a function of the lungs?", opts: ["Metabolism", "Serves as a reservoir of blood for the left ventricle.", "It is a filter to protect the systemic vasculature", "All of the above are true."], ans: 3, exp: "All of the above are true." },
+    { q: "71. The breathing centre initiates ventilation in response to -", opts: ["A decrease in air pressure", "A decrease in O2", "An increase in CO2", "The rate of gas exchange in the alveoli"], ans: 2, exp: "An increase in CO2." },
+    { q: "72. All of the following factors play role in the regulation of respiratory rhythm except -", opts: ["CO2", "H+ cone.", "O2", "None of the above is correct"], ans: 3, exp: "None of the above is correct." },
+    { q: "73. Receptors associated with aortic arch and carotid artery can recognise changes in _____ and _____ cone. and send necessary signal to _____ for remedial action.", opts: ["O2, CO2, Pneumothorax", "CO2, H+, rhythm centre", "CO2, H+, apneustic centre", "O2, H+, Pneumothorax"], ans: 1, exp: "CO2, H+, rhythm centre." },
+    { q: "74. Respiratory centre of brain is stimulated by-", opts: ["CO2 content in venous blood", "CO2 content in arterial blood", "O2 content in arterial blood", "O2 content in venous blood"], ans: 1, exp: "CO2 content in arterial blood." },
+    { q: "77. Asthma is caused by -", opts: ["Infections of lungs", "Infection of trachea", "Spasm in bronchial muscles", "Infection in nose"], ans: 2, exp: "Spasm in bronchial muscles." },
+    { q: "78. Hypoxia is the condition in which less O2 becomes available to the tissues. This may be due to -", opts: ["Lesser O2 in the atmosphere", "More CO in the air", "Less RBC in the blood", "All"], ans: 3, exp: "All are correct." },
+    { q: "79. One reason for emphysema is -", opts: ["Cigarette smoking", "Drug addition", "Wine consumption", "Heavy exercise"], ans: 0, exp: "Cigarette smoking." },
+    { q: "80. Emphysema is characterised by -", opts: ["Permanent enlargement and destruction of alveolar area leading to reduction in respiratory surface", "Inhibition of respiratory centre", "Accumulation of fluid in lungs", "Spasm of muscles of trachea"], ans: 0, exp: "Permanent enlargement and destruction of alveolar area leading to reduction in respiratory surface." },
+    { q: "81. Why do human beings have difficulty breathing at high elevations?", opts: ["O2 makes up lower percentage of air there", "The temperature is lower there", "The barometric pressure is higher there", "PO2 is lower there"], ans: 3, exp: "PO2 is lower there." },
+    { q: "82. Which of the following diseases is/are occupational respiratory disorder?", opts: ["Silicosis, Fibrosis and asbestosis", "Emphysema and mountain sickness", "Asthma and Emphysema", "Asthma and Hepatitis"], ans: 0, exp: "Silicosis, Fibrosis and asbestosis." },
+    { q: "83. Respiratory control centre lies in -", opts: ["Pons", "Medulla oblongata", "Both", "Cerebellum"], ans: 2, exp: "Both." },
+    { q: "86. The maximum volume of air you can forcefully exhale after taking the deepest possible breath is called", opts: ["Tidal volume", "Total respiratory volume", "Residual volume", "Vital capacity"], ans: 3, exp: "Vital capacity." },
+    { q: "87. The breathing rhythm is generated in the _____ and is influenced by variation in levels of _____ in the blood.", opts: ["Medulla, CO2", "Medulla, O2", "Frontal lobe, CO2 and O2", "Frontal lobe, CO2"], ans: 0, exp: "Medulla, CO2." },
+    { q: "88. The Hering-Breuer reflex", opts: ["Begins with stretch receptors in the trachea", "Involves the forebrain", "Occurs when mucus blocks the airways", "Is an override reflex that prevents the breathing muscles from overdistending and damaging the lungs."], ans: 3, exp: "Is an override reflex that prevents the breathing muscles from overdistending and damaging the lungs." },
+    { q: "89. Which of the following represents a larger volume of air than is normally found in the resting tidal volume of a human lung?", opts: ["Residual volume", "Diaphragm", "Expiratory reserve volume", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "90. Neural control of breathing is in the", opts: ["cerebrum", "Diaphragm", "Medulla", "Olfactory lobe"], ans: 2, exp: "Medulla." },
+    { q: "91. A large proportion of oxygen is left unused in the human blood even after its uptake by the body tissues. This O2", opts: ["Helps in releasing more O2 to the epithelium tissues", "Acts as a reserve during muscular exercise", "Raises the PCO2 of blood to 75 mm of Hg", "Is enough to keep oxyhaemoglobin saturation at 96%"], ans: 1, exp: "Acts as a reserve during muscular exercise." },
+    { q: "92. Two friends are eating together on a dining table. One of them suddenly starts coughing while swallowing some food. This coughing would have been due to improper movement of", opts: ["Tongue", "Epiglottis", "Diaphragm", "Neck"], ans: 1, exp: "Epiglottis." },
+    { q: "93. Which one of the following is a possibility for most of us in regard to breathing, by making a conscious effort?", opts: ["One can breathe out air totally without oxygen", "One can breathe out air through eustachian tubes by closing both the nose and the mouth", "One can consciously breathe in and breathe out by moving the diaphragm alone, without moving the ribs at all", "The lungs can be made fully empty by forcefully breathing out all air from them"], ans: 2, exp: "One can consciously breathe in and breathe out by moving the diaphragm alone, without moving the ribs at all." },
+    { q: "94. Cartilagenous rings in respiratory passage are present in", opts: ["Trachea only", "Trachea and initial bronchioles only", "Trachea, bronchi and initial bronchioles only", "Trachea, bronchi and all bronchioles"], ans: 2, exp: "Trachea, bronchi and initial bronchioles only." },
+    { q: "95. Mark the correct statement", opts: ["Tracheal rings are of hyaline cartilage", "Dorsal side of thoracic chamber is formed by sternum", "Expiration occurs when there is negative pressure in lungs", "All of these"], ans: 0, exp: "Tracheal rings are of hyaline cartilage." },
+    { q: "96. Functional residual capacity can be represented as", opts: ["TV + ERV", "ERV + RV", "RV + IRV", "ERV + TV + IRV"], ans: 1, exp: "ERV + RV." },
+    { q: "97. 6000 to 8000 ml of air is the", opts: ["Vital capacity of lungs", "Volume of normal expiration per minute", "Sum of IRV + ERV", "Inspiratory capacity of lungs"], ans: 1, exp: "Volume of normal expiration per minute." },
+    { q: "98. The volume of air that remains in the lungs after normal expiration is", opts: ["Residual volume", "Vital capacity", "Expiratory capacity", "Functional residual capacity"], ans: 3, exp: "Functional residual capacity." },
+    { q: "99. Mark incorrect statement in the following", opts: ["Diffusion membrane is made up of 3-major layers", "Solubility of CO2 is higher than that of O2 by 20 - 25 times", "Breathing volumes are estimated by spirometer", "High cone. of hydrogen ions favours oxyhaemoglobin formation"], ans: 3, exp: "High cone. of hydrogen ions favours oxyhaemoglobin formation." },
+    { q: "100. Every 100 ml of oxygenated blood delivers following amount of O2 to the tissues under normal physiological condition", opts: ["5 ml", "25 ml", "50 ml", "More the 50 ml"], ans: 0, exp: "5 ml." },
+    { q: "101. The Pneumotaxic centre that can moderate the function of respiratory rhythm centre is located in", opts: ["Dorsal side of medulla", "Ventral side of medulla", "Aortic arch and carotid artery", "Pons"], ans: 3, exp: "Pons." },
+    { q: "102. Which of the following does NOT happen during inspiration?", opts: ["The ribs move upward.", "The diaphragm lifts up.", "The antero-posterior dimensions of the chest are increased.", "The tranverse dimensions of the thorax are increased."], ans: 1, exp: "The diaphragm lifts up." },
+    { q: "103. Bulk of carbon dioxide (CO2) released from body tissues into the blood is present as :", opts: ["bicarbonate in blood plasma and RBCs", "free CO2 in blood plasma", "70% carbamino-haemoglobin and 30% as bicarbonate", "carbamino-haemoglobin in RBCs"], ans: 0, exp: "bicarbonate in blood plasma and RBCs." },
+    { q: "105. The percentage composition of respiratory gases is given in the table. The approximate percentage of oxygen transported by the blood during one complete circulation is", opts: ["16", "18", "20", "22"], ans: 0, exp: "16." },
+    { q: "106. Under normal physiological conditions, every 100 ml of oxygenated blood delivers about _____ of O2 to the _____ and every 100 ml of deoxygenated blood delivers about _____ of CO2 to the _____. The information in which alternative completes the given statement?", opts: ["i-4 ml; ii-tissues; iii- 5 ml; iv-alveoli", "i-5 ml; ii-tissues; iii-4 ml; iv-alveoli", "i-4 ml; ii-alveoli; iii-5 ml; iv-tissues", "i-5 ml; ii-alveoli; iii-4 ml; iv-tissues"], ans: 1, exp: "i-5 ml; ii-tissues; iii-4 ml; iv-alveoli." },
+    { q: "108. The pneumotaxic centre is present in the _____ region of the brain. It directly regulates the functions of the _____. The information in which alternative completes the given statements?", opts: ["i-pons; ii-chemosensitive area", "i-cerebellum; ii-chemosensitive area", "i-cerebellum; ii-respiratory rhythm centre", "i-pons; ii-respiratory rhythm centre"], ans: 3, exp: "i-pons; ii-respiratory rhythm centre." },
+    { q: "109. Haemoglobin combines reversibly with oxygen to form oxyhaemoglobin. Each haemoglobin molecule carries", opts: ["six oxygen molecules attached to heme groups", "four oxygen molecules attached to heme groups", "six oxygen molecules attached to the globin component", "four oxygen molecules attached to the globin component"], ans: 1, exp: "four oxygen molecules attached to heme groups." },
+    { q: "110. The respiratory membrane is a very thin membrane. It facilitates the exchange of respiratory gases through diffusion. Oxygen enters deoxygenated blood through diffusion because the", opts: ["partial pressure of oxygen in alveolar air and capillaries is 40 mm Hg and 100 mm Hg respectively.", "partial pressure of oxygen in alveolar air and capillaries is 100 mm Hg and 40 mm Hg respectively.", "partial pressure of oxygen in alveolar air and capillaries air is 46 mm Hg and 40 mm Hg respectively", "partial pressure of oxygen in alveolar air and capillaries is 40 mm Hg and 46 mm Hg respectively."], ans: 1, exp: "partial pressure of oxygen in alveolar air and capillaries is 100 mm Hg and 40 mm Hg respectively." },
+    { q: "111. During inspiration, how does alveolar pressure compare to atmospheric pressure?", opts: ["Alveolar pressure is greater than atmospheric.", "Alveolar pressure is less than atmospheric.", "Alveolar pressure is the same as atmospheric.", "Alveolar pressure is one of the few pressures where the reference pressure is not atmospheric."], ans: 1, exp: "Alveolar pressure is less than atmospheric." },
+    { q: "112. Which of the following is NOT an effector of respiration?", opts: ["Heart", "diaphragm", "intercostals", "Trapezius."], ans: 3, exp: "Trapezius." },
+    { q: "113. Which of the following is the first branching of the bronchial tree that has gas exchanging capabilities?", opts: ["Terminal bronchioles.", "Respiratory bronchioles", "Alveoli", "alveolar ducts."], ans: 1, exp: "Respiratory bronchioles." },
+    { q: "114. The most powerful respiratory stimulus for breathing in a healthy person is ___ _", opts: ["loss of oxygen in tissues", "increase of carbon dioxide", "pH (acidosis)", "pH (alkalosis)"], ans: 1, exp: "increase of carbon dioxide." },
+    { q: "115. Breathing becomes exhalerated when the person open his nose after holding of the breath by closing his nose with finger. This is due to", opts: ["Decreasing in H+ in the body", "Carbon monoxide build up in the body", "Decrease in carbon dioxide in arterial blood", "Carbon dioxide build up in the body"], ans: 3, exp: "Carbon dioxide build up in the body." },
+    { q: "117. Which one of the following is the correct statement for respiration in human", opts: ["Cigarette smoking may lead of inflammation of bronchi", "Neural signals from pneumotaxic centre in pons region of brain can increase the duration of inspiration", "Workers in grinding and stone-breaking industries may suffer, from lung fibrosis", "About 90% of carbon dioxide (CO2) is carried by haemoglobin as carbamino haemoglobin"], ans: 2, exp: "Workers in grinding and stone-breaking industries may suffer, from lung fibrosis." },
+    { q: "118. People who have migrated from the planes to an area adjoining Rohtang Pass about six months back:", opts: ["have more RBCs and their haemoglobin has a lower binding affinity to O2.", "are not physically fit to play games like football.", "suffer from altitude sickness with symptoms like nausea, fatigue, etc.", "have the usual RBC count but their haemoglobin has very high binding affinity to O2."], ans: 0, exp: "have more RBCs and their haemoglobin has a lower binding affinity to O2." },
+    { q: "119. What happens to the windpipe, or trachea, before it reaches the lungs?", opts: ["It branches in two directions.", "It branches in three directions.", "It vibrates and creates sounds.", "It closes up so that no oxygen can escape."], ans: 0, exp: "It branches in two directions." },
+    { q: "120. When we breathe in, we inhale many gases, including oxygen. What happens to the gases that the body can't use?", opts: ["They are exhaled.", "They are changed into oxygen by the lungs.", "They circulate through the body and are disposed off later.", "They are absorbed into the digestive system and used to create energy."], ans: 0, exp: "They are exhaled." },
+    { q: "122. Which of the following is NOT an effector of respiration?", opts: ["Heart", "diaphragm", "intercostals", "Trapezius."], ans: 3, exp: "Trapezius." },
+    { q: "123. During inspiration, how does alveolar pressure is compared to atmospheric pressure?", opts: ["Alveolar pressure is greater than atmospheric.", "Alveolar pressure is less than atmospheric.", "Alveolar pressure is the same as atmospheric.", "Alveolar pressure is one of the few pressures where the reference pressure is not atmospheric."], ans: 1, exp: "Alveolar pressure is less than atmospheric." },
+    { q: "124. Which of the following is not involved in the neural control of breathing?", opts: ["Neurons in medulla", "The vagus nerve", "The contraction of diaphragm", "Chemosensor/Chemosensitive area on the surface of medulla"], ans: 2, exp: "The contraction of diaphragm." },
+    { q: "125. The resting tidal volume to vital capacity ratio should be-", opts: ["1 : 5", "1 : 9", "1 : 20", "1 : 40"], ans: 1, exp: "1 : 9." },
+    { q: "126. A person met with an accident and died instantaneously without any injury to heart, brain, stomach and kidney; one of these must be the reason -", opts: ["Diaphragm get punctured.", "Stomach stopped digestion", "Intestine get twisted", "RBC's get coagulated"], ans: 0, exp: "Diaphragm get punctured." },
+    { q: "127. All of the following can bond with haemoglobin except", opts: ["O2", "H+", "CO2", "HCO3-"], ans: 3, exp: "HCO3-." },
+    { q: "128. A person has vital capacity of 5L and residual volume of 1.2 L. Total lung capacity-", opts: ["6.2 L", "4.8 L", "500 ml", "None"], ans: 0, exp: "6.2 L." },
+    { q: "129. At rest cardiac output is 5L/min, how much CO2 is delivered to the lungs to be exhaled each minute?", opts: ["4 ml/min.", "200 ml/min.", "5 ml/min.", "1.34 ml/min."], ans: 1, exp: "200 ml/min." },
+    { q: "130. The serous membrane which covers the lungs is called", opts: ["Pericardium", "Peritoneum", "Perichondrium", "Pleura"], ans: 3, exp: "Pleura." },
+    { q: "131. The volume of air that can be breathed in by maximum forced inspiration over and above the normal inspiration is called", opts: ["Expiratory Reserved Volume", "Inspiratory Reserved Volume", "Vital Capacity", "Inspiratory Capacity"], ans: 1, exp: "Inspiratory Reserved Volume." },
+    { q: "132. Partial pressures (in mm Hg) of respiratory gases at different regions are given below.\nRespiratory gas | A | B | C\nOxygen (P) | 159 | 104 | 40\nCarbon dioxide (Q) | 0.3 | 40 | 45\nIdentify the regions A, B and C respectively from the options.", opts: ["P-Alveoli, deoxygenated blood, oxygenated blood.", "Q - Tissues, lung alveoli, oxygenated blood.", "P-Atmospheric air, alveoli, deoxygenated blood", "Q-Atmospheric air, oxygenated blood, alveoli"], ans: 2, exp: "P-Atmospheric air, alveoli, deoxygenated blood." },
+    { q: "133. Breathing rate will automatically increase when --", opts: ["Blood pH is high", "The amount of carbon dioxide in blood increases", "Blood acidity decreases", "Haemoglobin is unloaded"], ans: 1, exp: "The amount of carbon dioxide in blood increases." },
+    { q: "134. When you take a deep breath, your stomach moves out because", opts: ["Swallowing of air increases the volume of thoracic cavity.", "Your stomach should not move out when you take a deep breath, because you want the volume of the chest cavity to increase not abdominal cavity.", "Contracting your abdominal muscles pushes your stomach out, generating negative pressure in the lungs", "When your diaphragm contracts, it moves down, pressing your abdominal cavity out."], ans: 3, exp: "When your diaphragm contracts, it moves down, pressing your abdominal cavity out." },
+    { q: "135. Each haemoglobin molecule can carry a maximum of four molecules of O2. Binding of oxygen with haemoglobin is primarily related to\nA. Partial pressure of O2\nB. Partial pressure of CO2\nC. Hydrogen ion concentration\nD. Temperature", opts: ["B only", "A only", "C and D", "B and D"], ans: 1, exp: "A only." },
+    { q: "136. Which of the following pulmonary volumes/capacities is not directly measured by spirometer?", opts: ["Volume of air inspired or expired during a normal respiration.", "Volume of air remaining in the lungs after forcible expiration.", "Total volume of air a person can inspire after a normal expiration", "The maximum volume of air a person can breath in after a forced expiration."], ans: 1, exp: "Volume of air remaining in the lungs after forcible expiration." },
+    { q: "137. ERV + RV = ? for lungs", opts: ["FRC", "VC", "IRV", "TV"], ans: 0, exp: "FRC." },
+    { q: "138. Each 100 ml of human arterial blood carries 'P' ml of O2 and 'Q' ml of CO2 whereas each 100 ml of venous blood carries 'R' ml of O2 and 'S' ml of CO2. Choose the correct value of P, Q, R and S.", opts: ["P-48 ml, Q-19-20 ml, R - 52 ml, S-14-15 ml", "P-19-20 ml, Q-48 ml, R -14-15 ml, S- 58 ml", "P-14-15 ml, Q - 52 ml, R -19-20 ml, S-48 ml", "P- 52 ml, Q-14-15 ml, R -48 ml, S -19-20 ml"], ans: 1, exp: "P-19-20 ml, Q-48 ml, R -14-15 ml, S- 58 ml." },
+    { q: "139. How would health improve if a person suffering from mild emphysema stopped smoking cigarettes?", opts: ["Goblet cells secrete more mucus, allowing a greater number of pathogens to be trapped.", "Increased number of phagocytic macrophages arrive in the lungs", "Less atheroma build-up on the inner lining of arteries, increasing lumen diameter.", "Less carboxyhaemoglobin produced, increasing oxygen transport by haemoglobin."], ans: 3, exp: "Less carboxyhaemoglobin produced, increasing oxygen transport by haemoglobin." },
+    { q: "140. Which is correct about the affinity between haemoglobin and the gases carbon dioxide, carbon monoxide and oxygen?\nHighest affinity | Lowest affinity", opts: ["Carbon monoxide | Carbon dioxide | Oxygen", "Carbon monoxide | Oxygen | Carbon dioxide", "Oxygen | Carbon dioxide | Carbon monoxide", "Oxygen | Carbon monoxide | Carbon dioxide"], ans: 0, exp: "Carbon monoxide | Carbon dioxide | Oxygen." },
+    { q: "141. The squamous epithelial cells of the alveoli form part of the gas exchange system. How do these cells assist gas exchange?\n1. They contain many mitochondria.\n2. They have a large surface area.\n3. They provide a short diffusion path", opts: ["1 and 2 only", "1 and 3 only", "2 and 3 only", "1, 2 and 3"], ans: 2, exp: "2 and 3 only." },
+    { q: "144. When you hold your breath, which of the following gas changes in blood would first lead to the urge to breathe?", opts: ["Falling CO2 concentration", "Rising CO2 and falling O2 concentration", "Falling O2 concentration", "Rising CO2 concentration"], ans: 3, exp: "Rising CO2 concentration." },
+    { q: "145. Name the pulmonary disease in which alveolar surface area involved in gas exchange is drastically reduced due to damage in the alveolar walls.", opts: ["Pneumonia", "Asthma", "Pleurisy", "Emphysema"], ans: 3, exp: "Emphysema." },
+    { q: "146. The cells which do not respire", opts: ["Epidermal cells", "Sieve cells", "Cortical cells", "Erythrocytes"], ans: 3, exp: "Erythrocytes." },
+    { q: "147. Name the chronic respiratory disorder caused mainly by cigarette smoking :-", opts: ["Emphysema", "Asthma", "Respiratory acidosis", "Respiratory alkalosis"], ans: 0, exp: "Emphysema." },
+    { q: "148. Asthma may be attributed to :", opts: ["bacterial infection of the lungs", "allergic reaction of the mast cells in the lungs", "inflammation of the trachea", "accumulation of fluid in the lungs"], ans: 1, exp: "allergic reaction of the mast cells in the lungs." },
+    { q: "149. Lungs do not collapse between breaths and some air always remains in the lungs which can never be expelled because :-", opts: ["There is a positive intrapleural pressure", "Pressure in the lungs is higher than the atomospheric pressure.", "There is a negative pressure in the lungs.", "There is a negative intrapleural pressure pulling at the lung walls."], ans: 3, exp: "There is a negative intrapleural pressure pulling at the lung walls." },
+    { q: "150. The partial pressure of oxygen in the alveoli of the lungs is :-", opts: ["Less than that in the blood", "Less than that of carbon dioxide", "Equal to that in the blood", "More than that in the blood"], ans: 3, exp: "More than that in the blood." },
+    { q: "151. CO2 is carried in blood by hemoglobin in the form of:", opts: ["Sodium bicarbonate", "Potassium bicarbonate", "Carbamino compound", "Methaemoglobin"], ans: 2, exp: "Carbamino compound." },
+    { q: "152. The given figures show some processes occurring during gaseous exchange in the human body. What are the phenomena X and Y called respectively?", opts: ["X - Hamburger's phenomenon; Y - Bohr's effect.", "X- Bohr's effect; Y - Haldane effect.", "X - Haldane effect; Y - Bohr's effect.", "X- Haldane effect; Y - Hamburger's phenomenon"], ans: 2, exp: "X - Haldane effect; Y - Bohr's effect." },
+    { q: "153. Dissociation of oxyhaemoglobin in blood increases when there is", opts: ["Increase in pH and decrease in CO2 concentration", "Decrease in temperature and increase in O2 concentration", "Increase in CO2 concentration", "Decrease in pH and increase in CO2 concentration"], ans: 3, exp: "Decrease in pH and increase in CO2 concentration." },
+    { q: "154. Read the given statements.\nI. Partial pressure of oxygen in inspired air is 104 mm Hg.\nII. CO2 is less soluble in venous blood than in arterial blood.\nIII. Liver is the chief site of deamination.\nIV. Pepsin cannot hydrolyse milk proteins.\nOf the above statements.", opts: ["I, II and III are correct", "III and IV are incorrect", "I, II and IV are incorrect", "Only I is correct"], ans: 2, exp: "I, II and IV are incorrect." },
+    { q: "156. A limit of gaseous exchange of respiratory membrane between alveoli and pulmonary blood is known as", opts: ["Partial pressure", "Alveolar air", "Diffusing capacity", "Inspired air"], ans: 2, exp: "Diffusing capacity." },
+    { q: "157. Select the correct sequence for the process of expiration.", opts: ["Alveoli -> Bronchi -> Trachea -> Pharynx -> Nasal cavities -> Internal nares -> External nares.", "Alveoli -> Bronchi -> Trachea -> Larynx -> Pharynx -> Internal nares -> Nasal cavities -> External nares.", "Bronchi -> Alveoli -> Trachea -> Pharynx -> Larynx -> Internal nares -> Nasal cavities -> External nares.", "Bronchi -> Alveoli -> Trachea -> Internal nares -> Larynx -> Pharynx -> Nasal cavities -> External nares."], ans: 1, exp: "Alveoli -> Bronchi -> Trachea -> Larynx -> Pharynx -> Internal nares -> Nasal cavities -> External nares." },
+    { q: "158. When diaphragm of man is completely dome shaped in it indicates.", opts: ["end of expiration and beginning of inspiration.", "beginning of expiration and end of inspiration", "hyperpnea", "dyspnea"], ans: 0, exp: "end of expiration and beginning of inspiration." },
+    { q: "159. The structure which does not contribute to the breathing movements in mammals is", opts: ["ribs", "larynx", "diaphragm", "intercostal muscles"], ans: 1, exp: "larynx." },
+    { q: "160. In a typical multicellular animal, the circulatory system interacts with various specialized surfaces in order to exchange materials with the exterior environment. Which of the following is not an example of such an exchange surface?\nI. skin\nII. intestine\nIII. muscle\nIV. lung\nV. kidney", opts: ["I and II are correct", "II and IV are correct", "Only III is correct", "IV and V are correct"], ans: 2, exp: "Only III is correct." },
+    { q: "161. Adult human RBCs are enucleated. Which of the following statement(s) is/are most appropriate explanation for this feature?\n(I) They do not need to reproduce\n(II) They are somatic cells\n(III) They do not metabolize\n(IV) All their internal space is available for oxygen transport", opts: ["only (I)", "(I), (III) and (IV)", "(II) and (III)", "only (IV)"], ans: 3, exp: "only (IV)." },
+    { q: "162. Lungs are made up of air-filled sacs, the alveoli. They do not collapse even after forceful expiration, because of:", opts: ["Inspiratory Reserve Volume", "Tidal Volume", "Expiratory Reserve Volume", "Residual Volume"], ans: 3, exp: "Residual Volume." },
+    { q: "163. A person suffer's punctures in his chest cavity in an accident, without any damage to the lungs. its effect could be", opts: ["Reduced breathing rate", "Rapid increase in breathing rate", "No change in respiration", "Cessation of breathing"], ans: 3, exp: "Cessation of breathing." },
+    { q: "164. What structure do RBCs move through single file?", opts: ["artery", "arteriole", "capillary", "venule"], ans: 2, exp: "capillary." },
+    { q: "166. Gaseous exchange takes place through diffusion membrane. Which of the following is not related to diffusion membrane.", opts: ["Its total thickness is more than a millimetre", "Thin squamous epithelium of alveoli", "Endothelium of alveolar capillaries", "A basement membrane"], ans: 0, exp: "Its total thickness is more than a millimetre." },
+    { q: "167. If O2 concentration in tissue becomes as high as at the respiratory surface :-", opts: ["Oxyhaemoglobin would dissociate to supply to the tissue", "Haemoglobin would combine with more O2 at respiratory surface", "Oxyhaemoglobin would not dissociate to supply O2 to the tissue", "CO2 will interfere with the O2 transport"], ans: 2, exp: "Oxyhaemoglobin would not dissociate to supply O2 to the tissue." },
+    { q: "168. The vital capacity of the lung signifies the volume of air breathed in :", opts: ["During normal inspiration", "With forcible expiration", "With forcible inspiration", "With deep inspiration and exhaled out by forcible expiration"], ans: 3, exp: "With deep inspiration and exhaled out by forcible expiration." },
+    { q: "169. The partial pressure of oxygen and the partial pressure of carbon dioxide is identical in", opts: ["Alveoli and deoxygenated blood", "Tissues and deoxygenated blood", "Oxygenated blood and tissues", "Tissues and oxygenated blood"], ans: 1, exp: "Tissues and deoxygenated blood." },
+    { q: "170. The correct statements about respiration are\n(i) In cockroach gaseous exchange occurs mainly between tracheoles and haemolymph\n(ii) Increase in inspiratory capacity does not involve an increase in tidal volume\n(iii) Partial pressure of oxygen in blood is less than that in alveoli\n(iv) Chloride shift in erythrocytes maintain the ionic balance", opts: ["(i) and (ii)", "(i), (iii) and (iv)", "(i), (ii) and (iv)", "(ii) and (iii)"], ans: 1, exp: "(i), (iii) and (iv)." },
+    { q: "171. Which of the following options correctly represents the lung conditions in asthma and emphysema, respectively?", opts: ["Increased respiratory surface; Inflammation of bronchioles", "Increased number of bronchioles; Increased respiratory surface", "Inflammation of bronchioles; Decreased respiratory surface", "Decreased respiratory surface; Inflammation of bronchioles"], ans: 2, exp: "Inflammation of bronchioles; Decreased respiratory surface." },
+    { q: "172. Match the items given in Column I with those in Column II and select the correct option given below:\nColumn I: A. Tidal volume, B. Inspiratory Reserve volume, C. Expiratory Reserve volume, D. Residual volume\nColumn II: i. 2500 - 3000 ml, ii. 1100 - 1200 ml, iii. 500 - 550 ml, iv. 1000 - 1100 ml", opts: ["A-iv, B-ii, C-iii, D-i", "A-iii, B-i, C-iv, D-ii", "A-iii, B-ii, C-iv, D-i", "A-iv, B-iii, C-ii, D-i"], ans: 2, exp: "A-iii, B-ii, C-iv, D-i." },
+    { q: "173. Which of the following is an occupational respiratory disorder?", opts: ["Botulism", "Silicosis", "Anthracis", "Emphysema"], ans: 1, exp: "Silicosis." },
+    { q: "174. Read the following statements and select the correct one.\nI. The volume of gas that diffuses through the membrane per minute for a pressure difference of 1 mm Hg is defined as diffusing capacity.\nII. The high PCO2 in deoxygenated blood allows the release of CO2 from blood into the alveoli.\nIII. Diffusion of oxygen is 20 times faster than CO2 and that of CO2 is two times faster than nitrogen at the particular pressure difference.\nIV. Binding of oxygen with haemoglobin is important in promoting CO2 transport and its exchange in tissues and lungs.", opts: ["I, II and IV", "II, III and IV", "III and IV", "All of these"], ans: 0, exp: "I, II and IV." },
+    { q: "175. The respiratory disorder which leads to irreversible distension and loss of elasticity of alveoli of lungs is", opts: ["bronchitis", "bronchial asthma", "emphysema", "SARS."], ans: 2, exp: "emphysema." },
+    { q: "176. During the exchange of gases between lung alveoli and pulmonary capillaries, if the partial pressure of oxygen in alveolar capillaries is 95 mm Hg and the partial pressure of CO2 is 45 mm Hg in deoxygenated blood. Based on this identify the correct statement.", opts: ["The partial pressure of oxygen will be highest, i.e., 104 mm Hg in alveoli.", "The partial pressure of nitrogen will remain same in both blood and alveoli.", "The partial pressure of CO2 is less in pulmonary veins as compared to pulmonary arteries.", "All of these"], ans: 3, exp: "All of these." },
+    { q: "177. Which of the following muscles are involved in forceful expiration?", opts: ["Abdominal and diaphragm muscles", "External intercostal and diaphragm muscles", "Abdominal and internal intercostal muscles", "External and internal intercostal muscles"], ans: 2, exp: "Abdominal and internal intercostal muscles." },
+    { q: "178. A disease characterised by accumulation of fluid with dead WBCs occupying most of the air space in alveolar sac is", opts: ["Pneumonia", "Bronchitis", "Emphysema", "Bronchial asthma"], ans: 0, exp: "Pneumonia." },
+    { q: "179. Air rushes into the lungs of humans during inhalation because:", opts: ["the rib muscles and diaphragm contract, increasing the lung volume.", "pressure in the alveoli increases.", "gas flows from a region of lower pressure to a region of higher pressure.", "a positive respiratory pressure is created when the diaphragm relaxes."], ans: 0, exp: "the rib muscles and diaphragm contract, increasing the lung volume." },
+    { q: "180. A person with a tidal volume of 450 ml, a vital capacity of 4,000 ml, and a residual volume of 1,000 ml would have a potential total lung capacity of", opts: ["1,450 ml.", "4,450 ml.", "5,000 ml.", "5,450 ml."], ans: 2, exp: "5,000 ml." },
+    { q: "181. Some human infants, especially those born prematurely, suffer serious respiratory failure. This most probably relates to which of the following?", opts: ["the sudden change from the uterine environment to the air", "the overproduction of surfactants", "the incomplete development of the lung surface", "inadequate production of surfactant"], ans: 3, exp: "inadequate production of surfactant." },
+    { q: "182. The oxy-hemoglobin dissociation curve shifts to the right by all the following except:", opts: ["Increased carbon dioxide", "Increased pH", "Increased temperature", "Presence of 2, 3 DPG"], ans: 1, exp: "Increased pH." },
+    { q: "183. Blood carbon dioxide levels determine the pH of other body fluids as well as blood, including the pH of cerebrospinal fluid. How does this enable the organism to control breathing?", opts: ["The brain directly measures and monitors carbon dioxide and causes breathing changes accordingly.", "The medulla, which is in contact with cerebrospinal fluid, monitors pH and uses this measure to control breathing.", "The brain alters the pH of the cerebrospinal fluid to force the animal to retain more or less carbon dioxide.", "Stretch receptors in the lungs cause the medulla to speed up or slow breathing."], ans: 1, exp: "The medulla, which is in contact with cerebrospinal fluid, monitors pH and uses this measure to control breathing." },
+    { q: "184. Which of the following does not stimulate the medullary breathing center chemosensitive neurons?", opts: ["low blood pH", "low blood oxygen", "high blood carbon dioxide", "high spinal fluid acidity"], ans: 1, exp: "low blood oxygen." },
+    { q: "185. Match each item in COLUMN I with one in COLUMN II and choose the correct answer from the codes given below.\nCOLUMN I: A Asthma, B. Emphysema, C. Occupational lung disease, D. Tuberculosis\nCOLUMN II: I. Over-inflation of alveoli, II. Vaccine preventable, III. Bronchospasm, IV. Pulmonary fibrosis", opts: ["A-III, B-IV, C-II, D-I", "A-III, B-IV, C-I, D-II", "A-III, B-II, C-IV, D-I", "A-IV, B-III, C-I, D-II"], ans: 1, exp: "A-III, B-IV, C-I, D-II." },
+    { q: "186. 'CO' poisoning causes the decrease in oxygen availability to the tissues because :", opts: ["It binds the haemoglobin and to form stable compound carboxyhaemoglobin", "It increases CO2 concentration in our body.", "It is a toxic gas so main body organs like brain, failure occurred.", "'CO' impedes the CO2 transportation."], ans: 0, exp: "It binds the haemoglobin and to form stable compound carboxyhaemoglobin." },
+    { q: "187. Identify the incorrect statement:", opts: ["The larynx, rings in the wall of trachea and the epiglottis are cartilaginous", "A negative intrapleural pressure will help in keeping the lungs inflated", "An airtight thoracic chamber is essential as we can directly alter the pulmonary volume", "The conducting part of the airway warms, humidifies and filters the air reaching the exchange site"], ans: 2, exp: "An airtight thoracic chamber is essential as we can directly alter the pulmonary volume." },
+    { q: "188. Which of the following is entirely made up of cartilage?", opts: ["Nasal septum", "Larynx", "Glottis", "Trachea"], ans: 1, exp: "Larynx." },
+    { q: "189. Glottis is an opening in the floor of", opts: ["Mouth", "Trachea", "Pharynx", "Diaphragm"], ans: 2, exp: "Pharynx." },
+    { q: "190. The form of energy used in respiration is :", opts: ["Chemical", "Electrical", "Mechanical", "Radiant"], ans: 0, exp: "Chemical." },
+    { q: "191. The affinity of Hb for O2 is", opts: ["Decreased in metabolizing tissue", "Increased at higher body temperature", "Increase at higher than normal 2, 3 DPG levels", "Decreased at more basic than normal pH"], ans: 0, exp: "Decreased in metabolizing tissue." },
+    { q: "192. If a person inhale normally without any extra effort after a forceful exhalation. Which pulmonary volumes will be inhaled :", opts: ["TV + IRV + ERV", "TV + FRC", "TV + IRV", "TV + ERV"], ans: 2, exp: "TV + IRV." },
+    { q: "193. Tidal Volume and Expiratory Reserve Volume of an athlete is 500 ml and 1000 ml, respectively. What will be his Expiratory Capacity if the Residual Volume is 1200 ml?", opts: ["1500 ml", "1700 ml", "2200 ml", "2700 ml"], ans: 0, exp: "1500 ml." },
+    { q: "194. Select the correct statement.", opts: ["Expiration is initiated due to contraction of diaphragm.", "Expiration occurs due to external intercostal muscles.", "Intrapulmonary pressure is lower than the atmospheric pressure during inspiration.", "Inspiration occurs when atmospheric pressure is less than intrapulmonary pressure."], ans: 2, exp: "Intrapulmonary pressure is lower than the atmospheric pressure during inspiration." },
+    { q: "195. The maximum volume of air a person can breathe in after a forced expiration is known as :", opts: ["Total Lung Capacity", "Expiratory Capacity", "Vital Capacity", "Inspiratory Capacity"], ans: 2, exp: "Vital Capacity." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 14; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

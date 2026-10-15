@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 2: Biological Classification - CBT (255 Questions)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    line-height: 1.6;
+    padding: 10px;
+  }
+  .main-container {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 15px;
+    height: calc(100vh - 20px);
+  }
+  .sidebar {
+    width: 300px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 15px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar h3 {
+    color: #2b6cb0;
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+  .stat-box {
+    background: #ebf8ff;
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .stat-box .num {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c5282;
+  }
+  .stat-box .lbl {
+    font-size: 11px;
+    color: #4a5568;
+  }
+  .stat-box.green { background: #f0fff4; }
+  .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; }
+  .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; }
+  .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; }
+  .stat-box.purple .num { color: #44337a; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    justify-content: center;
+  }
+  .legend span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .legend .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .palette-btn {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    background: #f7fafc;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+
+  .quiz-area {
+    flex: 1;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 25px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .quiz-header h2 {
+    color: #2b6cb0;
+    font-size: 18px;
+  }
+  .q-counter {
+    background: #4299e1;
+    color: #fff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .question-box {
+    flex: 1;
+    margin-bottom: 15px;
+  }
+  .q-text {
+    font-weight: 600;
+    margin-bottom: 15px;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  .q-num-badge {
+    display: inline-block;
+    background: #4299e1;
+    color: #fff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    font-size: 14px;
+    margin-right: 10px;
+  }
+  .option {
+    display: block;
+    padding: 12px 16px;
+    margin: 8px 0;
+    background: #f7fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 15px;
+  }
+  .option:hover {
+    border-color: #90cdf4;
+    background: #ebf8ff;
+  }
+  .option.selected {
+    border-color: #4299e1;
+    background: #bee3f8;
+  }
+  .option.correct-ans {
+    border-color: #38a169;
+    background: #c6f6d5;
+    font-weight: 600;
+  }
+  .option.wrong-ans {
+    border-color: #e53e3e;
+    background: #fed7d7;
+  }
+  .option.disabled {
+    pointer-events: none;
+    opacity: 0.8;
+  }
+  .feedback {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb {
+    background: #c6f6d5;
+    color: #22543d;
+    border-left: 4px solid #38a169;
+  }
+  .feedback.wrong-fb {
+    background: #fed7d7;
+    color: #742a2a;
+    border-left: 4px solid #e53e3e;
+  }
+  .feedback .exp {
+    margin-top: 6px;
+    font-style: italic;
+    color: #4a5568;
+  }
+  .nav-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-top: 10px;
+    border-top: 2px solid #e2e8f0;
+  }
+  .btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: #4299e1; color: #fff; }
+  .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; }
+  .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; }
+  .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; }
+  .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; }
+  .btn-danger:hover { background: #c53030; }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-marked {
+    background: #805ad5;
+    color: #fff;
+  }
+  .btn-marked:hover { background: #6b46c1; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    text-align: center;
+  }
+  .modal-box h2 {
+    color: #2b6cb0;
+    margin-bottom: 20px;
+  }
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .result-item {
+    background: #ebf8ff;
+    padding: 15px;
+    border-radius: 10px;
+  }
+  .result-item .label {
+    font-size: 12px;
+    color: #4a5568;
+  }
+  .result-item .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c5282;
+    margin-top: 4px;
+  }
+  .result-item.green { background: #f0fff4; }
+  .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; }
+  .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; }
+  .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; }
+  .result-item.orange .value { color: #7b341e; }
+
+  .mobile-palette-toggle {
+    display: none;
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    z-index: 500;
+    background: #4299e1;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar {
+      width: 100%;
+      max-height: 300px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 600;
+      transform: translateY(-100%);
+      transition: transform 0.3s;
+      border-radius: 0 0 12px 12px;
+    }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="num" id="sbTotal">0</div>
+        <div class="lbl">Total</div>
+      </div>
+      <div class="stat-box green">
+        <div class="num" id="sbAttempted">0</div>
+        <div class="lbl">Attempted</div>
+      </div>
+      <div class="stat-box red">
+        <div class="num" id="sbNotAnswered">0</div>
+        <div class="lbl">Not Answered</div>
+      </div>
+      <div class="stat-box orange">
+        <div class="num" id="sbNotVisited">0</div>
+        <div class="lbl">Not Visited</div>
+      </div>
+      <div class="stat-box purple">
+        <div class="num" id="sbMarked">0</div>
+        <div class="lbl">Marked</div>
+      </div>
+      <div class="stat-box green">
+        <div class="num" id="sbCorrect">0</div>
+        <div class="lbl">Correct</div>
+      </div>
+      <div class="stat-box red">
+        <div class="num" id="sbWrong">0</div>
+        <div class="lbl">Wrong</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="sbMarks">0</div>
+        <div class="lbl">Marks</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+
+    <div class="palette" id="palette"></div>
+  </div>
+
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Biological Classification</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+
+    <div class="question-box" id="questionBox"></div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="label">Total Questions</div>
+        <div class="value" id="rTotal">0</div>
+      </div>
+      <div class="result-item green">
+        <div class="label">Correct</div>
+        <div class="value" id="rCorrect">0</div>
+      </div>
+      <div class="result-item red">
+        <div class="label">Wrong</div>
+        <div class="value" id="rWrong">0</div>
+      </div>
+      <div class="result-item orange">
+        <div class="label">Marks Obtained</div>
+        <div class="value" id="rMarks">0</div>
+      </div>
+      <div class="result-item purple">
+        <div class="label">Percentage</div>
+        <div class="value" id="rPercent">0%</div>
+      </div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CHAPTER 2: BIOLOGICAL CLASSIFICATION - 255 QUESTIONS
+// (Diagram/Table wale 18 questions skip kiye)
+// ============================================================
+const questions = [
+  // Q1
+  { q: "Which one is the most abundant microorganism?", opts: ["Bacteria", "Protozoan", "Viruses", "Protists"], ans: 0, exp: "Bacteria are the most abundant microorganisms." },
+  // Q2
+  { q: "Bacteria occur —", opts: ["In water only", "In soil only", "As parasite", "Everywhere"], ans: 3, exp: "Bacteria occur everywhere." },
+  // Q3
+  { q: "Based upon the shape bacteria are grouped under how many categories?", opts: ["2", "3", "4", "5"], ans: 2, exp: "Four categories: Cocci, Bacilli, Spirilla, Vibrio." },
+  // Q4
+  { q: "Which of the following bacteria are comma-shaped?", opts: ["Coccius", "Vibrio", "Bacillus", "Clostridium"], ans: 1, exp: "Vibrio is comma-shaped." },
+  // Q6
+  { q: "Which of the following statement is correct about bacteria?", opts: ["Bacteria are simple in both structure and behaviour", "Bacteria are complex in structure as well as behaviour", "Bacteria are complex in structure but simple in behaviour", "Bacteria are simple in structure but complex in behaviour"], ans: 3, exp: "Bacteria are simple in structure but complex in behaviour." },
+  // Q7
+  { q: "Which of the following organisms show the most extensive metabolic diversity?", opts: ["Algae", "Fungi", "Bacteria", "Bryophytes"], ans: 2, exp: "Bacteria show most extensive metabolic diversity." },
+  // Q8
+  { q: "Most of the bacteria are —", opts: ["Autotrophs", "Chemoautotrophs", "Heterotroph", "Parasites"], ans: 2, exp: "Most bacteria are heterotrophs." },
+  // Q9
+  { q: "Which of the following are autotrophs?", opts: ["Photosynthetic bacteria", "Chemosynthetic bacteria", "Archaeobacteria", "Both a and b"], ans: 3, exp: "Photosynthetic and chemosynthetic bacteria are autotrophs." },
+  // Q10
+  { q: "Which of the following statements is wrong about Archaeobacteria?", opts: ["They live in some of the most harsh habitats", "They are recently evolved group", "Cell wall is peptidoglycanless", "They are unlike most other bacteria"], ans: 1, exp: "Archaeobacteria are ancient, not recently evolved." },
+  // Q11
+  { q: "Which of the following areas or conditions would be favoured by thermoacidophiles?", opts: ["The stomach of many herbivores", "Hot, alkaline", "Hot, sulphur springs", "Deep sea volcanic"], ans: 2, exp: "Thermoacidophiles favour hot, sulphur springs." },
+  // Q12
+  { q: "Which is not correct about methanogens?", opts: ["They are archaeobacteria", "They live in marshy areas", "Methane is their preferred carbon source", "They are present in gut of ruminants"], ans: 2, exp: "Methane is their product, not carbon source." },
+  // Q13
+  { q: "Which one is the most abundant microorganism?", opts: ["Bacteria", "Protozoan", "Viruses", "Protists"], ans: 0, exp: "Bacteria are most abundant." },
+  // Q14
+  { q: "Bacteria occur —", opts: ["In water only", "In soil only", "As parasite", "Everywhere"], ans: 3, exp: "Bacteria occur everywhere." },
+  // Q15
+  { q: "Based upon the shape bacteria are grouped under how many categories?", opts: ["2", "3", "4", "5"], ans: 2, exp: "Four categories." },
+  // Q16
+  { q: "Which of the following bacteria are comma-shaped?", opts: ["Coccius", "Vibrio", "Bacillus", "Clostridium"], ans: 1, exp: "Vibrio is comma-shaped." },
+  // Q17
+  { q: "Which of the following statement is correct about bacteria?", opts: ["Bacteria are simple in both structure and behaviour", "Bacteria are complex in structure as well as behaviour", "Bacteria are complex in structure but simple in behaviour", "Bacteria are simple in structure but complex in behaviour"], ans: 3, exp: "Simple in structure, complex in behaviour." },
+  // Q18
+  { q: "Which of the following organisms show the most extensive metabolic diversity?", opts: ["Algae", "Fungi", "Bacteria", "Bryophytes"], ans: 2, exp: "Bacteria." },
+  // Q19
+  { q: "Most of the bacteria are —", opts: ["Autotrophs", "Chemoautotrophs", "Heterotroph", "Parasites"], ans: 2, exp: "Heterotrophs." },
+  // Q20
+  { q: "Which of the following are autotrophs?", opts: ["Photosynthetic bacteria", "Chemosynthetic bacteria", "Archaeobacteria", "Both a and b"], ans: 3, exp: "Both a and b." },
+  // Q21
+  { q: "Which of the following statements is wrong about Archaeobacteria?", opts: ["They live in some of the most harsh habitats", "They are recently evolved group", "Cell wall is peptidoglycanless", "They are unlike most other bacteria"], ans: 1, exp: "Not recently evolved." },
+  // Q22
+  { q: "Which of the following areas or conditions would be favoured by thermoacidophiles?", opts: ["The stomach of many herbivores", "Hot, alkaline", "Hot, sulphur springs", "Deep sea volcanic"], ans: 2, exp: "Hot, sulphur springs." },
+  // Q23
+  { q: "Which is not correct about methanogens?", opts: ["They are archaeobacteria", "They live in marshy areas", "Methane is their preferred carbon source", "They are present in gut of ruminants"], ans: 2, exp: "Methane is product, not carbon source." },
+  // Q24
+  { q: "Chrysophytes include —", opts: ["Diatoms and desmids (golden algae)", "Dinoflagellates", "Euglenoids", "Slime moulds"], ans: 0, exp: "Chrysophytes include diatoms and desmids." },
+  // Q25
+  { q: "Which of the following modes of reproduction can be found in at least some protists?", opts: ["Binary fission", "Sexual reproduction", "Spore formation", "All"], ans: 3, exp: "All modes are found in protists." },
+  // Q26
+  { q: "Select the following statement that does not apply to diatoms —", opts: ["Diatom cell wall may be impregnated with silicon", "Cell wall is made up of 2 half-shells fit tightly together", "Diatom is a chrysophyte", "Diatom is multiflagellate"], ans: 3, exp: "Diatoms are not multiflagellate." },
+  // Q27
+  { q: "Silica gel (Keieselghur) / Diatomite / Diatomaceous earth is obtained by —", opts: ["Diatoms", "Dinoflagellates", "Euglenoids", "Brown algae"], ans: 0, exp: "Diatoms." },
+  // Q28
+  { q: "The diatoms do not easily decay like most of the other algae because —", opts: ["They have highly siliceous wall", "They have water proof cells", "Their cell wall are mucilaginous", "Cell wall is virus-resistant"], ans: 0, exp: "Highly siliceous wall." },
+  // Q29
+  { q: "Diatomaceous earth is used for all except —", opts: ["Polishing", "Filteration of oils and syrups", "Sound and fire proof room", "Biogas"], ans: 3, exp: "Not for biogas." },
+  // Q30
+  { q: "Chrysophytes are —", opts: ["Planktons", "Nektons", "Benthonic", "Active swimmers"], ans: 0, exp: "Planktons." },
+  // Q31
+  { q: "Chief producers in ocean are —", opts: ["Dinoflagellates", "Diatoms", "Euglenoids", "Green algae"], ans: 1, exp: "Diatoms." },
+  // Q32
+  { q: "Photosynthetic protists are —", opts: ["Euglenoids, Diatoms and Dinoflagellates", "Euglenoids and slime moulds", "Diatoms and Zooflagellates", "Desmids + Ciliates"], ans: 0, exp: "Euglenoids, Diatoms, Dinoflagellates." },
+  // Q33
+  { q: "Dinoflagellates are mostly —", opts: ["Marine", "Fresh water", "terrestrial", "Saprophytes"], ans: 0, exp: "Mostly marine." },
+  // Q34
+  { q: "Red tides in warm coastal water develop due to super abundance of —", opts: ["Dinoflagellates", "Euglenoid forms", "Diatoms and desmids", "Chlamydomonas nivalis"], ans: 0, exp: "Dinoflagellates." },
+  // Q35
+  { q: "Red tide is caused by —", opts: ["Ceretium", "Noctiluca", "Gonyaulax", "All of these"], ans: 3, exp: "All of these." },
+  // Q36
+  { q: "Dinoflagellates have —", opts: ["A single flagellum in the transverse groove between the cell plates", "A single flagellum in the longitudinal groove between the cell plates", "Two flagella one lies longitudinally and the other transversely in a furrow between the wall plates", "No flagella"], ans: 2, exp: "Two flagella, one longitudinal and one transverse." },
+  // Q37
+  { q: "In which of the following the cell wall has stiff cellulose plate on the outer surface —", opts: ["Dinoflagellates", "Desmids", "Diatoms", "Euglenoids"], ans: 0, exp: "Dinoflagellates." },
+  // Q38
+  { q: "Which of the following releases toxins that may even kill other marine animals like fishes —", opts: ["Gonyaulax", "Paramecium", "Euglenoids", "Sporozoans"], ans: 0, exp: "Gonyaulax." },
+  // Q39
+  { q: "Euglenoids e.g. Euglena are found —", opts: ["In fresh running water", "In fresh stagnant water", "In marine environment", "In both fresh and marine water"], ans: 1, exp: "Fresh stagnant water." },
+  // Q40
+  { q: "Which of the following statements about Euglena is true?", opts: ["Euglenoids are flagellates", "They have rigid cell wall", "The pigments of Euglena are quite different from those of green plants", "Euglena is a marine protist"], ans: 2, exp: "Pigments are similar to green plants; option c is wrong." },
+  // Q41
+  { q: "Which of the following statement is true about Euglena?", opts: ["They show flagellar locomotion", "They have a rigid cell wall", "They have no chloroplast", "They are obligate autotroph"], ans: 0, exp: "Flagellar locomotion." },
+  // Q42
+  { q: "I. Instead of a cell wall they have a protein rich pellicle making their body flexible. II. They have 2 flagella, a short and a long one. III. They have mixotrophic nutrition. IV. In light they are photosynthetic, but act as heterotroph when in dark. V. They are connecting link between plants and animals. The above statements are assigned to —", opts: ["Dinoflagellates", "Slime mould", "Desmids and Diatoms", "Euglena"], ans: 3, exp: "Euglena." },
+  // Q43
+  { q: "Slime moulds —", opts: ["Are parasite", "Do not produce spores", "Do not produce fruiting bodies", "Saprophytic protists"], ans: 3, exp: "Saprophytic protists." },
+  // Q44
+  { q: "The slimy mass of protoplasm with nuclei forms the body of slime mould is called —", opts: ["Plasmodium", "Myxamoeba", "Sporocytes", "Periplasmodium"], ans: 0, exp: "Plasmodium." },
+  // Q45
+  { q: "Which of the following is correct about the slime mould? I. Its thalloid body, plasmodium, has pseudopodia for locomotion. II. During unfavourable conditions plasmodium produces fruiting bodies. III. Spores possess no true cell wall. IV. They are dispersed by air. V. Spores survive for many years. VI. Plasmodium can grow upto several feet.", opts: ["I, II, IV, V, VI", "I, II, III", "I, II, III, VI", "II, III, VI"], ans: 0, exp: "I, II, IV, V, VI." },
+  // Q46
+  { q: "Protozoans are not included in kingdom Animalia because —", opts: ["Mostly asymmetrical", "Unicellular eukaryotes", "Heterotrophic nature", "Multicellular prokaryotes"], ans: 1, exp: "Unicellular eukaryotes." },
+  // Q47
+  { q: "All protozoans are —", opts: ["Saprophytes only", "Parasites only", "Predators only", "Heterotrophs (parasites or predator) only"], ans: 3, exp: "Heterotrophs." },
+  // Q48
+  { q: "Which of the following is considered to be primitive relatives of animals?", opts: ["Dinoflagellates", "Slime moulds", "Protozoa", "Protochordata"], ans: 2, exp: "Protozoa." },
+  // Q49
+  { q: "How many major groups protozoan have?", opts: ["3", "4", "2", "8"], ans: 1, exp: "4 groups." },
+  // Q50
+  { q: "Which of the following are protozoans?", opts: ["Diatoms, flagellates, ciliates", "Desmids, flagellates, ciliates", "Amoeboid, flagellates, ciliates, sporozoans", "Amoeba, Paramecium, dinoflagellates, Plasmodium"], ans: 2, exp: "Amoeboid, flagellates, ciliates, sporozoans." },
+  // Q51
+  { q: "Which of the following statements is wrong about the amoeboid protozoans?", opts: ["they live in freshwater, sea water or moist soil", "Amoeba has pseudopodia for locomotion and capture prey", "Entamoeba show holozoic nutrition", "Marine forms are shelled with silica"], ans: 3, exp: "Marine forms are shelled with calcium carbonate." },
+  // Q52
+  { q: "Flagellated protozoans are —", opts: ["Free living", "Parasites", "Either free living or parasites", "Pseudopodia"], ans: 2, exp: "Either free living or parasites." },
+  // Q53
+  { q: "Which one is correct about Trypanosoma?", opts: ["They are flagellated protozoan", "They are parasite", "They cause sleeping sickness", "All"], ans: 3, exp: "All." },
+  // Q54
+  { q: "Paramecium —", opts: ["Is a ciliated protozoan", "Shows water current maintained by cilia", "Has a cavity (gullet) that opens to the outside", "All"], ans: 3, exp: "All." },
+  // Q55
+  { q: "Plasmodium (malarial parasite) is —", opts: ["Sporozoan", "Ciliated protozoan", "Flagellated protozoan", "Amoeboid protozoan"], ans: 0, exp: "Sporozoan." },
+  // Q56
+  { q: "Which of the following always produce an infectious spore like stage in their life cycles?", opts: ["Ciliated protozoans", "Flagellated protozoans", "Sporozoans", "None"], ans: 2, exp: "Sporozoans." },
+  // Q57
+  { q: "Mode of nutrition in fungi is —", opts: ["Parasitic", "Saprophytic", "Autotrophic", "Heterotrophic"], ans: 3, exp: "Heterotrophic." },
+  // Q58
+  { q: "All of the following are fungi except —", opts: ["Yeast", "Penicillium", "Plasmodium", "Puccinia"], ans: 2, exp: "Plasmodium is protozoan." },
+  // Q59
+  { q: "Which of the following is odd?", opts: ["Toad stool", "Puccinia", "Alternaria", "Mushroom"], ans: 2, exp: "Alternaria is deuteromycete." },
+  // Q60
+  { q: "Cell walls of all fungi consist of the polysaccharide —", opts: ["Chitin", "Cellulose", "Silica", "Pectin"], ans: 0, exp: "Chitin." },
+  // Q61
+  { q: "The body of multicellular fungus is called a —", opts: ["Monokaryon", "Hyphae", "Rhizoids", "Dikaryon"], ans: 1, exp: "Hyphae." },
+  // Q62
+  { q: "The cells of the body of a multicellular fungus are organised into rapidly growing individual filaments called —", opts: ["Mycelium", "Rhizoids", "Hyphae", "Dikaryon"], ans: 2, exp: "Hyphae." },
+  // Q63
+  { q: "Which one is unicellular fungus?", opts: ["Puccinia", "Toad stool", "Penicillium", "Yeast"], ans: 3, exp: "Yeast." },
+  // Q64
+  { q: "Coenocytic hypha is —", opts: ["Uninucleate hypha", "Multicellular hypha", "Multinucleate hypha without septae", "Hypha in coelom"], ans: 2, exp: "Multinucleate hypha without septae." },
+  // Q65
+  { q: "Many fungi are associating with photosynthetic organisms to form mycorrhizae or lichens —", opts: ["Parasitic", "Symbiotic", "Photosynthetic", "Saprobic"], ans: 1, exp: "Symbiotic." },
+  // Q66
+  { q: "Fungi can be parasites on —", opts: ["Animals", "Human being", "Plants", "All"], ans: 3, exp: "All." },
+  // Q67
+  { q: "Fungi prefer to grow in —", opts: ["Cold and dry places", "Hot and dry places", "Sea water", "Warm and humid places"], ans: 3, exp: "Warm and humid places." },
+  // Q68
+  { q: "Fungi occur —", opts: ["in air and soil", "In water", "On plants and animals", "All"], ans: 3, exp: "All." },
+  // Q69
+  { q: "Fungi show a great diversity in —", opts: ["Morphology", "Habitat", "Both a and b", "Nutrition"], ans: 2, exp: "Both a and b." },
+  // Q70
+  { q: "Reproduction in fungi can take place by all of the following vegetative methods except —", opts: ["Gemmae", "Fragmentation", "Fission", "Budding"], ans: 0, exp: "Gemmae." },
+  // Q71
+  { q: "Fungi show asexual reproduction by all of the following spores except —", opts: ["Conidia", "Oospore", "Sporangiospore", "Zoospores"], ans: 1, exp: "Oospore is sexual." },
+  // Q72
+  { q: "Sexual reproduction in fungi is by all of the following except —", opts: ["Ascospore", "Basidiospore", "Oospore", "Conidia"], ans: 3, exp: "Conidia is asexual." },
+  // Q73
+  { q: "When a moist bread is kept exposed in air, it becomes mouldy and black because —", opts: ["Spores are present", "Spores are present in the bread", "Spores are in the air", "The bread gets decomposed"], ans: 2, exp: "Spores are in the air." },
+  // Q74
+  { q: "Which of the following is the correct sequence of 3 steps in the sexual cycle of fungi —", opts: ["Mitosis → Meiosis → Fertilization", "Plasmagomy → Karyogamy → Meiosis", "Meiosis → Plasmagomy → Karyogamy", "Karyogamy → Plasmagomy → Meiosis"], ans: 1, exp: "Plasmagomy → Karyogamy → Meiosis." },
+  // Q75
+  { q: "Fungi are classified on the basis of —", opts: ["Morphology of mycelium", "Mode of spore formation", "Development of fruiting bodies", "All"], ans: 3, exp: "All." },
+  // Q76
+  { q: "Dikaryophase / Dikaryon formation is a specific characteristic of —", opts: ["All fungi", "Phycomycetes and ascomycetes", "Only basidiomycetes", "Ascomycetes and basidiomycetes"], ans: 3, exp: "Ascomycetes and basidiomycetes." },
+  // Q77
+  { q: "Coenocytic, multinucleate and branched mycelial habit is found in —", opts: ["Basidiomycetes", "Phycomycetes", "Ascomycetes", "Deuteromycetes"], ans: 1, exp: "Phycomycetes." },
+  // Q78
+  { q: "Members of phycomycetes are found — I. In aquatic habitat, II. On decaying wood, III. On moist and damp places, IV. As obligate parasite on plants", opts: ["None of the above", "I and IV", "II and III", "All of the above"], ans: 3, exp: "All of the above." },
+  // Q79
+  { q: "In phycomycetes asexual reproduction occurs by —", opts: ["Zoospores (motile)", "Aplanospores (non-motile)", "Both", "Aplanogamete"], ans: 2, exp: "Both." },
+  // Q80
+  { q: "Which of the following spores are produced endogenously?", opts: ["Zoospores and Conidia", "Conidia and aplanospores", "Aplanospores and zoospores", "Aplanospore, zoospores and conidia"], ans: 2, exp: "Aplanospores and zoospores." },
+  // Q81
+  { q: "In Phycomycetes sexual reproduction occurs by —", opts: ["Isogamy and Anisogamy", "Isogamy, oogamy", "Isogamy, anisogamy and oogamy", "Oogamy and anisogamy"], ans: 2, exp: "Isogamy, anisogamy and oogamy." },
+  // Q82
+  { q: "All the following belong to phycomycetes except —", opts: ["Penicillium", "Rhizopus (bread mould)", "Mucor", "Albugo"], ans: 0, exp: "Penicillium is ascomycete." },
+  // Q83
+  { q: "Which of the following is parasite on mustard?", opts: ["Albugo", "Puccinia", "Yeast", "Ustilago"], ans: 0, exp: "Albugo." },
+  // Q84
+  { q: "Which of the following is false about ascomycetes?", opts: ["Mode of nutrition saprophytic, decomposer, coprophilous and parasitic", "Includes unicellular (e.g. yeast) and multicellular forms", "Mycelium is coenocytic", "Aspergillus, Claviceps, Neurospora are important members"], ans: 2, exp: "Mycelium is septate, not coenocytic." },
+  // Q85
+  { q: "I. It includes unicellular as well as multicellular fungi. II. In multicellular forms hyphae are branched and septate. III. Conidiophore produces conidia exogenously in chain. IV. Sexual spores are ascospores produced endogenously in Ascus. V. Fruiting body is called ascocarp. Which of the above characters are shown by —", opts: ["Phycomycetes", "Sac fungi", "Club fungi", "Fungi imperfecti"], ans: 1, exp: "Sac fungi (Ascomycetes)." },
+  // Q86
+  { q: "Which of the following are edible ascomycetes delicacies?", opts: ["Morels + Mushroom", "Truffles + Toadstool", "Morels + Truffles", "Puffball + Mushroom"], ans: 2, exp: "Morels + Truffles." },
+  // Q87
+  { q: "Which of the following is used extensively in biochemical and genetical work?", opts: ["Agaricus", "Alternaria", "Neurospora", "Mucor"], ans: 2, exp: "Neurospora." },
+  // Q88
+  { q: "Which of the following ascomycetes is the source of antibiotic?", opts: ["Neurospora", "Penicillium", "Claviceps", "None"], ans: 1, exp: "Penicillium." },
+  // Q89
+  { q: "Basidiomycetes include —", opts: ["Mushroom, Toadstool, Puffball and bracket fungi", "Smut fungi and rust fungi", "Both a and b", "Bread mould, sac fungi and algal fungi"], ans: 2, exp: "Both a and b." },
+  // Q90
+  { q: "Which of the following are common parasite basidiomycetes?", opts: ["Puccinia (rust) and Ustilago (smut)", "Bracket fungi", "Puffballs", "Agaricus (mushroom)"], ans: 0, exp: "Puccinia and Ustilago." },
+  // Q91
+  { q: "Where does meiosis occur in mushroom?", opts: ["Basidiospore", "Basidium", "Basidiocarp", "Ascus mother cell"], ans: 1, exp: "Basidium." },
+  // Q92
+  { q: "I. Mycelium is branched and septate. II. No asexual spores are generally formed. III. Vegetative reproduction by fragmentation is common. IV. Sex organs are absent but sexual reproduction takes place by somatogamy. V. Karyogamy and meiosis occur in basidium to form haploid exogenous 4 basidiospores. VI. Basidia are arranged in basidiocarp. The above characters are assigned to —", opts: ["Sac fungi", "Club fungi", "Algal fungi", "Fungi imperfecti"], ans: 1, exp: "Club fungi (Basidiomycetes)." },
+  // Q93
+  { q: "Plasmogamy is the fusion of —", opts: ["2 haploid cells including their nuclei", "2 haploid cells without nuclear fusion", "Sperm and egg", "Sperm with 2 polar nuclei"], ans: 1, exp: "2 haploid cells without nuclear fusion." },
+  // Q94
+  { q: "Somatogamy is the fusion of —", opts: ["Two vegetative/somatic cells of different strain/genotypes to form dikaryotic cell", "Sperm with egg", "2 somatic cell having identical strain", "Egg with egg"], ans: 0, exp: "Somatic cells of different strains." },
+  // Q95
+  { q: "Which of the following is false about deuteromycetes?", opts: ["They reproduce only by asexual spores (conidia)", "Mycelium is branched and septate", "They have only parasitic forms", "They have no sexual stage (perfect stage)"], ans: 2, exp: "They have both saprophytic and parasitic forms." },
+  // Q96
+  { q: "Which of the following is correct about class Deuteromycetes?", opts: ["Some members are saprophytes or parasites", "A large number of members are decomposers of litter and help in mineral cycling", "Alternaria, Colletotrichum and Trichoderma are deuteromycetes", "All"], ans: 3, exp: "All." },
+  // Q97
+  { q: "Sexual reproduction is found in all except —", opts: ["Deuteromycetes", "Ascomycetes", "Phycomycetes", "Basidiomycetes"], ans: 0, exp: "Deuteromycetes." },
+  // Q98
+  { q: "If sexual stage is discovered in a member of deuteromycetes, it is moved to —", opts: ["Phycomycetes", "Basidiomycetes", "Ascomycetes", "Both b and c"], ans: 3, exp: "Both b and c." },
+  // Q99
+  { q: "Select the false statement(s) —", opts: ["Kingdom Plantae includes multicellular chlorophyll containing organisms", "Plantae includes Bryophytes to Angiosperms; but not algae", "Plantae shows alternation of generation", "All"], ans: 3, exp: "All are false as statement b is false." },
+  // Q100
+  { q: "Which of the following pair(s) is false?", opts: ["Bladderwort - insectivorous", "Venus fly trap - insectivorous", "Cuscuta - Saprophytic", "Cell wall of plant cell - mainly cellulosic"], ans: 2, exp: "Cuscuta is parasitic, not saprophytic." },
+  // Q101
+  { q: "Kingdom Animalia is characterised by —", opts: ["Heterotrophic eukaryotic multicellular organisms having no cell wall", "Reserve food - glycogen or fat", "Holozoic nutrition", "All"], ans: 3, exp: "All." },
+  // Q102
+  { q: "In the five kingdom classification of Whittaker there is —", opts: ["No mention of viruses", "Mention of lichens", "No mention of viroids", "No mention of viruses, viroids and lichens"], ans: 3, exp: "No mention of viruses, viroids and lichens." },
+  // Q103
+  { q: "Viruses did not find a place in classification since —", opts: ["They are non-living", "They are not truly living", "They are obligate parasites", "They are not considered living"], ans: 1, exp: "They are not truly living." },
+  // Q104
+  { q: "Common cold / flu is —", opts: ["A viral disease", "A bacterial disease", "A mycoplasma disease", "A fungal disease"], ans: 0, exp: "Viral disease." },
+  // Q105
+  { q: "Which is absent in viruses?", opts: ["Nucleic acid", "Protoplasm", "Protein", "a and c"], ans: 1, exp: "Protoplasm." },
+  // Q106
+  { q: "The viruses are non-cellular organisms that are characterised by —", opts: ["Having no nucleic acid", "Having an active structure outside the living cell", "Having an inert crystalline structure outside the cell", "Their hyperactivity outside the cell"], ans: 2, exp: "Inert crystalline structure outside the cell." },
+  // Q107
+  { q: "Term virus means —", opts: ["Non-cellular", "A parasite", "A killer", "Venom or poison"], ans: 3, exp: "Venom or poison." },
+  // Q108
+  { q: "Term virus was given by —", opts: ["D.J. Ivanowsky", "Pasteur", "Beijerinek", "Stanley"], ans: 1, exp: "Pasteur." },
+  // Q109
+  { q: "The scientist who first crystallized TMV was —", opts: ["Ivanowsky", "Pasteur", "Robertson", "Stanley"], ans: 3, exp: "Stanley." },
+  // Q110
+  { q: "Chemically viruses are —", opts: ["Glycoproteins", "Glycolipid", "Nucleoproteins", "Lipopolysaccharides"], ans: 2, exp: "Nucleoproteins." },
+  // Q111
+  { q: "TMV was discovered by —", opts: ["Mayer", "Ivanowsky", "Towrt", "Pasteur"], ans: 0, exp: "Mayer." },
+  // Q112
+  { q: "The concept of Contagium vivum fluidum (infectious living fluid) for virus was given by —", opts: ["Mayer", "Beijerinek", "Pasteur", "Ivanowsky"], ans: 1, exp: "Beijerinek." },
+  // Q113
+  { q: "Which of the following statements is false about viruses —", opts: ["Viruses are obligate parasites", "Viruses can multiply only when they are inside the living cells", "Viruses cannot pass bacterial proof filters", "Viruses are made up of protein + DNA or RNA (never both DNA and RNA)"], ans: 2, exp: "Viruses can pass bacterial proof filters." },
+  // Q114
+  { q: "Which is the infectious component of the virus?", opts: ["Lipid", "Protein", "Nucleic acid", "b and c"], ans: 2, exp: "Nucleic acid." },
+  // Q115
+  { q: "Viruses have proteins and —", opts: ["ds DNA or ssRNA", "ssRNA or ds RNA", "DNA and RNA", "ds or ss RNA / DNA"], ans: 3, exp: "ds or ss RNA/DNA." },
+  // Q116
+  { q: "In general plant viruses have —", opts: ["Single strand RNA", "dsRNA", "ssDNA", "dsRNA"], ans: 0, exp: "Single strand RNA." },
+  // Q117
+  { q: "Animal viruses have —", opts: ["ssRNA", "dsRNA", "dsDNA or ssDNA", "a or b or c"], ans: 3, exp: "a or b or c." },
+  // Q118
+  { q: "The genetic material for most of the bacteriophages is —", opts: ["ssRNA", "dsRNA", "dsDNA", "ssDNA"], ans: 2, exp: "dsDNA." },
+  // Q119
+  { q: "The protein of viruses is called —", opts: ["Capsid", "Capsomere", "Core", "Envelope"], ans: 0, exp: "Capsid." },
+  // Q120
+  { q: "The subunit of capsid is called —", opts: ["Core", "Nucleotide", "Amino acid", "Capsomere"], ans: 3, exp: "Capsomere." },
+  // Q121
+  { q: "All are the viral diseases except —", opts: ["AIDS and mumps", "Small pox and herpes", "Influenza", "Cholera"], ans: 3, exp: "Cholera is bacterial." },
+  // Q122
+  { q: "In plants mosaic formation, leaf rolling and curling, yellowing and vein clearing dwarfing and stunted growth are symptoms of —", opts: ["Viral disease", "Bacterial disease", "Fungal disease", "Mycoplasma disease"], ans: 0, exp: "Viral disease." },
+  // Q123
+  { q: "In 1971 T.O. Diener discovered a new infectious agent that was smaller than viruses. I. It causes potato spindle tuber disease. II. It is free RNA. III. Molecular wt. of RNA is low. The above statements are assigned to —", opts: ["Viruses", "Viroids", "Virulent", "Mycoplasma"], ans: 1, exp: "Viroids." },
+  // Q124
+  { q: "Lichens are composite organism made up of a fungus and a photosynthetic alga. Which of the following statements is wrong about lichen?", opts: ["Lichens are sensitive to air pollution because they have no way to excrete toxic substances", "Algal partner (phycobiont) and fungal partner (mycobiont) live mutually", "Algae prepare food for fungi and fungi provide shelter and absorb water + minerals for algal partner", "None"], ans: 3, exp: "None is wrong." },
+  // Q125
+  { q: "Organisms called Methanogens are most abundant in a —", opts: ["Hot spring", "Sulphur rock", "Cattle yard", "Polluted stream"], ans: 2, exp: "Cattle yard." },
+  // Q126
+  { q: "Which one among the following statements is NOT correct?", opts: ["Contractile vacuoles regulate osmoregulation in marine protozoans", "Euglena is a holophytic protozoan", "Trypanasoma belongs to the class Mastigophora", "Class sporozoa includes plasmodium"], ans: 0, exp: "Contractile vacuoles are in freshwater protozoans." },
+  // Q127
+  { q: "How many organisms in the list given below are autotrophs? Lactobacillus, Nostoc, Chara, Nitrosomonas, Nitrobacter, Streptomyces, Sacharomyces, Trypanosoma, Porphyra, Wolfia", opts: ["Four", "Five", "Six", "Three"], ans: 2, exp: "Six autotrophs." },
+  // Q128
+  { q: "In the five-kingdom classification, Chlamydomonas and Chlorella have been included in:", opts: ["Protista", "Algae", "Plantae", "Monera"], ans: 0, exp: "Protista." },
+  // Q129
+  { q: "Cuscuta is an example of:", opts: ["Ectoparasitism", "Brood parasitism", "Predation", "Endoparasitism"], ans: 0, exp: "Ectoparasitism." },
+  // Q130
+  { q: "Which of the following option is correct? (A) In basidiomycetes class asexual spores are generally not found. (B) Yeast are a unicellular fungi. (C) Fungi are divided into different classes on the basis of morphology of mycelium and sexual reproduction. (D) Branched, aseptate and multinucleate mycelium are found in club fungi.", opts: ["B, C and D are correct", "A, C and D are incorrect", "A, B and C are correct", "A and D are incorrect"], ans: 2, exp: "A, B and C are correct." },
+  // Q131
+  { q: "Consider the following statements: A. Viruses are excluded from five kingdom classification of Whittaker. B. Kingdom Protista of Whittaker's classification seems to be unnatural. C. Maximum nutritional diversity is found in Monera. D. In five kingdom classification, Euglena is included under Protista. E. Algae are distributed in five kingdom classification amongst Monera, Plantae and Protista. Of the above statements —", opts: ["A and B are correct", "C and D are correct", "B and E are correct", "All are correct"], ans: 3, exp: "All are correct." },
+  // Q132
+  { q: "The beautiful diatoms and desmids are placed under —", opts: ["chrysophytes", "dinoflagellates", "euglenoids", "slime moulds"], ans: 0, exp: "Chrysophytes." },
+  // Q133
+  { q: "The cyanobacteria are also referred to as —", opts: ["protists", "golden algae", "Slime moulds", "blue green algae"], ans: 3, exp: "Blue green algae." },
+  // Q134
+  { q: "Which statement is wrong for viruses?", opts: ["All are parasites", "All of them have helical symmetry", "They have ability to synthesise nucleic acids and proteins", "They are non-cellular"], ans: 2, exp: "They cannot synthesise independently." },
+  // Q135
+  { q: "Multicellular organism with holophytic nutrition belong to how many kingdoms in Whittaker system?", opts: ["One", "Two", "Three", "Five"], ans: 0, exp: "One." },
+  // Q136
+  { q: "Multicellular with loose tissue body organization is a characteristic feature of —", opts: ["Monera", "Protista", "Plantae", "Fungi"], ans: 3, exp: "Fungi." },
+  // Q137
+  { q: "The Cyanobacteria of great nutritional value being marketed today is —", opts: ["Serytonema", "Spirogyra", "Spirulina", "Stigonema"], ans: 2, exp: "Spirulina." },
+  // Q138
+  { q: "What is true for cyanobacteria?", opts: ["oxygenic with nitrogenase", "oxygenic without nitrogenase", "non oxygenic with nitrogenase", "non oxygenic without nitrogenase"], ans: 0, exp: "Oxygenic with nitrogenase." },
+  // Q139
+  { q: "Select incorrect statement w.r.t eubacteria —", opts: ["Have very simple structure", "Peptidoglycan nature of cell wall", "Heterotrophs are most abundant in nature", "Show most simple metabolic diversity"], ans: 3, exp: "They show most extensive metabolic diversity." },
+  // Q140
+  { q: "Archaeabacteria do not show —", opts: ["Peptidoglycan in cell wall", "Introns in DNA", "Branched chain lipids in cell membrane", "Ribosomal protein with high acidic nature"], ans: 0, exp: "Peptidoglycan is absent." },
+  // Q141
+  { q: "Thermoacidophiles are capable of withstanding extremely low pH and high temperature due to the —", opts: ["Presence of branched chain lipid in cell membrane", "Presence of resistant enzyme which can operate in basic condition", "Presence of higher concentration of KCl in their cell", "More than one option is correct"], ans: 0, exp: "Branched chain lipids." },
+  // Q142
+  { q: "The name of the class is based on sexual structure as the site of karyogamy and meiosis in —", opts: ["Phycocytes and Actinomycetes", "Deuteromycetes and Zygomycetes", "Ascomycetes and Basidiomycetes", "Basidiomycetes and Actinomycetes"], ans: 2, exp: "Ascomycetes and Basidiomycetes." },
+  // Q143
+  { q: "Decomposers (microconsumers) are assigned to how many kingdoms of Whittaker?", opts: ["1", "2", "3", "4"], ans: 2, exp: "3." },
+  // Q144
+  { q: "Go through the following characters. How many of them are used to classify the organisms according to five kingdom system of classification? Cell structure, flagellation, mode of nutrition, reproduction, phylogenetic relationship, pigmentation.", opts: ["6", "4", "5", "3"], ans: 1, exp: "4." },
+  // Q145
+  { q: "A study of diverse organisms like plants, animals or fungi show similar pattern regarding —", opts: ["External morphology", "Internal structure", "Physiology", "Sexual mode of reproduction"], ans: 3, exp: "Sexual mode of reproduction." },
+  // Q146
+  { q: "Choose the correct statement —", opts: ["All the members of Phycomycetes are facultative parasites on plants", "Fusion of protoplasm between two motile or non-motile gametes is called plasmagamy", "Kingdom Plantae includes all eukaryotic chlorophyll containing organisms and non-chlorophyll organisms and are called plants", "Trichoderma belongs to basidiomycetes"], ans: 1, exp: "Plasmagamy is fusion of protoplasm." },
+  // Q147
+  { q: "Which of the following characters belongs to the kingdom Monera?", opts: ["Eukaryotic", "Heterotrophic", "Multicellular", "Presence of cell walls made of cellulose"], ans: 1, exp: "Heterotrophic." },
+  // Q148
+  { q: "Of the following statements which are not relevant to archaebacteria? A. They live in some of the most harsh habitats. B. They are present in the gut of several ruminant animals. C. They are characterised by the presence of a rigid cellulosic cell wall. D. They include mycoplasma. E. They are also referred to as blue-green algae.", opts: ["A, B and C", "A, C and E", "C, D and E", "A, C and D"], ans: 2, exp: "C, D and E are not relevant." },
+  // Q149
+  { q: "Which of the following is wrongly matched?", opts: ["T.O. Diener - Viroids are found to be a free DNA", "W.M. Stanley - Crystallised proteins", "M.W. Beijerinck - Contagium vivum fluidum", "D.J. Ivanowsky - Microbes smaller than a bacteria cause mosaic disease of tobacco"], ans: 0, exp: "Viroids are free RNA, not DNA." },
+  // Q150
+  { q: "The structure of E. coli chromosomal DNA is —", opts: ["Double stranded, right handed and circular", "Single stranded, right handed and circular", "Double stranded, left handed and linear", "Double stranded, left handed and circular"], ans: 0, exp: "Double stranded, right handed, circular." },
+  // Q151
+  { q: "The organisms which completely lack a cell wall and can live without oxygen are —", opts: ["Mycoplasmas", "Archaeobacteria", "Methanogens", "Thermoacidophiles"], ans: 0, exp: "Mycoplasmas." },
+  // Q152
+  { q: "Which one of the following cocci appears like grapes under microscope?", opts: ["Streptococci", "Diplococci", "Staphylococci", "Pneumococci"], ans: 2, exp: "Staphylococci." },
+  // Q153
+  { q: "Green phytoplankton are kept in which kingdom of five kingdom classification system?", opts: ["Kingdom - Monera", "Kingdom - Protista", "Kingdom - Plantae", "Kingdom - Fungi"], ans: 1, exp: "Protista." },
+  // Q154
+  { q: "True nucleus is absent in —", opts: ["Vaucheria", "Volvox", "Anabaena", "Mucor"], ans: 2, exp: "Anabaena." },
+  // Q155
+  { q: "Which one of the followings matches is correct?", opts: ["Mucor Reproduction by Conjugation Ascomycetes", "Agaricus Parasitic fungus Basidiomycetes", "Phytophthora Aseptate mycelium Basidiomycetes", "Alternaria Sexual reproduction absent Deuteromycetes"], ans: 3, exp: "Alternaria - Deuteromycetes." },
+  // Q156
+  { q: "The guts of cow and buffalo possess —", opts: ["Methanogens", "Cyanobacteria", "Fucus sp.", "Chlorella sp."], ans: 0, exp: "Methanogens." },
+  // Q157
+  { q: "The imperfect fungi which are decomposers of litter and help in mineral cycling belong to —", opts: ["Phycomycetes", "Ascomycetes", "Deuteromycetes", "Basidiomycetes"], ans: 2, exp: "Deuteromycetes." },
+  // Q158
+  { q: "Select the wrong statement —", opts: ["The term 'Contagium vivum fluidum' was coined by M.W. Beijerinck", "Mosaic disease in tobacco and AIDS in human being are caused by viruses", "The viroids were discovered by D.J. Ivanowsky", "W.M. Stanley showed that viruses could be crystallised"], ans: 2, exp: "Viroids discovered by T.O. Diener." },
+  // Q159
+  { q: "Choose the wrong statement —", opts: ["Morels and truffles are poisonous mushrooms", "Yeast is unicellular and useful in fermentation", "Penicillium is multicellular and produces antibiotics", "Neurospora is used in the study of biochemical genetics"], ans: 0, exp: "Morels and truffles are edible." },
+  // Q160
+  { q: "Pick up the wrong statement —", opts: ["Some fungi are edible", "Nuclear membrane is present in Monera", "Cell wall is absent in Animals", "Protists have photosynthetic and heterotrophic modes of nutrition"], ans: 1, exp: "Monera lacks nuclear membrane." },
+  // Q161
+  { q: "In which group of organisms the cell walls from two thin overlapping shells which fit together?", opts: ["Dinoflagellates", "Slime moulds", "Chrysophytes", "Euglenoids"], ans: 2, exp: "Chrysophytes." },
+  // Q162
+  { q: "Fungus prefer to grow in —", opts: ["Warm and humid places", "Cold and humid places", "Warm and cold places", "Warm, cold and humid places"], ans: 0, exp: "Warm and humid places." },
+  // Q163
+  { q: "Which of the following statements is wrong for viroids?", opts: ["They lack a protein coat", "They are smaller than viruses", "They cause infections", "Their RNA is of high molecular weight"], ans: 3, exp: "RNA is of low molecular weight." },
+  // Q164
+  { q: "One of the major components of cell wall of most fungi is —", opts: ["Chitin", "Peptidoglycan", "Cellulose", "Hemicellulose"], ans: 0, exp: "Chitin." },
+  // Q165
+  { q: "Which one of the following statements is wrong?", opts: ["Cyanobacteria are also called blue-green algae", "Golden algae are also called desmids", "Eubacteria are also called false bacteria", "Phycomycetes are also called algal fungi"], ans: 2, exp: "Eubacteria are true bacteria." },
+  // Q166
+  { q: "The primitive prokaryotes responsible for the production of biogas from the dung of ruminant animals, include the —", opts: ["Halophiles", "Thermoacidophiles", "Methanogens", "Eubacteria"], ans: 2, exp: "Methanogens." },
+  // Q167
+  { q: "Chrysophytes, Euglenoids, Dinoflagellates and Slime moulds are included in the kingdom —", opts: ["Monera", "Protista", "Fungi", "Animalia"], ans: 1, exp: "Protista." },
+  // Q168
+  { q: "Which of the following is not correctly matched?", opts: ["Ascomycetes - Sac fungi", "Neurospora - Drosophila of plant kingdom", "Claviceps purpurea - Ergotin drug", "Lycoperdon - Bracket fungi"], ans: 3, exp: "Lycoperdon is puffball." },
+  // Q169
+  { q: "Which one of the following is wrong for fungi?", opts: ["They are heterotrophic", "They are both unicellular and multicellular", "They are eukaryotic", "All fungi possess a purely cellulosic cell wall"], ans: 3, exp: "Fungi have chitinous cell wall." },
+  // Q170
+  { q: "Methanogens belong to:", opts: ["Dinoflagellates", "Slime moulds", "Eubacteria", "Archaeobacteria"], ans: 3, exp: "Archaeobacteria." },
+  // Q171
+  { q: "Select the wrong statement:", opts: ["Diatoms are chief producers in the oceans", "Diatoms are microscopic and float passively in water", "The walls of diatoms are easily destructible", "Diatomaceous earth is formed by the cell walls of diatoms"], ans: 2, exp: "Diatom walls are not easily destructible." },
+  // Q172
+  { q: "The genome of Influenza virus is a:", opts: ["Single-stranded RNA(-)", "Single-stranded RNA(+)", "Double-stranded RNA", "Single-stranded DNA"], ans: 0, exp: "Single-stranded RNA(-)." },
+  // Q173
+  { q: "Viral genome incorporated into host DNA is called:", opts: ["Prophase", "Prophage", "Bacteriophage", "None of these"], ans: 1, exp: "Prophage." },
+  // Q174
+  { q: "Production of zoospores is the characteristics of the members of —", opts: ["Ascomycetes", "Phycomycetes", "Basidiomycetes", "Deuteromycetes"], ans: 1, exp: "Phycomycetes." },
+  // Q175
+  { q: "In Whittaker's five kingdom classification unicellular eukaryotes primarily aquatic & having various cell organelles constitute —", opts: ["Monera", "Protista", "Animalia", "Plantae"], ans: 1, exp: "Protista." },
+  // Q176
+  { q: "How many from the followings belong to deuteromycetes? Albugo, Puccinia, Colletotrichum, Ustilago, Aspergillus, Saccharomyces, Rhizopus, Alternaria, Neurospora, Agaricus.", opts: ["One", "Three", "Two", "Four"], ans: 2, exp: "Two (Colletotrichum, Alternaria)." },
+  // Q177
+  { q: "The number of sets of chromosomes in a dikaryotic cell —", opts: ["is greater than diploid cell", "is lesser than diploid cell", "is equal to diploid cell", "none of these"], ans: 1, exp: "Lesser than diploid." },
+  // Q178
+  { q: "What is the exact name of the main primary pigment in all plant like protista?", opts: ["chlorophyll a", "chlorophyll b", "chlorophyll c", "chlorophyll d"], ans: 0, exp: "Chlorophyll a." },
+  // Q179
+  { q: "Recent evidence suggests that these two groups of organisms, which traditionally have been grouped together in the same kingdom, should be separated into two different kingdoms. The groups are —", opts: ["Prokaryotes and eukaryotes", "Algae and protozoans", "Archaeobacteria and eubacteria", "unicellular algae and seaweed"], ans: 2, exp: "Archaeobacteria and eubacteria." },
+  // Q180
+  { q: "Which of the following groups make up an important part of the phytoplankton?", opts: ["Phacophyta", "Foraminifera", "Rhodophyta", "Dinoflagellata"], ans: 3, exp: "Dinoflagellata." },
+  // Q181
+  { q: "Which one of the following statements about viruses is true?", opts: ["Viruses are the most primitive life-forms", "Viruses are certainly primitive life-forms, but not the most primitive", "All viruses have DNA cores, although the DNA can be single-stranded or double-stranded", "Viruses have a nucleic acid-based genome enclosed in a protein coat"], ans: 3, exp: "Nucleic acid + protein coat." },
+  // Q182
+  { q: "The infectious substance of prions is —", opts: ["protein", "glycophosphate", "RNA", "DNA"], ans: 0, exp: "Protein." },
+  // Q183
+  { q: "Viruses are considered to be —", opts: ["non-living", "primitive precursors of bacteria", "very small bacteria", "primitive organisms"], ans: 0, exp: "Non-living." },
+  // Q184
+  { q: "The only structural pattern that has been found among isometric viruses is —", opts: ["icosahedral", "spherical", "helical", "tetrahedral"], ans: 0, exp: "Icosahedral." },
+  // Q185
+  { q: "____ are small naked fragments of RNA that infect plant cells.", opts: ["Prions", "Nucleons", "Prophages", "Viroids"], ans: 3, exp: "Viroids." },
+  // Q186
+  { q: "An example of an emerging virus is —", opts: ["Herpes", "polio", "rubella", "Ebola"], ans: 3, exp: "Ebola." },
+  // Q187
+  { q: "Viruses are most conveniently thought of as —", opts: ["lost chromosomes", "the most primitive bacteria", "particles of genomes", "prions"], ans: 2, exp: "Particles of genomes." },
+  // Q188
+  { q: "The first virus to be purified was the —", opts: ["flu virus", "tobacco mosaic virus", "smallpox virus", "polio virus"], ans: 1, exp: "Tobacco mosaic virus." },
+  // Q189
+  { q: "Of the viruses listed below, the most lethal is —", opts: ["influenza", "Ebola", "measles", "herpes simplex"], ans: 1, exp: "Ebola." },
+  // Q190
+  { q: "Viruses have an overall structure that is —", opts: ["spherical, isometric", "isometric, icosahedron", "spherical, helical", "spherical, isometric, icosahedron, helical"], ans: 3, exp: "All of these." },
+  // Q191
+  { q: "Go through the following statements: I. Viruses are more closely related to chemical matter than to a living organism. II. Viruses and bacteria are the only infectious agents found in plants and animals. III. All viruses are obligate parasites of cells, the majority do not cause disease. IV. Viruses cannot be observed using a light microscope. Which one is correct option?", opts: ["I and II are correct", "II and III are correct", "II and IV are correct", "I, III and IV are correct"], ans: 3, exp: "I, III and IV are correct." },
+  // Q192
+  { q: "Most types of virus particles show which types of symmetries?", opts: ["Complex and helical", "Cuboid and helical", "Bilateral and helical", "Complex and bilateral"], ans: 1, exp: "Cuboid and helical." },
+  // Q193
+  { q: "Which of the following are found in extreme saline conditions?", opts: ["Eubacteria", "Cyanobacteria", "Mycobacteria", "Archaebacteria"], ans: 3, exp: "Archaebacteria." },
+  // Q194
+  { q: "Viroids differ from viruses in having:", opts: ["DNA molecules without protein coat", "RNA molecules with protein coat", "RNA molecules without protein coat", "DNA molecules with protein coat"], ans: 2, exp: "RNA without protein coat." },
+  // Q195
+  { q: "No virus can evolve to target mammalian red blood cells because of the:", opts: ["small size with a biconcave shape", "high concentration of oxygen", "lack of aerobic pathway to generate ATP", "lack of nuclear material"], ans: 3, exp: "Lack of nuclear material." },
+  // Q196
+  { q: "Extremophiles are characteristic of which of the following groups?", opts: ["Archaeobacteria", "Eubacteria", "Chordata", "Arthropods"], ans: 0, exp: "Archaeobacteria." },
+  // Q197
+  { q: "Which of the following is not a Kingdom?", opts: ["Protista", "Animalia", "Plantae", "Mammalia"], ans: 3, exp: "Mammalia is a class." },
+  // Q198
+  { q: "Find the incorrect statement about fungi —", opts: ["They show a great diversity in morphology and habitats", "Fungi are cosmopolitan and occur in air, water, soil and as parasite also", "They prefer to grow in cold and dry places", "With the exception of yeasts, fungi are filamentous"], ans: 2, exp: "Fungi prefer warm and humid places." },
+  // Q199
+  { q: "The classification system have undergone several changes over a period of time, why?", opts: ["Because the criteria for classification changed, now they are based to trace the developmental history", "Because over time an attempt has been made to evolve such classification which are based on phylogeny", "Because over time an attempt has been made to evolve such classification system which are based only on human evolution mainly", "Because over time an attempt has been made to evolve such system which are based on histological and cytological studies"], ans: 1, exp: "Based on phylogeny." },
+  // Q200
+  { q: "The basidiocarp bearing saprophytic fungi are:", opts: ["Agaricus, Puccinia", "Albugo, Mucor", "Aspergillus, Neurospora", "Amanita, Ganoderma"], ans: 3, exp: "Amanita, Ganoderma." },
+  // Q201
+  { q: "Which among the following is not a prokaryote?", opts: ["Nostoc", "Mycobacterium", "Saccharomyces", "Oscillatoria"], ans: 2, exp: "Saccharomyces is fungus." },
+  // Q202
+  { q: "Select the wrong statement:", opts: ["Pseudopodia are locomotory and feeding structures in Sporozoans", "Mushrooms belong to Basidiomycetes", "Cell wall is present in members of Fungi and Plantae", "Mitochondria are the powerhouse of the cell in all kingdoms except Monera"], ans: 0, exp: "Pseudopodia are in amoeboid protozoans." },
+  // Q203
+  { q: "After karyogamy followed by meiosis, spores are produced exogenously in —", opts: ["Agaricus", "Alternaria", "Neurospora", "Saccharomyces"], ans: 0, exp: "Agaricus." },
+  // Q204
+  { q: "Ciliates differ from all other protozoans in —", opts: ["using pseudopodia for capturing prey", "having a contractile vacuole for removing excess water", "using flagella for locomotion", "having two types of nuclei"], ans: 3, exp: "Two types of nuclei." },
+  // Q205
+  { q: "Which of the following organisms are known as chief producers in the oceans?", opts: ["Cyanobacteria", "Diatoms", "Dinoflagellates", "Euglenoids"], ans: 1, exp: "Diatoms." },
+  // Q206
+  { q: "Two morphologically similar populations are intersterile. They belong to —", opts: ["One species", "Two bispecies", "Two sibling species", "None of the above"], ans: 2, exp: "Two sibling species." },
+  // Q207
+  { q: "Distinction of prokaryota and eukaryota is mainly based on —", opts: ["Nucleus only", "Cell organelles only", "Chromosome only", "All of the above"], ans: 3, exp: "All of the above." },
+  // Q208
+  { q: "On the basis of nucleus, virus should be placed under —", opts: ["Prokaryotes", "Eukaryotes", "Both A and B", "None of the above"], ans: 3, exp: "None of the above." },
+  // Q209
+  { q: "Which is incorrect about E.coli?", opts: ["It is a bacterium", "It is a rod-shaped", "It is gram negative", "It has true nucleus"], ans: 3, exp: "It is prokaryote, no true nucleus." },
+  // Q210
+  { q: "Which of the following is correct?", opts: ["Cyanobacteria makes mycorrhiza which absorbs phosphate from soil", "Azotobacter is symbiotic nitrogen fixing bacteria", "In paddy field, cyanobacteria is used to decrease soil microbes", "Methanobacterium feed cellulose in anaerobic condition"], ans: 3, exp: "Methanobacterium feeds cellulose." },
+  // Q211
+  { q: "Identify which of the following is not correctly matched: A. Cocci - E.coli; B. Bacilli - Treponema; C. Spirilla - Spirillum volutans; D. Vibrio - Vibrio cholerae", opts: ["B and C", "A and B", "A, B and C", "Only C"], ans: 1, exp: "A and B are incorrect." },
+  // Q212
+  { q: "Read the following four statements (A-D): (A) Mycoplasma cannot survive without oxygen. (B) Mycoplasma are the smallest living cells known. (C) Bacteria completely lack a cell wall. (D) Bacteria reproduce mainly by fission. How many of the above statements are correct?", opts: ["one", "two", "three", "four"], ans: 1, exp: "Two (B and D)." },
+  // Q213
+  { q: "By observing the figure answer the following questions: (A) Identify the figure (B) Identify the parts labelled a, b and c", opts: ["Dividing Euglena - a-Pellicle, b-Cell membrane, c-DNA", "Dividing bacterial cell - a-DNA, b-Cell membrane, c-Cell wall", "Paramecium - a-DNA, b-Cell membrane, c-Glycocalyx", "Mycoplasma - a-Mesosome, b-Cell membrane, c-Cell wall"], ans: 1, exp: "Dividing bacterial cell." },
+  // Q214
+  { q: "In the list given below maximum members are of which kingdom? Rhizobium, Azolla, Ascobolus, Golden Algae, Euglena, Frankia, Nostoc, Anthoceros, Oscillatoria, Rumenococcus.", opts: ["Protista", "Monera", "Fungi", "Plantae"], ans: 1, exp: "Monera." },
+  // Q215
+  { q: "Read the following statements carefully: (A) Viruses are smaller than bacteria. (B) Viruses are always made up of DNA and protein only. (C) Viruses contain approximately 5% RNA and 95% DNA. (D) Viruses contain nucleic acid so they are capable of protein synthesis independently. How many of the above statements is/are correct?", opts: ["A and B", "A, B and D", "B and C", "A only"], ans: 3, exp: "Only A is correct." },
+  // Q216
+  { q: "Read the following statements carefully: (A) Members of protista are primarily aquatic. (B) Majority of protists have cilia as well as flagella. (C) Most of dinoflagellates have two flagella, one lies longitudinally and the other transversely. (D) The spores of slime moulds are extremely resistant but survive only for one month. How many of the above statements are incorrect?", opts: ["one", "two", "four", "three"], ans: 1, exp: "Two (B and D)." },
+  // Q217
+  { q: "Identify 'A' diagram and select the right option giving some of the features correctly? (A = Euglena)", opts: ["A = Paramoecium - Saprophytic - Pellicle makes the body flexible", "A = Euglena - Autotroph & heterotroph - Pigments are identical to higher plants", "A = Euglena - Heterotroph - They have a gullet that opens to the outside of the cell surface", "A = Trypanosoma - Heterotroph - They have one long flagellum"], ans: 1, exp: "Euglena - Autotroph & heterotroph." },
+  // Q218
+  { q: "Mixtrophic nutrition is present in —", opts: ["slime moulds", "Euglenoids", "diatoms", "dinoflagellates"], ans: 1, exp: "Euglenoids." },
+  // Q219
+  { q: "Which of the following is not correctly matched? Name - Stored food", opts: ["Diatoms - Chrysolaminarin and fat", "Euglenoids - Paramylum and fat", "Dinoflagellates - Starch", "Slime moulds - Fucoxanthin"], ans: 3, exp: "Slime moulds store glycogen." },
+  // Q220
+  { q: "Kingdom protista includes how many from the followings? Dinoflagellates, Deuteromycetes, Protozoans, Phycomycetes, Euglenoids, Lichen, Slime moulds, Archaeobacteria, Ascomycetes, Chrysophytes.", opts: ["Three", "Six", "Four", "Five"], ans: 3, exp: "Five." },
+  // Q221
+  { q: "How many from the followings have cell wall in anyone form of their life cycle? Golden Algae, Euglena, Entamoeba, Gonyaulax, Mycoplasma, Slime mould, Trypanosoma, Sporozoa, Albugo, Paramoecium.", opts: ["Five", "Six", "Four", "Three"], ans: 2, exp: "Four." },
+  // Q222
+  { q: "The protista have —", opts: ["only free nucleic acid aggregates", "membrane bound nucleoproteins lying embedded in the cytoplasm", "gene containing nucleoproteins condensed together loose mass", "nucleoprotein in direct contact with the rest of the substance"], ans: 1, exp: "Membrane bound nucleoproteins." },
+  // Q223
+  { q: "Which of the following is against the rules of ICBN?", opts: ["Generic and specific names should be written starting with small letters", "Hand written scientific names should be underlined", "Every species should have a generic name and a specific epithet", "Scientific names are in Latin and should be italicized"], ans: 0, exp: "Generic name starts with capital letter." },
+  // Q224
+  { q: "Mad cow disease in cattle is caused by an organism which has:", opts: ["Free DNA without protein coat", "Inert crystalline structure", "Abnormally folded protein", "Free RNA without protein coat"], ans: 2, exp: "Abnormally folded protein." },
+  // Q225
+  { q: "Which of the following statements is correct?", opts: ["Lichens are not good pollution indicators", "Lichens do not grow in polluted areas", "Algal component of lichens is called mycobiont", "Fungal component of lichens is called phycobiont"], ans: 1, exp: "Lichens do not grow in polluted areas." },
+  // Q226
+  { q: "Pinus seed cannot germinate and established without fungal association. This is because:", opts: ["its embryo is immature", "it has obligate association with mycorrhizae", "it has very hard seed coat", "it sees conditions that present germination"], ans: 1, exp: "Obligate association with mycorrhizae." },
+  // Q227
+  { q: "Which of the following statements is incorrect?", opts: ["Morels and truffles are edible delicacies", "Claviceps is a source of many alkaloids and LSD", "Conidia are produced exogenously and ascospores endogenously", "Yeasts have filamentous bodies with long thread-like hyphae"], ans: 3, exp: "Yeasts are unicellular." },
+  // Q228
+  { q: "Nitrogen fixing bacteria —", opts: ["Reduce nitrogen to NH4+", "Can break the triple bond in N2", "Form mutualistic relationships with legumes", "All of the above"], ans: 3, exp: "All of the above." },
+  // Q229
+  { q: "Which of the following bacteria reduce nitrate in soil into nitrogen?", opts: ["Nitrosomonas", "Nitrobacter", "Nitrococcus", "Thiobacillus"], ans: 3, exp: "Thiobacillus." },
+  // Q230
+  { q: "The main difference between active and passive transport across cell membrane is:", opts: ["active transport occurs more rapidly than passive transport", "passive transport is non-selective whereas active transport is selective", "passive transport requires a concentration gradient whereas active transport requires energy to move solutes", "passive transport is confined to anionic carrier proteins whereas active transport is confined to cationic channel proteins"], ans: 2, exp: "Concentration gradient vs energy." },
+  // Q231
+  { q: "Thiobacillus is a group of bacteria helpful in carrying out —", opts: ["Nitrogen fixation", "Chemoautotrophic fixation", "Nitrification", "Denitrification"], ans: 3, exp: "Denitrification." },
+  // Q232
+  { q: "Which one is the most abundant microorganism?", opts: ["Bacteria", "Protozoan", "Viruses", "Protists"], ans: 0, exp: "Bacteria." },
+  // Q233
+  { q: "Bacteria occur —", opts: ["In water only", "In soil only", "As parasite", "Everywhere"], ans: 3, exp: "Everywhere." },
+  // Q234
+  { q: "Based upon the shape bacteria are grouped under how many categories?", opts: ["2", "3", "4", "5"], ans: 2, exp: "4." },
+  // Q235
+  { q: "Which of the following bacteria are comma-shaped?", opts: ["Coccius", "Vibrio", "Bacillus", "Clostridium"], ans: 1, exp: "Vibrio." },
+  // Q236
+  { q: "Which of the following statement is correct about bacteria?", opts: ["Bacteria are simple in both structure and behaviour", "Bacteria are complex in structure as well as behaviour", "Bacteria are complex in structure but simple in behaviour", "Bacteria are simple in structure but complex in behaviour"], ans: 3, exp: "Simple in structure, complex in behaviour." },
+  // Q237
+  { q: "Which of the following organisms show the most extensive metabolic diversity?", opts: ["Algae", "Fungi", "Bacteria", "Bryophytes"], ans: 2, exp: "Bacteria." },
+  // Q238
+  { q: "Most of the bacteria are —", opts: ["Autotrophs", "Chemoautotrophs", "Heterotroph", "Parasites"], ans: 2, exp: "Heterotroph." },
+  // Q239
+  { q: "Which of the following are autotrophs?", opts: ["Photosynthetic bacteria", "Chemosynthetic bacteria", "Archaeobacteria", "Both a and b"], ans: 3, exp: "Both a and b." },
+  // Q240
+  { q: "Which of the following statements is wrong about Archaeobacteria?", opts: ["They live in some of the most harsh habitats", "They are recently evolved group", "Cell wall is peptidoglycanless", "They are unlike most other bacteria"], ans: 1, exp: "Not recently evolved." },
+  // Q241
+  { q: "Which of the following areas or conditions would be favoured by thermoacidophiles?", opts: ["The stomach of many herbivores", "Hot, alkaline", "Hot, sulphur springs", "Deep sea volcanic"], ans: 2, exp: "Hot, sulphur springs." },
+  // Q242
+  { q: "Which is not correct about methanogens?", opts: ["They are archaeobacteria", "They live in marshy areas", "Methane is their preferred carbon source", "They are present in gut of ruminants"], ans: 2, exp: "Methane is product, not carbon source." },
+  // Q243
+  { q: "Chrysophytes include —", opts: ["Diatoms and desmids (golden algae)", "Dinoflagellates", "Euglenoids", "Slime moulds"], ans: 0, exp: "Diatoms and desmids." },
+  // Q244
+  { q: "Which of the following modes of reproduction can be found in at least some protists?", opts: ["Binary fission", "Sexual reproduction", "Spore formation", "All"], ans: 3, exp: "All." },
+  // Q245
+  { q: "Select the following statement that does not apply to diatoms —", opts: ["Diatom cell wall may be impregnated with silicon", "Cell wall is made up of 2 half-shells fit tightly together", "Diatom is a chrysophyte", "Diatom is multiflagellate"], ans: 3, exp: "Not multiflagellate." },
+  // Q246
+  { q: "Silica gel (Keieselghur) / Diatomite / Diatomaceous earth is obtained by —", opts: ["Diatoms", "Dinoflagellates", "Euglenoids", "Brown algae"], ans: 0, exp: "Diatoms." },
+  // Q247
+  { q: "The diatoms do not easily decay like most of the other algae because —", opts: ["They have highly siliceous wall", "They have water proof cells", "Their cell wall are mucilaginous", "Cell wall is virus-resistant"], ans: 0, exp: "Highly siliceous wall." },
+  // Q248
+  { q: "Diatomaceous earth is used for all except —", opts: ["Polishing", "Filteration of oils and syrups", "Sound and fire proof room", "Biogas"], ans: 3, exp: "Not for biogas." },
+  // Q249
+  { q: "Chrysophytes are —", opts: ["Planktons", "Nektons", "Benthonic", "Active swimmers"], ans: 0, exp: "Planktons." },
+  // Q250
+  { q: "Chief producers in ocean are —", opts: ["Dinoflagellates", "Diatoms", "Euglenoids", "Green algae"], ans: 1, exp: "Diatoms." },
+  // Q251
+  { q: "Photosynthetic protists are —", opts: ["Euglenoids, Diatoms and Dinoflagellates", "Euglenoids and slime moulds", "Diatoms and Zooflagellates", "Desmids + Ciliates"], ans: 0, exp: "Euglenoids, Diatoms, Dinoflagellates." },
+  // Q252
+  { q: "Dinoflagellates are mostly —", opts: ["Marine", "Fresh water", "terrestrial", "Saprophytes"], ans: 0, exp: "Marine." },
+  // Q253
+  { q: "Red tides in warm coastal water develop due to super abundance of —", opts: ["Dinoflagellates", "Euglenoid forms", "Diatoms and desmids", "Chlamydomonas nivalis"], ans: 0, exp: "Dinoflagellates." },
+  // Q254
+  { q: "Red tide is caused by —", opts: ["Ceretium", "Noctiluca", "Gonyaulax", "All of these"], ans: 3, exp: "All of these." },
+  // Q255
+  { q: "Dinoflagellates have —", opts: ["A single flagellum in the transverse groove between the cell plates", "A single flagellum in the longitudinal groove between the cell plates", "Two flagella one lies longitudinally and the other transversely in a furrow between the wall plates", "No flagella"], ans: 2, exp: "Two flagella." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})">
+      <strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}
+    </div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) {
+  currentQ = idx;
+  renderQuestion();
+  document.querySelector('.sidebar').classList.remove('open');
+}
+
+function nextQuestion() {
+  if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); }
+}
+function prevQuestion() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+function toggleMark() {
+  marked[currentQ] = !marked[currentQ];
+  renderQuestion();
+}
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) {
+    userAnswers[i] = null;
+    marked[i] = false;
+    visited[i] = false;
+  }
+  correctCount = 0;
+  wrongCount = 0;
+  currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 2; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 10: Cell Cycle and Cell Division - CBT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+  .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+  .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+  .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+  .stat-box .lbl { font-size: 11px; color: #4a5568; }
+  .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+  .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+  .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+  .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+  .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+  .question-box { flex: 1; margin-bottom: 15px; }
+  .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; }
+  .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+  .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+  .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+  .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+  .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+  .option.disabled { pointer-events: none; opacity: 0.8; }
+  .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+  .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+  .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+  .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+  .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+  .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+  .result-item .label { font-size: 12px; color: #4a5568; }
+  .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+  .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+  .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+      <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+      <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+      <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+      <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+      <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+      <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Cell Cycle and Cell Division</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+      <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+      <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+      <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+      <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q: "The products of mitosis are —", opts: ["One nucleus containing twice as much DNA as the parent nucleus", "Two genetically identical cells", "Four nuclei containing half as much DNA as the parent nucleus", "Two genetically identical nuclei"], ans: 1, exp: "Two genetically identical cells." },
+  { q: "The mitotic spindle is composed of —", opts: ["Chromosomes", "Chromatids", "Microtubules", "Chromatin"], ans: 2, exp: "Microtubules." },
+  { q: "Centrosomes are —", opts: ["Constricted regions of phase chromosomes", "Regions where microtubules polymerize", "The central region of the same cell", "Part of cilia"], ans: 1, exp: "Regions where microtubules polymerize." },
+  { q: "When dividing cells are examined under a light microscope, chromosomes first become visible during —", opts: ["Interphase", "The S Phase", "Prophase", "G1"], ans: 2, exp: "Prophase." },
+  { q: "The structures that line up the chromosomes on the equatorial plate during metaphase are called —", opts: ["Asters", "Polar and Kinetochore microtubules", "Centrosomes", "Centrioles"], ans: 1, exp: "Polar and Kinetochore microtubules." },
+  { q: "DNA replication occurs —", opts: ["During both mitosis and meiosis", "Only during mitosis", "Only during meiosis", "During the S phase"], ans: 0, exp: "During both mitosis and meiosis." },
+  { q: "Mature nerve cells are incapable of cell division. These cells are probably in —", opts: ["G1 phase", "The S phase", "G2 phase", "Mitosis"], ans: 0, exp: "G1 phase." },
+  { q: "The microtubules of the mitotic spindle attach to a specialized structure in the centromere region of each chromosome, called the —", opts: ["Kinetochore", "Nucleosome", "Equatorial plate", "Centrosome"], ans: 0, exp: "Kinetochore." },
+  { q: "After the centromeres separate during mitosis the chromatids now called ___ move toward opposite poles of the spindle —", opts: ["Centrosomes", "Kinetochores", "Half spindles", "Daughter chromosomes"], ans: 3, exp: "Daughter chromosomes." },
+  { q: "In plant cells, cytokinesis is accomplished by the formation of a(n) —", opts: ["membrane furrow", "Equatorial plate", "Cell plate", "Spindle"], ans: 2, exp: "Cell plate." },
+  { q: "Genetically diverse offspring result from —", opts: ["Mitosis", "Cloning", "Cytokinesis", "Sexual reproduction"], ans: 3, exp: "Sexual reproduction." },
+  { q: "Meiosis can occur —", opts: ["in all organism", "Only when an organism is diploid", "Only in multicellular organisms", "Only in haploid organisms"], ans: 1, exp: "Only when an organism is diploid." },
+  { q: "The members of a homologous pair of chromosomes —", opts: ["Are identical in size and appearance", "Contain identical genetic information", "Separate to opposite poles of the cell during mitosis", "Are found only in haploid cells"], ans: 0, exp: "Are identical in size and appearance." },
+  { q: "The diagnosis of Down syndrome is made by examining the individual's —", opts: ["Spores", "Karyotype", "Chromatin", "Nucleosome"], ans: 1, exp: "Karyotype." },
+  { q: "During meiosis, the sister chromatids separate during —", opts: ["Anaphase II", "Anaphase I", "The S phase", "Synapsis"], ans: 0, exp: "Anaphase II." },
+  { q: "The exchange of genetic material between chromatids and homologous chromosomes occurs during —", opts: ["Interphase", "Mitosis and Meiosis", "Prophase I", "Anaphase I"], ans: 2, exp: "Prophase I." },
+  { q: "At the end of the first meiotic division, each chromosome consists of —", opts: ["A homologous chromosome pair", "Four copies of each DNA molecule", "Two chromatids", "A pair of polar microtubules"], ans: 2, exp: "Two chromatids." },
+  { q: "The four haploid nuclei found at the end of meiosis differ from one another in their exact genetic composition. Some of this difference is the result of —", opts: ["Cytokinesis", "Respiration of DNA during the S phase", "Spindle formation", "Crossing over during Prophase I"], ans: 3, exp: "Crossing over during Prophase I." },
+  { q: "During meiosis I in human, one of the daughter cells receives —", opts: ["Only maternal chromosomes", "A mixture of maternal and paternal chromosomes", "The same number of chromosomes as a diploid cell", "A sister chromatid from each chromosome"], ans: 1, exp: "A mixture of maternal and paternal chromosomes." },
+  { q: "A triploid nucleus cannot undergo meiosis because —", opts: ["The DNA cannot replicate", "Not all of the chromosomes can form homologous pairs", "The sister chromatids cannot separate", "Cytokinesis cannot occur"], ans: 1, exp: "Not all of the chromosomes can form homologous pairs." },
+  { q: "Chromatin condenses to form discrete, visible chromosomes —", opts: ["Early in G1", "During S", "During telophase", "During prophase"], ans: 3, exp: "During prophase." },
+  { q: "Chromosomes decondense into diffuse chromatin —", opts: ["At the end of telophase", "At the beginning of prophase", "At the end of interphase", "At the end of metaphase"], ans: 0, exp: "At the end of telophase." },
+  { q: "Genetic recombination occurs during —", opts: ["Prophase of meiosis I", "Interphase preceding meiosis II", "Mitotic telophase", "Fertilization"], ans: 0, exp: "Prophase of meiosis I." },
+  { q: "The number of chromosomes is reduced to half during —", opts: ["Anaphase of mitosis and meiosis", "Meiosis II", "Meiosis I", "Fertilization"], ans: 2, exp: "Meiosis I." },
+  { q: "The total DNA content of each daughter cell is reduced during meiosis because —", opts: ["Chromosomes do not replicate during the interphase preceding meiosis I", "Chromosomes do not replicate between meiosis I and II", "Half of the chromosomes from each gamete are lost during fertilization", "Chromosome arms are lost during crossing over"], ans: 1, exp: "Chromosomes do not replicate between meiosis I and II." },
+  { q: "Chromosome number is reduced during meiosis because the process consists of —", opts: ["Two cell divisions without any chromosome replication", "A single cell division without any chromosome replication", "Two cell divisions in which half of the chromosomes are destroyed", "Two cell divisions and only single round of chromosome replication"], ans: 3, exp: "Two cell divisions and only single round of chromosome replication." },
+  { q: "Which of the following is not true for homologous chromosome pairs?", opts: ["They come from only one of the individual's parents", "They usually contain slightly different versions of the same genetic information", "They segregate from each other during meiosis I", "They synapse during meiosis I"], ans: 0, exp: "They come from only one of the individual's parents." },
+  { q: "Which of the following is not true for sister chromatids?", opts: ["They arise by replication during S phase", "They segregate from each other during each mitotic anaphase", "They usually contain identical versions of the same genetic information", "They segregate from each other during meiosis I"], ans: 3, exp: "They segregate from each other during meiosis I." },
+  { q: "A cell that is post reproductive will remain in —", opts: ["S", "G1", "G2", "M"], ans: 2, exp: "G2." },
+  { q: "The milestone that defines telophase is when the chromosomes —", opts: ["Separate", "Come together", "Are at opposite poles", "Line up"], ans: 2, exp: "Are at opposite poles." },
+  { q: "Meiosis takes place in —", opts: ["Conidia", "Gemmule", "Megaspore", "Meiocyte"], ans: 3, exp: "Meiocyte." },
+  { q: "A reduction step during meiosis is important because —", opts: ["It returns the chromosomes number to normal before fertilization", "There is a mechanism for this", "Only one copy of each chromosome is necessary", "Otherwise chromosome copies would double each fertilization"], ans: 0, exp: "It returns the chromosomes number to normal before fertilization." },
+  { q: "Which of the following phases lasts for more than 95% of the duration of cell cycle —", opts: ["M-phase", "G1-phase", "G2-phase", "Interphase"], ans: 3, exp: "Interphase." },
+  { q: "Which phase corresponds to the interval between the mitosis and initiation of DNA replication —", opts: ["S-phase", "M-phase", "G1-phase", "G2-phase"], ans: 2, exp: "G1-phase." },
+  { q: "What happens in S-phase?", opts: ["DNA replication", "In animal cell replication of centriole", "Both a and b", "Separation of replicated DNA"], ans: 2, exp: "Both a and b." },
+  { q: "Which is otherwise called quiescent stage?", opts: ["G0", "G1", "G2", "S-phase"], ans: 0, exp: "G0." },
+  { q: "Cells in G0-stage —", opts: ["Are metabolically more active", "Are metabolically inactive", "Remain metabolically active but no longer proliferate in normal condition", "None"], ans: 2, exp: "Remain metabolically active but no longer proliferate in normal condition." },
+  { q: "Mitosis is seen in —", opts: ["Apical meristem", "Lateral meristem", "Intercalary meristem", "All meristematic cells"], ans: 3, exp: "All meristematic cells." },
+  { q: "As mitosis begins, a condensed chromosome appears to consist of two —", opts: ["Centromeres", "Centriole", "Centrosome", "Chromatids"], ans: 3, exp: "Chromatids." },
+  { q: "During which phase of the cell cycle does cell grow. The cell doubles in size during which phase of cell cycle —", opts: ["Interphase", "Metaphase", "Anaphase", "Telophase"], ans: 0, exp: "Interphase." },
+  { q: "Normal cellular activities, such protein synthesis, occurs primarily during —", opts: ["Prophase", "Metaphase", "Anaphase", "Interphase"], ans: 3, exp: "Interphase." },
+  { q: "It is important that the centromere not divide till the end of metaphase because it —", opts: ["Contains genes that control prophase", "Holds the replicated DNA molecules together", "Is connected with nuclear membrane", "Produces spindle fibres"], ans: 1, exp: "Holds the replicated DNA molecules together." },
+  { q: "Mitotic telophase shows which of the following events —", opts: ["Arrival of chromosomes cluster at opposite pole and loss of their identity as discrete elements", "NM assembles around each chromosomes clusters", "Nucleolus, GB and ER form", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following statements is True?", opts: ["Cell plate represents the middle lamella between the walls of two adjacents cells", "At the time of cytokinesis, organelles like mitochondria and plastids get distributed between the daughter cells", "Cytokinesis in plant cell is centrifugal and takes place by cell-plate formation while animal cells by furrowing / cleavage and is centripetal", "All"], ans: 3, exp: "All." },
+  { q: "I. Terminalization of chiasmata occurs. II. Chromosomes are fully condensed. III. Meiotic spindle is assembled. IV. By the end NM and nucleolus disappear. The above points indicate that it is —", opts: ["Zygotene stage", "Diakinesis stage", "Metaphase II", "Pachytene"], ans: 1, exp: "Diakinesis stage." },
+  { q: "Crossing is an enzyme-mediated process. The enzyme is —", opts: ["DNA ligase", "Recombinase", "RNAase", "DNAase"], ans: 1, exp: "Recombinase." },
+  { q: "Diplotene can lasts for months or years in —", opts: ["Oocytes of all vertebrates", "Oocytes of all invertebrates", "Oocytes of some vertebrates", "Spermatocytes of all vertebrates"], ans: 2, exp: "Oocytes of some vertebrates." },
+  { q: "Match Column I with Column II: Column I: I. Chromosomes are moved to spindle equator, II. Centromere splits and chromatids apart, III. Pairing between homologous chromosomes takes place, IV. Crossing between homologous chromosomes. Column II: (a) Pachytene, (b) Zygotene, (c) Anaphase, (d) Metaphase.", opts: ["A-I, B-II, C-III, D-IV", "A-IV, B-III, C-II, D-I", "A-III, B-IV, C-I, D-II", "A-II, B-I, C-IV, D-III"], ans: 1, exp: "A-IV, B-III, C-II, D-I." },
+  { q: "Cell cycle is the character of —", opts: ["Only bacteria", "Only plants and animals", "Only protists", "All organisms"], ans: 3, exp: "All organisms." },
+  { q: "Which event is not associated with prophase I?", opts: ["Synizesis", "Synapsis", "Segregation", "Terminalization"], ans: 2, exp: "Segregation." },
+  { q: "Human cells in culture show a cell cycle to be completed in approximately —", opts: ["42 hours", "24 hours", "24 minutes", "24 seconds"], ans: 1, exp: "24 hours." },
+  { q: "Yeast cell divides once in approximately every —", opts: ["90 minutes", "9 minutes", "24 hours", "24 days"], ans: 0, exp: "90 minutes." },
+  { q: "Which one is the correct sequence of a cell cycle?", opts: ["G2 → M → G1 → S", "S → G2 → M → G1", "G1 → S → G2 → M", "M → G1 → G2 → S"], ans: 2, exp: "G1 → S → G2 → M." },
+  { q: "A cell cycle includes —", opts: ["Interphase + M-phase / divisional phase", "Prophase + Metaphase + Anaphase + Telophase", "G1 + S + G2 - phase", "karyokinesis + Cytokinesis"], ans: 0, exp: "Interphase + M-phase / divisional phase." },
+  { q: "If you are provided with root tips of onion in your class and asked to count the chromosomes, which of the following stages can you most conveniently look into?", opts: ["Anaphase", "Prophase", "Metaphase", "Telophase"], ans: 2, exp: "Metaphase." },
+  { q: "Which one is the longest phase?", opts: ["G1", "G2", "Interphase", "Prophase"], ans: 2, exp: "Interphase." },
+  { q: "Which of the following statements is wrong?", opts: ["Chromosomes are well visualized in interphase", "Duration of cell cycle can vary from organism to organism and also from cell type to cell type", "M phase represents actual divisional phase or mitosis", "Interphase represents the phase between the two successive M phases"], ans: 0, exp: "Chromosomes are well visualized in interphase." },
+  { q: "Interphase —", opts: ["Includes karyokinesis and cytokinesis", "Some time called resting phase, is the preparatory phase for division in which cell undergoes growth and DNA replication in an order", "Is the shortest phase in which biomolecules are synthesised very fast", "Includes 5% duration of the cell cycle"], ans: 1, exp: "Some time called resting phase, is the preparatory phase for division in which cell undergoes growth and DNA replication in an order." },
+  { q: "Which is the correct order of cell cycle —", opts: ["G1 → S → G2 → Prophase → Metaphase → Anaphase → Telophase → Cytokinesis", "G2 → G1 → S → P-M → A → T → cytokinesis", "S → G1 → G2 → P-M → A → T → cytokinesis", "Prophase → Metaphase → Anaphase → Telophase → Cytokinesis → S → G2 → G1"], ans: 0, exp: "G1 → S → G2 → Prophase → Metaphase → Anaphase → Telophase → Cytokinesis." },
+  { q: "Which one is false about G1-phase (Gap-I)?", opts: ["It occurs between M and S phase", "In it cells are metabolically active and continuously grow", "It is pre-synthetic or post mitotic phase", "In this phase DNA replicates"], ans: 3, exp: "In this phase DNA replicates." },
+  { q: "Which one is correct about S-phase (synthetic phase)? I. It occurs between G1 and G2. II. It marks the period during which DNA replicates. III. At the end of this phase DNA is doubled but the number of chromosomes remains unchanged. IV. As the DNA is doubled in this phase number of chromosomes is also doubled. V. Centrioles replicate in this phase. VI. Amount of DNA changes from 2C to 4C. VII. It is pre G2 and post G1 phase.", opts: ["I, II, IV, V, VI, VII are correct", "I, II, III, V, VI, VII are correct", "All are correct", "Only IV is correct"], ans: 1, exp: "I, II, III, V, VI, VII are correct." },
+  { q: "Which one is false statement about G2 phase?", opts: ["It is post-S and Pre M-phase", "In this phase cell has quantity of DNA in each cell is 4C if the DNA in G1 phase is 2C", "In it G0 resides", "Proteins like tubulin is formed for mitosis as well as cell growth continues"], ans: 2, exp: "In it G0 resides." },
+  { q: "The sequence of events by which a cell duplicates its genome, synthesises other constituents of cells and eventually divides into daughter cells is termed as —", opts: ["Interphase", "M-phase", "Karyokinesis + Cytokinesis", "Cell cycle"], ans: 3, exp: "Cell cycle." },
+  { q: "Select the wrong statement —", opts: ["cell growth is a continuous process", "Cytoplasmic increase occurs only during one specific stage in the cell cycle", "DNA synthesis occurs only during one specific phase of cell cycle", "None"], ans: 1, exp: "Cytoplasmic increase occurs only during one specific stage in the cell cycle." },
+  { q: "Which one is correct for G0 stage? I. It is a quiescent stage. II. In this phase cell cycle is stopped. III. G0 cells in this stage do not grow or proliferate but metabolically active. IV. G0 cells can divide in response to some stimulus.", opts: ["All are correct", "I, II, III are correct", "I, II are correct", "Only I and IV are correct"], ans: 0, exp: "All are correct." },
+  { q: "Which of the following phases of the cell cycle is not part of interphase —", opts: ["S", "G0", "G1", "M"], ans: 3, exp: "M." },
+  { q: "DNA replication occurs —", opts: ["Before mitosis and meiosis", "Only before mitosis", "Only before meiosis", "During chromosomal condensation in G2 phase"], ans: 0, exp: "Before mitosis and meiosis." },
+  { q: "DNA replicates —", opts: ["Only once in each cell cycle", "Twice in each cell cycle", "Once in mitotic cell cycle, once in meiotic I (Reductional division) and once in meiotic II (equational division)", "None"], ans: 0, exp: "Only once in each cell cycle." },
+  { q: "Typically, cells that no longer undergo mitosis have chromosomes with ___ molecule of DNA and they remain in the ___ subphase of interphase —", opts: ["One, G1", "Two, G2", "One, G2", "Two, S"], ans: 0, exp: "One, G1." },
+  { q: "If mitotic division is arrested in G1 phase of a cell cycle, then the condition is known as —", opts: ["G2 phase", "S phase", "G0 phase", "M-phase"], ans: 2, exp: "G0 phase." },
+  { q: "Non-dividing cells like heart cells, neuron are in ____ phase —", opts: ["G1", "G2", "G4", "G0"], ans: 3, exp: "G0." },
+  { q: "Cells that do not further divide exit G1 phase to enter an inactive stage called —", opts: ["G1 stage", "G2 stage", "G4 stage", "G0 stage"], ans: 3, exp: "G0 stage." },
+  { q: "Which of the following statements is false?", opts: ["Mitosis or the equational division is usually restricted to the 2N cells only", "In onion 2N = 16", "Growth and reproduction are characteristics of cells indeed of all living organism", "In plants meristematic tissues show meiosis"], ans: 3, exp: "In plants meristematic tissues show meiosis." },
+  { q: "Which one is false about mitosis?", opts: ["Mitosis occurs in both haploid and diploid cells", "Root tip is the best material for study of mitosis", "M-phase, the most dramatic period of cell cycle and a progressive process having no clear cut line between various phases, involves a major reorganisation of all components of the cell", "Cells at late prophase, when view under microscope show GB, ER, nucleolus and NM"], ans: 3, exp: "Cells at late prophase, when view under microscope show GB, ER, nucleolus and NM." },
+  { q: "The major events of mitotic prophase include cell of the following except —", opts: ["Condensation of chromosomal materials to form compact chromosomes", "Initiation of the assembly of mitosis spindles, helped by cytoplasmic proteinaceous microtubules", "Nuclear membrane breakdown and nucleolar disaggregation", "DNA replication"], ans: 3, exp: "DNA replication." },
+  { q: "At metaphase of mitosis, each chromosome consists of ____ chromatid(s) ____ centromere(s) ___ kinetochore(s) and ____ molecules of DNA —", opts: ["2, 1, 2, 2", "2, 2, 2, 2", "2, 1, 1, 1", "2, 1, 2, 1"], ans: 0, exp: "2, 1, 2, 2." },
+  { q: "In human cells chromosomes are —", opts: ["Always condensed during the entire cell cycle", "Different in different tissues", "Of the same size and shape", "Visible only during mitosis and meiosis"], ans: 3, exp: "Visible only during mitosis and meiosis." },
+  { q: "Which of the following about the chromatids is false?", opts: ["They are replicated chromosomes still joined together at the centromere", "Both the chromatids are identical in both mitotic chromosome", "Both the sister chromatids separate in the late prophase", "In some lower plants and in some social insects haploid cells also divide by mitosis"], ans: 2, exp: "Both the sister chromatids separate in the late prophase." },
+  { q: "Which of the following is true about kinetochores?", opts: ["They are localized at the centromere of each chromosome", "They are the sites where microtubules attach to separate the chromosomes", "They are organised so that there is one per sister chromatid in meiosis", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "The milestone that defines metaphase is when the chromosomes —", opts: ["Separate", "Are at the opposite poles", "Line up", "Cross over"], ans: 2, exp: "Line up." },
+  { q: "The milestone that defines anaphase is when the chromosomes / chromatids —", opts: ["Separate", "Come together", "Are at opposite poles", "Line up"], ans: 0, exp: "Separate." },
+  { q: "Human males have ____ different types of chromosomes.", opts: ["23", "24", "46", "48"], ans: 1, exp: "24." },
+  { q: "The number of chromatids in a cell in prophase I of meiosis of a person with Turner syndrome (XO) is —", opts: ["23", "25", "46", "90"], ans: 2, exp: "46." },
+  { q: "Which one of the following correctly indicates the stages of mitosis at which particular events occur? DNA replication — Breakdown of nuclear membrane — Division of centromere", opts: ["Interphase — Metaphase — Metaphase", "Interphase — Prophase — Anaphase", "Interphase — Interphase — Anaphase", "Prophase — Prophase — Anaphase"], ans: 1, exp: "Interphase — Prophase — Anaphase." },
+  { q: "Which is the longest phase in the cell cycle of human liver cells?", opts: ["Anaphase", "Prophase", "Interphase", "Telophase"], ans: 2, exp: "Interphase." },
+  { q: "In prophase of mitosis, which one of the following events occurs in animal cells but not in plant cells?", opts: ["Centrioles migrate to opposite sides of the nucleus", "Homologous chromosomes do not associate", "The nuclear envelope (membrane) breaks down", "Nucleoli disappear"], ans: 0, exp: "Centrioles migrate to opposite sides of the nucleus." },
+  { q: "The events shown below occur during different phases: A. Centromere splits, chromatids separate and move to opposite poles chromatids are now called chromosome. B. Chromosomes cluster at opposite poles, decondensation of chromosome reappearance of NM, GB, ER and nucleolus. C. Chromosomal replication. D. Kinetochores attach to spindle fibres and chromosome are arranged at equatorial plate. E. Spiration of chromosomes / condensation of chromosomal materials. Which of the following correctly identifies each of the phases described: Interphase, Prophase, Metaphase, Anaphase, Telophase", opts: ["C, E, D, A, B", "C, D, E, A, B", "C, E, D, B, A", "C, A, E, D, B"], ans: 0, exp: "C, E, D, A, B." },
+  { q: "During mitotic anaphase, chromatids migrate —", opts: ["From the poles of the cell toward the metaphasic plate", "Toward the NM", "Along with their side chromatids toward one pole", "From metaphase plate towards the poles"], ans: 3, exp: "From metaphase plate towards the poles." },
+  { q: "Microtubules that form the mitotic spindle tend to originate from _____ and terminate in _____", opts: ["Centromeres, telomeres", "Centrioles, telomere", "Centrioles, kinetochores", "The nuclear envelope, Kinetochore"], ans: 2, exp: "Centrioles, kinetochores." },
+  { q: "Synaptonemal complex is more conspicuous at —", opts: ["Zygotene", "Pachytene", "Diplotene", "Leptotene"], ans: 1, exp: "Pachytene." },
+  { q: "In plant cells, cytokinesis is accomplished by the formation of a(n) —", opts: ["Aster", "Equatorial plate", "Cell plate", "Membrane furrow"], ans: 2, exp: "Cell plate." },
+  { q: "The distribution of mitochondria and plastid between the daughter cells during cytokinesis —", opts: ["Is random", "Is directed by centrioles", "Is directed by mitotic spindle", "Is directed by nuclear membrane"], ans: 0, exp: "Is random." },
+  { q: "When dividing cells are examined under a light microscope, chromosomes first become visible during —", opts: ["Interphase", "Prophase", "Metaphase", "G2 and S phases"], ans: 1, exp: "Prophase." },
+  { q: "Centromere are —", opts: ["Constricted regions of chromosomes", "Regions where microtubules polymerise", "Part of Cilia", "The central part of the same cell"], ans: 0, exp: "Constricted regions of chromosomes." },
+  { q: "In the cell cycle, mitosis occurs between —", opts: ["G1 and S phase", "S and G1 phase", "S and G2 phase", "G1 and G2 phase"], ans: 2, exp: "S and G2 phase." },
+  { q: "Cellular structures which disappear during late prophase and reappear during telophase are —", opts: ["Mitochondria and spindle fibres", "Plasma membrane", "Nuclear membrane and nucleolus", "Plastid"], ans: 2, exp: "Nuclear membrane and nucleolus." },
+  { q: "The best stage to observe shape, size and number of chromosomes is —", opts: ["Metaphase", "Anaphase", "Interphase", "Prophase or telophase"], ans: 0, exp: "Metaphase." },
+  { q: "A picture of dividing Drosophila cell through a microscope shows that the cell contains 8 chromosomes, each consisting of two chromatids. The picture must have been taken during —", opts: ["Mitotic metaphase", "Mitotic Anaphase", "Meiotic Anaphase II", "Meiotic Telophase II"], ans: 0, exp: "Mitotic metaphase." },
+  { q: "Which of the following phase of mitosis is essentially the reverse of prophase in terms of nuclear changes?", opts: ["S-phase", "Anaphase", "Telophase", "Interphase"], ans: 2, exp: "Telophase." },
+  { q: "Which of the following is not a function of mitotic cell division in animals?", opts: ["Growth and repair", "Cell replacement", "Asexual reproduction", "Gametes formation"], ans: 3, exp: "Gametes formation." },
+  { q: "Given: 1. Chromatid, 2. Monad, 3. Dyad, 4. Daughter chromosome. The correct sequence in cell division is:", opts: ["1, 2, 3, 4", "2, 3, 1, 4", "3, 2, 1, 4", "4, 3, 2, 1"], ans: 1, exp: "2, 3, 1, 4." },
+  { q: "Cytokinesis in animal cell takes place by ___ ; in ___ direction while in plant cell by ___ ; in ___ direction —", opts: ["Furrowing, centrifugal, cell plate, centripetal", "Furrowing, centripetal, cell plate, Centrifugal", "Cell plate, centrifugal, furrowing, centripetal", "Cell plate, centripetal, furrowing, centrifugal"], ans: 1, exp: "Furrowing, centripetal, cell plate, Centrifugal." },
+  { q: "Phragmoplasts or Phragmosomes, vesicles of GB are the precursors of —", opts: ["Cell plate", "Chloroplasts", "Chromoplast", "Protoplast"], ans: 0, exp: "Cell plate." },
+  { q: "In some organisms like certain fungi and algae, cells undergoing mitosis repeatedly without subsequently undergo cytokinesis. What would result from it?", opts: ["Decrease in the chromosome number", "Decrease in the DNA molecules", "Formation of syncytium", "Multicellularity"], ans: 2, exp: "Formation of syncytium." },
+  { q: "Liquid endosperm in coconut is resulted due to —", opts: ["Karyokinesis followed by cytokinesis", "Failure of karyokinesis followed by cytokinesis", "Karyokinesis twice followed by single cytokinesis", "karyokinesis is not followed by cytokinesis"], ans: 3, exp: "karyokinesis is not followed by cytokinesis." },
+  { q: "Which of the following statements is correct? I. Mitosis / equatorial is usually restricted to diploid cells. II. In some lower plants and in some social insects haploid cells also divide by mitosis. III. Mitosis is essential for the cell to restore the nucleo-cytoplasmic ratio. IV. Mitotic division in apical meristem lateral cambium results in a continuous growth throughout the life.", opts: ["All are correct", "All are incorrect", "Only I and III are correct", "Only IV are correct"], ans: 0, exp: "All are correct." },
+  { q: "Significance of mitosis is in —", opts: ["Producing identical cells genetically similar to mother cell", "Increasing cellular mass", "In reducing the chromosome (2N → N)", "Swift division"], ans: 0, exp: "Producing identical cells genetically similar to mother cell." },
+  { q: "Mitosis is important for skin, gut and blood cells because —", opts: ["It allows the animals to grow faster", "All cells must divide", "Old and work out cells are regularly replaced", "It helps the cells to overcome the effect of UV-rays"], ans: 2, exp: "Old and work out cells are regularly replaced." },
+  { q: "The four haploid nuclei found at the end of meiosis differ from one another in their exact genetic composition, some of this difference is the result of —", opts: ["Cytokinesis", "Replication of DNA during the S-phase", "Spindle formation", "Crossing over during prophase I"], ans: 3, exp: "Crossing over during prophase I." },
+  { q: "A cell that passes the restriction point in G1 will most likely —", opts: ["Undergo chromosome duplication", "Have just completed cytokinesis", "Continue to divide only if it is a cancer", "Move into the G0 phase"], ans: 0, exp: "Undergo chromosome duplication." },
+  { q: "Asexual reproduction produces genetically identical individuals because —", opts: ["Chromosome do not have to replicate", "It involves chromosome replication without cytokinesis", "No meiosis or fertilization takes place", "The only cell division that occurs in meiosis"], ans: 2, exp: "No meiosis or fertilization takes place." },
+  { q: "One difference between mitosis and meiosis I is that —", opts: ["homologous chromosome pairs synapse during mitosis", "Chromosome do not replicate in the interphase preceding meiosis", "Homologous chromosomes pairs synapse during meiosis but not mitosis", "Spindle composed of microtubules are not required during meiosis"], ans: 2, exp: "Homologous chromosomes pairs synapse during meiosis but not mitosis." },
+  { q: "The number of chromosomes is reduced to half during —", opts: ["Anaphase of mitosis and meiosis", "Meiosis II", "Meiosis I", "Fertilization"], ans: 2, exp: "Meiosis I." },
+  { q: "Which of the following is correct?", opts: ["DNA replication occur before mitosis but not meiosis", "In human cells, chromosome are visible only during mitosis and meiosis", "During meiosis centromere divides in anaphase I", "Crossing over takes place in meiosis II"], ans: 1, exp: "In human cells, chromosome are visible only during mitosis and meiosis." },
+  { q: "Chromosome number is reduced during meiosis because the process consists of —", opts: ["Two cell divisions without any chromosome replication", "A single cell division without any chromosome replication", "Two cell divisions in which half of the chromosomes are destroyed", "Two cell divisions and only a single round of chromosome replication"], ans: 3, exp: "Two cell divisions and only a single round of chromosome replication." },
+  { q: "Which of the following is false?", opts: ["The mitotic spindle is composed of microtubules", "In plant cells, cytokinesis is accomplished by the formation of a cell plate", "The distribution of mitochondria between the daughter cells during cytokinesis is random", "Chromatin condenses to form discrete, visible chromosomes early in G1"], ans: 3, exp: "Chromatin condenses to form discrete, visible chromosomes early in G1." },
+  { q: "A reduction step during meiosis is important because —", opts: ["It returns the chromosome number to normal before fertilization", "There is a mechanism for this", "Only one copy of each chromosome is necessary", "Otherwise chromosome copies would double each fertilization"], ans: 0, exp: "It returns the chromosome number to normal before fertilization." },
+  { q: "The importance of synapsis and the formation of chiasmata is that —", opts: ["Reciprocal exchange of chromosomal sections occurs", "The DNA on homologous chromosomes mix", "As a result an increase in the variation of progeny occurs", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Which of the following is true for the meiosis?", opts: ["The chromosome number in the resulting cell is halved", "DNA replication occurs between meiosis I and meiosis II", "The homologous do not pair during prophase I", "The chromosome number of the resulting cells is the same as that of the parent cell"], ans: 0, exp: "The chromosome number in the resulting cell is halved." },
+  { q: "Which of the following statements about meiosis is false?", opts: ["Haploid cells cannot divide meiotically", "DNA replication does not occur during interkinesis", "Assortment of homologous chromosomes on the equatorial plate during metaphase I is independent", "Of the four cells produced by meiosis, none are genetically identical to the parent cells but two are identical to each other"], ans: 3, exp: "Of the four cells produced by meiosis, none are genetically identical to the parent cells but two are identical to each other." },
+  { q: "Which one is correct about meiosis?", opts: ["First division is reduction and second division is equational", "The best material for the study of meiosis is microspore (pollen) mother cell in microsporangium of anther", "The importance of meiosis lies in maintaining the chromosomal number from generation to generation in sexually reproducing organisms", "All"], ans: 3, exp: "All." },
+  { q: "Which one is correct about crossing over / genetic recombination? I. It occurs in tetrad stage. It occurs in pachytene of prophase I of meiosis I. II. It occurs between non-sister chromatids of homologous chromosomes. III. It is the exchange of genetic material between the homologous chromosomes. IV. It is recombinase enzyme mediated process. V. Recombination nodule of synaptonemal complex between the homologous chromosomes is the site of crossing over. VI. It causes genetic variation which is important for evolution. VII. It is also the reciprocal transfer of genes between the non homologous chromosomes.", opts: ["All", "All except VII", "II, IV and VII", "I, III and VII"], ans: 1, exp: "All except VII." },
+  { q: "Recombination is caused by —", opts: ["Crossing over alone", "Crossing over and independent assortment", "Independent assortment only", "Chiasma formation"], ans: 1, exp: "Crossing over and independent assortment." },
+  { q: "Match the Column I with Column II: Column I: 1. Terminalization of chiasmata, 2. Synapsis, 3. Crossing over, 4. Dissolution of synaptonemal complex, 5. Best stage for the study of chiasmata, 6. Nuclear membrane and nucleolus disappear, 7. Tetrads are arranged on equatorial line. Column II: A. Zygotene, B. Diplotene, C. Metaphase I, D. Diakinesis, E. Pachytene.", opts: ["A-2, B-4,5, C-7, D-1,6, E-3", "A-2, B-3, C-7, D-1,4,6, E-5", "A-2, B-7, C-3, D-1,4,5, E-6", "A-2, B-1, C-4, D-5,3, E-6"], ans: 0, exp: "A-2, B-4,5, C-7, D-1,6, E-3." },
+  { q: "I. It is the final phase of prophase I. II. Termination of chiasmata occurs. III. Fully condensed chromosomes. IV. Spindle is assembled. V. Nucleolus and NM breaks down. The above characteristic are attributed to —", opts: ["Zygotene", "Diakinesis", "Diplotene", "Metaphase I"], ans: 1, exp: "Diakinesis." },
+  { q: "Anaphase I is marked by —", opts: ["Movement of homologous chromosomes toward their respective pole", "Centromere division", "Sister chromatids remain associated at centromere", "a and c"], ans: 3, exp: "a and c." },
+  { q: "Four different steps that occur during meiosis are given in the following list. I. Complete separation of chromatids. II. Pairing of homologous chromosomes. III. Lining up or paired chromosomes on equator. IV. Crossing over between chromatids. These steps would occur in the order —", opts: ["II, III, IV, I", "III, II, IV, I", "II, IV, III, I", "III, I, II, IV"], ans: 2, exp: "II, IV, III, I." },
+  { q: "The DNA content of individual cells and the number of cells in each phase of a 'cell cycle' can be determined using flow cytometry. Which of the following combinations of 'phase of a cell cycle and its corresponding DNA content' can be considered normal? A. Diploid cells found in the G0 or G1 phase. B. Cells with twice the normal DNA content in the early M phase. C. Cells with intermediate amounts of DNA in the S phase. D. Cells with twice the normal DNA content in the G2 phase.", opts: ["A and B", "B and C", "C and D", "All"], ans: 3, exp: "All." },
+  { q: "Sara would like to film the movement of chromosomes during cell division. Her best choice for a microscope would be —", opts: ["light microscope, because of its resolving power", "transmission electron microscope, because of its magnifying power", "scanning electron microscope, because the specimen is alive", "light microscope, because the specimen is alive"], ans: 3, exp: "light microscope, because the specimen is alive." },
+  { q: "Let a cell's generation time is 1 minute. In 20 minutes a culture tube (culture medium) is 1/8th filled with cells. When the tube will be fulfilled?", opts: ["21 minutes", "23 minutes", "60 minutes", "160 minutes"], ans: 1, exp: "23 minutes." },
+  { q: "Number of chromatids at metaphase is :", opts: ["Two each in mitosis and meiosis", "Two in mitosis and one in meiosis", "two in mitosis and four in meiosis", "one in mitosis and two in meiosis"], ans: 0, exp: "Two each in mitosis and meiosis." },
+  { q: "How many equational divisions are necessary in a cell of onion root tip to form 128 cells?", opts: ["64", "128", "7", "None of these"], ans: 2, exp: "7." },
+  { q: "Which one of the following precedes reformation of the nuclear envelope during M-phase of the cell cycle?", opts: ["Transcription from chromosomes and reassembly of the nuclear lamina", "Formation of the contractile ring, and formation of the phragmoplast", "Formation of the contractile ring, and Transcription from chromosomes", "Decondensation from chromosomes, and reassembly of the nuclear lamina"], ans: 3, exp: "Decondensation from chromosomes, and reassembly of the nuclear lamina." },
+  { q: "Identify the meiotic stage in which the homologous chromosomes separate while sister chromatids remain associated at their centromeres :", opts: ["Metaphase I", "Metaphase II", "Anaphase I", "Anaphase II"], ans: 2, exp: "Anaphase I." },
+  { q: "The chromosomes become gradually visible with compaction of chromatin during _____ meiotic stage —", opts: ["diplotene", "leptotene", "zygotene", "pachytene"], ans: 1, exp: "leptotene." },
+  { q: "During gamete formation, the enzyme recombinase participates during —", opts: ["Metaphase - I", "Anaphase - II", "Prophase - I", "Prophase - II"], ans: 2, exp: "Prophase - I." },
+  { q: "Meiosis results in —", opts: ["Production of gametes", "Reduction in the number of chromosomes", "Introduction of variation", "all of the above"], ans: 3, exp: "all of the above." },
+  { q: "At which stage of meiosis does the genetic constitution of gametes is finally decided —", opts: ["Metaphase I", "Anaphase II", "Metaphase II", "Anaphase I"], ans: 3, exp: "Anaphase I." },
+  { q: "Meiosis occurs in organisms during —", opts: ["Sexual reproduction", "Vegetative reproduction", "Both sexual and vegetative reproduction", "None of the above"], ans: 0, exp: "Sexual reproduction." },
+  { q: "During anaphase-1 of meiosis —", opts: ["Homologous chromosomes separate", "Non-homologous autosomes separate", "Sister chromatids separate", "Non-sister chromatids separate"], ans: 0, exp: "Homologous chromosomes separate." },
+  { q: "Meiosis is characterised by —", opts: ["Double reduction division", "Equal division only", "Both reduction and equal division", "Homotypic division"], ans: 2, exp: "Both reduction and equal division." },
+  { q: "A bivalent of meiosis-I consists of —", opts: ["Two chromatids and one centromere", "Two chromatids and two centromere", "Four chromatids and two centromere", "Four chromatids and four centromere"], ans: 2, exp: "Four chromatids and two centromere." },
+  { q: "Cells which are not dividing are likely to be at —", opts: ["G1", "G2", "G0", "S phase"], ans: 2, exp: "G0." },
+  { q: "Which of the events listed below is not observed during mitosis?", opts: ["Chromatin condensation", "Movement of centrioles to opposite poles", "Appearance of chromosomes with two chromatids joined together at the centromere", "Crossing over"], ans: 3, exp: "Crossing over." },
+  { q: "Identify the wrong statement about meiosis —", opts: ["Pairing of homologus chromosomes", "Four haploid cells are formed", "At the end of meiosis the number of chromosomes are reduced to half", "Two cycle of DNA replication occurs"], ans: 3, exp: "Two cycle of DNA replication occurs." },
+  { q: "Select the correct statement about G1 phase —", opts: ["Cell is metabolically inactive", "DNA in the cell does not replicate", "It is not a phase of synthesis of macromolecules", "Cell stops growing"], ans: 1, exp: "DNA in the cell does not replicate." },
+  { q: "In onion root tip during metaphase stage of mitosis the number of kinetochores will be —", opts: ["4", "8", "16", "32"], ans: 3, exp: "32." },
+  { q: "Select the CORRECT statement related to mitosis —", opts: ["Amount of DNA in the parent cell is first halved and then distributed into two daughter cells", "Amount of DNA in the parent cell is first doubled and then distributed into two daughter cells", "Amount of DNA in the parent cell is first halved and then distributed into four daughter cells", "Amount of DNA in the parent cell is first doubled and then distributed into four daughter cells"], ans: 1, exp: "Amount of DNA in the parent cell is first doubled and then distributed into two daughter cells." },
+  { q: "If a meristem cell is placed in a medium containing active thymidine, radioactivity will be first observed in —", opts: ["Euchromatin", "Heterochromatin", "Both simultaneously", "None of the above"], ans: 0, exp: "Euchromatin." },
+  { q: "In human there are 23 bivalents in metaphase -1, what will be the number of chromosomes in daughter cells of meiosis - I and meiosis - II?", opts: ["46 and 46", "92 and 46", "23 and 23", "46 and 23"], ans: 2, exp: "23 and 23." },
+  { q: "Choose the correct option.", opts: ["Longest phase in meiosis is metaphase - I", "During cell division spindles are attached to NOR (Nucleolar organising region) of chromosome", "In meiosis nucleus divides twice and DNA also replicates twice", "Synaptinemal complex appears first in zygotene of meiosis and disappears in diplotene"], ans: 3, exp: "Synaptinemal complex appears first in zygotene of meiosis and disappears in diplotene." },
+  { q: "Go through the following statements: (i) Meiosis never occurs in haploid cells. (ii) Meiosis occurs in sperm and egg. (iii) Mitosis heals wound. (iv) Crossing over occurs between sister chromatids of a chromosome in pachytene. (v) In anaphase centromere splits but chromatids do not separate.", opts: ["All are correct", "(i) and (iii) are correct", "(i), (ii) and (v) are correct", "Only (ii) is correct"], ans: 1, exp: "(i) and (iii) are correct." },
+  { q: "Go through the following statements. I. Meiosis - II is similar to mitosis. II. Terminalization of chiasmata occurs in meiosis - II. III. Meiosis- II performs separation of homologous chromosomes. IV. Interphase is intermitosis. V. After mitosis, the number of chromosomes in daughter cells shall one fourth of parent cell.", opts: ["I, III, V", "I, II, III", "I, III, IV", "I, IV"], ans: 3, exp: "I, IV." },
+  { q: "Choose the correct option :", opts: ["Spindle fibres attach to centromere, not to kinetochore", "Homologous genes are separated at diplotene", "Chromatin condenses to form chromosome in telophase", "Number of chromatids per chromosome is two in meiotic anaphase I but one in mitotic anaphase"], ans: 3, exp: "Number of chromatids per chromosome is two in meiotic anaphase I but one in mitotic anaphase." },
+  { q: "Which is incorrect about G0?", opts: ["Cell metabolism continues in G0", "Cell growth occurs in G0", "Mitosis occurs after G0", "Hormones help to exit G0"], ans: 2, exp: "Mitosis occurs after G0." },
+  { q: "If a cell possesses twice as much DNA as in the functional cell, the cell —", opts: ["Is preparing to divide", "Has completed division", "Has ceased to function", "Has reached end of its life span"], ans: 0, exp: "Is preparing to divide." },
+  { q: "Arrange the following events of meiosis in correct sequence: I. Terminalization, II. Crossing over, III. Synapsis, IV. Disjunction", opts: ["4, 3, 2, 1", "3, 2, 1, 4", "2, 1, 4, 3", "1, 4, 3, 2"], ans: 1, exp: "3, 2, 1, 4." },
+  { q: "Read the following statements: I. G0 state of cell denotes exit of cell from cell cycle. II. The two chromatids of a metaphase chromosome represent replicated chromosome to be separated at anaphase. III. DNA polymerase is active in S-phase. IV. RNA polymerase is active throughout interphase.", opts: ["I and II are correct", "I, II, III, IV are correct", "II and IV are correct", "I and IV are correct"], ans: 1, exp: "I, II, III, IV are correct." },
+  { q: "Gametic information is transferred from zygote to all cells of body by —", opts: ["Mitosis", "Meiosis", "Dinomitosis", "Amitosis"], ans: 0, exp: "Mitosis." },
+  { q: "Go through the following statements and choose incorrect one.", opts: ["After meiosis - I both the chromatids of a chromosome is genetically similar", "Homologous chromosomes show maximum attraction during zygotene", "Number of chromatids per chromosome is two in both mitotic and meiotic metaphase", "The amount of DNA in each cell after cytokinesis in mitosis is double to the amount of DNA in previous G2 phase"], ans: 3, exp: "The amount of DNA in each cell after cytokinesis in mitosis is double to the amount of DNA in previous G2 phase." },
+  { q: "A cell that passes the restriction point in G1 will most likely —", opts: ["undergo chromosome duplication", "have just have completed cytokinesis", "continue to divide only if it is a cancer cell", "show a drop in MPF concentration"], ans: 0, exp: "undergo chromosome duplication." },
+  { q: "Which one of the following is the significance of mitosis?", opts: ["Restricted to haploid cells", "Cell repair", "Increases the genetic variability", "Recombination of chromosomes"], ans: 1, exp: "Cell repair." },
+  { q: "Find out the correct statement.", opts: ["During mitosis endoplasmic reticulum and nucleolus disappear completely at early prophase", "Chromosomes are arranged along the equator during prophase of mitosis", "Chromosome is made up of two sister chromatids at anaphase of mitosis", "Small disc shaped structures at the surface of the centromeres that appear during metaphase are kinetochores"], ans: 3, exp: "Small disc shaped structures at the surface of the centromeres that appear during metaphase are kinetochores." },
+  { q: "Select the events that do not occur in interphase stage of cell-cycle. A. RNA and protein synthesis. B. Cytoplasmic growth. C. Polymerisation of spindle fibres protein. D. Disappearance of Golgi bodies and ER. E. DNA molecules in highly supercoiled stage.", opts: ["C, D and E", "D and E only", "B, C and D", "C and D only"], ans: 0, exp: "C, D and E." },
+  { q: "If mitotically dividing diploid cell has initial amount of DNA as 5 Pg in G1 stage, that is distributed among its 8 chromosomes then which of the following assumption is correct?", opts: ["G2 phase - 16 chromatids with 10 Pg DNA", "Late prophase nucleus - 4 chromatids with 10 Pg DNA", "Anaphasic cell - 16 chromatids with 10 Pg DNA", "S stage - 4 chromatids with 2.5 Pg DNA"], ans: 2, exp: "Anaphasic cell - 16 chromatids with 10 Pg DNA." },
+  { q: "Compaction of chromosomes continues and it is followed by the synapsis stage during cell division in: A. Antherozoid mother cells in mosses. B. Meristematic tissues of plants. C. Sperm mother cells in ferns. D. Spore mother cells in conifers. E. Embryonic stage of higher plants.", opts: ["A, C and D", "C and D", "D only", "All are correct, except B"], ans: 0, exp: "A, C and D." },
+  { q: "Which of the following does not occur in the interphase of eukaryotic cell division?", opts: ["Increase of ATP synthesis", "Increase of DNA synthesis", "Increase of RNA synthesis", "Reduction in cell size"], ans: 3, exp: "Reduction in cell size." },
+  { q: "Match the items in Column I with those in Column II: Column I: P. Mitosis, Q. Meiosis. Column II: (i) Occurs in diploid cells only, (ii) Occurs in both haploid and diploid cells, (iii) Daughter and parent cells have same chromosome numbers, (iv) Synapsis of homologous chromosomes.", opts: ["P - (i), Q - (ii)", "P - (ii), Q - (iii)", "P - (iii), Q - (iv)", "P - (iv), Q - (i)"], ans: 2, exp: "P - (iii), Q - (iv)." },
+  { q: "What is a correct description of the centrioles, nuclear envelope and spindle during mitosis in animal cells? Phase: (a) Anaphase (b) Metaphase (c) Prophase (d) Telophase. Centrioles: Replicate / Present / Move apart / Replicate. Nuclear envelope: Absent / Reforms / Breaks up / Breaks up. Spindle: Present / Present / Forms / Breaks up.", opts: ["Anaphase - Replicate - Absent - Present", "Metaphase - Present - Reforms - Present", "Prophase - Move apart - Breaks up - Forms", "Telophase - Replicate - Breaks up - Breaks up"], ans: 2, exp: "Prophase - Move apart - Breaks up - Forms." },
+  { q: "Select the correct option. Column I: A. Synapsis aligns homologous chromosomes, B. Synthesis of RNA and protein, C. Action of enzyme recombinase, D. Centromeres do not separate but chromatids move towards opposite poles. Column II: (i) Anaphase-II, (ii) Zygotene, (iii) G2-phase, (iv) Anaphase-I, (v) Pachytene.", opts: ["A-(i), B-(ii), C-(v), D-(iv)", "A-(ii), B-(iii), C-(iv), D-(v)", "A-(ii), B-(i), C-(iii), D-(iv)", "A-(ii), B-(iii), C-(v), D-(iv)"], ans: 3, exp: "A-(ii), B-(iii), C-(v), D-(iv)." },
+  { q: "A somatic cell that has just completed the S phase of its cell cycle, as compared to gamete of the same species, has —", opts: ["Twice the number of chromosomes and four times the amount of DNA", "Four times the number of chromosomes and twice the amount of DNA", "Twice the number of chromosomes and twice the amount of DNA", "Same number of chromosomes but twice the amount of DNA"], ans: 0, exp: "Twice the number of chromosomes and four times the amount of DNA." },
+  { q: "Which of the following statement gives best explanation for evolutionary advantage of meiosis?", opts: ["Meiosis alternates with mitosis from generation to generation", "The same genetic material passes on generation after generation", "Meiosis is must for sexual reproduction", "Genetic recombination occurs during meiosis"], ans: 3, exp: "Genetic recombination occurs during meiosis." },
+  { q: "How many chromosome shall be present in a diploid cell at mitotic anaphase if its egg cell has 10 chromosomes?", opts: ["10", "40", "30", "20"], ans: 1, exp: "40." },
+  { q: "Spindle fibres attach on to :", opts: ["Telomere of the chromosome", "Kinetochore of the chromosome", "Centromere of the chromosome", "Kinetosome of the chromosome"], ans: 1, exp: "Kinetochore of the chromosome." },
+  { q: "In meiosis crossing over is initiated at :", opts: ["Pachytene", "Leptotene", "Zygotene", "Diplotene"], ans: 0, exp: "Pachytene." },
+  { q: "Which of the following is not a characteristic feature during mitosis in somatic cells ?", opts: ["Spindle fibres", "Disappearance of nucleolus", "Chromosome movement", "Synapsis"], ans: 3, exp: "Synapsis." },
+  { q: "During cell growth, DNA synthesis takes place in:", opts: ["G2 phase", "M phase", "S phase", "G1 phase"], ans: 2, exp: "S phase." },
+  { q: "When cell has stalled DNA replication fork, which checkpoint should be predominantly activated?", opts: ["M", "Both G2/M and M", "G1/S", "G2/M"], ans: 3, exp: "G2/M." },
+  { q: "Match the stages of meiosis in Column-I to their characteristic features in Column-II: Column-I: a. Pachytene, b. Metaphase-1, c. Diakinesis, d. Zygotene. Column-II: i. Pairing of homologous chromosomes, ii. Terminalization of chiasmata, iii. Crossing over takes place, iv. Chromosomes align at equatorial plate.", opts: ["a-ii, b-iv, c-iii, d-i", "a-iv, b-iii, c-ii, d-i", "a-iii, b-iv, c-ii, d-i", "a-iv, b-ii, c-iii, d-i"], ans: 2, exp: "a-iii, b-iv, c-ii, d-i." },
+  { q: "In which stage of meiosis homologous chromosomes are segregated?", opts: ["Metaphase I", "Anaphase I", "Anaphase II", "Metaphase II"], ans: 1, exp: "Anaphase I." },
+  { q: "Cells of certain species of animals have six pairs of chromosomes. How many molecules of DNA will remain in a nucleus of these animals during G2 phase?", opts: ["12", "48", "6", "24"], ans: 3, exp: "24." },
+  { q: "During cell division the process that causes failure of separation of sister chromatids is called:", opts: ["Coincidence", "Interference", "Non-disjunction", "Complementation"], ans: 2, exp: "Non-disjunction." },
+  { q: "Nuclear membrane is formed around the groups of daughter chromosomes during the telophase by:", opts: ["Endoplasmic reticulum", "Lysosomes", "Golgi apparatus", "Microbodies"], ans: 0, exp: "Endoplasmic reticulum." },
+  { q: "Which of the following is not true for meiosis?", opts: ["Production of genetic variability", "Maintaining constancy of chromosome number during sexual reproduction", "Reduction of chromosome number to one half", "Production of diploid cell"], ans: 3, exp: "Production of diploid cell." },
+  { q: "Which of the following is used as the mitotic spindle poison?", opts: ["Ca++", "Mg++", "Tubulin", "Colchicine"], ans: 3, exp: "Colchicine." },
+  { q: "When does replication of centriole occur?", opts: ["Interphase", "Prophase", "Late prophase", "Late telophase"], ans: 0, exp: "Interphase." },
+  { q: "Progression of cell cycle is regulated by the concentration of which type of molecule?", opts: ["Centrosomes", "Cyclin-dependent kinases", "Cyclins", "Microtubules"], ans: 2, exp: "Cyclins." },
+  { q: "Progression through the cell cycle is regulated by oscillations in the concentration of which types of molecule?", opts: ["Actin", "Tubulin", "Cyclin - dependent kinases", "Cyclins"], ans: 3, exp: "Cyclins." },
+  { q: "In order to enter the cell cycle a cell must be stimulated from outside. What type of molecule provides this stimulation?", opts: ["Cyclins", "Cyclin-dependent kinases", "Cytokines and growth factors", "Tyrosine kinases"], ans: 2, exp: "Cytokines and growth factors." },
+  { q: "The passage of a cell through the stages of the cell cycle is controlled by protein kinases that phosphorylate many different proteins at appropriate times. What are these protein kinases called?", opts: ["Cdk activating kinases", "Cyclin-dependent kinases", "Cyclins", "Tyrosine kinases"], ans: 1, exp: "Cyclin-dependent kinases." },
+  { q: "At which cell cycle checkpoint is the cell cycle halted if the cell's DNA is damaged?", opts: ["G1-S", "S-G2", "G2-M", "G0-G1"], ans: 2, exp: "G2-M." },
+  { q: "In which phase of the cell cycle are the chromosomes inactive, condensed, and not transcribed to messenger RNA?", opts: ["G1 phase", "S phase", "M phase", "G2 phase"], ans: 2, exp: "M phase." },
+  { q: "Cyclin dependent kinases which control progression through cell cycle checkpoints are fully activated by which of the following:", opts: ["binding to cyclins", "phosphorylation by Cdk activating protein kinase", "binding to cyclin, plus phosphorylation by a Cdk activating protein kinase", "phosphorylation by a tyrosine kinase"], ans: 2, exp: "binding to cyclin, plus phosphorylation by a Cdk activating protein kinase." },
+  { q: "Passage through which checkpoint is the step which commits the cell to proceed through to mitosis and cell division?", opts: ["G1 to S", "S to G2", "G2 to M", "M to G1"], ans: 2, exp: "G2 to M." },
+  { q: "How many checkpoints in a cell cycle?", opts: ["3", "4", "5", "6"], ans: 0, exp: "3." },
+  { q: "Measurement of the amount of DNA per nucleus were taken on a large number of cells from a growing fungus. The measured DNA levels ranged between 3 to 6 picograms (pg) per nucleus. One nucleus has 5 pg of DNA. What stage of the cell cycle was this nucleus in?", opts: ["G0", "G1", "M", "S"], ans: 3, exp: "S." },
+  { q: "In the list given, the first point at which you could distinguish between a mitosis and a meiosis would be :", opts: ["Telophase", "Anaphase", "Metaphase", "Prophase"], ans: 3, exp: "Prophase." },
+  { q: "How do cells at the completion of meiosis compare with the cell from which they were derived?", opts: ["They have the same number of chromosomes and half the amount of DNA", "They have half the amount of cytoplasm and twice the amount of DNA", "They have half the number of chromosomes and half the amount of DNA", "They have twice the amount of cytoplasm and half the amount of DNA"], ans: 2, exp: "They have half the number of chromosomes and half the amount of DNA." },
+  { q: "Which of the following options gives the correct sequence of events during mitosis?", opts: ["Condensation → nuclear membrane disassembly → arrangement at equator → centromere division → segregation → telophase", "Condensation → crossing over → nuclear membrane disassembly → segregation → telophase", "Condensation → arrangement at equator → centromere division → segregation → telophase", "Condensation → nuclear membrane disassembly → crossing over → segregation → telophase"], ans: 0, exp: "Condensation → nuclear membrane disassembly → arrangement at equator → centromere division → segregation → telophase." },
+  { q: "Anaphase Promoting Complex (APC) is a protein degradation machinery necessary for proper mitosis of animal cells. If APC is defective in a human cell, which of the following is expected to occur?", opts: ["Chromosomes will be fragmented", "Chromosomes will not segregate", "Recombination of chromosome arms will occur", "Chromosomes will not condense"], ans: 1, exp: "Chromosomes will not segregate." },
+  { q: "Restorage of nucleocytoplasmic ratio is performed in :", opts: ["G1 phase", "G2 phase", "S phage", "M phase"], ans: 0, exp: "G1 phase." },
+  { q: "The complete disintegration of nuclear envelope marks the :", opts: ["Early prophase", "Start of second phase of mitosis", "End of first phase of mitosis", "End of second phase of mitosis"], ans: 0, exp: "Early prophase." },
+  { q: "If in a cell 6 tetrad are present in prophase-1 then what will be the number of chromatids in each cell in Anaphase-11?", opts: ["24", "6", "12", "48"], ans: 0, exp: "24." },
+  { q: "If primary spermatocyte have 2n = 16 chromosomes during first meiotic division, in such case how many chromatids could be present in each secondary spermatocyte?", opts: ["32", "8", "24", "16"], ans: 3, exp: "16." },
+  { q: "What would be the DNA content in the cell at G1, G2, anaphase stage, when the content after mitotic phase is 40 Pg?", opts: ["G1 = 40 Pg, G2 = 80 Pg, Anaphase = 40 Pg", "G1 = 40 Pg, G2 = 80 Pg, Anaphase = 80 Pg", "G1 = 80 Pg, G2 = 40 Pg, Anaphase = 40 Pg", "G1 = 80 Pg, G2 = 40 Pg, Anaphase = 80 Pg"], ans: 0, exp: "G1 = 40 Pg, G2 = 80 Pg, Anaphase = 40 Pg." },
+  { q: "Mention the DNA content of cell at the S, Prophase I, Prophase II of meiocyte.", opts: ["4C, 4C, 2C", "2C, 1C, 2C", "4C, 2C, 2C", "1C, 4C; 2C"], ans: 0, exp: "4C, 4C, 2C." },
+  { q: "How many chromosomes and DNA content will the cell have in G1 phase, after S-phase and after M-phase respectively, if root tip cells possess 14 chromosomes?", opts: ["14/2C, 28/4C, 14/4C", "14/2C, 14/4C, 14/2C", "14/2C, 14/2C, 7/2C", "28/4C, 28/8C, 14/2C"], ans: 0, exp: "14/2C, 28/4C, 14/4C." },
+  { q: "In mitosis, the daughter cells resemble their parent cell. But in meiosis, they differ not only from parent cell in having half the number of chromosomes, but also differ among themselves qualitatively in genetic constitution due to —", opts: ["Segregation and crossing over only", "Independent assortment and segregation only", "Crossing over, independent assortment and segregation", "Independent assortment and crossing over only"], ans: 2, exp: "Crossing over, independent assortment and segregation." },
+  { q: "Segregation of Mendelian factors (Aa) occurs during —", opts: ["Diplotene", "Anaphase I", "Zygotene/Pachytene", "Anaphase II"], ans: 1, exp: "Anaphase I." },
+  { q: "Which is not characteristic of meiosis —", opts: ["Two stage of DNA replication, first before meiosis I and Second before meiosis II", "Recombination and crossing over", "Sister chromatids separate during anaphase II", "Nuclear membrane disappears towards the end of Prophase"], ans: 0, exp: "Two stage of DNA replication, first before meiosis I and Second before meiosis II." },
+  { q: "At diakinesis, a meiocyte has ten pairs of chromosomes. The chromosome number expected in each nucleus is,", opts: ["Ten at the end of first division and five at the end of second division", "Ten at the end of first division and ten at the end of second division", "Five at the end of first division and five at the end of second division", "Twenty at the end of first division and ten at the end of second division"], ans: 1, exp: "Ten at the end of first division and ten at the end of second division." },
+  { q: "Synaptinemal complex is visible from —", opts: ["Leptotene through diplotene", "Pachytene through diplotene", "Zygotene through pachytene", "Diplotene through metaphase"], ans: 2, exp: "Zygotene through pachytene." },
+  { q: "During a cell cycle the transition from G1 to S phase and from G2 to M phase requires the activation of which of the following?", opts: ["Inducer enzyme", "ATP", "Cyclins", "Cyclin-CDK complex"], ans: 3, exp: "Cyclin-CDK complex." },
+  { q: "A eukaryotic cell that receives a 'go-ahead' signal at the G1 checkpoint of the cell cycle will —", opts: ["complete the cycle and divide", "move directly into the M phase", "move directly into the G2 phase", "enter a resting stage"], ans: 0, exp: "complete the cycle and divide." },
+  { q: "The cell cycle is regulated by checkpoints during the _____ phases.", opts: ["G1, S and G2", "G1, S and C", "G1, G2, and M", "G1, S and M"], ans: 2, exp: "G1, G2, and M." },
+  { q: "The eukaryotic cell cycle is controlled at several points; which of these statements is not true?", opts: ["Cell growth is assessed at the G1/S checkpoint", "DNA replication is assessed at the G2/M checkpoint", "Environmental conditions are assessed at the G0 checkpoint", "The chromosomes are assessed at the spindle checkpoint"], ans: 2, exp: "Environmental conditions are assessed at the G0 checkpoint." },
+  { q: "Ribonucleoprotein 'Telomerase' is significantly is expressed in all the following cells except —", opts: ["Cancerous cells", "Stem cells", "Epidermal cells", "Skeletal muscle cell"], ans: 3, exp: "Skeletal muscle cell." },
+  { q: "Decision of G0 - phase occurs —", opts: ["towards the end of G1 phase", "before middle of G1 phase", "at the end of telophase", "towards end of cytokinesis"], ans: 0, exp: "towards the end of G1 phase." },
+  { q: "Which specific protein is formed in G2 phase?", opts: ["Histone", "DNA polymerase", "Scaffold proteins", "Tubulin"], ans: 3, exp: "Tubulin." },
+  { q: "In meiosis, the daughter cells differ from parent cell as well as amongst themselves due to —", opts: ["segregation, independent assortment and crossing over", "segregation and crossing over", "independent assortment and crossing over", "segregation and independent assortment"], ans: 0, exp: "segregation, independent assortment and crossing over." },
+  { q: "Synaptonemal complex completed during —", opts: ["Leptotene", "Zygotene", "Pachytene", "Diplotene"], ans: 2, exp: "Pachytene." },
+  { q: "Cell cycle progression from one phase to another is primarily controlled by —", opts: ["phosphorylation of cdks", "proteolysis of cyclin", "dephosphorylation of cyclin", "proteolysis of cdks"], ans: 0, exp: "phosphorylation of cdks." },
+  { q: "DNA sequence responsible for chromatid separation —", opts: ["centromere", "telomere", "kinetochore", "satellite"], ans: 0, exp: "centromere." },
+  { q: "Consider a diploid organism with 2n value of 4. How many chromosomes and DNA molecules respectively are present in the G1 and G2 phases of somatic cell of this organism?", opts: ["G1 : 4 and 4 ; G2 4 and 4", "G1 : 4 and 4 ; G2 4 and 8", "G1 : 4 and 4 ; G2 8 and 4", "G1 : 4 and 4; G2 8 and 8"], ans: 1, exp: "G1 : 4 and 4 ; G2 4 and 8." },
+  { q: "The correct sequence of phases of cell cycle is:", opts: ["M → G1 → G2 → S", "G1 → G2 → S → M", "S → G1 → G2 → M", "G1 → S → G2 → M"], ans: 3, exp: "G1 → S → G2 → M." },
+  { q: "Cell in G0 phase :", opts: ["exit the cell cycle", "enter the cell cycle", "suspend the cell cycle", "terminate the cell cycle"], ans: 0, exp: "exit the cell cycle." },
+  { q: "Crossing over takes place between which chromatids and in which stage of the cell cycle ?", opts: ["Non-sister chromatids of non-homologous chromosomes at Pachytene stage of prophase I", "Non-sister chromatids of non-homologous chromosomes at Zygotene stage of prophase I", "Non-sister chromatids of homologous chromosomes at Pachytene stage of prophase I", "Non-sister chromatids of homologous chromosomes at Zygotene stage of prophase I"], ans: 2, exp: "Non-sister chromatids of homologous chromosomes at Pachytene stage of prophase I." },
+  { q: "After meiosis I, the resultant daughter cells have —", opts: ["four times the amount of DNA in comparison to haploid gamete", "same amount of DNA as in the parent cell in S phase", "twice the amount of DNA in comparison to haploid gamete", "same amount of DNA in comparison to haploid gamete"], ans: 2, exp: "twice the amount of DNA in comparison to haploid gamete." },
+  { q: "What would be the number of chromosomes of the aleurone cells of a plant with 42 chromosomes in its roots tip cells?", opts: ["21", "42", "63", "84"], ans: 2, exp: "63." },
+  { q: "Select the correct option with respect to mitosis —", opts: ["Chromosomes move to the spindle equator and get aligned along equatorial plate in metaphase", "Chromatids separate but remain in the centre of the cell in anaphase", "Chromatids start moving towards opposite poles in telophase", "Golgi complex and endoplasmic reticulum are still visible at the end of prophase"], ans: 0, exp: "Chromosomes move to the spindle equator and get aligned along equatorial plate in metaphase." },
+  { q: "At metaphase, chromosomes are attached to the spindle fibres by their :", opts: ["Satellites", "Secondary constrictions", "Kinetochores", "Centromere"], ans: 2, exp: "Kinetochores." },
+  { q: "The chromosomes become gradually visible with compaction of chromatin during the meiotic stage —", opts: ["diplotene", "leptotene", "zygotene", "pachytene"], ans: 1, exp: "leptotene." },
+  { q: "Two nuclear divisions occur during meiosis: meiosis I and meiosis II. Meiosis reduces chromosome number and introduces genetic variations in offsprings. Which of the following events does not occur during prophase I in meiosis?", opts: ["Crossing-over between homologous chromosomes", "Pairing of homologous chromosomes", "Disintegration of spindle fibres", "Formation of spindle fibres"], ans: 2, exp: "Disintegration of spindle fibres." },
+  { q: "The condensation of chromatin into dense chromosomes takes place during ____, while chromosomes uncoil to form thread-like chromatin during ____", opts: ["i-telophase; ii-metaphase", "i-metaphase; ii-anaphase", "i-anaphase; ii-prophase", "i-prophase; ii-telophase"], ans: 3, exp: "i-prophase; ii-telophase." },
+  { q: "The complex formed by a pair of synapsed homologous chromosomes is called:", opts: ["Equatorial plate", "Kinetochore", "Bivalent", "Axoneme"], ans: 2, exp: "Bivalent." },
+  { q: "During which phase(s) of cell cycle, amount of DNA in a cell remains at 4C level if the initial amount is denoted as 2C?", opts: ["G0 and G1", "G1 and S", "Only G2", "G2 and M"], ans: 2, exp: "Only G2." },
+  { q: "In 'S' phase of the cell cycle :", opts: ["Amount of DNA doubles in each cell", "Amount of DNA remains same in each cell", "Chromosome number is increased", "Amount of DNA is reduced to half in each cell"], ans: 0, exp: "Amount of DNA doubles in each cell." },
+  { q: "The enzyme recombinase is required at which stage of meiosis :", opts: ["Pachytene", "Zygotene", "Diplotene", "Diakinesis"], ans: 0, exp: "Pachytene." },
+  { q: "The centrosome duplicates during the —", opts: ["G2 - phase of cell cycle", "S - phase of cell cycle", "Prophase of cell cycle", "G1 - phase of cell cycle"], ans: 1, exp: "S - phase of cell cycle." },
+  { q: "During the metaphase stage of mitosis spindle fibres attach to chromosomes at —", opts: ["Centromere", "Kinetochore", "Both centromere and kinetochore", "Centromere, kinetochore and areas adjoining centromere"], ans: 1, exp: "Kinetochore." },
+  { q: "During meiosis I, the chromosomes start pairing at —", opts: ["Leptotene", "Zygotene", "Pachytene", "Diplotene"], ans: 1, exp: "Zygotene." },
+  { q: "The stage between two meiotic divisions is called interkinesis and —", opts: ["Is long lived", "Is followed by prophase I", "Is generally short lived and followed by prophase II", "Involves duplication of genes and centrioles"], ans: 2, exp: "Is generally short lived and followed by prophase II." },
+  { q: "What are the conditions in a human cell just before the cell enters prophase? No. of chromatids / No. of molecules of DNA in nucleus / Spindle present / Nuclear envelope present", opts: ["46 / 46 / Yes / No", "92 / 46 / No / Yes", "46 / 92 / Yes / Yes", "92 / 92 / No / Yes"], ans: 3, exp: "92 / 92 / No / Yes." },
+  { q: "Which processes involve mitosis?", opts: ["Growth, reduction division and asexual reproduction", "Growth, repair and asexual reproduction", "Growth, repair and semi-conservative replication", "Repair, reduction division and asexual reproduction"], ans: 1, exp: "Growth, repair and asexual reproduction." },
+  { q: "The G0 phase is —", opts: ["the checkpoint before G1", "the state of most cells in an animal body", "another name for interphase", "a permanent state of all body cells"], ans: 1, exp: "the state of most cells in an animal body." },
+  { q: "Which of the following terms is not related to mitosis?", opts: ["gametes", "chromosomes", "DNA replication", "somatic cells"], ans: 0, exp: "gametes." },
+  { q: "Following synapsis during meiosis I, the homologous chromosomes separate. This separation means that _____", opts: ["both chromosomes of each homologous pair reach each haploid daughter cell", "both chromosomes of each homologous pair reach each diploid daughter cell", "one chromosome from each homologous pair reaches each haploid daughter cell", "one chromosome from each homologous pair reaches each diploid daughter cell"], ans: 2, exp: "one chromosome from each homologous pair reaches each haploid daughter cell." },
+  { q: "During _____, homologous chromosomes separate and dyads move to opposite poles of the spindle.", opts: ["prophase I", "prophase II", "metaphase I", "anaphase I"], ans: 3, exp: "anaphase I." },
+  { q: "During _____, the sister chromatids are lined up at the equator.", opts: ["prophase I", "prophase II", "metaphase I", "metaphase II"], ans: 3, exp: "metaphase II." },
+  { q: "At the completion of meiosis I, each human cell contains —", opts: ["23 chromosomes, 46 chromatids", "46 chromosomes, 46 chromatids", "46 chromosomes, 92 chromatids", "23 chromosomes, 23 chromatids"], ans: 0, exp: "23 chromosomes, 46 chromatids." },
+  { q: "Which of the following is incorrect?", opts: ["Crossing over and independent assortment are the two sources of genetic diversity in meiosis", "Meiosis and sexual reproduction have fostered diversity in natural world", "Meiosis involves one replication only", "Independent assortment occurs during metaphase II"], ans: 3, exp: "Independent assortment occurs during metaphase II." },
+  { q: "In the beginning of meiosis, a meiocyte has 16 Pg of DNA. The amount in a gamete will be —", opts: ["4 Pg", "16 Pg", "32 Pg", "8 Pg"], ans: 0, exp: "4 Pg." },
+  { q: "If mammalian cells receive a go-ahead signal at the G1 checkpoint, they will —", opts: ["move directly into telophase", "complete the cycle and divide", "exit the cycle and switch to a nondividing state", "show a drop in MPF concentration"], ans: 1, exp: "complete the cycle and divide." },
+  { q: "Select an incorrect statement w.r.t. cell cycle :", opts: ["Duplication of genes occurs twice in meiosis", "Karyokinesis occurs twice during meiotic division", "Cyclins are protein that activate protein kinase to regulate the cell cycle", "After telophase -1, chromosome number is reduced to half"], ans: 0, exp: "Duplication of genes occurs twice in meiosis." },
+  { q: "All of the following statements are true for the typical eukaryotic cell cycle EXCEPT:", opts: ["The S phase is far removed from cell division", "G1 occurs after the S phase", "The shortest phase in terms of time is usually M", "Many of the enzymes necessary for DNA replication are typically produced during G1"], ans: 1, exp: "G1 occurs after the S phase." },
+  { q: "A bacterium growing on an agar surface divides. Most bacteria are not very motile on solid surface. The progeny bacteria remain very near to the location of original bacterium. If 10 cells are plated and a cell takes 30 minutes to multiply then number of colonies visible, next day would be —", opts: ["10", "10²", "10⁴", "10⁸"], ans: 0, exp: "10." },
+  { q: "A drug 'Paclitaxel' interferes with the breakdown of micro tubules and stabilizes them. This drug is also used in cancer therapy. Which of the following stages will be severely affected when animal cell is treated with this drug —", opts: ["Prophase", "G0", "Anaphase", "Cytokinesis"], ans: 2, exp: "Anaphase." },
+  { q: "During which period of cell cycle do the paired centrioles become centrosomes?", opts: ["prophase", "metaphase", "anaphase", "telophase"], ans: 0, exp: "prophase." },
+  { q: "Meiosis allows species to increase the genetic variation within the gene pool by —", opts: ["making exact copies of each parent cell", "using a diploid cell to make two haploid cells", "causing internal fertilization", "generating new cells to repair injury"], ans: 1, exp: "using a diploid cell to make two haploid cells." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+  correctCount = 0; wrongCount = 0; currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 10; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

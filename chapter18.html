@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 21: Neural Control and Coordination - CBT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+  .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+  .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+  .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+  .stat-box .lbl { font-size: 11px; color: #4a5568; }
+  .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+  .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+  .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+  .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+  .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+  .question-box { flex: 1; margin-bottom: 15px; }
+  .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; }
+  .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+  .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+  .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+  .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+  .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+  .option.disabled { pointer-events: none; opacity: 0.8; }
+  .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+  .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+  .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+  .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+  .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+  .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+  .result-item .label { font-size: 12px; color: #4a5568; }
+  .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+  .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+  .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+      <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+      <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+      <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+      <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+      <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+      <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Neural Control and Coordination</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+      <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+      <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+      <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+      <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q: "Body coordination is maintained by -", opts: ["Nervous system", "Excretory system", "Endocrine system", "Neuroendocrine system"], ans: 3, exp: "Neuroendocrine system." },
+  { q: "Which of the following statements is false?", opts: ["The neural system provides an organised network of point to point connection for a quick coordination", "The endocrine system provides chemical integration through hormones", "The neural organisation is very complex in lower invertebrates", "The human neural system includes CNS and PNS"], ans: 2, exp: "The neural organisation is very simple in lower invertebrates." },
+  { q: "Which of the following is correct?", opts: ["CNS includes brain and spinal cord", "CNS is the site of information, processing and control", "PNS comprises of all the nerves of the body associated with CNS", "All"], ans: 3, exp: "All are correct." },
+  { q: "Which of the following systems transmits impulse from CNS to involuntary organs and smooth muscles?", opts: ["Somatic neural system", "Sympathetic neural system", "Parasympathetic neural system", "Autonomic neural system"], ans: 3, exp: "Autonomic neural system." },
+  { q: "Which of the following system relays impulse from CNS to skeletal muscles?", opts: ["Somatic neural system", "Sympathetic neural system", "Parasympathetic neural system", "Autonomic neural system"], ans: 0, exp: "Somatic neural system." },
+  { q: "Neurons-", opts: ["Can detect different kinds of stimuli", "Can receive different kinds of stimuli", "Can transmit different kinds of stimuli", "All"], ans: 3, exp: "All are correct." },
+  { q: "The basic unit of the nervous system is -", opts: ["The axon", "The dendrite", "Cell body", "Neuron"], ans: 3, exp: "Neuron." },
+  { q: "Function of axon is to -", opts: ["Bring impulse into cyton", "Take impulse away from cyton", "Support neuroglial cell", "Form myelin sheath"], ans: 1, exp: "Take impulse away from cyton." },
+  { q: "Nissl's granules are absent in -", opts: ["Dendrons and dendrites", "Axon", "Cyton", "Cyton and dendrons"], ans: 1, exp: "Axon." },
+  { q: "Unipolar neuron / Unipolar nerve cells means", opts: ["Nerve cell with one dendron", "Nerve cell with many dendrons", "Nerve cell without dendrons", "Neuron with one dendron and one axon"], ans: 2, exp: "Nerve cell without dendrons." },
+  { q: "Multipolar neuron means -", opts: ["Neuron with one dendron and one axon", "Neuron with many dendrons and one axon", "Neuron with one dendron and many axons", "Neuron with many dendrons only"], ans: 1, exp: "Neuron with many dendrons and one axon." },
+  { q: "Bipolar neuron -", opts: ["Has two dendrons", "Has one dendron and one axon", "Is interneuron", "Has no dendron"], ans: 1, exp: "Has one dendron and one axon." },
+  { q: "Which of the following cells form myelin sheath around axon -", opts: ["Neuroglial cell", "Neuron", "Schwann cell", "Astrocyte"], ans: 2, exp: "Schwann cell." },
+  { q: "Nodes of Ranvier are -", opts: ["Areas of swellings of axon", "Found in the wall of stomach", "The gaps between two adjacent myelin sheath", "Bands in striated muscles"], ans: 2, exp: "The gaps between two adjacent myelin sheath." },
+  { q: "Myelin sheath is present around -", opts: ["Medullated nerve fibre", "Non-medullated nerve fibre", "Muscle fibre", "Medullated and non-medullated nerve fibre"], ans: 0, exp: "Medullated nerve fibre." },
+  { q: "Neurons are excitable cells because their membranes are in a -", opts: ["Depolarised state", "Polarized state", "Repolarized state", "None of the above is correct"], ans: 1, exp: "Polarized state." },
+  { q: "Ion channels present on neural membrane are -", opts: ["Impermeable", "Semipermeable", "Selective permeable", "Fully permeable"], ans: 2, exp: "Selective permeable." },
+  { q: "A polarized neuron is said to be in -", opts: ["Action potential", "Resting potential", "Spike potential", "None of these"], ans: 1, exp: "Resting potential." },
+  { q: "When a neuron is not conducting any impulse i.e. resting, the axonal membrane is -", opts: ["Comparatively more permeable to K+ and impermeable (nearly impermeable) to Na+", "Impermeable to negatively charged proteins present in the axoplasm", "Both", "More permeable to Na+ ions than K+ ion."], ans: 2, exp: "Both." },
+  { q: "What generally maintains the electrical charge across the neuronal membrane?", opts: ["Na+ - K+ pump", "Action potential", "resting potential", "Voltage - gated channels"], ans: 0, exp: "Na+ - K+ pump." },
+  { q: "Na+ - K+ pump: I. Needs energy (ATP) to work II. Expels 3 Na+ for every 2K+ ions imported III. Works against a concentration gradient IV. Maintains resting potential", opts: ["All are correct", "Only II and III are correct", "Only I and III are correct", "None is correct"], ans: 0, exp: "All are correct." },
+  { q: "Which of the following statements is correct?", opts: ["The electrical potential difference across the polarised plasma membrane is called as the resting potential", "The impulse is action potential", "Na+ ions are responsible for generating an action potential", "All"], ans: 3, exp: "All are correct." },
+  { q: "During depolarization of the neuronal membrane -", opts: ["Na+ ions rapidly move to the inside of the cell", "Na+ ions rapidly move to the outside of the cell", "K+ ions rapidly move to the outside of the cell", "K+ ions rapidly move to the outside of the cell"], ans: 0, exp: "Na+ ions rapidly move to the inside of the cell." },
+  { q: "Which of the following increases when an action potential is initiated?", opts: ["Diffusion of Na+ ions into the neuron", "Diffusion of Na+ ions out of the neuron", "Diffusion of K+ ions into the neuron", "Diffusion of K+ ions out of the neuron"], ans: 0, exp: "Diffusion of Na+ ions into the neuron." },
+  { q: "A segment of neuronal membrane showing action potential is said to be -", opts: ["Polarized", "Depolarized", "Repolarized", "None of the above"], ans: 1, exp: "Depolarized." },
+  { q: "When a stimulus is applied at a site on the polarized membrane, the membrane at that site becomes freely permeable to ____ ions. It causes rapid influx of ____ ions leading ____ of the membrane -", opts: ["Na+, K+, depolarization", "K+, K+, depolarization", "K+, Na+, depolarization", "Na+, Na+, depolarization"], ans: 3, exp: "Na+, Na+, depolarization." },
+  { q: "The electrical potential difference across the depolarized membrane is called -", opts: ["Action potential", "Resting potential", "Water potential", "Solute potential"], ans: 0, exp: "Action potential." },
+  { q: "During repolarization of nerve -", opts: ["K+ gate closes and Na+ gate opens", "Na+ channels are closed and K+ channels are opened", "Both K+ and Na+ gates are closed", "Both gates remain opened"], ans: 1, exp: "Na+ channels are closed and K+ channels are opened." },
+  { q: "Nerve impulse is generated when the nerve cell undergoes -", opts: ["Hyperpolarization", "Depolarization", "Repolarization", "Pseudopolarization"], ans: 1, exp: "Depolarization." },
+  { q: "The junction between the axon of one neuron and the dendrite of the next is called -", opts: ["A joint", "Constant bridge", "Junction point", "Synapse"], ans: 3, exp: "Synapse." },
+  { q: "Unidirectional transmission of the nerve impulse is maintained by -", opts: ["Interneurons", "Myelin sheath", "Synapse", "Membrane polarity"], ans: 2, exp: "Synapse." },
+  { q: "Which of the following statements is false about the electrical synapse? I. At electrical synapses, the membranes of pre and post synaptic neurons are in very close proximity II. Electrical current can flow directly from one neuron into the other across the synapses III. Transmission of an impulse across electrical synapses is very similar to impulse conduction along single axon. IV. Electrical synapses pass electrical signal between cells with the use of Ach V. Electrical synapses are fast VI. Electrical synapses are rare in our system", opts: ["I and II", "Only II", "Only IV", "Only V"], ans: 2, exp: "Only IV is false." },
+  { q: "The new potential developed on post-synaptic membrane is-", opts: ["Always excitatory", "Always inhibitory", "May be excitatory or inhibitory", "Neither excitatory nor inhibitory"], ans: 2, exp: "May be excitatory or inhibitory." },
+  { q: "The hind brain develops into which structure?", opts: ["Medulla", "Pons", "Cerebellum", "All"], ans: 3, exp: "All." },
+  { q: "The forebrain develops into -", opts: ["Diencephalon and Cerebrum", "Diencephalon and Cerebellum", "Diencephalon and Medulla", "Diencephalon and Pons"], ans: 0, exp: "Diencephalon and Cerebrum." },
+  { q: "The thalamus and hypothalamus develop from -", opts: ["Telencephalon", "Diencephalon", "Cerebrum", "Cerebellum"], ans: 1, exp: "Diencephalon." },
+  { q: "The correct sequence meninges from inner to outerside is -", opts: ["Arachnoid, Duramater, Piamater", "Duramater, Arachnoid, Piamater", "Piamater, Arachnoid, Duramater", "Piamater, Duramater, Arachnoid"], ans: 2, exp: "Piamater, Arachnoid, Duramater." },
+  { q: "The name of nervous band connecting the cerebral hemispheres is -", opts: ["Corpus albicans", "Corpus callosum", "Corpus striatum", "Corpus spongiosum"], ans: 1, exp: "Corpus callosum." },
+  { q: "Which of the following statements is incorrect about cortex of cerebrum?", opts: ["It consists of grey matter", "It consists of white matter", "It shows prominent folds", "It contains motor areas, sensory areas and association areas."], ans: 1, exp: "It consists of white matter." },
+  { q: "Association areas in cerebral cortex are -", opts: ["Sensory areas", "Motor areas", "Responsible for intersensory associations, memory and communication", "None of the above is correct"], ans: 2, exp: "Responsible for intersensory associations, memory and communication." },
+  { q: "The medulla of cortex, inner part of cerebral hemisphere consists of-", opts: ["Grey matter", "White matter", "Both grey matter and white matter", "Non myelinated nerve fibres"], ans: 1, exp: "White matter." },
+  { q: "Myelinated fibres of the tract forms -", opts: ["White matter", "Grey matter", "White and grey matter", "Red matter"], ans: 0, exp: "White matter." },
+  { q: "The cerebrum wraps around a structure called thalamus, which is -", opts: ["A major coordinating centre for sensory signal only", "A major centre for motor signaling", "A major coordinating centre for sensory and motor signaling", "Not a nervous part of a brain"], ans: 2, exp: "A major coordinating centre for sensory and motor signaling." },
+  { q: "Hypothalamus does not control -", opts: ["Thermoregulation", "Urge for eating and drinking", "Produces hormones that regulate the synthesis and secretion of pituitary hormone", "Creative thinking and consciousness"], ans: 3, exp: "Creative thinking and consciousness." },
+  { q: "The inner parts of cerebral hemispheres and a group of associated deep structures like amygdala, hippocampus, etc; form a complex structure called -", opts: ["Reticular system", "Corpora quadrigemina", "Limbic lobe / limbic system", "Arborvitae"], ans: 2, exp: "Limbic lobe / limbic system." },
+  { q: "Along with hypothalamus, limbic system is involved in the -", opts: ["Regulation of sexual behaviour", "Expression of emotional reaction (e.g. excitement pleasure, rage and fear)", "Motivation", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following statements or structures is not correct about the midbrain?", opts: ["Located between the thalamus / hypothalamus and pons", "Has arbor vitae", "Has a canal (Cerebral aqueduct)", "Its dorsal part consists of 4 lobes (corpora quadrigemina)"], ans: 1, exp: "Has arbor vitae." },
+  { q: "Brain stem includes -", opts: ["Mid brain only", "Hind brain only", "Mid brain and hind brain only", "Fore brain and hind brain only"], ans: 2, exp: "Mid brain and hind brain only." },
+  { q: "Which of the following features is not related with pons?", opts: ["It forms floor of brain stem", "It serves as neural link between different parts of brain", "It can moderate the functions of respiratory rhythm centre", "It has a chemosensitive area for respiratory regulation"], ans: 3, exp: "It has a chemosensitive area for respiratory regulation." },
+  { q: "I. Cerebellum has very convoluted surface in order to provide the additional space for more neurons II. The medulla is connected to the spinal cord III. Medulla contains controlling centres for respiration, cardiovascular reflexes and gastric secretion", opts: ["All are correct", "Only I is correct", "Only I and III are correct", "Only II is correct"], ans: 0, exp: "All are correct." },
+  { q: "Immediate involuntary response to stimulus is -", opts: ["Reflex action", "Autonomic response", "Action control", "None of these"], ans: 0, exp: "Reflex action." },
+  { q: "Reflex action is controlled by -", opts: ["CNS", "PNS", "ANS", "None of these"], ans: 0, exp: "CNS." },
+  { q: "Reflex is controlled by -", opts: ["Spinal cord", "ANS", "PNS", "Sympathetic nervous system"], ans: 0, exp: "Spinal cord." },
+  { q: "In reflex action, the reflex arc is formed by-", opts: ["Muscle, receptor, brain", "Brain, spinal cord, muscle", "Receptor, spinal cord, muscle", "muscle, spinal cord, receptor"], ans: 2, exp: "Receptor, spinal cord, muscle." },
+  { q: "Different components of reflex arc are given below- 1. Effector organ II. Interneuron III. Motor neuron IV. Sensory neuron V. Sensory receptor Choose the correct order an action potential follows after a sensory receptor is stimulated -", opts: ["V, IV, III, II, I", "V, IV, II, III, I", "V, III, IV, I, II", "V, II, IV, III, I"], ans: 1, exp: "V, IV, II, III, I." },
+  { q: "Where A stands for axon, D for dendrite, S for synapse, and CB for cell body, a typical sequence of structures between a receptor and an efferent is -", opts: ["D-CB-A-S-D-CB-A", "A-D-CB-S-A-D-CB", "D-CB-A-S-A-CB-D", "D-A-S-CB-D-A-CB"], ans: 0, exp: "D-CB-A-S-D-CB-A." },
+  { q: "What is meant by a reflex arc in the nervous system?", opts: ["An inherited behaviour pattern that functions through a certain neural pathway", "A functional unit consisting of a receptor, neural pathway, and an effector", "Peripheral nerves, spinal cords and brain", "A homeostatic system of sensory nerves, synapses and motor nerves"], ans: 1, exp: "A functional unit consisting of a receptor, neural pathway, and an effector." },
+  { q: "The reflex pathway comprises -", opts: ["Atleast two afferent neurons and two efferent neurons", "Atleast one afferent neuron and one efferent neuron", "Atleast two afferent neurons and one efferent neuron", "Atleast one afferent neuron and four efferent neurons"], ans: 1, exp: "Atleast one afferent neuron and one efferent neuron." },
+  { q: "A stimulus is received by a receptor, which initiates an impulse in the afferent neuron. The afferent neuron transmits the signal via ____ nerve root into ____ (at the level of spinal cord). The efferent neuron than carries signal from ____ to the ____ -", opts: ["Ventral, CNS, PNS, sensory organs", "Ventral, CNS, CNS, effector", "Dorsal, CNS, PNS, affector", "Dorsal, CNS, CNS, effector"], ans: 3, exp: "Dorsal, CNS, CNS, effector." },
+  { q: "Three layers in wall of each eye ball from inside to outwards are -", opts: ["Sciera, Choroid, Retina", "Retina, Choroid, Sciera", "Choroid, Retina, Sciera", "Choroid, Sciera, Retina"], ans: 1, exp: "Retina, Choroid, Sciera." },
+  { q: "Cornea is the transparent part of-", opts: ["Retina", "Choroid", "Sciera", "Conjunctiva"], ans: 2, exp: "Sciera." },
+  { q: "Which of the following layer of eye ball contains blood vessels and is blue in colour?", opts: ["Choroid", "Sciera", "Retina", "Cornea"], ans: 0, exp: "Choroid." },
+  { q: "Colour of eye is due to -", opts: ["Iris", "Lens", "Pupil", "Cornea"], ans: 0, exp: "Iris." },
+  { q: "The size of pupil of eye is controlled by -", opts: ["Iris", "Retina", "Ciliary body", "Lens"], ans: 0, exp: "Iris." },
+  { q: "Iris is a part of-", opts: ["Retina only", "Choroid only", "Sciera only", "Cornea only"], ans: 1, exp: "Choroid only." },
+  { q: "The lens in eyeball is -", opts: ["Semitransparent crystalline", "Semitransparent and non-crystalline", "Transparent crystalline", "Opaque crystalline"], ans: 2, exp: "Transparent crystalline." },
+  { q: "Three layers of cells in retina from inside to outside are_:", opts: ["Layers of ganglion cells, bipolar cells, photoreceptor cells", "Layers of ganglion cells, photoreceptor cells, bipolar cells", "Layers of photoreceptor cells, ganglion cells, bipolar cells", "Layers of bipolar cells, photoreceptor cells, ganglion cells"], ans: 0, exp: "Layers of ganglion cells, bipolar cells, photoreceptor cells." },
+  { q: "Which of the following cells are photoreceptor cells in human eye?", opts: ["Only cones", "Only amacrine cells", "Only rods", "Only rods and cones"], ans: 3, exp: "Only rods and cones." },
+  { q: "Sensitive pigmented layer of eye is -", opts: ["Retina", "Cornea", "Sciera", "None of these"], ans: 0, exp: "Retina." },
+  { q: "Photoreceptor cells are present in the ____ layer of wall of eye ball -", opts: ["Outer", "Middle", "Inner", "Corneal"], ans: 2, exp: "Inner." },
+  { q: "The area of retina in human eye containing only cone cells is called -", opts: ["Pecten", "Tapetum", "Macula lutea", "Fovea centralis"], ans: 3, exp: "Fovea centralis." },
+  { q: "At the posterior pole of eye latter to blind spot, there is a yellowish pigmented spot called ____ with a central pit called ____ -", opts: ["Corpus luteum, Fovea", "Macula, fovea", "Macula lutea, fovea", "macula, columella"], ans: 2, exp: "Macula lutea, fovea." },
+  { q: "The place in eye of human from which optic nerves and blood vessels leave the eye ball is -", opts: ["Pupil", "Fovea centralis", "Cornea", "Blind spot"], ans: 3, exp: "Blind spot." },
+  { q: "Blind spot has -", opts: ["Cones but no rods", "Rods but no cones", "No rods and cones", "Cones and rods"], ans: 2, exp: "No rods and cones." },
+  { q: "In which of the following structures cones are densely packed and visual acuity (resolution) is the greatest?", opts: ["Macula", "Fovea", "Lens", "Cornea"], ans: 1, exp: "Fovea." },
+  { q: "The fovea is a ____ portion of the ____ -", opts: ["Thick-out, sclera", "Thin-out, choroid", "Thin-out, retina", "Thick-out, retina"], ans: 2, exp: "Thin-out, retina." },
+  { q: "Which of the following statement is correct?", opts: ["Rods contain a purplish-red protein called rhodopsin / visual purple", "Rhodopsin is a derivative of vitamin A", "The twilight (scotopic) vision is a function of the rods", "All"], ans: 3, exp: "All are correct." },
+  { q: "Which of the following statements is false about cones? I. The daylight (photopic) vision and colour vision are function of cones II. In human eye, there are three types of cones having characteristic photopigments that respond to red, green and blue light III. The sensations of different colours are produced by various combination of these 3 types of cones IV. When these 3 types of cones are stimulated equally, a sensation of white light is produced.", opts: ["Only IV", "Only I and IV", "Only III", "None"], ans: 3, exp: "None." },
+  { q: "Cavity of vitreous humour (gel) is -", opts: ["Behind the lens", "In front of lens", "Between choroid and retina", "Between choroid and sclera"], ans: 0, exp: "Behind the lens." },
+  { q: "Cavity of aqueous humour (watery fluid) is -", opts: ["Behind the lens", "Between choroid and retina", "Between cornea and lens", "Between lens and retina"], ans: 2, exp: "Between cornea and lens." },
+  { q: "Given these structures- A. Lens B. Aqueous humour C. Vitreous humour D. Cornea. Choose the correct sequence of pathway of light from outside to inside the eyeball -", opts: ["D, B, A, C", "A, B, C, D", "D, C, B, A", "A, D, B, C"], ans: 0, exp: "D, B, A, C." },
+  { q: "Which of the following options is wrong?", opts: ["Eye muscles are attached with sclera", "Visual purple is concerned with dim light, while visual violet is concerned with bright light", "The colour differentiation is done by cones", "None"], ans: 3, exp: "None." },
+  { q: "The blind spot is the region where -", opts: ["Image is dim", "Image is formed in strong light", "Optic disc is present", "Image is formed in the dark"], ans: 2, exp: "Optic disc is present." },
+  { q: "Anatomically, human ear can be divided into ____ major sections.", opts: ["2", "3", "4", "6"], ans: 1, exp: "3." },
+  { q: "The outer ear consists of -", opts: ["Only pinna", "Only external auditory meatus (ear canal)", "Both", "Pinna+ Membranous labyrinth"], ans: 2, exp: "Both." },
+  { q: "The ear of human is enclosed in -", opts: ["Mastoid bone", "Ethmoid Bone", "Frontal and parietal bone", "Temporal bone"], ans: 3, exp: "Temporal bone." },
+  { q: "The waxy substance secreting sebaceous glands present in skin of external auditory meatus are -", opts: ["Zeis gland", "Harderian gland", "Meibomian gland", "Ceruminous gland"], ans: 3, exp: "Ceruminous gland." },
+  { q: "Which of the following is correct about ear drum (tympanic membrane)?", opts: ["It is composed of connective tissues covered with skin inside and with mucous membrane outside", "It consists of connective tissues covered with skin outside and mucus membrane inside", "It consists of proteins-lipids-proteins only", "It consists of hyaline cartilage"], ans: 1, exp: "It consists of connective tissues covered with skin outside and mucus membrane inside." },
+  { q: "Which of the following is correct about ear ossicles?", opts: ["They are present in the middle ear", "The 3 ear ossicles (malleus, incus and stapes) are attached to one other in a chain-like fashion", "Malleus is attached to the ear drum and stapes to the oval window", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following options is wrong?", opts: ["Sound is amplified by ear ossicles", "In a person there are 2 malleus, 2 incus and 2 stapes", "The ear has two sensory functions (hearing+ balancing of body)", "The ear has no role in body balancing"], ans: 3, exp: "The ear has no role in body balancing." },
+  { q: "The structures for hearing and body balance are located in -", opts: ["External ear", "Middle ear", "Inner ear", "Eustachian tube"], ans: 2, exp: "Inner ear." },
+  { q: "The smallest bone in human body is -", opts: ["Incus", "Stapes", "Malleus", "Columella auris"], ans: 1, exp: "Stapes." },
+  { q: "Eustachian tube connects-", opts: ["Middle ear with pharynx", "Middle ear with inner ear", "Middle ear with external ear", "Left auricle with left ventricle"], ans: 0, exp: "Middle ear with pharynx." },
+  { q: "The fluid filled inner ear is called -", opts: ["Labyrinth", "Vestibule", "Saccule", "Utricle"], ans: 0, exp: "Labyrinth." },
+  { q: "The bony labyrinth is a -", opts: ["Solid structure", "Triangular bone without any channel", "Series of channels", "A series of channels present with lymph"], ans: 2, exp: "Series of channels." },
+  { q: "The fluid present between bony labyrinth and membranous labyrinth is -", opts: ["Endolymph", "Perilymph", "Lymph", "Serum"], ans: 1, exp: "Perilymph." },
+  { q: "The fluid present inside the membranous labyrinth is -", opts: ["Endolymph", "Perilymph", "Lymph", "Serum"], ans: 0, exp: "Endolymph." },
+  { q: "The coiled portion of the labyrinth is called -", opts: ["Superior colliculi", "Inferior colliculi", "Cochlea", "Fovea centralis"], ans: 2, exp: "Cochlea." },
+  { q: "Bony labyrinth contains -", opts: ["Lymph", "Endolymph", "Perilymph", "Haemolymph"], ans: 2, exp: "Perilymph." },
+  { q: "In the ear of human, sound waves pass from middle ear to inner ear through -", opts: ["Foramen ovale", "Fenestra ovalis", "Fenestra rotundus", "Tympanic membrane"], ans: 1, exp: "Fenestra ovalis." },
+  { q: "Membranous labyrinth is stato-acoustic organ because it is concerned with -", opts: ["Hearing", "Balancing", "Both a and b", "None"], ans: 2, exp: "Both a and b." },
+  { q: "Which of the following structures is not involved in gathering sound, directing it to the sensors, or amplifying it?", opts: ["Ear ossicles", "Pinna", "Eustachian tube", "Organ of Corti and cochlear canal"], ans: 2, exp: "Eustachian tube." },
+  { q: "Which of the following is not a membrane in the cochlea?", opts: ["Reissner's membrane", "Tectorial membrane", "Tympanic membrane", "Basilar membrane"], ans: 2, exp: "Tympanic membrane." },
+  { q: "Which of the following structures of the mammalian auditory system is involved in transduction of pressure changes in receptor potential?", opts: ["The tympanic membrane", "The ear ossicles", "The oval window", "Organ of Corti"], ans: 3, exp: "Organ of Corti." },
+  { q: "The hair cells in the ear that give auditory information are concentrated in the -", opts: ["oval window", "Organ of Corti", "Semicircular canal", "Ear drum"], ans: 1, exp: "Organ of Corti." },
+  { q: "The middle ear serves which auditory function?", opts: ["It converts air pressure waves into fluid pressure waves", "It converts fluid pressure waves into air pressure waves", "It converts air pressure waves into nerve impulses", "It converts fluid pressure waves into nerve impulses"], ans: 0, exp: "It converts air pressure waves into fluid pressure waves." },
+  { q: "Which of the following membrane gives us the ability to discriminate different pitches of sound?", opts: ["Tympanic membrane", "Tectorial membrane", "Basilar membrane", "Oval window"], ans: 2, exp: "Basilar membrane." },
+  { q: "Membranous structure separating the scala vestibuli and scala media of mammalian ear is called -", opts: ["Basilar membrane", "Reissner's membrane", "Tectorial membrane", "Tympanic membrane"], ans: 1, exp: "Reissner's membrane." },
+  { q: "Which of the following is known as \"Cochlear duct\"?", opts: ["Scala media", "Scala tympani", "Scala vestibuli", "None"], ans: 0, exp: "Scala media." },
+  { q: "In the internal ear, the \"organ of Corti\" bearing hair cells is located in -", opts: ["Scala media", "Scala tympani", "Scala vestibuli", "Sacculus"], ans: 0, exp: "Scala media." },
+  { q: "Scala vestibuli is connected with -", opts: ["Scala media", "Scala tympani", "Fenestra ovalis", "Foramen ovalis"], ans: 1, exp: "Scala tympani." },
+  { q: "Scala vestibuli, scala media and scala tympani contain -", opts: ["Endolymph, perilymph & endolymph respectively", "Perilymph, endolymph & perilymph respectively", "Perilymph, endolymph & endolymph respectively", "Perilymph, haemolymph & endolymph respectively"], ans: 1, exp: "Perilymph, endolymph & perilymph respectively." },
+  { q: "At the base of cochlea, scala vestibuli ends at the ____ window, while the scala tympani terminates at the ____ window which open into ____ ear-", opts: ["Oval, round, inner", "Oval, round, outer", "Round, oval, outer", "Oval, round, middle"], ans: 0, exp: "Oval, round, inner." },
+  { q: "The organ of Corti is located on the -", opts: ["Basilar membrane", "Reissner's membrane", "Tectorial membrane", "Tympanic membrane"], ans: 0, exp: "Basilar membrane." },
+  { q: "Above the row of hair cells in organ of Corti, is a thin elastic membrane called -", opts: ["Basilar membrane", "Reissner's membrane", "Tympanic membrane", "Tectorial membrane"], ans: 3, exp: "Tectorial membrane." },
+  { q: "The vestibular apparatus is composed of-", opts: ["3 semicircular canals", "Otolith organs", "Oval window", "a and b"], ans: 3, exp: "a and b." },
+  { q: "The otolith organ consists of -", opts: ["3 semicircular canals", "Utricle and saccule", "Utricle and semicircular canal", "Saccule and semicircular canal"], ans: 1, exp: "Utricle and saccule." },
+  { q: "3 semicircular canals located above utricle lie-", opts: ["In a chain-like fashion", "Perpendicular to each other", "In a triangular fashion", "In the same plane"], ans: 1, exp: "Perpendicular to each other." },
+  { q: "The saccule and utricle contain a projecting ridge called -", opts: ["Crista ampullaris", "Jacobson's organ", "Macula", "Lateral line"], ans: 2, exp: "Macula." },
+  { q: "Receptor cells in the human ear are located in -", opts: ["Organ of Corti only", "Jacobson's organ only", "Organ of Corti, Utricle, saccule & semicircular canal", "Eustachian canal only"], ans: 2, exp: "Organ of Corti, Utricle, saccule & semicircular canal." },
+  { q: "Static equilibrium is maintained by -", opts: ["Utricle", "Saccule", "Both a and b", "Semicircular canal"], ans: 2, exp: "Both a and b." },
+  { q: "The swollen base of semicircular canals contain projecting ridge is called -", opts: ["Macula", "Jacobson's organ", "Crista ampullaris", "Organ of Corti"], ans: 2, exp: "Crista ampullaris." },
+  { q: "The crista and macula are the specific receptor of the vestibular apparatus responsible for-", opts: ["Hearing", "Balance of body and posture", "Touch sensation", "Thermal sensation"], ans: 1, exp: "Balance of body and posture." },
+  { q: "Crista ampullaris -", opts: ["Is a chemoreceptor", "Maintains dynamic equilibrium", "Is a thermoreceptor", "Is an olfactoreceptor"], ans: 1, exp: "Maintains dynamic equilibrium." },
+  { q: "The purplish red pigment rhodopsin contained in the rods type of photoreceptor cells of the human eye, is a derivative of -", opts: ["Vitamin A", "Vitamin B1", "Vitamin C", "Vitamin D"], ans: 0, exp: "Vitamin A." },
+  { q: "When a neuron is in resting state i.e. not conducting any impulse, the axonal membrane is", opts: ["Comparatively more permeable to K+ ions and nearly impermeable to Na+ ions", "Comparatively more permeable to Na+ ions and nearly impermeable to K+ ions", "Equally permeable to both Na+ and K+ ions", "Impermeable to both Na+ and K+ ions"], ans: 0, exp: "Comparatively more permeable to K+ ions and nearly impermeable to Na+ ions." },
+  { q: "The impulses from CNS to skeletal muscles are relayed through", opts: ["SNS", "Somatic neural system", "PSNS", "All of these"], ans: 1, exp: "Somatic neural system." },
+  { q: "Sodium- Potassium pump across membrane, actively transports", opts: ["2-Na ions outwards and 3 K ions into the cell", "3-Na ions outwards and 2 K ions into the cell", "2-K ions out wards and 3 Na ions into the cell", "3 K ions outwards and 2 Na ions into the cell"], ans: 1, exp: "3-Na ions outwards and 2 K ions into the cell." },
+  { q: "The polarity of the membrane is reversed -", opts: ["During action potential", "When there is nerve impulse at the site", "And the membrane is said to be depolarized", "All of these statements are correct"], ans: 3, exp: "All of these statements are correct." },
+  { q: "Mark the correct statement", opts: ["Electrical synapses are more common in our neural system than chemical synapses", "The new potential in post synaptic neuron may be either excitatory or inhibitory", "Hypothalamus is the major coordination centre for sensory and motor signaling", "The tracts of nerve fibres that connect two cerebral hemispheres are called corpora bigemina"], ans: 1, exp: "The new potential in post synaptic neuron may be either excitatory or inhibitory." },
+  { q: "The cerebral cortex is", opts: ["The outer layer of cerebrum, called white matter", "Inner layer of cerebrum, called white matter", "The outer layer of cerebrum, called grey matter", "Inner layer of cerebrum, called grey matter"], ans: 2, exp: "The outer layer of cerebrum, called grey matter." },
+  { q: "The secretion of gastric juice is controlled by", opts: ["Cerebellum", "ANS", "Cerebrum", "Medulla"], ans: 1, exp: "ANS." },
+  { q: "Afferent neurons transmit impulses via dorsal nerve root to", opts: ["Sensory organs", "Effector organs", "CNS", "The statement in incorrect since afferent neurons pass via ventral nerve root"], ans: 2, exp: "CNS." },
+  { q: "Mark the correct statement", opts: ["Limbic system is involved in emotional expression", "Cerebral aqueduct passes through mid brain", "The meninx in contact of brain tissue is pia mater", "All of these"], ans: 3, exp: "All of these." },
+  { q: "Accomodation is due to contraction of", opts: ["Rectus and oblique muscles", "Iris muscles", "Ciliary body", "Ciliary muscles"], ans: 3, exp: "Ciliary muscles." },
+  { q: "Which cells (layer) of retina faces the lens", opts: ["Ganglion cells", "Photoreceptor cells", "Bipolar cells", "Pigmented cells"], ans: 0, exp: "Ganglion cells." },
+  { q: "Twilight vision is also called", opts: ["Scotopic vision and is the function of rods", "Scotopic vision and is the function of cones", "Photopic vision and is the function of rods", "Photopic vision and is the function of cones"], ans: 0, exp: "Scotopic vision and is the function of rods." },
+  { q: "The thinned-out portion of retina where only cones are densely packed is, called", opts: ["Blind spot", "Corpus luteum", "Macula lutea", "Fovea"], ans: 3, exp: "Fovea." },
+  { q: "Mark the correct statement", opts: ["The space between cornea and lens is filled with transparent gel", "When all cones are stimulated equally a sensation of no light (dark) is produced", "Rhodopsin is purplish red protein, hence called visual purple", "The anterior transparent portion of choroid is called cornea"], ans: 2, exp: "Rhodopsin is purplish red protein, hence called visual purple." },
+  { q: "The cochlea of ear contains", opts: ["Perilymph", "Aqueous humour", "Perilymph and endolymph", "Only endolymph"], ans: 2, exp: "Perilymph and endolymph." },
+  { q: "Mark the incorrect statement", opts: ["The ear ossicle attached to tympanic membrane is Malleus", "Opsin (of Rhodopsin) develops from vitamin A", "The pressure on ear drum is equalized by Eustachian tube", "Otolith organ consists of saccule and utricle"], ans: 1, exp: "Opsin (of Rhodopsin) develops from vitamin A." },
+  { q: "At the base of cochlea, the canal that ends at the oval window is", opts: ["Scala tympani", "Scala media", "Scala vestibuli", "Auditory"], ans: 2, exp: "Scala vestibuli." },
+  { q: "The stereo cilia of hair cells or organ of Corti are covered with a thick elastic membrane called", opts: ["Reissner's membrane", "Basilar membrane", "Tympanic membrane", "None of these"], ans: 3, exp: "None of these." },
+  { q: "Macula of labyrinth is bathed in", opts: ["Aqueous humour", "Vitreous humour", "Perilymph", "Endolymph"], ans: 3, exp: "Endolymph." },
+  { q: "The ripples in basilar membrane press the hair cells against the ____ to generate nerve impulse for auditory cortex", opts: ["Macula", "Otolith", "Round window", "None of these"], ans: 3, exp: "None of these." },
+  { q: "The region of vertebrate's eye where the optic nerve passes out of the retina is called", opts: ["Yellow spot", "Optic chiasma", "Fovea", "Blind spot"], ans: 3, exp: "Blind spot." },
+  { q: "Mark the wrong statement", opts: ["The most developed part of human brain is cerebrum", "The pitch of sound in human ear is determined by the spot of cochlear coil stimulated", "The part of CNS that acts as a master clock is amygdala", "None of these"], ans: 2, exp: "The part of CNS that acts as a master clock is amygdala." },
+  { q: "The amount of light that falls on retina is regulated by", opts: ["Lens", "Cornea", "Iris", "Ciliary muscles"], ans: 2, exp: "Iris." },
+  { q: "The path of extra sound in the ear is -", opts: ["scala vestibuli → scala media → scala tympani → fenestra ovalis → tympanic cavity → Eustachian tube → pharynx", "scala vestibuli → helicotrema → scala media → fenestra rotunda → Eustachian tube → pharynx", "scala vestibuli → helicotrema → scala tympani → fenestra rotunda → tympanic cavity → Eustachian tube → pharynx", "scala vestibuli → helicotrema → fenestra rotunda → Eustachian tube → pharynx."], ans: 2, exp: "scala vestibuli → helicotrema → scala tympani → fenestra rotunda → tympanic cavity → Eustachian tube → pharynx." },
+  { q: "Which of the following differences between the sympathetic and parasympathetic nervous systems is INCORRECT?", opts: ["sympathetic: prepares body for 'fight and flight'; parasympathetic: calms body down", "sympathetic: involves expenditure energy; parasympathetic: promotes conservation energy", "sympathetic: promotes hyperactivity; parasympathetic: promotes hypoactivity", "sympathetic: operates under voluntary control; parasympathetic: operates under involuntary control"], ans: 3, exp: "sympathetic operates under involuntary control; parasympathetic operates under involuntary control." },
+  { q: "The following table gives examples of the effect of the autonomic nervous system on certain parts of the body. Which entry is INCORRECT?", opts: ["parasympathetic: muscle of heart wall; effect: rate of contraction decreased", "sympathetic: sweat glands; effect: secretion stimulated", "parasympathetic: muscle of bronchioles; effect: relaxation promoted", "sympathetic: salivary glands; effect: secretion inhibited"], ans: 2, exp: "parasympathetic: muscle of bronchioles; effect: contraction promoted." },
+  { q: "The optic lobes in human are represented by the corpora", opts: ["bigemina", "arenacea", "allata", "quadrigemina"], ans: 3, exp: "quadrigemina." },
+  { q: "The human hind brain comprises three parts, one of which is :", opts: ["Spinal cord", "Corpus callosum", "Cerebellum", "Hypothalamus"], ans: 2, exp: "Cerebellum." },
+  { q: "Which part of the human ear plays no role in hearing as such but is otherwise very much required?", opts: ["Eustachian tube", "Organ of corti", "Vestibular apparatus", "Ear ossicles"], ans: 2, exp: "Vestibular apparatus." },
+  { q: "How do parasympathetic neural signals affect the working of the heart?", opts: ["Reduce both heart rate and cardiac output.", "Heart rate is increased without affecting the cardiac output.", "Both heart rate and cardiac output increase.", "Heart rate decreases but cardiac output increases."], ans: 0, exp: "Reduce both heart rate and cardiac output." },
+  { q: "Which one of the following statements is not correct?", opts: ["Retinal is the light absorbing portion of visual photo pigments.", "In retina the rods have the photopigment rhodopsin while cones have three different photopigments.", "Retinal is a derivative of Vitamin C.", "Rhodopsin is the purplish red protein present in rods only."], ans: 2, exp: "Retinal is a derivative of Vitamin A." },
+  { q: "Select the correct statement with respect to disorders of muscles in humans", opts: ["Rapid contractions of skeletal muscles causes muscle dystrophy", "Failure of neuromuscular transmission in myasthenia gravis can prevent normal swallowing.", "Accumulation of urea and creatine in the joints cause their inflammation", "An overdose of vitamin D causes osteoporosis"], ans: 1, exp: "Failure of neuromuscular transmission in myasthenia gravis can prevent normal swallowing." },
+  { q: "Which excitatory neurotransmitter is involved in the transmission of impulse at the neuro-muscular junction?", opts: ["Epinephrine", "Serotonin", "Acetyl choline", "Glycine"], ans: 2, exp: "Acetyl choline." },
+  { q: "Which one of the following is the functional unit of hearing?", opts: ["Utricle", "Organ of Zuckerkandl", "Organ of Corti", "Vestibular apparatus"], ans: 2, exp: "Organ of Corti." },
+  { q: "Which one of the following is not a refractive medium of the eye?", opts: ["Lens", "Vitreous humour", "Aqueous humour", "Pupil"], ans: 3, exp: "Pupil." },
+  { q: "A gymnast is able to balance his body upside down even in the total darkness because of", opts: ["tectorial membrane", "Organ of corti", "Cochlea", "Vestibular apparatus"], ans: 3, exp: "Vestibular apparatus." },
+  { q: "Which of the following regions of the brain is incorrectly paired with its function?", opts: ["Corpus callosum -Communication between the left and right cerebral cortices", "Cerebrum- Calculation and contemplation", "Medulla oblongata - Homeostatic control", "Cerebellum- Language comprehension"], ans: 3, exp: "Cerebellum- Language comprehension." },
+  { q: "Destruction of the anterior horn cells of the spinal cord would result in loss of", opts: ["Commissural impulses", "Integrating impulses", "Sensory impulses", "Voluntary motor impulses"], ans: 3, exp: "Voluntary motor impulses." },
+  { q: "In mammalian eye, the 'fovea' is the center of the visual field, where", opts: ["Only rods are present", "More rods than cones are found", "High density of cones occur, but has no rods", "The optic nerve leaves the eye"], ans: 2, exp: "High density of cones occur, but has no rods." },
+  { q: "Photosensitive compound in human eye is made up of:-", opts: ["Guanosine and Retinal", "Opsin and Retinal", "Opsin and Retinal", "Transducin and Retinene"], ans: 1, exp: "Opsin and Retinal." },
+  { q: "Choose the correct statement.", opts: ["Photoreceptors in the human eye are depolarized during darkness and become hyperpolarized in response to the light stimulus.", "Receptors do not produce graded potentials.", "Nociceptors respond to changes in pressure.", "Meissner's corpuscles are thermo receptors."], ans: 0, exp: "Photoreceptors in the human eye are depolarized during darkness and become hyperpolarized in response to the light stimulus." },
+  { q: "Cerebrum is a part of :", opts: ["Mesencephalon", "Metencephalon", "Prosencephalon", "Myelencephalon"], ans: 2, exp: "Prosencephalon." },
+  { q: "Which cell in the retina recognize colour?", opts: ["Rod cells", "Cone cells", "Both Rod and Cone cells", "Epithelial cells"], ans: 1, exp: "Cone cells." },
+  { q: "Acetylcholine is a :", opts: ["Hormone", "Brain peptide", "Neurotransmitter", "Digestive enzyme"], ans: 2, exp: "Neurotransmitter." },
+  { q: "Vagus nerve is a :", opts: ["Vth cranial nerve", "VIth cranial nerve", "IXth cranial nerve", "Xth cranial nerve"], ans: 3, exp: "Xth cranial nerve." },
+  { q: "The fovea of eye", opts: ["has the lowest light threshold", "is the region of highest visual activity", "contains only green and red cones", "contains only rods"], ans: 1, exp: "is the region of highest visual activity." },
+  { q: "The function of our visceral organs are controlled by", opts: ["Sympathetic and somatic nervous system", "Sympathetic and parasympathetic nervous system", "Central and somatic nervous system", "None of the above"], ans: 1, exp: "Sympathetic and parasympathetic nervous system." },
+  { q: "In homeotherms the brain centre which regulate body temperature is located in", opts: ["Cerebrum", "Cerebellum", "Medulla oblongata", "Hypothalamus"], ans: 3, exp: "Hypothalamus." },
+  { q: "The basilar membrane of the cochlea", opts: ["Is unaffected by movement of fluid in the scala of vestibule", "Covers the oval window and round window", "Vibrates in a pattern determined by the form of the travelling wave in the fluids of the choclea", "Vibrates when body is subjected to linear acceleration."], ans: 2, exp: "Vibrates in a pattern determined by the form of the travelling wave in the fluids of the choclea." },
+  { q: "Third ventricle of brain is located in", opts: ["Diencephalon", "Rhombencephalon", "Mesencephalon", "Cerebrum"], ans: 0, exp: "Diencephalon." },
+  { q: "Left and right cerebral hemispheres are linked by a broad nerve band called", opts: ["Corpus callosum", "Corpus luteum", "Corpora quadregemina", "Anterior choroid plexus"], ans: 0, exp: "Corpus callosum." },
+  { q: "Human body temperature is regulated by the centre located in", opts: ["Cerebrum", "Cerebellum", "Medulla", "Hypothalamus"], ans: 3, exp: "Hypothalamus." },
+  { q: "Which one is correct?", opts: ["Biceps of upper arm - smooth muscle fibre.", "Abdominal muscle - smooth muscle fibre.", "Iris- Involuntary muscle", "Heart wall - Involuntary and unstriated muscle"], ans: 2, exp: "Iris- Involuntary muscle." },
+  { q: "Myelin sheath is produced by :", opts: ["Astrocytes and Schwann cells", "Oligodendrocytes and Osteoclasts", "Osteoclasts and Astrocytes", "Schwann cells and Oligodendrocytes"], ans: 3, exp: "Schwann cells and Oligodendrocytes." },
+  { q: "Receptor sites for neurotransmitters are present on :", opts: ["Pre-synaptic membrane", "Tips of axons", "Post-synaptic membrane", "Membrane of synaptic vesicles"], ans: 2, exp: "Post-synaptic membrane." },
+  { q: "Good vision depends on adequate intake of carotene rich food : Select the best option from the following statements : I. Vitamin A derivatives are formed from carotene II. The photopigments are embedded in the membrane discs of the inner segment III. Retinal is a derivative of Vitamin A IV. Retinal is a light absorbing part of all the visual photopigments", opts: ["I, III and IV", "I and III", "II, III and IV", "I and II"], ans: 0, exp: "I, III and IV." },
+  { q: "Information on the right side of our visual world is processed by which side(s) of the brain?", opts: ["Right", "Left", "Both right and left", "Neither right nor left"], ans: 1, exp: "Left." },
+  { q: "If myelin sheath present completely around axon what will be happened?", opts: ["Conduction will be as usual", "Conduction is slow", "Conduction is fast", "Conduction is stoppped"], ans: 3, exp: "Conduction is stoppped." },
+  { q: "In nerve resting membrane potential is maintained by :", opts: ["Active transport", "Passive diffusion", "Both (a) and (b)", "Unidirectional flow of ion"], ans: 2, exp: "Both (a) and (b)." },
+  { q: "Read the following statements and choose the correct answer of the question following them. I. Both nose and tongue detect dissolve chemicals. II. The chemical senses of gustation and olfactory are functionally similar III. The chemical senses of gustation and olfactory are interrelated IV. With each taste of food the brain integrates the differential input from the taste buds and a complex flavour is perceived. How many of the above statements is / are correct.", opts: ["One", "Two", "Three", "Four"], ans: 3, exp: "Four." },
+  { q: "If Chlorolab of retina is damaged which colour can not be visualised?", opts: ["Green", "Red", "Yellow", "Many colours"], ans: 3, exp: "Many colours." },
+  { q: "The transparent lens in the human eye is held in its place by", opts: ["smooth muscles attached to the iris", "ligaments attached to the iris", "ligaments attached to the ciliary body", "smooth muscles attached to the ciliary body"], ans: 2, exp: "ligaments attached to the ciliary body." },
+  { q: "Which of the following structures or regions is incorrectly paired with its functions?", opts: ["Hypothalamus: production of releasing hormones and regulation of temperature, hunger and thirst.", "Limbic system : consists of fibre tracts that interconnect different regions of brain; controls movement.", "Medulla oblongata : controls respiration and cardiovascular reflexes.", "Corpus callosum : band of fibers connecting left and right cerebral hemispheres."], ans: 1, exp: "Limbic system : consists of fibre tracts that interconnect different regions of brain; controls movement." },
+  { q: "Nissl bodies are mainly composed of", opts: ["Nucleic acids and SER", "DNA and RNA", "Proteins and lipids", "Free ribosomes and RER"], ans: 3, exp: "Free ribosomes and RER." },
+  { q: "Which of the following is not an autoimmune disease?", opts: ["Alzheimer's disease", "Rheumatoid arthritis", "Psoriasis", "Vitiligo"], ans: 0, exp: "Alzheimer's disease." },
+  { q: "When a person thinks and solve problems, which area of the cerebrum is envolved?", opts: ["Frontal lobe", "Parietal lobe", "Occipital lobe", "Temporal lobe"], ans: 0, exp: "Frontal lobe." },
+  { q: "The black pigment in the eye, which reduces the internal reflection, is located in", opts: ["retina", "iris", "sclerotic", "cornea"], ans: 0, exp: "retina." },
+  { q: "The main reason for some neurons being myelinated is to", opts: ["protect the nerve against physical damage.", "increase the diameter of the axon to slow the speed of the action potential.", "increase the speed of the action potential.", "increase metabolic activity to maintain nerve function."], ans: 2, exp: "increase the speed of the action potential." },
+  { q: "Which maintains static equilibrium -", opts: ["Cerebrum", "Utricle & Saccule", "Cerebellum", "Semicircular canal"], ans: 1, exp: "Utricle & Saccule." },
+  { q: "Which part of the brain is responsible for thermoregulation?", opts: ["Cerebrum", "Hypothalamus", "Corpus callosum", "Medulla oblongata"], ans: 1, exp: "Hypothalamus." },
+  { q: "Which of the following statements is correct?", opts: ["Cornea is an external, transparent and protective proteinacious covering of the eye-ball.", "Cornea consists of dense connective tissue of elastin and can repair itself.", "Cornea is convex, transparent layer which is highly vascularised.", "Cornea consists of dense matrix of collagen and is the most sensitive portion the eye."], ans: 0, exp: "Cornea is an external, transparent and protective proteinacious covering of the eye-ball." },
+  { q: "Which of the following receptors are specifically responsible for maintenance of balance of body and posture?", opts: ["Crista ampullaris and macula", "Basilar membrane and otoliths", "Hair cells and organ of corti", "Tectorial membrane and macula"], ans: 0, exp: "Crista ampullaris and macula." },
+  { q: "Which of the following statements is not correct?", opts: ["In the knee-jerk reflex, stimulus is the stretching of muscle and response is its contraction", "An action potential in an axon does not move backward because the segment behind is in a refractory phase", "Depolarisation of hair cells of cochlea results in the opening of the mechanically gated potassium-ion channels", "Rods are very sensitive and contribute to daylight vision"], ans: 3, exp: "Rods are very sensitive and contribute to daylight vision." }
+];
+
+let currentQ = 0;
+let userAnswers = {};
+let markedQuestions = new Set();
+let visited = new Set();
+
+function initQuiz() {
+  userAnswers = {};
+  markedQuestions.clear();
+  visited.clear();
+  currentQ = 0;
+  renderPalette();
+  renderQuestion();
+  updateStats();
+}
+
+function renderPalette() {
+  const palette = document.getElementById('palette');
+  palette.innerHTML = '';
+  for (let i = 0; i < questions.length; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i] !== undefined) {
+      btn.classList.add('attempted');
+    } else if (markedQuestions.has(i)) {
+      btn.classList.add('marked');
+    } else if (visited.has(i)) {
+      btn.classList.add('not-answered');
+    } else {
+      btn.classList.add('not-visited');
+    }
+    if (markedQuestions.has(i) && userAnswers[i] !== undefined) {
+      btn.classList.remove('attempted', 'marked');
+      btn.classList.add('answered-marked');
+    }
+    btn.onclick = () => {
+      currentQ = i;
+      renderPalette();
+      renderQuestion();
+      updateStats();
+    };
+    palette.appendChild(btn);
+  }
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  visited.add(currentQ);
+  const box = document.getElementById('questionBox');
+  let html = `<div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>`;
+  q.opts.forEach((opt, idx) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== undefined) {
+      cls += ' disabled';
+      if (idx === q.ans) cls += ' correct-ans';
+      else if (idx === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    html += `<div class="${cls}" onclick="selectOption(${idx})">${String.fromCharCode(65 + idx)}. ${opt}</div>`;
+  });
+  if (userAnswers[currentQ] !== undefined) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    html += `<div class="feedback ${isCorrect ? 'correct-fb' : 'wrong-fb'} show">`;
+    html += isCorrect ? '✅ Correct!' : '❌ Wrong!';
+    html += `<div class="exp">Explanation: ${q.exp}</div></div>`;
+  } else {
+    html += `<div class="feedback" id="feedback"></div>`;
+  }
+  box.innerHTML = html;
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${questions.length}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === questions.length - 1;
+  const markBtn = document.getElementById('btnMark');
+  if (markedQuestions.has(currentQ)) {
+    markBtn.textContent = '🔖 Unmark';
+    markBtn.className = 'btn btn-marked';
+  } else {
+    markBtn.textContent = '🔖 Mark for Review';
+    markBtn.className = 'btn btn-warning';
+  }
+}
+
+function selectOption(idx) {
+  if (userAnswers[currentQ] !== undefined) return;
+  userAnswers[currentQ] = idx;
+  markedQuestions.delete(currentQ);
+  renderQuestion();
+  renderPalette();
+  updateStats();
+}
+
+function toggleMark() {
+  if (markedQuestions.has(currentQ)) {
+    markedQuestions.delete(currentQ);
+  } else {
+    markedQuestions.add(currentQ);
+  }
+  renderPalette();
+  renderQuestion();
+}
+
+function prevQuestion() {
+  if (currentQ > 0) {
+    currentQ--;
+    renderPalette();
+    renderQuestion();
+    updateStats();
+  }
+}
+
+function nextQuestion() {
+  if (currentQ < questions.length - 1) {
+    currentQ++;
+    renderPalette();
+    renderQuestion();
+    updateStats();
+  }
+}
+
+function updateStats() {
+  const total = questions.length;
+  let attempted = 0, correct = 0, wrong = 0, marked = 0, notVisited = 0, notAnswered = 0;
+  for (let i = 0; i < total; i++) {
+    if (userAnswers[i] !== undefined) {
+      attempted++;
+      if (userAnswers[i] === questions[i].ans) correct++;
+      else wrong++;
+    } else if (visited.has(i)) {
+      notAnswered++;
+    } else {
+      notVisited++;
+    }
+    if (markedQuestions.has(i)) marked++;
+  }
+  const marks = correct * 1 - wrong * 0.25;
+  document.getElementById('sbTotal').textContent = total;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = marked;
+  document.getElementById('sbCorrect').textContent = correct;
+  document.getElementById('sbWrong').textContent = wrong;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function showResult() {
+  const total = questions.length;
+  let correct = 0, wrong = 0;
+  for (let i = 0; i < total; i++) {
+    if (userAnswers[i] !== undefined) {
+      if (userAnswers[i] === questions[i].ans) correct++;
+      else wrong++;
+    }
+  }
+  const marks = correct * 1 - wrong * 0.25;
+  const percent = ((marks / total) * 100).toFixed(1);
+  document.getElementById('rTotal').textContent = total;
+  document.getElementById('rCorrect').textContent = correct;
+  document.getElementById('rWrong').textContent = wrong;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  document.getElementById('resultModal').classList.remove('show');
+  if (confirm('Reset the quiz? All progress will be lost.')) {
+    initQuiz();
+  }
+}
+
+initQuiz();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 18; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

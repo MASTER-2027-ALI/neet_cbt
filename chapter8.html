@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 8: Cell: The Unit of Life - CBT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+  .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+  .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+  .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+  .stat-box .lbl { font-size: 11px; color: #4a5568; }
+  .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+  .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+  .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+  .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+  .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+  .question-box { flex: 1; margin-bottom: 15px; }
+  .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; }
+  .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+  .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+  .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+  .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+  .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+  .option.disabled { pointer-events: none; opacity: 0.8; }
+  .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+  .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+  .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+  .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+  .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+  .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+  .result-item .label { font-size: 12px; color: #4a5568; }
+  .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+  .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+  .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+      <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+      <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+      <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+      <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+      <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+      <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Cell: The Unit of Life</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+      <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+      <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+      <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+      <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q: "Unicellular organisms are —", opts: ["Not capable of independent existence because they cannot perform all the essential functions of life", "Not capable of independent existence but they can perform all the essential vital functions", "Are capable of independent existence and perform all the essential vital functions", "Are capable to lead independent existence but they perform some vital functions"], ans: 2, exp: "Are capable of independent existence and perform all the essential vital functions." },
+  { q: "Select the incorrect statement —", opts: ["Any thing less than a complete structure of a cell does not ensure independent living", "Anton Von Leeuwenhoek first saw and described a living cell", "Robert Brown discovered cell", "Cell is the basic unit of structure and function of all organisms"], ans: 2, exp: "Robert Brown discovered cell." },
+  { q: "Cell is the fundamental structural and functional unit of all living organisms is evidenced by the facts like —", opts: ["Any thing less than a complete structure of a cell does not ensure independent living", "Subcellular components can regenerate whole cell", "A cell arises by fusion of two cells", "All cells are totipotent"], ans: 0, exp: "Any thing less than a complete structure of a cell does not ensure independent living." },
+  { q: "Select the right option which relates to Schwann regarding the following statement: I. He reported that cells have a thin outer layer which is today known as plasma membrane. II. Cell wall is a unique character of the plant cell. III. Body of plants and animals are composed of cells and products of cells.", opts: ["All are correct", "Only III is correct", "II and III are correct", "All are incorrect"], ans: 0, exp: "All are correct." },
+  { q: "Which of the following statements was not explained in the cell theory given jointly by Schleiden and Schwann?", opts: ["All living organisms are composed of cells and products of cells", "Cell is the structural and functional unit of living organisms", "Explanation of formation of new cells", "None"], ans: 2, exp: "Explanation of formation of new cells." },
+  { q: "Choose the wrong option —", opts: ["Mycoplasma is the smallest cell (0.3 μm in length)", "Bacteria are 3 to 5 μm", "The largest cell is the egg of an ostrich", "Nerve cells are some of the smallest cells"], ans: 3, exp: "Nerve cells are some of the smallest cells." },
+  { q: "I. The shape of the cells may vary with the function they perform. II. Human RBC is about 7.0 μm in diameter. III. Cytoplasm is the main arena of cellular activities. IV. Various chemical reactions occur in cytoplasm to keep the cell in the living state.", opts: ["All are correct", "Only I and II are correct", "Only IV is correct", "All are wrong"], ans: 0, exp: "All are correct." },
+  { q: "Go through the following statements and then select correct option(s) for prokaryotic cells: I. They are generally smaller than eukaryotic cells. II. They multiply more rapidly than the eukaryotic cells. III. They are presented by bacteria, B.G.A, mycoplasma and PPLO.", opts: ["All", "II and III", "Only III", "I and III"], ans: 0, exp: "All." },
+  { q: "All the statements are correct except —", opts: ["The organization of the prokaryotic cells is fundamentally similar", "Prokaryotes show a wide variety of shapes and functions", "Few prokaryotes have cell walls", "There is no well-defined nucleus"], ans: 2, exp: "Few prokaryotes have cell walls." },
+  { q: "Organization of a cell has not been achieved in —", opts: ["Bacteria", "Bacteriophage", "Amoeba", "Diatom"], ans: 1, exp: "Bacteriophage." },
+  { q: "Which of the following is (are) exception(s) to the cell theory —", opts: ["Viruses", "Viriods", "Prions", "All"], ans: 3, exp: "All." },
+  { q: "Arrange the following cells in an ascending order of their sizes: I. Mycoplasma, II. Ostrich egg, III. Human RBC, IV. Bacteria", opts: ["I, II, III, IV", "I, IV, III, II", "II, IV, I, III", "IV, III, II, I"], ans: 1, exp: "I, IV, III, II." },
+  { q: "Match the column I with column II correctly: Column I: I. Typical bacteria, II. Viruses, III. PPLO, IV. A typical eukaryotic cells; Column II: A. 10-20 μm, B. 1-2 μm, C. 0.1 μm, D. 0.02-0.2 μm", opts: ["I-B, II-D, III-C, IV-A", "I-A, II-B, III-C, IV-D", "I-D, II-C, III-B, IV-A", "I-B, II-D, III-A, IV-C"], ans: 0, exp: "I-B, II-D, III-C, IV-A." },
+  { q: "Which of the following is not a characteristic of prokaryotic cell —", opts: ["Mesosome", "Circular DNA", "Photosynthetic membrane system", "Membrane bound organelles"], ans: 3, exp: "Membrane bound organelles." },
+  { q: "Which of the following statements concerning prokaryotes is/are true?", opts: ["Because prokaryotes do not contain organelles, they cannot photosynthesize or carry out cellular respiration", "Prokaryotes have no chromosomes and therefore lack DNA", "Prokaryotic flagella are similar in structure to eukaryotic flagella", "None of the above"], ans: 3, exp: "None of the above." },
+  { q: "All of the following statements are correct about plasmids except —", opts: ["they are extrachromosomal DNA", "They are smaller, circular, double stranded naked DNA that confer certain unique phenotypic characters to some bacteria like resistance to antibiotics", "They are used in genetic engineering", "It helps in the replication of nucleoid"], ans: 3, exp: "It helps in the replication of nucleoid." },
+  { q: "Which one is correct about mesosome?", opts: ["A characteristic of bacteria", "Infolding of cell membrane", "May be in the form of vesicles, tubules or lamellae", "All"], ans: 3, exp: "All." },
+  { q: "I. It is the extension of plasma membrane into the cytoplasm. II. It helps in cell wall formation, DNA replication, helps in respiration, secretion processes, increases the surface area of plasma membrane and enzymatic contents, also helps in cytokinesis. III. It is the characteristic of bacterial cells. The above features are attributed to bacterial —", opts: ["Nucleoid", "Plasmid", "Mesosome", "Pilus"], ans: 2, exp: "Mesosome." },
+  { q: "Most prokaryotic cells, particularly the bacterial cells, have —", opts: ["A chemically simple cell envelope", "A chemically complex cell envelope", "No cell envelope", "Cell envelope only in the form a cell membrane"], ans: 1, exp: "A chemically complex cell envelope." },
+  { q: "Most of the bacterial cell envelope consists of —", opts: ["Only the cell membrane", "The cell wall and cell membrane", "A tightly bound 3 layered structure", "Only glycocalyx"], ans: 2, exp: "A tightly bound 3 layered structure." },
+  { q: "Which one is correct about the bacterial cell envelope?", opts: ["The outmost cell wall followed by glycocalyx and then plasma membrane", "The outer most glycocalyx followed by plasma membrane and then cell wall", "The outermost glycocalyx followed by cell wall and plasma membrane", "Cell envelope is chemically very simple and consists of only plasma membrane"], ans: 2, exp: "The outermost glycocalyx followed by cell wall and plasma membrane." },
+  { q: "Which of the following pairs is mismatched?", opts: ["Glycocalyx - may be capsule or slime layer", "Pili - Reproduction", "Cell wall - Protective, determines shape, prevents from bursting", "Flagella, Pilli and Fimbriae - Surface structures of bacterial cell"], ans: 1, exp: "Pili - Reproduction." },
+  { q: "Which is mismatched pair?", opts: ["Capsule - Thick and tough glycocalyx", "Slime layer - Loose glycocalyx", "Pili - Motility organ", "Bacterial cells - Motile or nonmotile"], ans: 2, exp: "Pili - Motility organ." },
+  { q: "Which of the following is not true about fimbriae?", opts: ["they are composed of protein", "They may be used for attachment", "They are small bristle like fibres sprouting out of the bacterial cell", "They form pellicle"], ans: 3, exp: "They form pellicle." },
+  { q: "Which is false?", opts: ["Bacterial glycocalyx differs in composition and thickness among different bacteria", "Bacterial envelope has a 3 layered structure and each layer has a distinct function but they act as a single protective unit", "Bacteria are organelleless and sans ribosomes", "Number and arrangement of flagella are variable in bacteria"], ans: 2, exp: "Bacteria are organelleless and sans ribosomes." },
+  { q: "Bacteria can be classified into 2 groups on the basis of —", opts: ["Differences in the cell envelopes", "The manner in which they respond to the staining procedure developed by Gram", "Occurrence of pili", "a and b"], ans: 3, exp: "a and b." },
+  { q: "Bacterial flagellum consists of all of the following parts except —", opts: ["Filament", "Microtubule", "Hook", "Basal body"], ans: 1, exp: "Microtubule." },
+  { q: "Select the incorrect statement —", opts: ["Filament of the bacterial flagella is the longest part and extends from the cell surface to the outside", "In prokaryotes, ribosomes (70S) are associated with plasma membrane", "Size of prokaryotic ribosomes (70S) is 15 nm x 20 nm", "None"], ans: 3, exp: "None." },
+  { q: "Select the incorrect statement about prokaryotic ribosomes —", opts: ["50S and 30S subunits unite to form 70S ribosomes", "Polysome / polyribosome consists of many ribosomes only", "Ribosome is the site of protein synthesis", "Polysome indicate the synthesis of identical polypeptide in multiple copies"], ans: 1, exp: "Polysome / polyribosome consists of many ribosomes only." },
+  { q: "Which of the following statement is false for prokaryotic cell inclusions?", opts: ["These are storage granules in the cytoplasm", "They are membranous", "Phosphate granules, cyanophycean granules and glycogen granules are the examples of cell inclusions", "Gas vacuole is found in B.G.A and purple and green photosynthetic bacteria"], ans: 1, exp: "They are membranous." },
+  { q: "The eukaryotes include —", opts: ["Fungi", "Protists", "Plants and animals", "All"], ans: 3, exp: "All." },
+  { q: "If you removed the fimbriae from a bacterial cell, which of the following would you expect to happen?", opts: ["The bacteria could no longer swim", "The bacteria would not adhere to the host tissue", "Transportation of molecules across the membrane would stop", "The shape of bacteria would change"], ans: 1, exp: "The bacteria would not adhere to the host tissue." },
+  { q: "There is an extensive compartmentalization of cytoplasm through membrane bound organelles in all except —", opts: ["Prokaryotes", "Diatoms", "Plants and fungi", "Animals"], ans: 0, exp: "Prokaryotes." },
+  { q: "Plant cells differ from animal cells in having —", opts: ["large vacuole, plastid and cell wall", "Cell wall, plastid, centriole", "Cell wall, plastid and mitochondria", "Cell membrane, plastid and cell wall"], ans: 0, exp: "large vacuole, plastid and cell wall." },
+  { q: "Cell membrane is absent in living —", opts: ["Prokaryotic cells", "RBC", "Mesophyll cell", "None"], ans: 3, exp: "None." },
+  { q: "The detailed structure of the membrane was studied in the 1950s only after the advent of the —", opts: ["Phase contrast microscope", "Electrophoresis", "Electron microscope", "DNA probes"], ans: 2, exp: "Electron microscope." },
+  { q: "The best material for the study of structure of cell membrane is —", opts: ["RBC of human", "RBC of frog", "Kidney cell", "Muscle cell"], ans: 0, exp: "RBC of human." },
+  { q: "Biochemical investigation reveals that the cell membrane is composed of —", opts: ["Proteins + Lipids only", "Carbohydrate + Protein only", "Carbohydrate + Lipids + Proteins", "Carbohydrate + lipids only"], ans: 2, exp: "Carbohydrate + Lipids + Proteins." },
+  { q: "In cell membrane, lipids are arranged in a —", opts: ["Bilayer", "Mono layer", "Multilayer", "Unilayer at some places and bilayers at other places"], ans: 0, exp: "Bilayer." },
+  { q: "The most abundant lipid in the cell membrane is —", opts: ["Cutin", "Cholesterol", "Steroid", "Phospholipid / phosphoglycerides"], ans: 3, exp: "Phospholipid / phosphoglycerides." },
+  { q: "Lipids are arranged within the membrane with —", opts: ["Polar heads towards inner side and the hydrophobic tails towards outer side", "Both heads and tails towards outer side", "Heads towards outer side and tail towards inside", "Both heads and tails towards inner side"], ans: 2, exp: "Heads towards outer side and tail towards inside." },
+  { q: "Why tail of lipids in the membrane are towards inner part?", opts: ["The tail is non polar hydrocarbon and so protected within an aqueous environment", "The tail is polar hydrocarbon and so is protected from aqueous environment", "The non polar or hydrophobic hydrocarbon tails of lipid, being on inner side ensures their protection from aqueous environment", "The tail is hydrophilic so it tends to be located in the aqueous inner side of membrane"], ans: 2, exp: "The non polar or hydrophobic hydrocarbon tails of lipid, being on inner side ensures their protection from aqueous environment." },
+  { q: "Which of the following statement is incorrect about the plasma membrane?", opts: ["The ratio of proteins and lipid varies considerably in different cell types", "52% protein and 40% lipids are in the membrane of human RBC", "The arrangement of proteins (P) and lipids (L) is L-P-P-L", "Head of lipid (fatty acid) is hydrophilic"], ans: 2, exp: "The arrangement of proteins (P) and lipids (L) is L-P-P-L." },
+  { q: "The molecules in a membrane that limit its permeability are the —", opts: ["Carbohydrates", "Phospholipids", "Proteins", "Water"], ans: 2, exp: "Proteins." },
+  { q: "An improved model of cell membrane, a widely accepted model is the —", opts: ["Unit membrane model", "Fluid mosaic model", "Danielli and Davson's model", "Robertson's model"], ans: 1, exp: "Fluid mosaic model." },
+  { q: "Who proposed the fluid mosaic model of plasma membrane in 1972?", opts: ["Singer and Nicolson", "Robertson", "Robert Brown", "Camillo Golgi"], ans: 0, exp: "Singer and Nicolson." },
+  { q: "Which of the following statements is not true about the cell membrane?", opts: ["It is present in both plant and animal cells", "Lipid is present in it as bilayer", "Proteins may be peripheral or integral in it", "carbohydrates are never found in it"], ans: 3, exp: "carbohydrates are never found in it." },
+  { q: "According to the fluid mosaic model of the cell membrane, the proteins are located —", opts: ["In a continuous layer over the outer surface of the membrane only", "In a continuous layer over the inner surface only", "In discontinuous arrangement, both on the surface (as peripheral proteins) and in the interior of the membrane (integral proteins)", "In the middle of the membrane, between the lipid layers only"], ans: 2, exp: "In discontinuous arrangement, both on the surface (as peripheral proteins) and in the interior of the membrane (integral proteins)." },
+  { q: "According to the modern concept, cell membrane is —", opts: ["Solid", "Quasifluid", "Fluid", "Solidified sheath"], ans: 2, exp: "Fluid." },
+  { q: "The fluid mosaic model explains —", opts: ["Only structural aspects of cell membrane", "Only functional aspects of cell membrane", "Both structural and functional aspects of cell membrane", "Only fluidity of membrane"], ans: 2, exp: "Both structural and functional aspects of cell membrane." },
+  { q: "Integral cell membrane proteins —", opts: ["Are partially embedded in lipid layers", "Are completely embedded in lipid layers", "Show lateral but not vertical movements within bilayer of lipid", "All"], ans: 3, exp: "All." },
+  { q: "Select the incorrect statement —", opts: ["A membrane is a mosaic or composite of diverse lipid and proteins", "In 2003, the chemistry Nobel Prize was awarded for work on aquaporins", "A membrane is held together primarily by hydrophobic attraction", "Proteins, not lipids, are responsible for fluid behaviour"], ans: 3, exp: "Proteins, not lipids, are responsible for fluid behaviour." },
+  { q: "Fluid nature of membrane is able to explain —", opts: ["Cell growth, cell division", "Formation of intercellular junction", "Secretion and permeation of various substances across membrane", "All"], ans: 3, exp: "All." },
+  { q: "Plasma membrane is —", opts: ["Semipermeable", "permeable", "Selective / differentially permeable", "Impermeable"], ans: 2, exp: "Selective / differentially permeable." },
+  { q: "Cell membrane is selective permeable. This means that it —", opts: ["Allows all materials to pass through", "Allows only water to pass through", "Allow only certain materials to pass through", "Allow only ions to pass through"], ans: 2, exp: "Allow only certain materials to pass through." },
+  { q: "Which one is false about osmosis?", opts: ["It is a specific form of diffusion", "It refers to the movement of water along its concentration gradient", "It is a passive movement of water", "It occurs through a carrier protein and needs ATP"], ans: 3, exp: "It occurs through a carrier protein and needs ATP." },
+  { q: "Neutral solutes may move across the membrane by a process of simple ______ concentration gradients (from higher to lower concentration) —", opts: ["method, against", "transport, along", "Diffusion, along", "Active transport, against"], ans: 2, exp: "Diffusion, along." },
+  { q: "The polar molecules —", opts: ["Can pass through bilayers of lipid of plasma membrane", "Cannot pass through bilayers of lipid of plasma membrane", "Need carrier proteins of the membrane to facilitate their transport across the membrane", "b and c"], ans: 3, exp: "b and c." },
+  { q: "What would you expect to happen if you removed the cell wall from a plant cell and placed it into a drop of water —", opts: ["The cell would begin to grow", "The cell would shrink", "The cell would burst", "Nothing would happen"], ans: 2, exp: "The cell would burst." },
+  { q: "Algal cell wall consists of —", opts: ["Cellulose", "Galactans", "Mannans and minerals like CaCO₃", "All"], ans: 3, exp: "All." },
+  { q: "The cell wall of plants consists of —", opts: ["Cellulose", "hemicellulose", "Pectins and proteins", "All"], ans: 3, exp: "All." },
+  { q: "A cell without cell wall would also lack —", opts: ["Mitochondria", "Chloroplast", "ER", "biomembrane"], ans: 3, exp: "biomembrane." },
+  { q: "Which statement about the plant cell wall is not true?", opts: ["Its principal chemical composition is polysaccharide", "It is rigid", "It completely isolates adjacent cells", "All"], ans: 2, exp: "It completely isolates adjacent cells." },
+  { q: "Middle lamellae —", opts: ["Mainly consists of Ca-pectate", "Holds different neighbouring cells together", "Is formed as cell plate during cytokinesis", "All"], ans: 3, exp: "All." },
+  { q: "A mutant cell, unable to manufacture cellulose would be unable to —", opts: ["Build a cell wall", "Capture sunlight", "Store food", "Divide"], ans: 0, exp: "Build a cell wall." },
+  { q: "The innermost portion of a mature plant cell wall is the —", opts: ["Primary cell wall", "Plasma membrane", "Secondary cell wall", "Plasmodesmata"], ans: 1, exp: "Plasma membrane." },
+  { q: "Choose the false statement —", opts: ["The 1° cell wall of young cell is capable of growth", "Growth of 1° cell wall diminishes as the cell matures", "1° cell wall is very non-elastic", "Secondary cell wall is thicker, stronger and positioned between the 1° cell wall and cell membrane"], ans: 2, exp: "1° cell wall is very non-elastic." },
+  { q: "Choose the correct statement —", opts: ["The secondary cell wall forms when the growth of cell stops", "The secondary wall is inextensible", "Plasmodesmata consists of a fine pore / canal in the cell wall and middle lamella. It is a cytoplasmic bridge among neighbouring cells", "All"], ans: 3, exp: "All." },
+  { q: "ER, GB, lysosome and vacuoles are components of endomembranous system because —", opts: ["Their structures are distinct", "Their functions are distinct", "Their functions are coordinated", "All"], ans: 2, exp: "Their functions are coordinated." },
+  { q: "Read the following statements (A - D) and answer as asked next to them. A. Mitochondria and chloroplast are energy transducers. B. The functions of mitochondria, chloroplast and peroxisome are not coordinated with ER, GB, lysosome and vacuoles, so they are a part of the endomembranous system. C. Internal compartmentalization causes the division of labour within eukaryotic cells that greatly increases overall cellular function. D. Prokaryotic cells have various types of cell organelles. How many of the above statements are correct?", opts: ["One", "Three", "Four", "Two"], ans: 1, exp: "Three." },
+  { q: "Which of the following cell organelles were discovered after the introduction of electron microscope?", opts: ["Mitochondria", "Endoplasmic Reticulum", "Ribosomes", "Both b and c"], ans: 3, exp: "Both b and c." },
+  { q: "Endoplasmic reticulum is called RER when it has ______ on its surface —", opts: ["Elementary particles", "Ribosomes", "Oxysome", "Quantasomes"], ans: 1, exp: "Ribosomes." },
+  { q: "Cholesterol is synthesised by —", opts: ["Eggs", "SER", "RER", "Golgi Body"], ans: 1, exp: "SER." },
+  { q: "Ribosomes are found in all except —", opts: ["Bacteria", "Mitochondria and chloroplast", "RER", "GB"], ans: 3, exp: "GB." },
+  { q: "The proteins that will function outside the cytosol are made by —", opts: ["GB", "Ribosomes in mitochondria", "Ribosomes on RER", "Ribosomes in the nucleus"], ans: 2, exp: "Ribosomes on RER." },
+  { q: "The membrane of the ER are continuous with the membrane of —", opts: ["Nucleus", "Golgi body", "Membrane of mitochondria", "Membrane of plastid"], ans: 0, exp: "Nucleus." },
+  { q: "The SER is the major site of synthesis of —", opts: ["Lipid", "Protein", "Lipid, steroidal hormones and glycogen metabolism", "Protein and lipid"], ans: 2, exp: "Lipid, steroidal hormones and glycogen metabolism." },
+  { q: "A cell, which is very active in the synthesis and secretion of proteins, would be expected to have —", opts: ["Equal amount of RER and SER", "More SER than RER", "More RER than SER", "More GB and no RER"], ans: 2, exp: "More RER than SER." },
+  { q: "'The cytoplasm of animal and plant cells is transversed by a network of tiny tubular membranous system that divides the intracellular space into 2 compartments (Luminal inside the membranous system) and extraluminal (Cytoplasmic compartment).' The above statement is attributed to —", opts: ["ER", "GB", "Plasma membrane", "Nuclear membrane"], ans: 0, exp: "ER." },
+  { q: "Packing of substances for export from the cell occurs in the —", opts: ["SER", "GB", "Lysosome", "Nucleolus"], ans: 1, exp: "GB." },
+  { q: "Which of the following cell organelles are named after the name of discoverer?", opts: ["ER", "DNA", "GB", "ATP"], ans: 2, exp: "GB." },
+  { q: "Name of the densely stained reticular structure (near the nucleus) having many parallely stacked flat, disc-shaped cisternae of 0.5 μm to 1.0 μm diameter is —", opts: ["ER", "GB", "Lysosome", "Microfilament"], ans: 1, exp: "GB." },
+  { q: "A. Varied number of cisternae are present in a GB. B. Golgi cisternae are concentrically arranged near the nucleus. C. GB shows polarity - Cis / proximal / forming / Concave face near nucleus and distal / Convex / Trans / Maturation face. D. The Cis and trans face are inter connected. E. Both the faces are similar. Which of the above statements about GB is/are false?", opts: ["Only C and E", "Only D", "Only D and E", "Only C"], ans: 2, exp: "Only D and E." },
+  { q: "Which of the following is the correct sequence / route of the secretory product?", opts: ["ER → Vesicles → Cis region of GB → Trans region of GB → Vesicle → Plasma membrane", "RER → GB → Lysosome → Nuclear membrane → Plasma membrane", "ER → Vesicles → Trans region of GB → Cis region of GB → Vesicles → Plasma membrane", "Lysosome → ER → GB → Vesicles → Cell membrane"], ans: 0, exp: "ER → Vesicles → Cis region of GB → Trans region of GB → Vesicle → Plasma membrane." },
+  { q: "Which one is the important site of synthesis of glycoprotein and glycolipid?", opts: ["GB", "RER", "Lysosome", "None"], ans: 0, exp: "GB." },
+  { q: "Which of the following is correct about GB?", opts: ["GB is structurally and biochemically polarized", "The main function of GB is packing of materials, to be delivered to the intracellular targets or secreted outside", "The products that travel through GB are usually modified as they move from one cisternae to another cisternae", "All"], ans: 3, exp: "All." },
+  { q: "A distinctive feature of the lysosome is that it has —", opts: ["A lower pH than the cytoplasm", "A higher pH than the cytoplasm", "A reduced hydrolase activity", "Double membraned envelope"], ans: 0, exp: "A lower pH than the cytoplasm." },
+  { q: "Which of the following enzymes is absent in lysosome?", opts: ["Lipases and proteases", "carbohydrase", "Polymerases", "Nuclease"], ans: 2, exp: "Polymerases." },
+  { q: "The Golgi apparatus (Dictyosome) —", opts: ["Is found in animal cells only", "Is found in prokaryotes only", "Is the site of rapid ATP production", "Packages and modifies proteins"], ans: 3, exp: "Packages and modifies proteins." },
+  { q: "Which statement about the ER is not true?", opts: ["It is of two types, rough and smooth", "It is a network of tubes and flattened sacs", "Some of it is sprinkled with ribosome", "It is found in all living cells"], ans: 3, exp: "It is found in all living cells." },
+  { q: "Which of the following is correct for the origin of lysosome (L)?", opts: ["ER → GB → L", "GB → ER → L", "Nucleus → GB → L", "Mitochondria → ER → GB → L"], ans: 0, exp: "ER → GB → L." },
+  { q: "Of the following structures of a plant cell, the one that most often has the greatest volume is the —", opts: ["Vacuole", "Lysosome", "Glyoxysome", "Ribosome"], ans: 0, exp: "Vacuole." },
+  { q: "I. It contains water, sap, excretory product and other unwanted materials. II. It is bound by a single membrane called tonoplast. III. In plant cells, it can occupy upto 90% of cellular volume. IV. Its content forms cell sap. V. It maintains turgor pressure. The above features are attributed to —", opts: ["Lysosome", "Vacuole", "Peroxisome vacuole", "Food"], ans: 1, exp: "Vacuole." },
+  { q: "Which one is correct —", opts: ["In Amoeba, contractile vacuole is important for excretion and osmoregulation", "In many cells as in protists, food vacuoles are formed by engulfing the food particles", "Both a and b", "Vacuole is always large sized in all cells of plant"], ans: 2, exp: "Both a and b." },
+  { q: "The concentration of a number of ions and other materials is higher in vacuoles than those in cytoplasm - why?", opts: ["Tonoplast has a number of active transport system that pumps ions into vacuole from cytoplasm", "Through osmosis, a large amount of ions go continuously to vacuole from cytoplasm", "Cytoplasmic ions enter the vacuole through osmotic flow of water", "Vacuole is always engaged in the hydrolysis of salts into their ions"], ans: 0, exp: "Tonoplast has a number of active transport system that pumps ions into vacuole from cytoplasm." },
+  { q: "The DNA is located in the ______ of ______", opts: ["Cristae, mitochondria", "Matrix, mitochondria", "Intermembrane space, mitochondria", "Grana, chloroplast"], ans: 1, exp: "Matrix, mitochondria." },
+  { q: "RNA is found in all of the following structures except —", opts: ["Prokaryotic cell", "Nucleus, chloroplast and mitochondria", "Vacuole", "Ribosomes, HIV, TMV"], ans: 2, exp: "Vacuole." },
+  { q: "Which of the following cell organelle(s) is/are double membrane bound?", opts: ["Nucleus", "Chloroplast", "Mitochondria", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following statement is incorrect?", opts: ["Mitochondria, unless specifically stained are not easily visible under the microscope", "Physiological activity of cells determines the number of mitochondria per cell", "Mitochondrion, a power house of cell has DNA, RNA, ribosomes and enzyme. So it can survive outside the cell", "Mitochondria divide by fission"], ans: 2, exp: "Mitochondrion, a power house of cell has DNA, RNA, ribosomes and enzyme. So it can survive outside the cell." },
+  { q: "Both the membranes of a mitochondrion are —", opts: ["Structurally different but functionally similar", "Structurally as well as functionally different", "Structurally similar but functionally different", "Structurally as well as functionally similar"], ans: 1, exp: "Structurally as well as functionally different." },
+  { q: "Choose the correct statements: I. Mitochondria and Chloroplast transfer energy. II. Mitochondrion is a power-house of cell as it produces most of the cellular ATP. III. Mitochondria and chloroplast are found in all eukaryotic cells. IV. Mitochondria are the sites of anaerobic respiration. V. The matrix of mitochondria posses a single linear DNA, many RNA molecules, 80S ribosomes.", opts: ["IV and V", "I, II", "II, IV and V", "III and V"], ans: 1, exp: "I, II." },
+  { q: "The matrix of which cell organelle has single circular DNA molecule, a few RNA, 70S ribosomes and component required for protein synthesis and aerobic respiration —", opts: ["Chloroplast", "Golgi Body", "Mitochondrion", "ER"], ans: 2, exp: "Mitochondrion." },
+  { q: "I. Sausage shaped / cylindrical. II. Diameter 0.2-1.0 μm (average 0.5 μm); Length 1.0-4.1 μm. III. Has 2 aqueous compartments. IV. Outermembrane as continuous limiting boundary of the organelle. V. Inner membrane forms many cristae which increase surface area. VI. Both membranes have their own specific enzymes. All the above features are attributed to —", opts: ["Chloroplast", "Nucleus", "ER", "Mitochondria"], ans: 3, exp: "Mitochondria." },
+  { q: "Plastids are found in —", opts: ["All animal cells", "Some animal cells", "All plant cells", "All plants cells and euglenoids"], ans: 3, exp: "All plants cells and euglenoids." },
+  { q: "Which group of structures would be clearly seen in a suitable stained plant cell under the light microscope?", opts: ["Chloroplast, mitochondria, nucleus and ribosomes", "Chloroplast, mitochondria, vacuole, nucleus, starch grain", "ER, GB, ribosome", "GB, ER, ribosome, mitochondria"], ans: 1, exp: "Chloroplast, mitochondria, vacuole, nucleus, starch grain." },
+  { q: "Based upon the type of pigment, plastids are of how many type?", opts: ["3 types", "4 types", "2 types", "5 types"], ans: 0, exp: "3 types." },
+  { q: "Chloroplasts contain —", opts: ["All types of pigments", "Chl + Carotene + anthocyanine", "Chl + Carotenoids", "Only chl"], ans: 2, exp: "Chl + Carotenoids." },
+  { q: "Carotenoids —", opts: ["Are fat soluble pigments", "Include carotene (orange) and xanthophyll (yellow) pigment", "Are present in both chloroplasts and chromoplasts", "All"], ans: 3, exp: "All." },
+  { q: "I. Amyloplasts - Store starch e.g. potato. II. Elaioplasts - Store oil and fat. III. Aleuroplast - Store protein. The above types of plastids are included under —", opts: ["Leucoplasts (Colourless plastid)", "Chromoplasts (Non green colour plastid)", "Chloroplast (green plastid)", "None"], ans: 0, exp: "Leucoplasts (Colourless plastid)." },
+  { q: "In chloroplast, chlorophyll is present in —", opts: ["thylakoid", "Stroma", "Outer membrane", "Inner membrane of envelope"], ans: 0, exp: "thylakoid." },
+  { q: "Stacks of vesicles in chloroplast form —", opts: ["Stroma", "Thylakoid", "Grana", "Oxysome"], ans: 2, exp: "Grana." },
+  { q: "Extranuclear genes are found in —", opts: ["Lysosome and chloroplast", "GB and ER", "Nucleus and mitochondria", "Mitochondria and chloroplast"], ans: 3, exp: "Mitochondria and chloroplast." },
+  { q: "Majority of the chloroplast of the green plants are found in —", opts: ["Mesophylls of leaves", "Bundle sheath of leaf", "Vascular bundle of leaf", "Mid ribs of leaf"], ans: 0, exp: "Mesophylls of leaves." },
+  { q: "The number of chloroplast in each mesophyll is —", opts: ["100", "100-1000", "20-40", "10⁴"], ans: 1, exp: "100-1000." },
+  { q: "In Chlamydomonas (a green alga) the number of chloroplast per cell is —", opts: ["1", "2", "100", "1000"], ans: 0, exp: "1." },
+  { q: "The length and width of chloroplast is —", opts: ["5-10 μm, 1-4 mm", "50-10 μm, 2-4 μm", "2-4 μm, 5-10 μm", "5-10 μm, 2-4 μm"], ans: 3, exp: "5-10 μm, 2-4 μm." },
+  { q: "In higher plants the chloroplast is —", opts: ["Spiral", "Lens-shaped", "Cup shaped", "Reticulate"], ans: 1, exp: "Lens-shaped." },
+  { q: "Which of the following is correct about the outer and inner membrane of chloroplast?", opts: ["Less permeable and more permeable respectively", "More permeable and less permeable respectively", "Both are equally permeable", "Both are equally impermeable"], ans: 1, exp: "More permeable and less permeable respectively." },
+  { q: "Grana of the chloroplast are interconnected by —", opts: ["Granal thylakoids", "Granal lamellae", "Stromal lamellae", "Stroma"], ans: 2, exp: "Stromal lamellae." },
+  { q: "The stroma of chloroplast has —", opts: ["Enzymes for protein synthesis only", "Enzymes for carbohydrate synthesis", "Both", "Enzymes for dark reaction and oxidative phosphorylation"], ans: 2, exp: "Both." },
+  { q: "Which of the following is membraneless?", opts: ["Ribosomes", "Nucleolus", "Centriole", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following is Nucleoproteinaceous?", opts: ["Chromosomes, Viruses and ribosomes", "Centriole, Viruses and lysosome", "Viruses, chromosomes and vacuole", "Nucleus, GB, DNA"], ans: 0, exp: "Chromosomes, Viruses and ribosomes." },
+  { q: "70S ribosomes are found —", opts: ["In prokaryotic cells, mitochondria and chloroplast", "In prokaryotic cells and in cytoplasm of eukaryotic cells", "On Endoplasmic reticulum", "On Endoplasmic reticulum and Nuclear membrane"], ans: 0, exp: "In prokaryotic cells, mitochondria and chloroplast." },
+  { q: "Who discovered ribosomes as dense particles under the electron microscope?", opts: ["George Palade", "Kolliker", "Boveri", "Strasburger"], ans: 0, exp: "George Palade." },
+  { q: "To enter or leave a cell, substances must pass through —", opts: ["Microtubule", "Plasma membrane", "Microfilament", "Nucleus"], ans: 1, exp: "Plasma membrane." },
+  { q: "Of the following organelles, which group is involved in manufacturing substances needed by cell?", opts: ["Lysosome, vacuole, ribosome", "Vacuole, RER, SER", "Ribosome, RER, SER", "RER, Lysosome, vacuole"], ans: 2, exp: "Ribosome, RER, SER." },
+  { q: "Dye injected into a cell might be able to enter an adjacent cell through a —", opts: ["Microtubule", "Microfilament", "Plasmodesmata", "Tight junction"], ans: 2, exp: "Plasmodesmata." },
+  { q: "The cytoskeleton is a proteinaceous network of fibres in the cytoplasm involved in —", opts: ["Mechanical support", "Motility", "maintenance of cell-shape", "All"], ans: 3, exp: "All." },
+  { q: "Microtubules are made up of —", opts: ["Actin and function in locomotion", "Tubulin is found in cilia and flagella", "Myosin and function in contraction", "Polysaccharide and function in locomotion"], ans: 1, exp: "Tubulin is found in cilia and flagella." },
+  { q: "An organelle with an internal cross section showing characteristic '9 + 2' morphology is the —", opts: ["Microtubule", "Microfilament", "Cilium or flagellum", "Cytoskeleton"], ans: 2, exp: "Cilium or flagellum." },
+  { q: "The cellular component at the base of each cilium or flagellum is —", opts: ["Centriole", "Nucleus", "Microvillus", "Basal Body"], ans: 3, exp: "Basal Body." },
+  { q: "The cellular structures that are almost like centrioles are —", opts: ["Basal bodies", "Microfilaments", "Microtubules", "Centromeres"], ans: 0, exp: "Basal bodies." },
+  { q: "I. Cilium / Flagellum contains an outer ring of nine doublet microtubules surrounding two singlet microtubules. II. Cilia are smaller which works like oars, causing the movement of either the cells or surrounding fluid. III. Flagella are comparatively longer and responsible for cell movement. IV. Cilium and flagellum are covered with plasma membrane. Which of the above statement is correct?", opts: ["I, II", "I, II, III, IV", "I, IV", "II, III"], ans: 1, exp: "I, II, III, IV." },
+  { q: "The core of cilium or flagellum, composed of microtubules and their associated proteins is called —", opts: ["Blepharoplast", "Axoneme", "Microfilament", "Tubulin"], ans: 1, exp: "Axoneme." },
+  { q: "Section of Cilia / flagella shows —", opts: ["9+0", "9+2", "9", "3"], ans: 1, exp: "9+2." },
+  { q: "Choose the correct statement about cilia and flagella.", opts: ["They are hair-like outgrowths of the cell membrane", "Eukaryotic flagella are not structurally different from prokaryotic flagella", "They originate from basal bodies (centriole like structure)", "a and c are correct"], ans: 3, exp: "a and c are correct." },
+  { q: "Centrioles arise —", opts: ["From pre-existing centrioles", "de novo", "From nuclear envelope", "From spherosome"], ans: 0, exp: "From pre-existing centrioles." },
+  { q: "Which of the following statement is false?", opts: ["Both the centrioles in a centrosome lie perpendicular to each other", "Central proteinaceous hub is missing in a centriole", "Each centriole has an organization like that of a cartwheel", "Centrosome usually contains 2 cylindrical centrioles"], ans: 1, exp: "Central proteinaceous hub is missing in a centriole." },
+  { q: "The cross section of a centriole shows —", opts: ["9 peripheral triplets, 2 central singlets, 1 hub, 9 spokes, 9 intertriplet bridges", "9 peripheral triplets, 0 central singlets, 1 hub, 9 spokes, 9 intertriplet bridges", "9 peripheral triplets, 2 central singlets, 1 hub, 2 spokes, 9 intertriplet bridges", "3 peripheral triplets, 0 central singlets, 1 hub, 9 spokes, 9 intertriplet bridges"], ans: 1, exp: "9 peripheral triplets, 0 central singlets, 1 hub, 9 spokes, 9 intertriplet bridges." },
+  { q: "Choose the false statement —", opts: ["Centrosome - Cytoplasmic structure of animal cells", "Centrioles form spindle poles", "Centriole - Membraneless, but surrounded by amorphous pericentriolar bodies", "Centrosome occurs in every animal cells and most of the plant cells"], ans: 3, exp: "Centrosome occurs in every animal cells and most of the plant cells." },
+  { q: "Which of the following sequence is correct?", opts: ["Basal body → Cilium / flagellum → Centriole", "Cilium / flagellum → Basal body → Centriole", "Centriole → Basal body → Cilium / Flagellum", "Basal body → Centriole → Flagellum / Cilium"], ans: 2, exp: "Centriole → Basal body → Cilium / Flagellum." },
+  { q: "The inner and outer nuclear membranes of nuclear envelope can be differentiated in that —", opts: ["Inner membrane has ribosomes", "Outer membrane has ribosomes", "Outer membrane is continuous with the ER", "Both b and c"], ans: 3, exp: "Both b and c." },
+  { q: "The content of nucleolus is continuous with the rest of the nucleoplasm as —", opts: ["It is the site of active rRNA synthesis", "It is spherical", "It is membraneless", "It is associated with NOR of certain chromosome"], ans: 2, exp: "It is membraneless." },
+  { q: "Number of nucleolus in a nucleus is —", opts: ["Only one", "Many", "Dependent on number of SAT-chromosome", "One or more"], ans: 3, exp: "One or more." },
+  { q: "Nuclear DNA exists as a complex of proteins called ____ that condenses into ____ during ____", opts: ["Chromatids, chromosomes, cell division", "Chromosomes, Chromatin, Interphase", "Chromatin, Chromosome, Interphase", "Chromatin, Chromosome, Cell Division"], ans: 3, exp: "Chromatin, Chromosome, Cell Division." },
+  { q: "Which of the following cell organelles is directly connected to the outer nuclear membrane?", opts: ["Mitochondria", "Golgi body", "ER", "Chromatin"], ans: 2, exp: "ER." },
+  { q: "An organelle found in all eukaryotic cells during some portion of their lives is the —", opts: ["Chloroplast", "Nucleus", "Flagellum", "Centriole"], ans: 1, exp: "Nucleus." },
+  { q: "Material of the nucleus is stained by —", opts: ["Acidic dye", "Basic dye", "Neutral dye", "Iodine"], ans: 1, exp: "Basic dye." },
+  { q: "For the study of structure of nucleus the best cell is —", opts: ["Cell in the interphase", "Cell in the late prophase", "Cell in the divisional phase", "Cell in the meiotic phase"], ans: 0, exp: "Cell in the interphase." },
+  { q: "Which one is correct about the nuclear membranes (NMs) —", opts: ["Both the NMs are never fused", "Both the NMs are always parallel to each other and is never fused", "Both NMs are parallel to each other and fused to form nuclear pores at a number of places", "Inner NM is attached with ribosomes"], ans: 2, exp: "Both NMs are parallel to each other and fused to form nuclear pores at a number of places." },
+  { q: "The nuclear pores are the passage for the movement of certain materials between the nucleus and cytoplasm in both the direction. Which one is correct about materials in their respective direction —", opts: ["Proteins, enzymes into the nucleus", "Ribosomal components out of the nucleus", "mRNA out of the nucleus", "All"], ans: 3, exp: "All." },
+  { q: "Actively functional nucleus shows —", opts: ["Large nucleolus, diffused chromatin and more nuclear pores", "Large nucleolus, diffused chromatin and no nuclear pores", "Large nucleolus, compact chromatin and many pores", "No nucleolus, diffused chromatin and small nuclear pores"], ans: 0, exp: "Large nucleolus, diffused chromatin and more nuclear pores." },
+  { q: "Both the nuclear membranes are separated by ____ in perinuclear space —", opts: ["10 to 50 A⁰", "1 to 5 A⁰", "10 to 50 nm", "1 to 5 nm"], ans: 2, exp: "10 to 50 nm." },
+  { q: "Cells actively carrying out protein synthesis have —", opts: ["Smaller and single nucleolus", "Smaller and more numerous nucleoli", "Large and more numerous nucleoli", "Larger and single nucleolus"], ans: 2, exp: "Large and more numerous nucleoli." },
+  { q: "Chromatin consists of —", opts: ["DNA only", "DNA + Histones", "DNA + RNA + histones + Non-histones", "Ribonucleoproteins only"], ans: 2, exp: "DNA + RNA + histones + Non-histones." },
+  { q: "Which one of the following structures is an organelle within an organelle?", opts: ["Ribosome", "Peroxisome", "ER", "Mesosome"], ans: 0, exp: "Ribosome." },
+  { q: "Which one of the following cellular parts is correctly described?", opts: ["Thylakoids - flattened membranous sacs forming the grana of chloroplasts", "Centrioles - sites for active RNA synthesis", "Ribosomes - those on chloroplasts are larger (80s) while those in the cytoplasm are smaller (70s)", "Lysosomes - optimally active at a pH of about 8.5"], ans: 0, exp: "Thylakoids - flattened membranous sacs forming the grana of chloroplasts." },
+  { q: "The cell membranes of adjacent cells are fused at —", opts: ["macula adherens", "zonula adherens", "zonula occludens", "nexus"], ans: 2, exp: "zonula occludens." },
+  { q: "Detailed structure of the membrane was studied after the advent of electron microscope during —", opts: ["1930's", "1950's", "1970's", "1990's"], ans: 1, exp: "1950's." },
+  { q: "The usual axonemal arrangement of microtubules is —", opts: ["6 pairs of doublets radially arranged at periphery with a pair of centrally located microtubules", "6 pairs of doublets radially arranged at periphery with a single centrally located microtubule", "9 pairs of doublets radially arranged at periphery with a pair of centrally located microtubules", "9 pairs of doublets radially arranged at periphery with a single centrally located microtubule"], ans: 2, exp: "9 pairs of doublets radially arranged at periphery with a pair of centrally located microtubules." },
+  { q: "When the chromosome has a centromere nearer to one end of the chromosome resulting into one shorter and longer arm, the chromosome is termed as —", opts: ["metacentric", "sub-metacentric", "acrocentric", "telocentric"], ans: 2, exp: "acrocentric." },
+  { q: "Cells require which of the following to form cilia or flagella?", opts: ["centriole", "ribosomes", "actin", "Both (a) and (b) only"], ans: 3, exp: "Both (a) and (b) only." },
+  { q: "Which one of the following does not differ in E.coli and Chlamydomonas —", opts: ["Ribosomes", "Chromosomal Organization", "Cell wall", "Cell membrane"], ans: 0, exp: "Ribosomes." },
+  { q: "What is true about ribosomes —", opts: ["The prokaryotic ribosomes are 80S, where 'S' stands for sedimentation coefficient", "These are composed of ribonucleic acid and proteins", "These are found only in eukaryotic cells", "These are self-splicing introns of some RNAs"], ans: 1, exp: "These are composed of ribonucleic acid and proteins." },
+  { q: "Nuclear membrane is absent in —", opts: ["Penicillium", "Agaricus", "Volvox", "Nostoc"], ans: 3, exp: "Nostoc." },
+  { q: "Select the correct statement from the following regarding cell membrane.", opts: ["Na+ and K+ ions move across cell membrane by passive transport", "Proteins make up 60 to 70% of the cell membrane", "Lipids are arranged in a bilayer with polar heads towards the inner part", "Fluid mosaic model of cell membrane was proposed by Singer and Nicolson"], ans: 3, exp: "Fluid mosaic model of cell membrane was proposed by Singer and Nicolson." },
+  { q: "The Golgi complex plays a major role:", opts: ["in digesting proteins and carbohydrates", "as energy transferring organelles", "in post translational modification of proteins and glycosidation of lipids", "in trapping the light and transforming it into chemical energy"], ans: 2, exp: "in post translational modification of proteins and glycosidation of lipids." },
+  { q: "Which of the following statement is wrong?", opts: ["Cell theory was propounded by both a botanist and a zoologist", "Smaller cells have large surface area per volume ratio", "Cell arises de novo", "Heterochromatin is genetically and metabolically inactive"], ans: 2, exp: "Cell arises de novo." },
+  { q: "Kinetochore is —", opts: ["Granule within centromere", "Surface of centromere", "Constriction near chromosomal end", "Kinetin"], ans: 1, exp: "Surface of centromere." },
+  { q: "How many microtubules are present in a cilium / flagellum?", opts: ["20", "11", "9", "1"], ans: 1, exp: "11." },
+  { q: "Which is a wrong statement?", opts: ["Ribosome is an organelle present with 2 other organelles", "Shape of chloroplast in higher plant is lens shaped", "Plastid is a mitoplast", "Largest subunit of ribosome in life kingdom is 60S"], ans: 2, exp: "Plastid is a mitoplast." },
+  { q: "All are correct except —", opts: ["Number of membranes separating intrathylakoid space from cytoplasm is 3", "Protoplast includes cell wall", "Plasmodesmata connections help in movement of substances between plant cells", "Cells involved in energy consumption have large number of mitochondria"], ans: 1, exp: "Protoplast includes cell wall." },
+  { q: "Which one of the following is called 'system of membrane'?", opts: ["ER", "GB", "Lysosome", "Chloroplast"], ans: 0, exp: "ER." },
+  { q: "(i) Mitochondria are cellular furnaces. (ii) Mitochondria are single membrane bound. (iii) Na+ is present in middle lamella. (iv) chloroplast is cellular kitchen. (v) Ribosome is the site of peptide bond formation.", opts: ["All are correct except (v) only", "All are correct except (ii) only", "All are correct except (ii) and (iii)", "All are correct"], ans: 2, exp: "All are correct except (ii) and (iii)." },
+  { q: "If you fractionate all the cell organelles from the cytoplasm of a plant cell, which one of the following set of fraction will have nucleic acids?", opts: ["Nucleus, mitochondria, lysosome, vacuole", "Mitochondria, chloroplast, peroxisome, lysosome", "Nucleus, chloroplast, GB, ER", "Nucleus, mitochrondria, ribosome, chloroplast"], ans: 3, exp: "Nucleus, mitochrondria, ribosome, chloroplast." },
+  { q: "ER is not related with —", opts: ["Plasmamembrane", "GB", "Mitochondria", "Nucleus"], ans: 2, exp: "Mitochondria." },
+  { q: "The main organelle involved in modification and routing of newly synthesised protein to their destinations is:", opts: ["ER", "Lysosome", "Mitochondria", "Chloroplast"], ans: 0, exp: "ER." },
+  { q: "Which cell organelle reduces the number of other organelles?", opts: ["Oxysome", "Mesosome", "Ribosome", "Lysosome"], ans: 3, exp: "Lysosome." },
+  { q: "Go through the following statements: (i) Bacteria, chloroplasts and mitochondria have circular DNA. (ii) Chloroplast reduce air pollution. (iii) GB is export of cell. (iv) Nucleus is covered by porous single membrane. (v) Organelle involved in transformation of cell membrane is golgi complex. (vi) Nucleolus is the site of mRNA formation.", opts: ["Only (iv) and (vi) are incorrect", "Only (i) and (v) are correct", "All are incorrect except (iii)", "All are false"], ans: 0, exp: "Only (iv) and (vi) are incorrect." },
+  { q: "Which is not a true organelle?", opts: ["Lysosome", "Mitochondrion", "Chloroplast", "Ribosome"], ans: 3, exp: "Ribosome." },
+  { q: "Which is not constituent of cell membrane?", opts: ["Glycolipid", "Phospholipid", "Cholesterol", "Proline"], ans: 3, exp: "Proline." },
+  { q: "Choose the correct option.", opts: ["Respiratory enzymes are in chloroplast", "Ribosomes can do protein alone", "Palade particle is peroxisome", "Blepharoplast is a type of centriole"], ans: 3, exp: "Blepharoplast is a type of centriole." },
+  { q: "(i) They help in respiration. (ii) They help in cell wall formation. (iii) They help in DNA replication. (iv) They increase surface area of plasma membrane. Which of the following prokaryotic structures has all the above roles?", opts: ["Chromosome", "Ribosome", "Mesosome", "Lysosome"], ans: 2, exp: "Mesosome." },
+  { q: "Match the Column I with that of Column II and choose the correct combination from the options given. Column I: A. Rough ER, B. Smooth ER, C. Mitochondria, D. Golgi apparatus. Column II: (i) Synthesis of glycoproteins, (ii) Aerobic respiration, (iii) Synthesis of lipid, (iv) Protein synthesis", opts: ["A-(i), B-(ii), C-(iii), D-(iv)", "A-(ii), B-(iii), C-(iv), D-(i)", "A-(iii), B-(iv), C-(ii), D-(i)", "A-(iv), B-(iii), C-(ii), D-(i)"], ans: 3, exp: "A-(iv), B-(iii), C-(ii), D-(i)." },
+  { q: "How many structures are not associated with bacterial cells? (i) Capsid, (ii) Microtubular flagella, (iii) Polysomes, (iv) Naked genetic material, (v) Fimbriae, (vi) Cellulosic cell wall, (vii) Endomembrane system, (viii) Chromatophores, (ix) Chloroplast", opts: ["Five", "Four", "Six", "Seven"], ans: 2, exp: "Six." },
+  { q: "How many statements are correct for sap vacuoles? A. Double membrane bound space in the cytoplasm. B. Non-cytoplasmic fluid filled sacs. C. Bound by monolayer lipid membrane. D. It maintains transports number of ions and other materials against concentration gradient. E. Vacuolar sap contains the materials useful for the cell.", opts: ["Four", "Three", "Two", "One"], ans: 1, exp: "Three." },
+  { q: "The following is generally used for creating density gradient during centrifugation.", opts: ["NaCl", "KCl", "CsCl", "MgCl₂"], ans: 2, exp: "CsCl." },
+  { q: "The filament in flagellum can rotate by —", opts: ["360°", "60°", "120°", "80°"], ans: 0, exp: "360°." },
+  { q: "Which one of the following is correct for the transmembrane proteins in bilayer?", opts: ["They are absent in animal cells", "They act as channel proteins", "They are absent in plant cells", "They are only externally located"], ans: 1, exp: "They act as channel proteins." },
+  { q: "Mitochondria perform all of the following function except —", opts: ["Nucleic acid synthesis", "Steroid synthesis", "ATP synthesis", "Polysaccharide degradation"], ans: 3, exp: "Polysaccharide degradation." },
+  { q: "Protoplast lacks in —", opts: ["Cytoplasm", "Nucleus", "Mitochondria", "Cell wall"], ans: 3, exp: "Cell wall." },
+  { q: "Mitochondria are thought to have evolved from prokaryotic cells that were ingested by an ancestral cell. Which feature have the prokaryotes lost during their evolution into mitochondria?", opts: ["Cell wall", "Circular chromosome", "Endoplasmic reticulum", "Ribosomes"], ans: 0, exp: "Cell wall." },
+  { q: "Which one of the following is not an inclusion body found in prokaryotes?", opts: ["Glycogen granule", "Polysome", "Phosphate granule", "Cyanophycean granule"], ans: 1, exp: "Polysome." },
+  { q: "The chromosomes in which centromere is situated close to one end are —", opts: ["Telocentric", "Sub-metacentric", "Metacentric", "Acrocentric"], ans: 3, exp: "Acrocentric." },
+  { q: "Select the correct matching in the following pairs.", opts: ["Rough ER - Synthesis of glycogen", "Rough ER - Oxidation of fatty acids", "Smooth ER - Oxidation of phospholipids", "Smooth ER - Synthesis of lipids"], ans: 3, exp: "Smooth ER - Synthesis of lipids." },
+  { q: "The structures that are formed by stacking of organised flattened membranous sacs in the chloroplasts are —", opts: ["Stroma lamellae", "Stroma", "Cristae", "Grana"], ans: 3, exp: "Grana." },
+  { q: "Nuclear envelope is a derivative of —", opts: ["Microtubules", "Rough endoplasmic reticulum", "Smooth endoplasmic reticulum", "Membrane of Golgi complex"], ans: 1, exp: "Rough endoplasmic reticulum." },
+  { q: "DNA is not present in —", opts: ["Nucleus", "Mitochondria", "Chloroplast", "Ribosome"], ans: 3, exp: "Ribosome." },
+  { q: "Match the columns and identify the correct option. Column I: A. Thylakoids, B. Cristae, C. Cisternae, D. Chromatin. Column II: (i) Disc-shaped sacs in Golgi apparatus, (ii) Condensed structure of DNA, (iii) Flat membrane sacs in stroma, (iv) Infolding in mitochondria", opts: ["A-(iii), B-(i), C-(iv), D-(ii)", "A-(iii), B-(iv), C-(ii), D-(i)", "A-(iv), B-(iii), C-(i), D-(ii)", "A-(iii), B-(iv), C-(i), D-(ii)"], ans: 3, exp: "A-(iii), B-(iv), C-(i), D-(ii)." },
+  { q: "Which of the following structures is not found in a prokaryotic cell?", opts: ["Mesosome", "Plasma membrane", "Nuclear envelope", "Ribosome"], ans: 2, exp: "Nuclear envelope." },
+  { q: "Cellular organelles with membranes are —", opts: ["endoplasmic reticulum, ribosomes and nuclei", "Lysosomes, golgi apparatus and mitochondria", "Nuclei, ribosomes and mitochondria", "Chromosomes, ribosomes and endoplasmic reticulum"], ans: 1, exp: "Lysosomes, golgi apparatus and mitochondria." },
+  { q: "Chromatophores take part in —", opts: ["Movement", "Respiration", "Photosynthesis", "Growth"], ans: 2, exp: "Photosynthesis." },
+  { q: "In given table (a), (b), (c) and (d) are matched with respective column I, II and III. Identify the correct matching. I: (a) Passive transport, (b) Bacteria, (c) Cell wall in plant, (d) ER. II: No use of ATP, Mesosome, Cellulose, Convex face. III: Na+/K+ pump, DNA replication, Selectively permeable, Trans face.", opts: ["(a) Passive transport - No use of ATP - Na+/K+ pump", "(b) Bacteria - Mesosome - DNA replication", "(c) Cell wall in plant - Cellulose - Selectively permeable", "(d) ER - Convex face - Trans face"], ans: 1, exp: "(b) Bacteria - Mesosome - DNA replication." },
+  { q: "If living cells similar to those found on earth, were found on another planet where there was no oxygen, which cell organelle would most probably be absent?", opts: ["Cell membrane", "Chromosomes", "Ribosomes", "Mitochondria"], ans: 3, exp: "Mitochondria." },
+  { q: "Which of the following represent the correct sequence of relative sizes in descending order?", opts: ["Cell, Nucleus, Chromosome, H₂O, O₂", "Cell, Nucleus, H₂O, Oxygen atom, Chromosome", "Chromosome, Cell, Nucleus, H₂O molecule, Oxygen atom", "Cell, Nucleus, Water molecule, Chromosome, Oxygen atom"], ans: 0, exp: "Cell, Nucleus, Chromosome, H₂O, O₂." },
+  { q: "All the following statements are true regarding the 'Cell Theory' except —", opts: ["All living things or organisms are made of cells", "All cells arise spontaneously", "Cell is the basic structural and functional unit of life", "All cells arise from pre-existing cells"], ans: 1, exp: "All cells arise spontaneously." },
+  { q: "Which of the following is not an exception of cell theory?", opts: ["Bacteria", "Viruses", "Prions", "Viroids"], ans: 0, exp: "Bacteria." },
+  { q: "Study the names of different cell organelles / structure given below. Lysosome, Mitochondria, Ribosome, Chromosome, Thylakoid, Flagella, Peroxisomes. How many of the above are bound by single membrane?", opts: ["Six", "Two", "Four", "Three"], ans: 1, exp: "Two." },
+  { q: "Mitochondria and chloroplast are: (a) semi-autonomous organelles, (b) formed by division of pre-existing organelles and they contain DNA but lack protein synthesizing machinery. Which one of the following options is correct?", opts: ["Both (a) and (b) are correct", "(b) is true but (a) is false", "(a) is true but (b) is false", "Both (a) and (b) are false"], ans: 2, exp: "(a) is true but (b) is false." },
+  { q: "In a chloroplast the highest number of protons are found in:", opts: ["Stroma", "Lumen of thylakoids", "Inter membrane space", "Antennae complex"], ans: 1, exp: "Lumen of thylakoids." },
+  { q: "Microtubules are the constituents of:", opts: ["Cilia, Flagella and Peroxisomes", "Spindle fibres, Centrioles and Cilia", "Centrioles, Spindle fibres and Chromatin", "Centrosome, Nucleosome and Centrioles"], ans: 1, exp: "Spindle fibres, Centrioles and Cilia." },
+  { q: "A complex of ribosomes attached to a single strand of RNA is known as:", opts: ["Polysome", "Polymer", "Polypeptide", "Okazaki fragment"], ans: 0, exp: "Polysome." },
+  { q: "Which one of the following cell organelles is enclosed by a single membrane?", opts: ["Mitochondria", "Chloroplasts", "Lysosomes", "Nuclei"], ans: 2, exp: "Lysosomes." },
+  { q: "Water soluble pigments found in plant cell vacuoles are:", opts: ["Xanthophylls", "Chlorophylls", "Carotenoids", "Anthocyanins"], ans: 3, exp: "Anthocyanins." },
+  { q: "Select the mismatch:", opts: ["Protists - Eukaryotes", "Methanogens - Prokaryotes", "Gas vacuoles - Green bacteria", "Large central vacuoles - Animal cells"], ans: 3, exp: "Large central vacuoles - Animal cells." },
+  { q: "Select the wrong statement:", opts: ["Cyanobacteria lack flagellated cells", "Mycoplasma is a wall-less microorganism", "Bacterial cell wall is made up of peptidoglycan", "Pilli and fimbriae are mainly involved in motility of bacterial cells"], ans: 3, exp: "Pilli and fimbriae are mainly involved in motility of bacterial cells." },
+  { q: "A cell organelle containing hydrolytic enzymes is:", opts: ["Ribosome", "Mesosome", "Lysosome", "Microsome"], ans: 2, exp: "Lysosome." },
+  { q: "'Peroxisome' is the microbody of a cell that helps in:", opts: ["Removal of electron and associated hydrogen", "Removal of proton", "Conversion of carbohydrate into fat", "Conversion of carbohydrate into protein"], ans: 2, exp: "Conversion of carbohydrate into fat." },
+  { q: "Bacterial resistance to antibiotics is a genetic trait, it is normally carried by the:", opts: ["Centromere", "Plasmid", "Chromosome", "Intron"], ans: 1, exp: "Plasmid." },
+  { q: "Cytoskeletal network of a cell is built by a process called:", opts: ["Triphasic polymerization", "Biphasic polymerization", "Treadmilling", "Dynamic instability"], ans: 3, exp: "Dynamic instability." },
+  { q: "In which animal cells polytene chromosomes are noticed?", opts: ["Man", "Reptiles", "Bird", "Drosophila"], ans: 3, exp: "Drosophila." },
+  { q: "Which cell organelle is present in both prokaryotic and eukaryotic cells?", opts: ["Endoplasmic reticulum", "Mitochondria", "Nucleus", "Ribosome"], ans: 3, exp: "Ribosome." },
+  { q: "Which one of the following is stored in lysosome?", opts: ["Secretory glycoproteins", "Hydrolytic enzymes", "RNA and protein", "Fat, sugar, ATP"], ans: 1, exp: "Hydrolytic enzymes." },
+  { q: "Which one of the following matching pairs is WRONG? I. Bacterial cell wall - cellulose. II. Bacterial ribosome - 16s rRNA. III. Bacterial flagella - protein. IV. Bacterial glycocalyx - cellulose.", opts: ["I and II only", "I and III only", "I and IV only", "II and III only"], ans: 2, exp: "I and IV only." },
+  { q: "In plants, both cellulose and hemicellulose are major components of which one of the following?", opts: ["Plasma membrane", "Cell wall", "Nuclear membrane", "Mitochondrial membrane"], ans: 1, exp: "Cell wall." },
+  { q: "Match the following items in column-I with those in column-II and choose the correct answer: Column I: P. Plasma membrane mainly contains, Q. Middle lamella mainly composed of. Column II: i. Hemicellulose, ii. Calcium pectate, iii. Proteinaceous filaments, iv. Proteins embedded in phospholipid bilayer", opts: ["P-ii, Q-i", "P-i, Q-ii", "P-iv, Q-ii", "P-iii, Q-iv"], ans: 2, exp: "P-iv, Q-ii." },
+  { q: "Which of the following pigments are not stored in a cell-organelle?", opts: ["Carotenes", "Anthocyanins", "Xanthophylls", "Chlorophylls"], ans: 1, exp: "Anthocyanins." },
+  { q: "What is the outer boundary of the cell?", opts: ["cell wall", "plasma membrane", "nuclear membrane", "endoplasmic reticulum"], ans: 1, exp: "plasma membrane." },
+  { q: "Which of the following statements is NOT correct about the plasma membrane?", opts: ["Small noncharged molecules easily cross the membrane", "Lipid molecules have little difficulty in crossing the plasma membrane", "Charged molecules and ions readily move from inside the cell to outside the cell", "Carbon dioxide follows its concentration gradient as it exits a cell"], ans: 2, exp: "Charged molecules and ions readily move from inside the cell to outside the cell." },
+  { q: "Which organelle in a plant cell fills with water as turgor pressure develops?", opts: ["nucleus", "endoplasmic reticulum", "Golgi apparatus", "central vacuole"], ans: 3, exp: "central vacuole." },
+  { q: "Which of the following conditions does NOT apply to active transport?", opts: ["requires ATP", "transports molecules from a high to low concentration area", "requires a carrier protein", "carrier proteins bind reversibly to transported substances"], ans: 1, exp: "transports molecules from a high to low concentration area." },
+  { q: "Why are proteins involved in active transport often called 'pumps'?", opts: ["They use energy to move a substance against its concentration gradient", "They use energy to move a substance with its concentration gradient", "They use energy to bind the substance to the carrier", "They use energy to dislodge the substance from the carrier"], ans: 0, exp: "They use energy to move a substance against its concentration gradient." },
+  { q: "What is the name of the structure that detoxifies alcohol in the liver?", opts: ["smooth endoplasmic reticulum", "rough endoplasmic reticulum", "golgi apparatus", "nucleus"], ans: 0, exp: "smooth endoplasmic reticulum." },
+  { q: "Which of the following cells lacks cytoskeleton?", opts: ["Eukaryotic plant cell", "Prokaryotic bacterial cells", "Both (a) and (b)", "Prokaryotic cells and eukaryotic animal cells"], ans: 1, exp: "Prokaryotic bacterial cells." },
+  { q: "Cytoskeletons are chemically —", opts: ["nucleoprotein filaments", "nucleoprotein filaments and lipids", "ribonucleoproteins filaments", "protein filaments"], ans: 3, exp: "protein filaments." },
+  { q: "Microfilaments are involved in —", opts: ["Cyclosis", "Amoeboid movement", "Furrow formation during cell division", "All of these"], ans: 3, exp: "All of these." },
+  { q: "Chromosome movement during cell division is regulated by —", opts: ["Microtubules", "Microfilaments", "Intermediate filaments", "All of these"], ans: 0, exp: "Microtubules." },
+  { q: "What do both mitochondria and chloroplasts have in common?", opts: ["They are structures where ATP is produced", "Both are found in all eukaryotic cells", "Both may be found in some prokaryotic cells", "Only b and c are correct"], ans: 0, exp: "They are structures where ATP is produced." },
+  { q: "To a cytogeneticist, a chromosome is an entity containing chromatin that —", opts: ["Has a sister chromatid", "Contains two sister chromatids", "Only has a single chromatid", "Has a centromere"], ans: 3, exp: "Has a centromere." },
+  { q: "According to the fluid-mosaic model of cell membranes, which of the following is a true statement about membrane phospholipids?", opts: ["They frequently flip-flop from one side of the membrane to the other", "They move laterally along the plane of the membrane", "They are free to depart from the membrane and dissolve in the surrounding solution", "They have hydrophilic tails in the interior of the membrane"], ans: 1, exp: "They move laterally along the plane of the membrane." },
+  { q: "During which phase of mitosis are two-chromatid chromosomes visible?", opts: ["from metaphase through telophase", "From G2 of interphase through metaphase", "from the end of interphase until anaphase", "from G1 of interphase through metaphase"], ans: 1, exp: "From G2 of interphase through metaphase." },
+  { q: "What is a human cell that contains 22 pairs of autosomes and two X chromosomes?", opts: ["an unfertilized egg cell", "a sperm cell", "a male somatic cell", "a female somatic cell"], ans: 3, exp: "a female somatic cell." },
+  { q: "Which of the following components provides sticky character to the bacterial cell?", opts: ["Nuclear membrane", "Plasma membrane", "Glycocalyx", "Cell wall"], ans: 2, exp: "Glycocalyx." },
+  { q: "Which among the following are the smallest living cells, known without a definite cell wall, pathogenic to plants as well as animals and can survive without oxygen?", opts: ["Pseudomonas", "Mycoplasma", "Nostoc", "Bacillus"], ans: 1, exp: "Mycoplasma." },
+  { q: "Which of the following cell organelles is responsible for extracting energy from carbohydrates to form ATP?", opts: ["Ribosome", "Chloroplast", "Mitochondrion", "Lysosome"], ans: 2, exp: "Mitochondrion." },
+  { q: "Which of the following will not be affected by RNAse?", opts: ["Smaller subunit of ribosome", "Larger subunit of ribosome", "Amino acyl tRNA transferase", "Nucleolus in interphase"], ans: 2, exp: "Amino acyl tRNA transferase." },
+  { q: "To study the ability to secrete a specific protein, cells were homogenized mechanically and organelles were separated by centrifugation. Which organelle should be used for further investigation?", opts: ["Microsome", "Peroxisome", "Lysosome", "Ribosome"], ans: 0, exp: "Microsome." },
+  { q: "A few major discoveries in cell biology are listed: I. Schleiden and Schwann proposed the cell theory. II. Leewenhoeck discovered bacteria. III. Golgi stained cells with silver nitrate, discovered golgi apparatus. IV. First transmission electron microscope was developed. The correct chronological order of these events starting with the earliest event is —", opts: ["I, II, III, IV", "II, III, I, IV", "II, I, III, IV", "II, I, IV, III"], ans: 2, exp: "II, I, III, IV." },
+  { q: "A few statements are made about the characteristics of various life forms. Mark the correct statement.", opts: ["All chordates are vertebrates but not all vertebrates are chordates", "All prokaryotes lack nuclear envelope but nuclear envelope is present in mitochondria of eukaryotes", "All eukaryotic chromosomes are associated with histone proteins but the genome of chloroplast lacks histone", "All bryophytes show predominant sporophytic generation but all pteridophytes show predominant gametophytic generation"], ans: 2, exp: "All eukaryotic chromosomes are associated with histone proteins but the genome of chloroplast lacks histone." },
+  { q: "Which of the cellular organelles mentioned below have to import all the proteins they contains?", opts: ["Nucleus", "Lysosomes", "Chloroplast", "Mitochondria"], ans: 1, exp: "Lysosomes." },
+  { q: "A Few cells and associated entities are listed. Which of them represents the correct ascending order of the size relative to each other —", opts: ["Mitochondrion < Paramecium < Human < erythrocyte < E. coli", "Protein < Virus < Mitochondrion < Paramecium", "Chloroplast < Protein < Human sperm < Frog egg", "Nucleus < protein < Paramecium < Chloroplast"], ans: 1, exp: "Protein < Virus < Mitochondrion < Paramecium." },
+  { q: "In a resting nucleus, centromeres appear as —", opts: ["euchromatin", "constitutive heterochromatin", "facultative heterochromatin", "nucleolus"], ans: 1, exp: "constitutive heterochromatin." },
+  { q: "Biochemical analysis of a cell fraction revealed no carbohydrates, 1% RNA, 0.2% DNA, 40% lipids and 60% proteins. It may possibly be a pure —", opts: ["Plasma membrane fraction", "nuclear fraction", "microsomal fraction", "mitochondrial fraction"], ans: 0, exp: "Plasma membrane fraction." },
+  { q: "Cell organelles that perform the function of food storage as well as energy harvesting are —", opts: ["Mitochondria", "Plastids", "Vacuoles", "Nucleus"], ans: 1, exp: "Plastids." },
+  { q: "One of the major differences separating prokaryotes and eukaryotes is the presence in eukaryotes of membrane-bound structures known as:", opts: ["organelles", "tissues", "cytotoxins", "nucleoids"], ans: 0, exp: "organelles." },
+  { q: "Which of the following structures could play an important role in the phenomenon known as 'drug tolerance' in liver cells?", opts: ["Ribosomes", "Golgi apparatus", "Chromosomes", "Endoplasmic reticulum"], ans: 3, exp: "Endoplasmic reticulum." },
+  { q: "Read the following four statements (I - IV): I. Meiosis occurs in the diploid cells, which are destined to form gametes, it is called the reduction division since it reduces the chromosome number by half while making the gametes. II. Based on the presence or absence of a membrane bound nucleus and other organelles, cells and hence organisms can be named as eukaryotic or prokaryotic. III. Many membrane bound minute vesicles called microsomes that contains various enzymes are present in both plant and animals cells. IV. Both the centrioles in a centrosome lie perpendicular to each other in which each has an organisation like the cart wheel. Which of the above statements are correct?", opts: ["I, II", "III, IV", "II, III", "I, II, III, IV"], ans: 3, exp: "I, II, III, IV." },
+  { q: "How many organelles in the list given below are not included in endomembrane system? Golgi apparatus, Endoplasmic reticulum, Mitochondria, Lysosomes, Vacuoles, Cilia, Chloroplasts, Centrosome, Nucleus.", opts: ["Four", "Three", "Five", "Six"], ans: 2, exp: "Five." },
+  { q: "The fluidity of membranes in a plant in cold weather may be maintained by:", opts: ["Increasing the number of phospholipids with unsaturated hydrocarbon tails", "Increasing the proportion of integral proteins", "Decreasing concentration of cholesterol in membrane", "Increasing the number of phospholipids with saturated hydrocarbon tails"], ans: 0, exp: "Increasing the number of phospholipids with unsaturated hydrocarbon tails." },
+  { q: "Choose the correct pair. Organelle: (a) Lysosome, (b) Mitochondria, (c) Ribosome, (d) Centrosome. Feature: Endomembrane system, Matrix has all enzymes of Krebs cycle, First observed under light microscope, Two spherical structures surrounded by crystalline material", opts: ["(a) Lysosome - Endomembrane system", "(b) Mitochondria - Matrix has all enzymes of Krebs cycle", "(c) Ribosome - First observed under light microscope", "(d) Centrosome - Two spherical structures surrounded by crystalline material"], ans: 1, exp: "(b) Mitochondria - Matrix has all enzymes of Krebs cycle." },
+  { q: "Choose incorrect statement for nucleolus.", opts: ["Polygonal structure present in nucleoplasm", "Continuous with rest of the nucleoplasm", "Site for active ribosomal RNA synthesis", "Large sized and more in number in cells actively carrying our protein synthesis"], ans: 0, exp: "Polygonal structure present in nucleoplasm." },
+  { q: "Cell organelle that divides intracellular space of a cell into two compartments luminal space and extra luminal space —", opts: ["May have ribosomes attached by its smaller subunit", "Performs the function of packaging materials", "Shows a distinct polarity and is situated near the nucleus", "Is composed of tiny tubular structures scattered in the cytoplasm"], ans: 3, exp: "Is composed of tiny tubular structures scattered in the cytoplasm." },
+  { q: "What are the infolding of plasma membrane in prokaryotes called:", opts: ["Envelope of Nuclear membrane", "Mesosome", "Mitochondria", "Lysosome"], ans: 1, exp: "Mesosome." },
+  { q: "Find the incorrect statements about bacterial characters: I. F-pili are longer and they occur only in donot bacteria. II. Capsulated bacteria are mostly pathogenic and more resistant. III. Cell wall of gram negative bacteria is made up of only one layer of lipopolysaccharides.", opts: ["I and II", "II and III", "Only III", "Only II"], ans: 2, exp: "Only III." },
+  { q: "The genome of onion has 8 chromosomes (n = 8). In a root tip cell undergoing anaphase the number of chromosomes will be —", opts: ["8", "16", "32", "Indeterminate"], ans: 2, exp: "32." },
+  { q: "What is nucleoid?", opts: ["An organelle that makes protein", "A region that contain loosely organized", "An organelle that contains DNA surrounded by a nuclear", "An organelle that produces energy"], ans: 1, exp: "A region that contain loosely organized." },
+  { q: "What is characteristic of prokaryotic cells?", opts: ["Small, between 0.1-5.0 μm in length", "High surface area to volume ratio", "Lack of nucleus", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Cluster of rRNA where ribosomes are assembled are called —", opts: ["Nuclei", "Nucleoli", "GB", "Polyribosomes"], ans: 1, exp: "Nucleoli." },
+  { q: "Lysosome is called —", opts: ["Acid vacuole", "Basic vacuole", "Neutral vacuole", "Pseudo vacuole"], ans: 0, exp: "Acid vacuole." },
+  { q: "The largest plastid is —", opts: ["Chloroplast", "Chromoplast", "Aleuroplast", "Amyloplast"], ans: 0, exp: "Chloroplast." },
+  { q: "What is the main function of the chloroplast?", opts: ["Meiosis", "Translation", "Cellular Respiration", "Photosynthesis"], ans: 3, exp: "Photosynthesis." },
+  { q: "Which of the following controls which molecules can enter or leave the chloroplast?", opts: ["Outer Membrane", "Inner Membrane", "Stroma", "Thylakoids"], ans: 1, exp: "Inner Membrane." },
+  { q: "Which of the following is the collection of sacks containing chlorophyll?", opts: ["Outer Membrane", "Inner Membrane", "Stroma", "Thylakoids"], ans: 3, exp: "Thylakoids." },
+  { q: "Pigments define the plant's:", opts: ["Smell", "Taste", "Shape", "Color"], ans: 3, exp: "Color." },
+  { q: "Which of the following is the liquid inside the chloroplast?", opts: ["Outer Membrane", "Inner Membrane", "Stroma", "Thylakoids"], ans: 2, exp: "Stroma." },
+  { q: "Photosynthesis is the process of turning:", opts: ["Oxygen into Carbon Dioxide", "Food into Energy", "DNA into RNA", "Sunlight into Energy"], ans: 3, exp: "Sunlight into Energy." },
+  { q: "Other Functions of the chloroplast include:", opts: ["Making proteins", "Fighting off diseases", "Making amino acids", "All of the Above"], ans: 3, exp: "All of the Above." },
+  { q: "The mitochondria are to animal cells as the chloroplast are to ___", opts: ["Plant Cells", "Animal Cells", "Bacteria", "Prokaryotic Cells"], ans: 0, exp: "Plant Cells." },
+  { q: "The Golgi complex participates in —", opts: ["Respiration in bacteria", "Formation of secretory vesicles", "Fatty acid breakdown", "Activation of amino acid"], ans: 1, exp: "Formation of secretory vesicles." },
+  { q: "Which of the following is true for nucleolus?", opts: ["It takes part in spindle formation", "It is a membrane-bound structure", "Larger nucleoli are present in dividing cells", "It is a site for active ribosomal RNA synthesis"], ans: 3, exp: "It is a site for active ribosomal RNA synthesis." },
+  { q: "Select the incorrect match:", opts: ["Submetacentric - L-shaped chromosomes", "Allosomes - Sex chromosomes", "Lampbrush - Diplotene bivalents chromosomes", "Polytene - Oocytes of chromosomes amphibians"], ans: 3, exp: "Polytene - Oocytes of chromosomes amphibians." },
+  { q: "Which of the following events does not occur in rough endoplasmic reticulum?", opts: ["Cleavage of signal peptide", "Protein glycosylation", "Protein folding", "Phospholipid synthesis"], ans: 3, exp: "Phospholipid synthesis." },
+  { q: "Many ribosomes may associate with a single mRNA to form multiple copies of a polypeptide simultaneously. Such strings of ribosomes are termed as —", opts: ["Plastidome", "Polyhedral bodies", "Polysome", "Nucleosome"], ans: 2, exp: "Polysome." },
+  { q: "Flow of materials through golgi body occurs in —", opts: ["A one-way route [Cis → Trans]", "A one-way route [Trans → Cis]", "Both way route [Trans ↔ Cis]", "Circular way route"], ans: 0, exp: "A one-way route [Cis → Trans]." },
+  { q: "Site of actin and tubulin synthesis is —", opts: ["SER", "RER", "70S", "Polysomes in cytoplasm"], ans: 3, exp: "Polysomes in cytoplasm." },
+  { q: "Where does glycosylation of protein occur?", opts: ["Endoplasmic reticulum", "Lysosomes", "Mitochondria", "Chloroplast"], ans: 0, exp: "Endoplasmic reticulum." },
+  { q: "Which of the following statment is incorrect regarding ribosome?", opts: ["Can be observed through high magnification light microscope", "Appear as granular structure under the electron microscope", "Eukaryotic ribosome and prokaryotic ribosome consist only one type of common ribosomal RNA", "The three domains of progenote is based on 16S ribosomal RNA genes"], ans: 2, exp: "Eukaryotic ribosome and prokaryotic ribosome consist only one type of common ribosomal RNA." },
+  { q: "One of the following is not the feature of centriole —", opts: ["It has an organisation like the cartwheel", "It consists of hub and spokes made of protein", "It is a site for rRNA synthesis", "Form the basal body of cilia and flagella"], ans: 2, exp: "It is a site for rRNA synthesis." },
+  { q: "Proteins destined to be secreted move through the secretory pathway in which of the following orders?", opts: ["Rough ER → smooth ER → Golgi transport vesicle → Golgi cisternae → secretory vesicle → cell surface", "Rough ER → Golgi transport vesicle → Golgi cisternae → secretory vesicle → cell surface", "Golgi cisternae → ER transport vesicle → smooth ER → secretory vesicle → cell surface", "Golgi cisternae → ER transport vesicle → rough ER → secretory vesicle → cell surface"], ans: 1, exp: "Rough ER → Golgi transport vesicle → Golgi cisternae → secretory vesicle → cell surface." },
+  { q: "Which of the following statements regarding cilia is not correct?", opts: ["Cilia contain an outer ring of nine doublet microtubules surrounding two singlet microtubules", "ATP is not required for ciliary movements", "Cilia are hair-like cellular appendages", "Microtubules of cilia are composed of tubulin"], ans: 1, exp: "ATP is not required for ciliary movements." },
+  { q: "Homologous chromosomes can be defined as:", opts: ["Chromatids of same chromosome", "Same chromosome, same gene, different allele in different order", "Same chromosome, different gene, same allele", "Same chromosome, same gene, different allele in same order"], ans: 3, exp: "Same chromosome, same gene, different allele in same order." },
+  { q: "If mitochondria is absent in mature RBC what will be the source of energy:", opts: ["TCA", "ETS", "link reaction", "Glycolysis"], ans: 3, exp: "Glycolysis." },
+  { q: "The shorter and longer arms of a submetacentric chromosome are referred to as —", opts: ["s-arm and l-arm respectively", "p-arm and q-arm respectively", "q-arm and p-arm respectively", "m-arm and n-arm respectively"], ans: 1, exp: "p-arm and q-arm respectively." },
+  { q: "Which of the following statements is not correct?", opts: ["Lysosomes have numerous hydrolytic enzymes", "The hydrolytic enzymes of lysosomes are active under acidic pH", "Lysosomes are membrane bound structures", "Lysosomes are formed by the process of packaging in the endoplasmic reticulum"], ans: 3, exp: "Lysosomes are formed by the process of packaging in the endoplasmic reticulum." },
+  { q: "Which of the following pair of organelles does not contain DNA?", opts: ["Mitochondria and Lysosomes", "Chloroplast and Vacuoles", "Lysosomes and Vacuoles", "Nuclear envelope and Mitochondria"], ans: 2, exp: "Lysosomes and Vacuoles." },
+  { q: "Which of the following statements regarding mitochondria is incorrect?", opts: ["Outer membrane is permeable to monomers of carbohydrates, fats and proteins", "Enzymes of electron transport are embedded in outer membrane", "Inner membrane is convoluted with infoldings", "Mitochondrial matrix contains single circular DNA molecule and ribosomes"], ans: 1, exp: "Enzymes of electron transport are embedded in outer membrane." },
+  { q: "Match the column I with column II. Column I: (A) Golgi apparatus, (B) Lysosomes, (C) Vacuoles, (D) Ribosomes. Column II: (i) Synthesis of protein, (ii) Trap waste and excretory products, (iii) Formation of glycoproteins and glycolipids, (iv) Digesting biomolecules", opts: ["(A)-(i), (B)-(ii), (C)-(iv), (D)-(iii)", "(A)-(iii), (B)-(iv), (C)-(ii), (D)-(i)", "(A)-(iv), (B)-(iii), (C)-(i), (D)-(ii)", "(A)-(iii), (B)-(ii), (C)-(iv), (D)-(i)"], ans: 1, exp: "(A)-(iii), (B)-(iv), (C)-(ii), (D)-(i)." },
+  { q: "Which of the following cell organelles is present in the highest number in secretory cells?", opts: ["Lysosome", "Mitochondria", "Golgi complex", "Endoplasmic reticulum"], ans: 3, exp: "Endoplasmic reticulum." },
+  { q: "Non-membranous nucleoplasmic structures in nucleus are the site for active synthesis of —", opts: ["tRNA", "protein synthesis", "mRNA", "rRNA"], ans: 3, exp: "rRNA." },
+  { q: "Where is the respiratory electron transport system (ETS) located in plants?", opts: ["Intermembrane space", "Mitochondrial matrix", "Outer mitochondrial membrane", "Inner mitochondrial membrane"], ans: 3, exp: "Inner mitochondrial membrane." },
+  { q: "The concept of 'Omnis cellula-e cellula' regarding cell division was first proposed by —", opts: ["Rudolf Virchow", "Theodor Schwann", "Schleiden", "Aristotle"], ans: 0, exp: "Rudolf Virchow." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+  correctCount = 0; wrongCount = 0; currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 8; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

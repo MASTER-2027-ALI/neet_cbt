@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 18: Body Fluids and Circulation - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Body Fluids and Circulation</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "1. Which of the following use water from their environment as circulating fluid -", opts: ["Sponges", "Coelenterates", "a and b", "Fishes"], ans: 2, exp: "Sponges and coelenterates use water from their environment as circulating fluid." },
+    { q: "2. Blood, a special type of connective tissue -", opts: ["Consists of a fluid matrix (Plasma)", "Has formed elements", "Is the most commonly used body fluid by most of the higher organisms", "All"], ans: 3, exp: "All are correct." },
+    { q: "3. Plasma is a straw coloured, viscous fluid constituting nearly ____ % of blood -", opts: ["55", "45", "90", "10"], ans: 0, exp: "55%." },
+    { q: "4. The amount of water present in blood plasma is -", opts: ["99%", "90-92%", "10%", "55%"], ans: 1, exp: "90-92%." },
+    { q: "5. I. Proteins contribute 6 - 8% of the blood plasma\nII. Plasma contains very high amount of minerals\nIII. Plasma without the clotting factors is called serum\nIV Glucose, amino acids, lipids, etc., are also present in the plasma as they are always in transit in the body.\nOf the above statements -", opts: ["All are correct", "Only II is false", "Only I is correct", "All are false"], ans: 1, exp: "Only II is false." },
+    { q: "6. Match List I with List II and select the correct option.\nList I: Plasma protein - I. Fibrinogen, II. Globulins, III. Albumins\nList II: Functions - A. Defence mechanism, B. Osmotic balance, C. Coagulation of blood", opts: ["I - C, II - A, III - B", "I - A, II - C, III - B", "I - C, II - B, III - A", "I - B, II - A, III - C"], ans: 0, exp: "I - C, II - A, III - B." },
+    { q: "7. Formed elements of blood include -", opts: ["RBC, WBC and blood platelets", "Proteins present in blood", "All solutes present in blood", "All minerals (elements)"], ans: 0, exp: "RBC, WBC and blood platelets." },
+    { q: "8. Which of the following statements is false?", opts: ["Erythrocytes/RBC are the least abundant of all the cells in blood", "The number of RBCs in adult man per mm3 of blood is 5 million to 5.5 million", "RBC are formed in the red bone marrow in the adults", "RBCs are enucleate in most of the mammals"], ans: 0, exp: "Erythrocytes/RBC are the most abundant of all the cells in blood." },
+    { q: "9. Life span of human RBC is -", opts: ["120 hours", "120 month", "120 days", "102 days"], ans: 2, exp: "120 days." },
+    { q: "10. What is the amount of haemoglobin present in 100 ml blood of human blood?", opts: ["45 g", "18-20 g", "12-16 g", "10-12 g"], ans: 2, exp: "12-16 g." },
+    { q: "11. Mammalian RBCs are _____ in shape-", opts: ["Oval", "Biconvex", "biconcave", "Sickle like"], ans: 2, exp: "biconcave." },
+    { q: "12. All of the following statement are correct about WBCs except -", opts: ["They are nucleate and least constancy in shape", "They are lesser in number (6000 - 8000 per mm3 blood)", "They are generally short lived", "They help in blood clotting"], ans: 3, exp: "They help in blood clotting." },
+    { q: "13. All of the following are granulocytes except-", opts: ["Neutrophils", "Eosinophils", "Basophils only", "Lymphocytes and monocytes"], ans: 3, exp: "Lymphocytes and monocytes." },
+    { q: "14. Match list I with list II correctly -\nList I: Types of leucocytes/WBCs - I. Neutrophils, II. Basophils, III. Monocytes, IV Eosinophils, V Lymphocytes\nList II: Their % (of total WBC) - A. 20 - 25, B. 2 - 3, C. 6 - 8, D. 0.5 - 1, E. 60 - 65", opts: ["I - E, II - D, III - C, IV - A, V - B", "I - A, II - B, III - C, IV - E, V - D", "I - E, II - D, III - C, IV - B, V - A", "I - B, II - D, III - A, IV - C, V - A"], ans: 0, exp: "I - E, II - D, III - C, IV - A, V - B." },
+    { q: "15. Match the following -\nColumn I: I. Basophils, II. Neutrophils, III. Monocytes, IV Eosinophils, V Lymphocytes\nColumn II: A. Phagocytes, B. Secrete histamin, serotonin, heparin and involved in inflammatory response, C Resist infections and are also involved in allergic reaction, D. Immunity", opts: ["I - B, II and III - A, IV - C, V - D", "I - B, II and III - C, IV - A, V - D", "I - C, II and III - A, IV - B, V - D", "I - D, II and III - C, IV - A, V - B"], ans: 0, exp: "I - B, II and III - A, IV - C, V - D." },
+    { q: "16. Megacaryotes produce-", opts: ["Leucocytes", "Lymphocytes", "Bone cells", "Blood platelets (thrombocytes)"], ans: 3, exp: "Blood platelets (thrombocytes)." },
+    { q: "17. Which of the following is cell fragments?", opts: ["Leucocytes", "RBCs", "Blood platelets", "None"], ans: 2, exp: "Blood platelets." },
+    { q: "18. 1 mm3 blood has how many blood platelets?", opts: ["150000 - 350000", "1.5 million to 3.5 million", "1500-3000", "10 to 15 lacs"], ans: 0, exp: "150000 - 350000." },
+    { q: "19. During blood clotting - platelets release -", opts: ["Thrombin", "Fibrinogen", "Prothrombin", "Thrombokinase and other blood clotting factor"], ans: 3, exp: "Thrombokinase and other blood clotting factor." },
+    { q: "20. ABO blood grouping is based on the presence or absence of _____ surface antigens", opts: ["2", "3", "6", "12"], ans: 0, exp: "2." },
+    { q: "22. Which of the following blood groups is universal donor and universal acceptors respectively?", opts: ["AB, O", "O, AB", "AB, A", "A, AB"], ans: 1, exp: "O, AB." },
+    { q: "24. Rh factor is concerned with blood grouping. It derives its name from-", opts: ["Man", "Chimpanzee", "Monkey", "Rat"], ans: 2, exp: "Monkey." },
+    { q: "25. Rh factor is responsible for-", opts: ["Sickle cell anaemia", "erythroblastosis foetalis", "AIDS", "Turner syndrome"], ans: 1, exp: "erythroblastosis foetalis." },
+    { q: "26. In developing foetus erythroblastosis foetalis is caused by-", opts: ["Haemolysis", "Clumping of RBCs", "Failure of blood clotting", "Phagocytosis by WBC"], ans: 0, exp: "Haemolysis." },
+    { q: "27. In erythroblastosis foetalis, which of the following factors passes through placenta into foetus -", opts: ["Rh antigens", "Rh antibodies", "Agglutinins", "ABO antibodies"], ans: 1, exp: "Rh antibodies." },
+    { q: "28. A doctor suggested to a couple not to have more than one child because of -", opts: ["Rh+ male and Rh- female", "Rh- male and Rh+ female", "Rh- male and Rh- female", "Rh+ male and Rh+ female"], ans: 0, exp: "Rh+ male and Rh- female." },
+    { q: "29. Find the correct descending order of percentage proportion of leucocytes in human blood.", opts: ["Neutrophils -> Basophils -> Lymphocytes -> Acidophils (Eosinophils) -> Monocytes", "Neutrophils -> Monocytes -> Lymphocytes -> Acidophils -> Basophils", "Neutrophils -> Lymphocytes -> Monocytes -> Acidophils -> Basophils", "Neutrophils -> Acidophils -> Basophils -> Lymphocytes -> Monocytes"], ans: 2, exp: "Neutrophils -> Lymphocytes -> Monocytes -> Acidophils -> Basophils." },
+    { q: "30. In case of emergency which blood group could be safely transfused?", opts: ["AB Rh-", "AB Rh+", "O Rh-", "O Rh+"], ans: 2, exp: "O Rh-." },
+    { q: "31. Which of the following is expected if husband is Rh+ and wife is Rh-?", opts: ["No problem with 1st pregnancy", "Problem would be expected with future pregnancies", "Both", "No problem could be expected in any pregnancy"], ans: 2, exp: "Both." },
+    { q: "32. Which of the following statements is correct?", opts: ["Rh compatibility must be tested before pregnancy establishment and blood transfusion", "Rh antibodies can cross placenta", "At the time of 1st delivery some of Rh+ RBCs from the baby (Rh+) mix the mother's blood (Rh-) due to tear in placenta mother's blood for Rh- antibodies", "All"], ans: 3, exp: "All are correct." },
+    { q: "33. What is the correct order of these events?\n1. Conversion of fibrinogen to fibrin\n2. Clot retraction and leakage of serum\n3. Thromboplastin formation\n4. Conversion of prothrombin to thrombin", opts: ["3, 2, 1, 4", "3, 4, 1, 2", "3, 4, 2, 1", "4, 1, 3, 2"], ans: 1, exp: "3, 4, 1, 2." },
+    { q: "34. Which of the following statement are correct?\nI. Ca+2 is necessary for blood coagulation\nII. Coagulation in blood vessel is prevented during normal condition by heparin\nIII. Clotting of blood involves changes of fibrinogen to fibrin by thrombin\nIV Blood clotting involves cascading process involving a number of factors present in the active form always", opts: ["I, III, IV", "II, IV", "I, II, III", "III, IV"], ans: 2, exp: "I, II, III." },
+    { q: "35. Which of the following pathways is correct for blood clotting", opts: ["Thromboplastin or Thrombokinase -> Prothrombin -> Thrombin -> Fibrinogen -> Fibrin -> Clot", "Thromboplastin or Thrombokinase -> Fibrinogen -> Fibrin -> Thrombin -> Prothrombin -> Clot", "Thromboplastin or Thrombokinase -> Thrombin -> Prothrombin -> Fibrin -> Fibrinogen -> Clot", "Thromboplastin or Thrombokinase -> Prothrombin -> Thrombin -> Fibrinogen -> Fibrin -> Clot"], ans: 0, exp: "Thromboplastin or Thrombokinase -> Prothrombin -> Thrombin -> Fibrinogen -> Fibrin -> Clot." },
+    { q: "36. Which of following statements is wrong about lymph.\nI. Lymph is colourful as it has haemoglobin but no RBC\nII. The fluid present in lymphatic system is called lymph\nIII. It contains specialized lymphocytes which are responsible for immunity of the body\nIV. Lymph is an important carrier for nutrients and hormones\nV. Fats are absorbed through lymph in the lacteals present in the intestinal villi", opts: ["Only I", "III and IV", "II and III", "Only IV"], ans: 0, exp: "Only I." },
+    { q: "37. Which of the following statements is correct?\nI. Lymphatic system collects tissue fluid/interstitial fluid and drains it back to the major veins\nII. Interstitial fluid (tissue fluid) and lymph have almost similar composition\nIII. Lymph and interstitial fluid have no larger proteins and RBC\nIV. Exchange of nutrients and gases, etc. between the blood and cells always occurs through tissue fluid\nV. Interstitial fluid has the same mineral distribution as that in plasma\nVI. Lymph can be defined as blood minus RBC but has specialized lymphocytes", opts: ["All", "Only III and IV", "V and VI", "I, III, V"], ans: 0, exp: "All are correct." },
+    { q: "38. Blood clotting pathways cause -", opts: ["Conversion of Vit. K to prothrombin", "Conversion of fibrin to fibrinogen", "Conversion of thrombin to prothrombin", "None of the above"], ans: 3, exp: "None of the above." },
+    { q: "39. Open circulatory system is found in -", opts: ["Arthopods and molluscs", "Annelids and Chordates", "Annelids and arthopods", "Fishes and molluscs"], ans: 0, exp: "Arthopods and molluscs." },
+    { q: "40. Closed circulatory system is found in -", opts: ["Arthopod and chordates", "Molluscs and chordates", "Amphibians and molluscs", "Annelids and chordates"], ans: 3, exp: "Annelids and chordates." },
+    { q: "41. In an open circulatory system -", opts: ["There is no heart", "There is no need of blood vessels", "There is no distinction between blood and tissue fluid", "There are no open spaces or sinuses in the body"], ans: 2, exp: "There is no distinction between blood and tissue fluid." },
+    { q: "42. Advantages of closed circulatory system over open circulatory system includes which of the following?", opts: ["Closed system can direct blood to specific tissues", "Exchange occurs more rapidly", "Close circulatory system can support higher levels of metabolic activity", "All"], ans: 3, exp: "All are correct." },
+    { q: "43. Which of the following statements is wrong about the closed circulatory system?", opts: ["Blood remains within blood vessels and never comes in direct contact with the body cells", "In it flow of fluid can be more precisely regulated", "There is no blood capillary", "Blood flow is more rapid due to higher pressure"], ans: 2, exp: "There is no blood capillary." },
+    { q: "45. In fishes the blood circulation is represented as - Body parts -> Impure blood -> Heart -> Gill -> Pure blood. The above flow of blood indicates it is a -", opts: ["Double circulation", "Single circulation", "Incomplete single circulation", "Incomplete double circulation"], ans: 1, exp: "Single circulation." },
+    { q: "46. Incomplete double circulation is found in which of the following animals?", opts: ["Birds", "Mammals", "Birds and Mammals", "Amphibians and Reptiles"], ans: 3, exp: "Amphibians and Reptiles." },
+    { q: "47. Which of the following statements is not true?", opts: ["Heart is ectodermal in origin", "In human beings heart is situated in the thoracic cavity, in between the two lungs slightly lifted to the left", "Human heart has the size of a clenched fist.", "Double wall membranous bag (pericardium) with pericardial fluid protects heart"], ans: 0, exp: "Heart is mesodermal in origin." },
+    { q: "48. Which of the following is correct about human heart?", opts: ["The volume of both atria > the volume of both ventricles", "The volume of both ventricle > the volume of both atria", "The volume of both atria = the volume of both ventricles", "Ventricles are upper chambers and atria are lower chambers in our heart"], ans: 1, exp: "The volume of both ventricle > the volume of both atria." },
+    { q: "49. Bicuspid valve/mitral valve is found between -", opts: ["Left atrium and left ventricle", "Right atrium and right ventricle", "Right atrium and left ventricle", "Left atrium and right ventricle"], ans: 0, exp: "Left atrium and left ventricle." },
+    { q: "50. Tricuspid valve is present between the-", opts: ["Two atria", "Two ventricles", "Left atrium and left ventricle", "Right atrium and right ventricle"], ans: 3, exp: "Right atrium and right ventricle." },
+    { q: "51. Chordae tendinae are found in -", opts: ["Joints", "Atria of heart", "Ventricles of heart", "Ventricles of brain"], ans: 2, exp: "Ventricles of heart." },
+    { q: "52. Ventricles are thick-walled as compared to atrium because -", opts: ["it is to receive blood from atria", "It is present on the posterior side", "It is to pump blood", "None"], ans: 2, exp: "It is to pump blood." },
+    { q: "53. Which of the following has thickest wall?", opts: ["Left auricle", "Left ventricle", "Right auricle", "Right ventricle"], ans: 1, exp: "Left ventricle." },
+    { q: "54. Match the Columns -\nColumn I: A. Superior vena cava, B. Inferior vena cava, C. Pulmonary artery, D. Pulmonary vein\nColumn II: p. carries deoxygenated blood to lungs, q. carries oxygenated blood from lungs, r. brings deoxygenated blood from lower part of body to right atrium, s. bring deoxygenated blood from upper part of body to right atrium", opts: ["A - q, B - s, C - r, D - p", "A - s, B - p, C - q, D - r", "A - s, B - r, C - p, D - q", "A - s, B - p, C - r, D - q"], ans: 2, exp: "A - s, B - r, C - p, D - q." },
+    { q: "55. Origin of heart beat and its conduction is represented by -", opts: ["SA-node -> Purkinje fibres -> AV-node -> Bundle of His", "AV-node -> Bundle of His -> SA-node -> Purkinje fibres", "Purkinje fibres -> AV-node -> SA-node -> Bundle of His", "SA-node -> AV-node -> Bundle of His -> Purkinje fibres"], ans: 3, exp: "SA-node -> AV-node -> Bundle of His -> Purkinje fibres." },
+    { q: "56. 'Heart of heart' is -", opts: ["SA-node", "AV-node", "Bundle of His", "Purkinje fibres"], ans: 0, exp: "SA-node." },
+    { q: "57. SA node is located in -", opts: ["Upper lateral wall of left atrium", "Lower lateral wall of left atrium", "Lower lateral wall of right atrium", "Upper lateral wall of right atrium"], ans: 3, exp: "Upper lateral wall of right atrium." },
+    { q: "58. SA node is called pace maker of the heart. Why?", opts: ["It can change contractile activity generated by AV node", "It delays the transmission of impulse between the atria and ventricles", "It gets stimulated when it receives neural signal", "It initiates and maintains the rhythmic contractile activity of heart"], ans: 3, exp: "It initiates and maintains the rhythmic contractile activity of heart." },
+    { q: "59. Sino-atrial node (SAN) can generate impulses -", opts: ["70 - 75 min-1", "50 - 55 min-1", "35 - 40 min-1", "100 - 150 min-1"], ans: 0, exp: "70 - 75 min-1." },
+    { q: "60. The impulse of heart beat originate from -", opts: ["SAN", "AVN", "Vagus nerve", "Cardiac nerve"], ans: 0, exp: "SAN." },
+    { q: "61. Rate of heart is determined by-", opts: ["SAN", "AVN", "Purkinje fibres", "Bundle of His"], ans: 0, exp: "SAN." },
+    { q: "62. Bundle of His is a group of-", opts: ["Ganglia", "Nerve fibres", "Muscular fibres", "Connective tissue"], ans: 2, exp: "Muscular fibres." },
+    { q: "63. Bundle of His/AV-bundle found in -", opts: ["Right auricle", "Left auricle", "Bone", "Interventricular septum"], ans: 3, exp: "Interventricular septum." },
+    { q: "64. Atria-ventricular node (AVN) is situated in -", opts: ["Lower left corner of left auricle, close to AV-septum", "Lower left corner of right auricle, close to AV-septum", "Upper left corner of right auricle, close to AV-septum", "Upper left corner of left auricle, close to AV-septum"], ans: 1, exp: "Lower left corner of right auricle, close to AV-septum." },
+    { q: "65. Purkinje fibres are present in -", opts: ["Left auricle", "Right auricle", "Ventricular myocardium", "SAN"], ans: 2, exp: "Ventricular myocardium." },
+    { q: "66. The chordae tendineae-", opts: ["Close the AV-valves", "Prevent the AV-valves flaps from everting", "Open semilunar valves", "Are present in auricles"], ans: 1, exp: "Prevent the AV-valves flaps from everting." },
+    { q: "67. Which of the following correctly traces the electrical impulses that trigger each heart beat -", opts: ["Pacemaker -> AV node -> Atria -> Ventricles", "Pacemaker -> Atria -> AV node -> Ventricles", "AV node -> Pacemaker -> Auricles -> Ventricles", "Ventricle -> pacemaker -> AV node -> Auricle"], ans: 1, exp: "Pacemaker -> Atria -> AV node -> Ventricles." },
+    { q: "68. An atrioventricular valve prevents the back flow or leakage of blood from -", opts: ["The right ventricle into the right atrium", "The left atrium into the left ventricle", "The aorta into the left ventricle", "The pulmonary vein into the right atrium"], ans: 0, exp: "The right ventricle into the right atrium." },
+    { q: "69. How many double circulation are normally completed by the human heart in one minute?", opts: ["8", "16", "36", "72"], ans: 3, exp: "72." },
+    { q: "70. The duration of cardiac cycle in a normal man is -", opts: ["0.8 seconds", "80 seconds", "60 seconds", "72 seconds"], ans: 0, exp: "0.8 seconds." },
+    { q: "71. During systole of heart -", opts: ["Only atria contract", "only ventricles contract", "Auricles and ventricles contract separately", "Auricles and ventricles contract simultaneously"], ans: 2, exp: "Auricles and ventricles contract separately." },
+    { q: "72. During ventricular systole -", opts: ["Oxygenated blood is pumped into the aorta and deoxygenated blood is pumped into the pulmonary artery", "Oxygenated blood is pumped into the pulmonary artery and deoxygenated blood is pumped into the artery", "Oxygenated blood is pumped into aorta and deoxygenated blood is pumped into pulmonary vein", "Oxygenated blood is pumped into pulmonary vein and deoxygenated blood is pumped into pulmonary artery"], ans: 0, exp: "Oxygenated blood is pumped into the aorta and deoxygenated blood is pumped into the pulmonary artery." },
+    { q: "73. Contraction of right ventricle pumps blood into-", opts: ["Dorsal aorta", "Pulmonary vein", "Coronary artery", "Pulmonary artery"], ans: 3, exp: "Pulmonary artery." },
+    { q: "74. When ventricular systole occurs -", opts: ["Auricular diastole coincides", "Tricuspid and bicuspid valves close", "Semilunar valves guarding pulmonary artery and aorta are forced to open", "All"], ans: 3, exp: "All are correct." },
+    { q: "75. During cardiac cycle about _____ % of ventricular filling occurs prior to atrial contraction. _____ % ventricular filling occurs due to atrial contraction -", opts: ["50, 50", "70, 30", "30, 70", "10, 90"], ans: 1, exp: "70, 30." },
+    { q: "76. Which of the following events do not occur during joint diastole?\nI. All 4 chambers of heart are in relaxed state\nII. Tricuspid and bicuspid valves open\nIII. Action potential is conducted from SAN to AVN\nIV. Blood from the pulmonary veins and vena cava flows into the left and right ventricles respectively through the left and right atria\nV. The Semilunar valves are closed", opts: ["Only V", "Only III", "Only IV", "Only I and II"], ans: 2, exp: "Only IV." },
+    { q: "78. Cardiac output is determined by -", opts: ["Heart rate", "Stroke volume", "Blood flow", "Both a and b"], ans: 3, exp: "Both a and b." },
+    { q: "79. The amount of blood to be pumped out by each ventricle/minute is-", opts: ["Stroke volume", "Cardiac output", "Tidal volume", "Residual volume"], ans: 1, exp: "Cardiac output." },
+    { q: "80. During cardiac cycle each ventricle pumps out about 70 ml of blood which is called -", opts: ["Stroke volume", "Cardiac output", "Tidal volume", "Residual volume"], ans: 0, exp: "Stroke volume." },
+    { q: "81. A red blood cell, entering the right side of the heart passes by or through the following structures -\n1. Atrioventricular valves\n2. Semi-lunar valves\n3. Right atrium\n4. Right ventricle\n5. SAN", opts: ["2 -> 3 -> 1 -> 4 -> 5", "3 -> 1 -> 5 -> 2 -> 4", "3 -> 5 -> 1 -> 2 -> 4", "5 -> 3 -> 1 -> 4 -> 2"], ans: 3, exp: "5 -> 3 -> 1 -> 4 -> 2." },
+    { q: "82. Cardiac output is -", opts: ["Stroke volume (SV) x Heart rate (HR) = 5L/m", "SV x HR = 500 ml", "SV x HR = 72 ml/m", "SV x HR = 70 ml/m"], ans: 0, exp: "Stroke volume (SV) x Heart rate (HR) = 5L/m." },
+    { q: "83. Which of the following statement is not true?", opts: ["Cardiac output of an athlete is much higher than that of an ordinary man", "In each minute a single cardiac cycle is performed", "Cardiac sounds are of clinical diagnostic significances", "Cardiac cycle includes Auricular systole, ventricular systole and joint diastole/complete diastole"], ans: 1, exp: "In each minute a single cardiac cycle is performed." },
+    { q: "84. First cardiac sound (lub) is associated with -", opts: ["Closure of tricuspid and bicuspid valves", "Opening of tricuspid and bicuspid valves", "Closure of semilunar valves", "Opening of semi lunar valves"], ans: 0, exp: "Closure of tricuspid and bicuspid valves." },
+    { q: "85. Which of the following statement is wrong for second cardiac sound?", opts: ["It is heard as dup", "It is produced due to closure of semilunar valves", "It is clinically significant", "It is clinically non significant"], ans: 3, exp: "It is clinically non significant." },
+    { q: "86. Electrocardiogram is a measure of-", opts: ["Heart rate", "Ventricular contraction", "Volume of blood pumped", "Electrical activity of heart"], ans: 3, exp: "Electrical activity of heart." },
+    { q: "87. Which of the following is a false statements?", opts: ["ECG is of a great clinical significance", "Electrocardiograph is the recording of electrical changes during the cardiac cycle", "To obtain a standard ECG, a patient is connected to the machine with 3 electrical electrodes (one to each wrist and to the left ankle)", "Normal activities of the heart are regulated intrinsically"], ans: 3, exp: "Normal activities of the heart are regulated intrinsically." },
+    { q: "88. P-wave represents -", opts: ["Depolarization of ventricles", "Repolarization of ventricle", "Repolarization of atria", "Depolarization of atria"], ans: 3, exp: "Depolarization of atria." },
+    { q: "89. QRS complex represents the -", opts: ["Depolarization of ventricles", "Repolarization of ventricles", "Repolarization of atria", "Depolarization of atria"], ans: 0, exp: "Depolarization of ventricles." },
+    { q: "90. T wave on an ECG represents -", opts: ["Depolarization of ventricles", "Repolarization of ventricle", "Repolarization of atria", "Depolarization of atria"], ans: 1, exp: "Repolarization of ventricle." },
+    { q: "92. Match the Column I with Column II -\nColumn I: A. Counting the number of QRS complex in a given time period, B. Potential generated by the recovery of ventricles from the depolarization state, C. Multiple leads are attached to the chest region\nColumn II: I. A detailed evaluation of the heart function, II. Determination of heart beat, III. T-wave", opts: ["A-I, B-II, C-III", "A-III, B-II, C-I", "A-II, B-III, C-I", "A-II, B-I, C-III"], ans: 2, exp: "A-II, B-III, C-I." },
+    { q: "93. Which of the following options represents the pulmonary circulation in human being -", opts: ["Left Auricle - Oxygenated blood - Lungs - Deoxygenated blood - Right ventricle", "Left Auricle - Deoxygenated blood - Lungs - Oxygenated blood - Right Ventricle", "Right Ventricle - Deoxygenated blood - Lungs - Oxygenated blood - Left Auricle", "Right Ventricle - Oxygenated blood - Lungs - Deoxygenated blood - Left Auricle"], ans: 2, exp: "Right Ventricle - Deoxygenated blood - Lungs - Oxygenated blood - Left Auricle." },
+    { q: "94. Which of the following options represent correct systemic circulation in human being -", opts: ["Left Ventricle - Deoxygenated blood - Tissues - Oxygenated blood - Right Auricle", "Right Ventricle - Oxygenated blood - Tissues - Deoxygenated blood - Right Auricle", "Left Ventricle - Oxygenated blood - Tissues - Deoxygenated blood - Right Auricle", "Left Ventricle - Deoxygenated blood - Tissues - Oxygenated blood - Right Auricle"], ans: 2, exp: "Left Ventricle - Oxygenated blood - Tissues - Deoxygenated blood - Right Auricle." },
+    { q: "95. Note the following blood vessels -\nA. Arteriole\nB. Capillary\nC. Aorta\nD. Muscular artery\nE. Vein\nF. Venule\nChoose the correct path that lists the blood vessels in order, blood passes through them as it leaves the heart, travels to tissue and returns to heart -", opts: ["C, D, B, A, E, F", "C, D, A, B, F, E", "D, C, A, B, E, F", "D, C, B, A, E, F"], ans: 1, exp: "C, D, A, B, F, E." },
+    { q: "98. Which of the following blood vessels possess semilunar valves", opts: ["Vena cava and aorta", "Aorta and pulmonary artery", "Pulmonary artery and pulmonary vein", "Pulmonary vein and vena cava"], ans: 1, exp: "Aorta and pulmonary artery." },
+    { q: "100. Systemic circulation -", opts: ["Provides nutrient, O2 and other essential substances to the tissues", "Takes CO2 and other harmful substances away for elimination", "Both a and b", "Carries blood from heart to lungs"], ans: 2, exp: "Both a and b." },
+    { q: "101. The blood circulation which starts and ends into capillaries is -", opts: ["Portal circulation", "Renal circulation", "Hepatic circulation", "Lymphatic circulation"], ans: 0, exp: "Portal circulation." },
+    { q: "102. Vascular connection between the digestive tracts and liver is called -", opts: ["Hepatic circulation", "Hepatic portal system", "Both a and b", "Hepatic sinusoid"], ans: 1, exp: "Hepatic portal system." },
+    { q: "103. The hepatic portal vein carries blood from _____ to the _____ before it is delivered to the systemic circulation -", opts: ["Liver, intestine", "Pancreas, intestine", "Intestine, liver", "Hepatic artery, hepatic vein"], ans: 2, exp: "Intestine, liver." },
+    { q: "104. A special coronary system of blood vessels present in our body exclusively for the circulation of blood to and from the -", opts: ["Corneocytes", "Cornea", "Cori cycle", "Heart/Cardiac musculature"], ans: 3, exp: "Heart/Cardiac musculature." },
+    { q: "105. Cardiac centre lies in -", opts: ["Medulla oblongata", "Pons", "Cerebrum", "Epithalamus"], ans: 0, exp: "Medulla oblongata." },
+    { q: "106. Cardiac centre can moderate the cardiac functions through -", opts: ["Somatic neural system", "Parasympathetic nervous system only", "Autonomic nervous system (ANS)", "Sympathetic nervous system only"], ans: 2, exp: "Autonomic nervous system (ANS)." },
+    { q: "107. Neural signal through the sympathetic nerve (part of ANS) increases cardiac output because of-", opts: ["Increasing the rate of heart beat", "Increasing the strength of ventricular contraction", "Both a and b", "Increasing the stimulation of vagus nerve"], ans: 2, exp: "Both a and b." },
+    { q: "108. Parasympathetic neural signal decreases cardiac output by -", opts: ["Decreasing the rate of heart beat", "Decreasing the speed conduction of action potential", "Both", "Increasing adrenal medulla hormones secretion"], ans: 2, exp: "Both." },
+    { q: "109. Heart beat increases -", opts: ["On stimulation of sympathetic nerves", "On stimulation of vagus nerve (para sympathetic nerve)", "By adrenaline secreted by adrenal medulla", "Both a and c"], ans: 3, exp: "Both a and c." },
+    { q: "110. In adult, normal blood pressure is -", opts: ["80/120 mmHg", "100/80 mmHg", "120/80 mmHg", "100/120 mmHg"], ans: 2, exp: "120/80 mmHg." },
+    { q: "111. Normal BP= 120/80 mmHg in an adult. In this measurement 120 mmHg is the ____ pressure and 80 mmHg is _____ pressure-", opts: ["Diastolic, systolic", "Systolic, diastolic", "Pulse, diastolic", "Pulse, systolic"], ans: 1, exp: "Systolic, diastolic." },
+    { q: "112. Which one indicates B.P or hypertension?", opts: ["120/80 mmHg", "80/120 mmHg", "140/90 mmHg or higher", "40/60 mm Hg"], ans: 2, exp: "140/90 mmHg or higher." },
+    { q: "113. Match the Column I with Column II-\nColumn I: A Heart failure, B. Cardiac arrest, C. Heart Attack, D. Coronary Artery disease (CAD), E. Angina pectoris\nColumn II: I. Heart muscle is suddenly damaged by an inadequate blood supply, II. Chest pain due to inadequate O2 reaching the heart muscles, III. Atherosclerosis, IV. Heart not pumping blood effectively enough to meet the needs of the body, V. Heart stops beating", opts: ["A-IV, B-V, C-I, D-III, E-II", "A-V, B-IV, C-II, D-III, E-I", "A-IV, B-V, C-II, D-III, E-I", "A-V, B-IV, C-I, D-III, E-II"], ans: 0, exp: "A-IV, B-V, C-I, D-III, E-II." },
+    { q: "114. It is often referred as atherosclerosis, affects the blood vessels that supply blood to the heart muscles. It is caused by deposition of Ca, fat, cholesterol and fibrous tissues making the lumen of arteries narrow - The above facts are related to", opts: ["CAD", "SCID", "Blue baby", "Heart arrest"], ans: 0, exp: "CAD." },
+    { q: "115. Haemoglobin (Hb) transports oxygen from lungs to tissues. The partial pressure of oxygen in lungs is different from that in tissues. Each Hb can bind to up to four oxygen molecules. Suppose we have an equal number of Hb and oxygen molecules and all the oxygen molecules are in bound form. Then, which of the following is TRUE?", opts: ["Almost all the Hb molecules have one bound oxygen molecule.", "Nearly half of all the Hb molecules are each bound to two oxygen molecules.", "Nearly one-fourth of all the Hb molecules are bound to four oxygen molecules each.", "Most of the Hb molecules have one bound oxygen molecule each; the rest either have no bound oxygen or have two or more bound oxygen molecules."], ans: 3, exp: "Most of the Hb molecules have one bound oxygen molecule each; the rest either have no bound oxygen or have two or more bound oxygen molecules." },
+    { q: "116. Arteries are best defined as the vessels which", opts: ["Carry blood from one visceral organ to another visceral organ", "Supply oxygenated blood to the different organs", "Carry blood away from the heart to different organs", "Break up into capillaries which reunite to form a vein"], ans: 2, exp: "Carry blood away from the heart to different organs." },
+    { q: "117. Which one of the following plasma proteins is involved in the coagulation of blood?", opts: ["Fibrinogen", "An albumin", "Serum amylase", "A globulin"], ans: 0, exp: "Fibrinogen." },
+    { q: "118. 'Bundle of His' is a part of which one of the following organs in humans?", opts: ["Pancreas", "Brain", "Heart", "Kidney"], ans: 2, exp: "Heart." },
+    { q: "119. Which one of the following statements is correct regarding blood pressure?", opts: ["190/110 mmHg may harm vital organs like brain and kidney", "130/90 mmHg is considered high and requires treatment", "100/55 mmHg is considered an ideal blood pressure", "105/50 mmHg makes one very active"], ans: 0, exp: "190/110 mmHg may harm vital organs like brain and kidney." },
+    { q: "120. Go through the statements\nStatement -1 : The AV node and the bundle of His constitute the only electrical link between the atria and the ventricles.\nStatement - II : The Bundle of His is a bundle of electrical nodes which allow the ventricles to contract\nStatement - III : The bundle of His is a group of fibres that carry electrical impulses through the center of the heart\nStatement - IV: The bundle of His is located in the proximal intraventricular septum\nHow many of the above statements are correct?", opts: ["One", "Two", "Four", "Three"], ans: 3, exp: "Three." },
+    { q: "121. During joint diastole", opts: ["Both atria relax but ventricles contract", "Both ventricles relax but atria contract", "Both semi lunar valves are open", "Tricuspid and bicuspid valves are open"], ans: 3, exp: "Tricuspid and bicuspid valves are open." },
+    { q: "122. Mark incorrect statement regarding normal ECG", opts: ["Patient is connected to 3 electrical leads (one to each wrist and to the left ankle)", "'T' wave represents atrial repolarization", "Q marks the beginning of ventricular systole", "R represents ventricular depolarization"], ans: 1, exp: "'T' wave represents atrial repolarization." },
+    { q: "123. Hepatic portal system carries", opts: ["Oxygenated blood from liver to intestine", "Deoxygenated blood from liver to intestine", "Oxygenated blood from intestine to liver", "Deoxygenated blood from intestine to liver"], ans: 3, exp: "Deoxygenated blood from intestine to liver." },
+    { q: "124. Fastest distribution of some injectable material/medicine and with no risk of any kind can be achieved by injecting it into the", opts: ["Muscles", "Arteries", "Veins", "Lymph vessels"], ans: 2, exp: "Veins." },
+    { q: "125. Given below are four statements (a-d) regarding human blood circulatory system\n(i) Arteries are thick-walled and have narrow lumen as compared to veins\n(ii) Angina is acute chest pain when the blood circulation to the brain is reduced\n(iii) Persons with blood group AB can donate blood to any person with any blood group under ABO system\n(iv) Calcium ions play a very important role in blood clotting\nWhich two of the above statements are correct ?", opts: ["(i) & (iv)", "(i) & (ii)", "(ii) & (iii)", "(iii) & (iv)"], ans: 0, exp: "(i) & (iv)." },
+    { q: "126. Go through the following statements.\nI. Blood cannot get from an artery into a vein without passing through at least one capillary bed.\nII. Blood cannot flow from point A to point B in a vessel unless the pressure is higher at A than at B.\nIII. Blood capillaries has no muscle.\nIV Glucose is carried from digestive tract to liver by Hepatic portal vein.\nHow many of the above statement(s) are correct?", opts: ["1", "2", "3", "4"], ans: 3, exp: "4." },
+    { q: "127. The blood buffer system is controlled by an amino acid of Hb4; its chemical nature is", opts: ["acidic", "basic", "neutral", "achiral"], ans: 1, exp: "basic." },
+    { q: "128. If a snake poison is found to be lowering BP (blood pressure) of a healthy person, the condition of his B.M.R. will", opts: ["Increases", "remains as before", "decreases", "unpredictable."], ans: 0, exp: "Increases." },
+    { q: "129. Given below is the ECG of a normal human. Which one of its components is correctly interpreted below?", opts: ["Complex QRS - One complete pulse", "Peak T - Initiation of total cardiac contraction", "Peak P and Peak R together - systolic and diastolic blood pressures", "Peak P - Initiation of left atrial contraction only"], ans: 3, exp: "Peak P - Initiation of left atrial contraction only." },
+    { q: "137. Why is blood that flows from the lungs to the heart bright red rather than dark red?", opts: ["Oxygen makes it red.", "Carbon dioxide makes it red.", "Gastric juices produce the red colour of the blood.", "The lungs add a pigment (dye) to blood as it flows through them."], ans: 0, exp: "Oxygen makes it red." },
+    { q: "138. Which of the following can best be compared to soldiers?", opts: ["Lungs", "Capillaries", "Red blood cells", "White blood cells"], ans: 3, exp: "White blood cells." },
+    { q: "139. What happens to blood when it is pumped into the thin-walled blood vessels of the lungs?", opts: ["Platelets are exchanged for plasma.", "Carbon dioxide is replaced with oxygen.", "Blood fills the lungs and causes coughing.", "Nothing - the lungs are just a place blood goes through on its way back to the heart."], ans: 1, exp: "Carbon dioxide is replaced with oxygen." },
+    { q: "140. How many major types of blood have scientists discovered?", opts: ["One: Type \"O\"", "Two: white cells and red cells", "Three: white cells, red cells, and plasma", "Four: Types A, B, AB, and O"], ans: 3, exp: "Four: Types A, B, AB, and O." },
+    { q: "141. The mitral valve is on the same side of the heart as the ------", opts: ["superior vena cava", "tricuspid valve", "pulmonary semilunar valve", "aortic semilunar valve"], ans: 3, exp: "aortic semilunar valve." },
+    { q: "142. The tricuspid valve prevents the backflow of blood from the _____ _", opts: ["right ventricle to the right atrium", "left ventricle to the left atrium", "pulmonary trunk to the right ventricle", "right atrium into the left atrium"], ans: 0, exp: "right ventricle to the right atrium." },
+    { q: "143. Name the conductile tissue in the heart located on the posterior wall of the right atrium that has the highest rate of depolarization in the heart.", opts: ["Medulla oblongata.", "Atrioventricular (AV) node.", "Sinoatrial (SA) node.", "Cranial nerve X- Vagus nerve."], ans: 2, exp: "Sinoatrial (SA) node." },
+    { q: "144. What portion of the ECG indicates ventricular repolarization?", opts: ["P wave.", "QRS complex.", "R spike.", "T wave."], ans: 3, exp: "T wave." },
+    { q: "145. Compared to an artery, the wall of a vein differs in which of the following ways?", opts: ["It consists of three coats called tunics.", "It is lined by a thin layer of endothelium.", "It contains smooth muscle.", "The middle tunic is thin."], ans: 3, exp: "The middle tunic is thin." },
+    { q: "146. The cardiac cycle includes all of the following events EXCEPT", opts: ["the closing and opening of the heart valves during each heart beat.", "the movement of impulse from the SA node to all regions of the heart wall.", "the number of times the heart beats in one minute.", "the changes in blood volume in all chambers of the heart."], ans: 2, exp: "the number of times the heart beats in one minute." },
+    { q: "149. Which one of the following human organs is often called the 'graveyard' of RBCs?", opts: ["Gall bladder", "Kidney", "Spleen", "Liver"], ans: 2, exp: "Spleen." },
+    { q: "150. 'Lubb' sound produced during heart beat is caused by", opts: ["ventricular diastole", "ventricular systole", "atrial diastole", "atrial systole"], ans: 1, exp: "ventricular systole." },
+    { q: "151. A certain road accident patient with unknown blood group needs immediate blood transfusion. His one doctor friend at once offers his blood. What was the blood group of the donor?", opts: ["Blood group B", "Blood group AB", "Blood group O", "Blood group A"], ans: 2, exp: "Blood group O." },
+    { q: "152. Mark, among the following a cell which does not exhibit phagocytotic activity", opts: ["Monocytes", "Neutrophil", "Basophil", "Macrophage"], ans: 2, exp: "Basophil." },
+    { q: "153. One of the common symptoms observed in people infected with Dengue fever is", opts: ["Significant decrease in RBC count", "Significant decrease in WBC count", "Significant decrease in platelets count", "Significant increase in platelets count"], ans: 2, exp: "Significant decrease in platelets count." },
+    { q: "154. Which among the following is correct during each cardiac cycle?", opts: ["The volume of blood pumped out by the Rt and Lt ventricles is same.", "The volume of blood pumped out by the Rt and Lt ventricles is different", "The volume of blood received by each atrium is different", "The volume of blood received by the aorta and pulmonary artery is different"], ans: 0, exp: "The volume of blood pumped out by the Rt and Lt ventricles is same." },
+    { q: "155. Cardiac activity could be moderated by the autonomous neural system. Tick the correct answer:", opts: ["The parasympathetic system stimulates heart rate and stroke volume", "The sympathetic system stimulates heart rate and stroke volume", "The parasympathetic system decreases the heart rate but increase stroke volume", "The sympathetic system decreases the heart rate but increase stroke volume"], ans: 1, exp: "The sympathetic system stimulates heart rate and stroke volume." },
+    { q: "156. Mark the pair of substances among the following which is essential for coagulation of blood.", opts: ["Heparin and calcium ions", "Calcium ions and platelet factors", "Oxalates and citrates", "Platelet factors and heparin"], ans: 1, exp: "Calcium ions and platelet factors." },
+    { q: "157. ECG depicts the depolarisation and repolarisation processes during the cardiac cycle. In the ECG of a normal healthy individual one of the following waves is not represented.", opts: ["Depolarisation of atria", "Repolarisation of atria", "Depolarisation of ventricles", "Repolarisation of ventricles"], ans: 1, exp: "Repolarisation of atria." },
+    { q: "158. Which one of the following type of cells lack nucleus?", opts: ["RBC", "Neutrophils", "Eosinophils", "Monocytes"], ans: 0, exp: "RBC." },
+    { q: "159. Which one of the following blood cells is involved in antibody production.", opts: ["B-Lymphocytes", "T-Lymphocytes", "RBC", "Neutrophils"], ans: 0, exp: "B-Lymphocytes." },
+    { q: "160. The cardiac impulse is initiated and conducted further upto ventricle. The correct sequence of conduction of impulse is", opts: ["SA Node -> AV Node -> Purkinje fiber -> AV Bundle", "SA Node -> Purkinje fiber -> AV Node -> AV Bundle", "SA Node -> AV Node -> AV Bundle -> Purkinje fiber", "SA Node -> Purkinje fiber -> AV Bundle -> AV Node"], ans: 2, exp: "SA Node -> AV Node -> AV Bundle -> Purkinje fiber." },
+    { q: "161. The cells involved in inflammatory reactions are", opts: ["Basophils", "Neutrophils", "Eosinophils", "Lymphocytes"], ans: 0, exp: "Basophils." },
+    { q: "162. The second heart sound (dubb) is associated with the closure of", opts: ["Tricuspid valve", "Semilunar valves", "Bicuspid valve", "Tricuspid and bicuspid valves."], ans: 1, exp: "Semilunar valves." },
+    { q: "163. Which of the following correctly explains a phase/event in cardiac cycle in a standard electrocardiogram?", opts: ["QRS complex indicates atrial contraction.", "QRS complex indicates ventricular contraction.", "Time between S and T represents atrial systole.", "P-wave indicates beginning of ventricular contraction."], ans: 1, exp: "QRS complex indicates ventricular contraction." },
+    { q: "164. Which of the following statements is incorrect?", opts: ["A person of 'O' blood group has anti 'A' and anti 'B' antibodies in his blood plasma.", "A person of 'B' blood group can't donate blood to a person of 'A' blood group.", "Blood group is designated on the basis of the presence of antibodies in the blood plasma.", "A person of AB blood group is universal recipient."], ans: 2, exp: "Blood group is designated on the basis of the presence of antibodies in the blood plasma." },
+    { q: "165. What would be the cardiac output of a person having 72 heart beats per minute and a stroke volume of 50 ml?", opts: ["360 ml", "3600 ml", "7200 ml", "5000 ml"], ans: 1, exp: "3600 ml." },
+    { q: "166. Match the terms given under Column 'A' with their functions given under Column 'B' and select the answer from the options given below:\nColumn A: (A) Lymphatic System, (B) Pulmonary vein, (C) Thrombocytes, (D) Lymphocytes\nColumn B: i. Carries oxygenated blood, ii. Immune Response, iii. To drain back the tissue fluid to the circulatory system, iv. Coagulation of blood", opts: ["A-ii, B-i, C-iii, D-iv", "A-iii, B-i, C-iv, D-ii", "A-iii, B-i, C-iii, D-iv", "A-ii, B-i, C-iii, D-iv"], ans: 1, exp: "A-iii, B-i, C-iv, D-ii." },
+    { q: "167. Read the following statements and choose the correct option\nStatement 1 : Atria receive blood from all parts of the body which subsequently flows to ventricles.\nStatement 2 : Action potential generated at sino-atrial node passes from atria to ventricles.", opts: ["Action mentioned in Statement 1 is dependent on action mentioned in Statement 2", "Action mentioned in Statement 2 is dependent on action mentioned in Statement 1", "Action mentioned in Statements 1 and 2 are independent of each other.", "Action mentioned in Statements 1 and 2 are synchronous."], ans: 1, exp: "Action mentioned in Statement 2 is dependent on action mentioned in Statement 1." },
+    { q: "168. Go through the following statements\nI. The kind of epithelium which forms the inner walls of blood vessels is Squamous epithelium\nII. Murmur is a disorder of Heart valves\nIII. In a cardiac output of 5250 ml/minute, with 75 heart beats per minute, the stroke volume is 70 ml\nIV Oxygenated blood occurs in Pulmonary artery\nHow many of the above statements are incorrect", opts: ["One", "Two", "Three", "Four"], ans: 0, exp: "One." },
+    { q: "171. A substance present over the surface of RBC and is genetically heritable is called", opts: ["Blood group", "Haemoglobin", "Antibody", "None of these"], ans: 0, exp: "Blood group." },
+    { q: "172. If heart sound recording and ECG are superimposed, the first heart sound would occurs", opts: ["At P-wave", "Just after P-wave", "Just before QRS complex", "Just after QRS complex."], ans: 2, exp: "Just before QRS complex." },
+    { q: "173. Valves which allow blood flow from ventricles into arteries and not in opposite direction and are", opts: ["Aortic valve and mitral valve", "AV valves and semilunar valves", "Bicuspid and tricuspid valves", "Semilunar valves and tricuspid valves"], ans: 0, exp: "Aortic valve and mitral valve." },
+    { q: "175. Approximately seventy percent of carbon-dioxide absorbed by the blood will be transported to the lungs :", opts: ["as bicarbonate ions", "in the form of dissolved gas molecules", "by binding to R.B.C.", "as carbamino - haemoglobin"], ans: 0, exp: "as bicarbonate ions." },
+    { q: "176. Person with blood group AB is considered as universal recipient because he has :", opts: ["both A and B antigens on RBC but no antibodies in the plasma.", "both A and B antibodies in the plasma.", "no antigen on RBC and no antibody in the plasma.", "both A and B antigens in the plasma but no antibodies."], ans: 0, exp: "both A and B antigens on RBC but no antibodies in the plasma." },
+    { q: "179. Which valve is present at the opening of coronary sinus?", opts: ["Mitral valve", "Eustachian valve", "Thebesian valve", "Tricuspid valve"], ans: 2, exp: "Thebesian valve." },
+    { q: "180. Which blood cells can engulf bacteria by phagocytosis?", opts: ["Eosinophil and Basophil", "Basophil and Lymphocyte", "Neutrophil and Monocyte", "Neutrophil and Lymphocyte"], ans: 2, exp: "Neutrophil and Monocyte." },
+    { q: "181. Which of the following factor(s) increase blood pressure?\nA Increase of cardiac output\nB. Constriction of blood vessel\nC. Activation of parasympathetic nerve\nC. Increase of blood volume", opts: ["A, B, D are correct", "B, C, D are correct", "A, C, D are correct", "All are correct"], ans: 0, exp: "A, B, D are correct." },
+    { q: "182. Which type of blood contains A antibodies (but not B antibodies) in the plasma and lack Rh antigen?", opts: ["AB negative", "A positive", "B negative", "O positive"], ans: 2, exp: "B negative." },
+    { q: "183. Which of the following statement/s are incorrect w.r.t. regulation of cardiac activity?\nA. Neural signals through the sympathetic nerves can increase the rate of heart beat and cardiac output\nB. Parasympathetic neural signals decrease the speed of conduction of cardiac impulse, so stroke volume is increased.\nC. Sympathetic nervous system increases the strength of ventricular contraction and stroke volume is same.\nD. Parasympathetic nervous system decreases the heart rate, cardiac output and stroke volume.\nIncorrect statements are", opts: ["B and C", "C and D", "A and C", "B and D"], ans: 0, exp: "B and C." },
+    { q: "184. If due to some injury the chordae tendinae of the bicuspid valve of the human heart is partially non-functional, what would be the immediate effect?", opts: ["Heart beat would become irregular", "Blood will tend to move back into the right atrium.", "The flow of blood into the aorta will be slowed down.", "The flow of blood into pulmonary artery will be reduced."], ans: 2, exp: "The flow of blood into the aorta will be slowed down." },
+    { q: "186. Read the statements A and B given below and choose the correct option.\nA. Human heart transplanted is denervated but still keeps beating.\nB. Human heart is myogenic", opts: ["Both the statements A and B are correct and B is the correct reason of statement A.", "Statement A is wrong but B is correct", "Both the statements A and B are correct but B is not the correct reason of A", "Statement A is correct but B is wrong."], ans: 0, exp: "Both the statements A and B are correct and B is the correct reason of statement A." },
+    { q: "187. Which of the following pair of substance play very important role in clotting of blood?", opts: ["Potassium oxalate and sodium citrate", "Calcium ions and platelet factors", "Platelet factors and oxalates", "Heparin and citrates"], ans: 1, exp: "Calcium ions and platelet factors." },
+    { q: "188. Which of the following statement is not true about blood pressure?", opts: ["High blood pressure leads to heart diseases and also affects vital organs like brain and kidney.", "If the blood pressure of an individual is 140/190 mm Hg or higher it is hypertension.", "If the blood pressure is 220/120 mm Hg it can lead to cerebrovascular accident", "Hypertension can lead to 'angina pectoris'."], ans: 1, exp: "If the blood pressure of an individual is 140/190 mm Hg or higher it is hypertension." },
+    { q: "189. Which of the following cannot clot?", opts: ["Lymph only", "Plasma only", "Serum only", "Lymph and serum"], ans: 3, exp: "Lymph and serum." },
+    { q: "190. During each cardiac cycle two prominent sounds are produced which can be easily heard through a stethoscope. If during check up the heart sounds are not clear it indicates", opts: ["Cardiac arrest", "Heart failure", "Leaky valves", "Atherosclerosis"], ans: 2, exp: "Leaky valves." },
+    { q: "191. Which of the following disorders of circulatory system is not correctly stated?", opts: ["Hypertension - a sustained high blood pressure of 140/90 or above", "CAD - The lumen of coronary arteries become narrower due to deposits of calcium, fat, cholesterol and fibrous tissue.", "Angina - Acute chest pain appears when heart muscle is suddenly damaged by inadequate blood supply, because of blockage", "Heart failure - Usually called congestive heart failure because congestion of lungs is one of the main symptoms of the disease."], ans: 2, exp: "Angina - Acute chest pain appears when heart muscle is suddenly damaged by inadequate blood supply, because of blockage." },
+    { q: "192. The nucleated blood cells whose number averages 6000-8000 mm-3 of blood have all of the following functions/characteristics, except", opts: ["Secretion of histamine", "Phagocytosis", "Diapedesis", "Secretion of thromboplastin"], ans: 3, exp: "Secretion of thromboplastin." },
+    { q: "193. Which is not the function of lymph?", opts: ["Transport RBCs", "Drain excess tissue fluid", "Transport lymphocyte and antibodies", "Transport absorbed fat"], ans: 0, exp: "Transport RBCs." },
+    { q: "194. Heaviness with severe chest pain which may disappear with rest indicates", opts: ["Angina pectoris", "Atherosclerosis", "Arteriosclerosis", "Hyperthyroidism"], ans: 0, exp: "Angina pectoris." },
+    { q: "195. Select correct combination of statements for lymph.\n(i) It helps to maintain fluid balance of the body.\n(ii) It is contained in lymphatic vessels and lymphatic organs in mammals.\n(iii) It is derived from tissue fluid.\n(iv) It contains less antibodies than plasma\n(v) It flows in both directions.\n(vi) It helps to conserve proteins and remove bacteria", opts: ["(i), (ii), (iii) and (v)", "(ii), (iii), (iv) and (vi)", "(i), (iv), (v) and (vi)", "(iii), (iv), (v) and (vi)"], ans: 1, exp: "(ii), (iii), (iv) and (vi)." },
+    { q: "196. Which chamber of the heart shows the greatest pressure changes during one cardiac cycle?", opts: ["Left atrium", "Left Ventricle", "Right atrium", "Right ventricle"], ans: 1, exp: "Left Ventricle." },
+    { q: "197. Aged and damaged erythrocytes are broken down by macrophages in the", opts: ["spleen.", "liver.", "bone marrow.", "spleen, liver, and bone marrow."], ans: 3, exp: "spleen, liver, and bone marrow." },
+    { q: "199. Blood pressure in the mammalian aorta is maximum during", opts: ["Systole of the left ventricle", "Diastole of the right atrium", "Systole of the left atrium", "Diastole of the right ventricle"], ans: 0, exp: "Systole of the left ventricle." },
+    { q: "200. Which one of the following is correct?", opts: ["Lymph = Plasma + RBC + WBC", "Blood = Plasma + RBC + WBC + Platelets", "Plasma = Blood - Lymphocytes", "Serum = Blood + Fibrinogen"], ans: 1, exp: "Blood = Plasma + RBC + WBC + Platelets." },
+    { q: "201. Erythropoiesis is associated with\nI. Spleen\nII. Red bone marrow\nIII. Kidney\nIV Liver", opts: ["I and II only", "II and IV only", "I and IV only", "I, II, III and IV"], ans: 3, exp: "I, II, III and IV." },
+    { q: "202. Which one of the following animals has two separate circulatory pathways?", opts: ["Whale", "Shark", "Frog", "Lizard"], ans: 0, exp: "Whale." },
+    { q: "203. Doctors use stethoscope to hear the sounds produced during each cardiac cycle. The second sound is heard when", opts: ["AV node receives signal from SA node", "AV valves open up", "Ventricular walls vibrate due to gushing in of blood from atria", "Semi lunar valves close down after the blood flows into vessels from ventricles"], ans: 3, exp: "Semi lunar valves close down after the blood flows into vessels from ventricles." },
+    { q: "204. Louder sound of heart beat occurs during closure of", opts: ["Tricuspid valve", "Auriculo-ventricular valves", "Mitral valve", "Semilunar valves"], ans: 1, exp: "Auriculo-ventricular valves." },
+    { q: "205. If liver is removed, the component that increases in blood", opts: ["Protein", "Urea", "Uric acid", "Ammonia"], ans: 3, exp: "Ammonia." },
+    { q: "206. 'Heart of heart' is", opts: ["SA node", "AV node", "Bundle of His", "Purkinje fibres"], ans: 0, exp: "SA node." },
+    { q: "207. A labeled red blood corpuscle is released into the arterial circulation in the left leg. It is recaptured 30 seconds later in the left lung. What is the minimum number of chambers of the heart it must have passed through?", opts: ["0", "1", "2", "3"], ans: 2, exp: "2." },
+    { q: "208. Most common blood group is", opts: ["AB", "A", "B", "O"], ans: 3, exp: "O." },
+    { q: "209. Systematic circulation of oxygenated blood starts from", opts: ["Right atrium", "Left atrium", "Left ventricle", "Right ventricle"], ans: 2, exp: "Left ventricle." },
+    { q: "210. Systemic heart refers to", opts: ["Heart that contracts under stimulation from nervous system", "Left auricle and left ventricle in higher vertebrates.", "Entire heart in lower vertebrates", "The two ventricles together in humans"], ans: 1, exp: "Left auricle and left ventricle in higher vertebrates." },
+    { q: "211. Blood vessel carrying least CO2 is", opts: ["Pulmonary vein", "Pulmonary artery", "Vena cava", "Hepatic vein"], ans: 0, exp: "Pulmonary vein." },
+    { q: "212. Middle man of the body is", opts: ["Plasma", "Lymph", "WBC", "RBC"], ans: 1, exp: "Lymph." },
+    { q: "213. Heart block is the failure of stimulation of the ventricles following atrial contraction. Which one of the following heart structures could not be involved in heart block?", opts: ["Atrioventricular node", "Bundle of His fibres", "Purkinje fibres", "Sinoatrial node"], ans: 3, exp: "Sinoatrial node." },
+    { q: "215. In a normal ECG recording, heart sound will occur", opts: ["On the P wave and at the end of QRS complex", "On the QRS complex and at the end of T wave", "At the end of P wave and on the T wave", "At the end of QRS complex and on T wave"], ans: 1, exp: "On the QRS complex and at the end of T wave." },
+    { q: "216. On the ECG recording the maximum ventricular pressure would be", opts: ["At QRS complex", "At T wave", "Between QRS complex and T wave", "Between P and QRS complex"], ans: 2, exp: "Between QRS complex and T wave." },
+    { q: "217. Valves occur in", opts: ["Arteries, veins and auricles", "Atria, ventricles and veins", "Arteries, veins and ventricles", "SA node, AV node and veins."], ans: 2, exp: "Arteries, veins and ventricles." },
+    { q: "218. A patient is hooked upto a monitoring machine that shows voltage traces on a screen and make the sound\" .... pip .... pip ..... pip .. ... peeeeeee\" as the patient goes into -", opts: ["Heart failure", "Heart attack", "Cardiac arrest", "All"], ans: 2, exp: "Cardiac arrest." },
+    { q: "219. What is the state of heart in the interval after end of second heart sound and before beginning of first heart sound again?", opts: ["Ventricle remain systole auricles undergo first diastole and the systole", "Ventricle remain in diastole, auricles undergoes first diastole and then systole", "Ventricles undergo first systole and then diastole, auricles remain in diastole.", "Ventricles remain in diastole, auricles remain in systole."], ans: 1, exp: "Ventricle remain in diastole, auricles undergoes first diastole and then systole." },
+    { q: "220. Reduction in pH of blood will :-", opts: ["reduce the rate of heart beat.", "reduce the blood supply to the brain.", "decrease the affinity of hemoglobin with oxygen.", "release bicarbonate ions by the liver."], ans: 2, exp: "decrease the affinity of hemoglobin with oxygen." },
+    { q: "221. Blood pressure in the pulmonary artery is:-", opts: ["same as that in the aorta.", "more than that in the carotid.", "more than that in the pulmonary vein.", "less than that in the venae cavae."], ans: 2, exp: "more than that in the pulmonary vein." },
+    { q: "222. Serum differs from blood in :-", opts: ["Lacking clotting factors", "Lacking antibodies", "Lacking globulins", "Lacking albumins"], ans: 0, exp: "Lacking clotting factors." },
+    { q: "223. Name the blood cells, whose reduction in number can cause clotting disorder, leading to excessive loss of blood from the body.", opts: ["Neutrophils", "Thrombocytes", "Erythrocytes", "Leucocytes"], ans: 1, exp: "Thrombocytes." },
+    { q: "224. Which white blood cell releases chemical to inhibit blood clotting ?", opts: ["Monocyte", "Eosinophil", "Basophil", "Neutrophil"], ans: 2, exp: "Basophil." },
+    { q: "225. Which of the following statements on the Red blood cells in human cells in human is/are True?\n(a) Measures about 15 µm in diameter.\n(b) Do not contain mitochondria.\n(c) Have a life span of 120 days in the circulation.\n(d) Are released from the bone marrow as mature red blood cells.", opts: ["I and IV are correct.", "II and III are correct", "II and IV are correct", "III and IV are correct"], ans: 1, exp: "II and III are correct." },
+    { q: "226. Hardening of arteries due to precipitation of Ca salts and cholesterol causes:", opts: ["Heart attack", "Arteriosclerosis", "Atherosclerosis", "Hypertension"], ans: 1, exp: "Arteriosclerosis." },
+    { q: "227. Which of the following body systems facilitates (but doesn't regulate) the functions of the other systems?", opts: ["Respiratory system", "Endocrine system", "Digestive system", "Circulatory system"], ans: 3, exp: "Circulatory system." },
+    { q: "228. When the proteins involved in clotting are removed from blood plasma, the remaining liquid is called _____ _", opts: ["water", "urea", "ground substance", "serum"], ans: 3, exp: "serum." },
+    { q: "229. The surfaces of erythrocytes contain genetically determined types of proteins that are responsible for the two major blood group classifications, which are", opts: ["ABO and Rh", "Type A and Type B", "Type AB and O", "Rh- and Rh+"], ans: 0, exp: "ABO and Rh." },
+    { q: "230. Lymphocytes are involved in producing certain proteins known as _____ that inactivate foreign chemicals known as _____", opts: ["antigens, antibodies", "antibodies, antigens", "basophils, eosinophils", "neutrophils, monocytes"], ans: 1, exp: "antibodies, antigens." },
+    { q: "231. The heartbeat begins in the ___ _", opts: ["sino-atrial node", "S-A node", "pacemaker", "all of the above"], ans: 3, exp: "all of the above." },
+    { q: "232. A wave of contraction spreads from the S-A node across the walls of the atria to the ____ , which transmits impulses to the ventricles via ____ _", opts: ["atrio-ventricular node, a bundle of branching fibers", "A-V node, bundle of His", "Atrio-ventricular node, bundle of His", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "233. The blood pressure exerted on the wall of any blood vessel when the ventricle is contracted is the _____ , and the pressure exerted on the wall of any vessel when the heart is relaxed is the ____ _", opts: ["systolic pressure, diastolic pressure", "diastolic pressure, systolic pressure", "sphygmomanomic pressure, blood pressure", "ventricular pressure, auricular pressure."], ans: 0, exp: "systolic pressure, diastolic pressure." },
+    { q: "234. What produces systolic blood pressure?", opts: ["Contraction of the right atrium", "Contraction of the right ventricle", "Contraction of the left atrium", "Contraction of the left ventricle"], ans: 3, exp: "Contraction of the left ventricle." },
+    { q: "235. The hepatic portal vein drains blood to liver from :", opts: ["Stomach", "Kidneys", "Intestine", "Heart"], ans: 2, exp: "Intestine." },
+    { q: "236. Frog's heart when taken out of the body continues to beat for sometime. Select the best option from the following-\nStatements :\nI. Frog is a poikilotherm.\nII. Frog does not have any coronary circulation.\nIII. Heart is \"myogenic\" in nature.\nIV Heart is autoexcitable", opts: ["Only IV", "I and II", "III and IV", "Only III"], ans: 2, exp: "III and IV." },
+    { q: "237. Venous valves are responsible for", opts: ["preventing anterograde flow.", "channeling blood away from the heart.", "channeling blood toward the heart.", "preventing blood from re-entering a ventricle."], ans: 2, exp: "channeling blood toward the heart." },
+    { q: "238. What vessels hold the largest percentage of the blood supply?", opts: ["artery", "arteriole", "capillary", "vein"], ans: 3, exp: "vein." },
+    { q: "239. As blood travels from arteries to veins,", opts: ["pressure builds.", "pressure drops.", "flow becomes turbulent.", "diameter of the blood vessels gets progressively smaller."], ans: 1, exp: "pressure drops." },
+    { q: "240. The blood pressure inside capillaries connected to the arterioles and venules is 32 mm Hg and 7 mm Hg respectively. What will be the pressure of interstitial fluid?", opts: ["22 mm Hg", "0 mm Hg", "7 mm Hg", "32 mm Hg"], ans: 0, exp: "22 mm Hg." },
+    { q: "241. Blood pressure is highest in _____ and lowest in ____ _", opts: ["Arteries; Veins", "Arteries; Ventricles", "Arteries; Relaxed atria", "Arterioles; Veins"], ans: 0, exp: "Arteries; Veins." },
+    { q: "242. Blood flow velocity is slowest in the", opts: ["Arteries", "Arterioles", "Capillaries", "Venules"], ans: 2, exp: "Capillaries." },
+    { q: "243. Arteries have ____ and _____ walls when compared to veins", opts: ["Thicker; stronger", "Thicker; weaker", "Thinner; stronger", "Thinner; weaker"], ans: 0, exp: "Thicker; stronger." },
+    { q: "244. Movement of lymph within the lymphatic vessels is result of", opts: ["High blood pressure", "Contraction of skeletal muscles", "Contraction of smooth muscles found around the lymphatic vessels", "Both (a) and (c) only"], ans: 1, exp: "Contraction of skeletal muscles." },
+    { q: "245. Lymph (tissue fluid) is composed of", opts: ["Plasma", "Large proteins", "Formed elements", "None"], ans: 0, exp: "Plasma." },
+    { q: "246. Which blood vessels have walls only one cell thick?", opts: ["Capillaries", "Venules", "Veins", "Arterioles"], ans: 0, exp: "Capillaries." },
+    { q: "247. Which phase of the ECG indicates ventricular excitation and contraction?", opts: ["P wave", "QRS wave", "T wave", "All of them"], ans: 1, exp: "QRS wave." },
+    { q: "248. Which of the following is most responsible for the movement of blood to the lungs?", opts: ["Left ventricle", "Left atrium", "Right atrium", "Right ventricle"], ans: 3, exp: "Right ventricle." },
+    { q: "249. The blood from a person with an AB blood type", opts: ["Would agglutinate with both anti-A and anti-B antibodies", "Would not agglutinate with either anti-A and anti-B antibodies", "Would agglutinate with anti-A antibodies only", "Would agglutinate with anti-B antibodies only"], ans: 1, exp: "Would not agglutinate with either anti-A and anti-B antibodies." },
+    { q: "250. Innervation of heart in a living animals is primarily meant for :-", opts: ["Initiation of heart beat", "Regulation of heart beat", "Release of acetylcholine only", "Release of adrenaline only"], ans: 1, exp: "Regulation of heart beat." },
+    { q: "251. Considering size, which of the following series is the most appropriate?", opts: ["bacteria > viruses > yeast", "hornworts > mosses > liverworts", "smooth muscle cell < striated muscle cell < cardiac muscle cell", "platelets < human erythrocytes < human eosinophils"], ans: 3, exp: "platelets < human erythrocytes < human eosinophils." },
+    { q: "253. A cardiac impulse leads to the contraction and relaxation of the heart. Which of the following arrow diagrams correctly represents the flow of cardiac impulse in the heart?", opts: ["SA node -> contraction of auricle -> AV node -> bundle of HIS -> purkinje fibres -> contraction of ventricle", "SA node -> AV node -> contraction of auricle -> purkinje fibres -> bundle of HIS -> contraction of ventricle", "SA node -> contraction of auricle -> bundle of HIS -> AV node -> purkinje fibres -> contraction of ventricles", "SA node -> AV node -> bundle of HIS -> purkinje fibres -> contraction of auricle -> contraction of ventricle"], ans: 0, exp: "SA node -> contraction of auricle -> AV node -> bundle of HIS -> purkinje fibres -> contraction of ventricle." },
+    { q: "254. Match the items given in Column I with those in Column II and select the correct option given below.:\nColumn I: a. Tricuspid valve, b. Bicuspid valve, c. Semilunar valve\nColumn II: i. Between left atrium and left ventricle, ii. Between right ventricle and pulmonary artery, iii. Between right atrium and right ventricle", opts: ["a-ii, b-iii, c-i", "a-iii, b-i, c-ii", "a-iii, b-ii, c-i", "a-ii, b-i, c-iii"], ans: 1, exp: "a-iii, b-i, c-ii." },
+    { q: "255. Match the items given in Column I with those in Column II and select the correct option given below:\nColumn I: a. Fibrinogen, b. Globulin, c. Albumin\nColumn II: (i) Osmotic balance, (ii) Blood clotting, (iii) Defence mechanism", opts: ["a-(i), b-(iii), c-(ii)", "a-(i), b-(ii), c-(iii)", "a-(iii), b-(ii), c-(i)", "a-(ii), b-(iii), c-(i)"], ans: 3, exp: "a-(ii), b-(iii), c-(i)." },
+    { q: "256. During the joint diastole heart receive?", opts: ["Deoxygenated blood", "Oxygenated blood", "Venous blood", "None"], ans: 3, exp: "None." },
+    { q: "257. Which one is the reason for fast conduction of impulse in heart muscles?", opts: ["Presence of intercalated discs", "SA node", "AV node", "Purkinje fibers"], ans: 3, exp: "Purkinje fibers." },
+    { q: "258. Which of the following has highest pH?", opts: ["Human saliva", "Human blood", "Gastric juice", "Urine"], ans: 1, exp: "Human blood." },
+    { q: "259. Which fat soluble vitamin helps in synthesis of prothrombin?", opts: ["Vit K", "Vit A", "Vit B", "Vit C"], ans: 0, exp: "Vit K." },
+    { q: "260. Which of the following statements is incorrect?", opts: ["The fibrous cords attached to the flaps of the bicuspid and tricuspid valves are chordae tendinae.", "The opening of inferior vena cava is guarded by Eustachian valve.", "The right atrio-ventricular opening is guarded by the mitral valve", "Impulses received from carotid sinuses decreases heart rate whereas impulses received from vena cava increases heart rate."], ans: 2, exp: "The right atrio-ventricular opening is guarded by the mitral valve." },
+    { q: "261. When the ECG of a person was analysed, the Q and R waves was found to be enlarged. It could be due to", opts: ["myocardial infarction", "hypertension", "cardiac arrest", "bradycardia."], ans: 0, exp: "myocardial infarction." },
+    { q: "262. Which of the following statements is correct for cardiac cycle?", opts: ["The ventricular systole is stimulated by the SA node.", "The first heart sound coincides with the closure of semilunar valves and relaxation of ventricles.", "The blood flows from auricles to ventricles during the atrial systole via bicuspid and tricuspid valves.", "The fall in ventricular pressure causes the closure of semilunar valve to prevent the back-flow of blood into ventricles."], ans: 2, exp: "The blood flows from auricles to ventricles during the atrial systole via bicuspid and tricuspid valves." },
+    { q: "263. Select important functions of lymph.\n(i) It absorbs and transports fat and fat soluble vitamins from intestine.\n(ii) It regulates the pH of the body.\n(iii) It transports nutrients, hormones, etc., to the body cell.\n(iv) It destroys invading microorganisms.", opts: ["(i) only", "(i), (iii) and (iv)", "(i) and (ii) only", "(i), (ii), (iii) and (iv)"], ans: 1, exp: "(i), (iii) and (iv)." },
+    { q: "264. If the heart rate of a person has increased but the stroke volume is same. The cardiac output will", opts: ["increase", "decrease", "remains same", "first increase then decrease."], ans: 0, exp: "increase." },
+    { q: "265. Which of the following statements is correct?", opts: ["Peripheral circulation is the flow of deoxygenated blood from the right ventricle to the lungs and return of oxygenated blood from the lungs to the left atrium.", "Pulmonary circulation carries deoxygenated blood from pulmonary and bronchial arteries.", "Hepatic portal system is a unique vascular connection which exists between digestive tract and heart.", "Coronary circulation is the flow of oxygenated blood from ascending aorta to heart muscle and return of deoxygenated blood from heart muscle to the right atrium."], ans: 3, exp: "Coronary circulation is the flow of oxygenated blood from ascending aorta to heart muscle and return of deoxygenated blood from heart muscle to the right atrium." },
+    { q: "266. Identify the incorrect statement regarding plasma:", opts: ["It constitutes about 55% of the blood", "The most common plasma protein is albumin", "Globulins are mainly responsible for colloid osmotic pressure in the blood", "If clotting factors are removed from the plasma, what remains is the serum"], ans: 2, exp: "Globulins are mainly responsible for colloid osmotic pressure in the blood." },
+    { q: "267. Match each item in COLUMN I with one in COLUMN II and choose the correct answer from the codes given below:\nCOLUMN I [WBC]: A. Monocyte, B. Basophils, C. Eosinophils, D. Lymphocytes\nCOLUMN II [Function]: I. Inflammatory responses, II. Allergic reactions, III. Phagocytosis, IV. Adaptive immunity", opts: ["A-III, B-I, C-II, D-IV", "A-III, B-IV, C-II, D-I", "A-III, B-I, C-II, D-IV", "A-I, B-IV, C-II, D-III"], ans: 0, exp: "A-III, B-I, C-II, D-IV." },
+    { q: "268. If type A agglutinogens are present on the surface of RBCs of a person but type B are absent, then what type of agglutinin will be present in the plasma of this person?", opts: ["Anti-A", "Anti-B", "Nil", "Both Anti-A and Anti-B"], ans: 1, exp: "Anti-B." },
+    { q: "269. What class of antibodies are responsible for the condition - erythroblastosis fetalis?", opts: ["IgA", "IgM", "IgD", "IgG"], ans: 3, exp: "IgG." },
+    { q: "270. Which of these are involved in the early stages of blood clotting?", opts: ["low-density lipoproteins", "erythropoietin", "epinephrine", "platelets"], ans: 3, exp: "platelets." },
+    { q: "271. Compared to the right ventricle, the left ventricle:", opts: ["holds less blood", "develops less pressure during contraction", "has a thicker wall", "increases in diameter during contraction"], ans: 2, exp: "has a thicker wall." },
+    { q: "272. Which of the following events is not recorded on the surface ECG?", opts: ["Atrial depolarization", "Atrial repolarization", "Ventricular depolarization", "Ventricular repolarization"], ans: 1, exp: "Atrial repolarization." },
+    { q: "273. The neural center that regulates cardiac activity through ANS is located in:", opts: ["Cerebrum", "Hypothalamus", "Pons", "Medulla"], ans: 3, exp: "Medulla." },
+    { q: "274. Which term refers to the severe chest pain evident during an attack of myocardial ischemia?", opts: ["hypoxia", "infarction", "angina", "diaphoresis"], ans: 2, exp: "angina." },
+    { q: "275. Go through the following statements.\nI. In the patients of emphysema, the total lung capacity increases largely as a result of increase FRC.\nII. Residual volume is important because it prevents the lungs from collapsing.\nIII. Residual volume prevents the inner surfaces of the lungs sticking together.\nHow many statement or statements is/are correct?", opts: ["Only One", "Only two", "All three", "None"], ans: 2, exp: "All three." },
+    { q: "276. How would the blood pumped per minute by the left ventricle compare with that pumped by the right ventricle?", opts: ["Normally greater than that of the right ventricle", "Probably lower than the right ventricle if the person has systemic edema.", "Probably lower than the right ventricle if the person has pulmonary edema.", "Probably higher than the right ventricle if the person has pulmonary edema."], ans: 0, exp: "Normally greater than that of the right ventricle." },
+    { q: "277. In which one of the following is extra blood stored and is released when shortage occurs", opts: ["Adrenal gland", "Pancreas", "Spleen", "Thyroid gland"], ans: 2, exp: "Spleen." },
+    { q: "278. When a child is born, what happens to its blood circulation?", opts: ["Its blood flows for the first time", "Its blood reverse its flow through the heart", "Its blood causes to pass from one atrium to the other", "Its blood carries wastes for the first time."], ans: 1, exp: "Its blood reverse its flow through the heart." },
+    { q: "278. Match the Column-I with Column-II\nColumn-I: (A) P - wave, (B) QRS complex, (C) T -wave, (D) Reduction in the size of T-wave\nColumn-II: (i) Depolarisation of ventricles, (ii) Repolarisation of ventricles, (iii) Coronary ischemia, (iv) Depolarisation of atria, (v) Repolarisation of atria\nSelect the correct option.", opts: ["(a) (iv) (i) (ii) (iii)", "(b) (iv) (i) (ii) (v)", "(c) (ii) (i) (v) (iii)", "(d) (ii) (iii) (v) (iv)"], ans: 0, exp: "(a) (iv) (i) (ii) (iii)." },
+    { q: "279. What would be the heart rate of a person if the cardiac output is 5 l, blood volume in the ventricles at the end of diastole is 100 ml and at the end of ventricular systole is 50 ml?", opts: ["50 beats per minute", "75 beats per minute", "100 beats per minute", "125 beats per minute"], ans: 2, exp: "100 beats per minute." },
+    { q: "280. All the components of the nodal tissue are autoexcitable. Why does the SA node act as the normal pacemaker?", opts: ["SA node has the highest rate of depolarisation.", "SA node has the lowest rate of depolarisation.", "SA node is the only component to generate the threshold potential.", "Only SA node can convey the action potential to the other components."], ans: 0, exp: "SA node has the highest rate of depolarisation." },
+    { q: "281. A specialised nodal tissue embedded in the lower corner of the right atrium, close to Atrio-ventricular septum, delays the spreading of impulses to heart apex for about 0.1 sec. This delay allows -", opts: ["the atria to empty completely.", "blood to enter aorta.", "the ventricles to empty completely.", "blood to enter pulmonary arteries."], ans: 0, exp: "the atria to empty completely." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 15; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

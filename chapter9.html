@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 9: Biomolecules - CBT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+  .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+  .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+  .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+  .stat-box .lbl { font-size: 11px; color: #4a5568; }
+  .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+  .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+  .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+  .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+  .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+  .question-box { flex: 1; margin-bottom: 15px; }
+  .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; }
+  .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+  .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+  .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+  .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+  .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+  .option.disabled { pointer-events: none; opacity: 0.8; }
+  .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+  .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+  .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+  .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+  .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+  .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+  .result-item .label { font-size: 12px; color: #4a5568; }
+  .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+  .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+  .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+      <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+      <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+      <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+      <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+      <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+      <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Biomolecules</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+      <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+      <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+      <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+      <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q: "Which of the following statements is incorrect?", opts: ["All the elements present in a sample of earth's crust are also present in a sample of living tissue", "Relative abundance of carbon and hydrogen with respect to other elements is higher in any living organisms than in earth's crust", "Living organisms have more nitrogen and oxygen per unit mass than in animate object (e.g. earth crust)", "Living organisms have more Ca, Mg, Na in them than in animate object"], ans: 3, exp: "Living organisms have more Ca, Mg, Na in them than in animate object." },
+  { q: "One of the following is almost not found in living organism —", opts: ["Si", "Mg", "Ca", "S"], ans: 0, exp: "Si." },
+  { q: "Lipid come under acid insoluble fraction during analysis of chemical composition of tissues. Why?", opts: ["It has low molecular weight", "It has high molecular weight", "It is polymer", "On grinding, the biomembranes are broken into pieces and form insoluble vesicles"], ans: 3, exp: "On grinding, the biomembranes are broken into pieces and form insoluble vesicles." },
+  { q: "The inorganic compounds like sulphate, phosphate, etc., are found in —", opts: ["Acid soluble pool", "Acid insoluble fraction", "Both acid soluble pool and acid insoluble fraction", "Not found in cellular pool"], ans: 0, exp: "Acid soluble pool." },
+  { q: "All of the following statements are correct except —", opts: ["Elemental analysis gives elemental composition of living tissues", "Analysis for compound gives an idea of the kind of organic and inorganic constituents present in living tissues", "In plant ash contains carbon in maximum amount", "Both a and b"], ans: 2, exp: "In plant ash contains carbon in maximum amount." },
+  { q: "The four elements called 'Big-four' which make up 95% of all elements found in a living system are —", opts: ["C, H, O, N", "C, H, O, P", "C, H, O, S", "C, N, O, P"], ans: 0, exp: "C, H, O, N." },
+  { q: "The correct order of chemical composition of living tissues / cells in term of % of the total cellular mass is —", opts: ["Nucleic acid > Proteins > H₂O > Carbohydrate > Ions > Lipid", "H₂O > Proteins > Nucleic acid > Carbohydrate > Lipid > Ions", "H₂O > Proteins > Carbohydrate > Nucleic acid > Lipid > Ions", "Lipid > Ions > Carbohydrate > H₂O > Proteins > Nucleic acid"], ans: 2, exp: "H₂O > Proteins > Carbohydrate > Nucleic acid > Lipid > Ions." },
+  { q: "The sum total composition of acid soluble and acid insoluble fraction represent the entire empirical composition of —", opts: ["Dead cells", "Gene pool", "Cellular pool", "Gene library"], ans: 2, exp: "Cellular pool." },
+  { q: "Biomolecules are —", opts: ["Inorganic materials", "Organic materials", "All the carbon compounds obtained from living tissues", "Only DNA, RNA"], ans: 2, exp: "All the carbon compounds obtained from living tissues." },
+  { q: "An amino acid is a/an —", opts: ["Substituted methane", "Substituted ethane", "Any acid having amino group", "Derivative of indoleacetic acid"], ans: 0, exp: "Substituted methane." },
+  { q: "In order to produce amino acids from methane how many substituents should occupy the valency positions of the carbon —", opts: ["1", "3", "2", "4"], ans: 1, exp: "3." },
+  { q: "Protein amino acids are called —", opts: ["α-amino acids", "β-amino acids", "γ-amino acids", "δ-amino acids"], ans: 0, exp: "α-amino acids." },
+  { q: "The number of amino and carboxyl groups in an amino acid is never —", opts: ["1 and 1", "2 and 1", "3 and 1", "1 and 2"], ans: 3, exp: "1 and 2." },
+  { q: "The physical and the chemical properties of amino acids are essentially of the —", opts: ["Only amino group", "Only the carboxyl group", "Only the R functional group", "Amino, carboxyl and R groups"], ans: 2, exp: "Only the R functional group." },
+  { q: "Which of the group in amino acids makes them unique —", opts: ["R group", "NH₂ group", "COOH group", "All"], ans: 0, exp: "R group." },
+  { q: "There are many types of amino acids on the basis of —", opts: ["NH₂ group", "COOH group", "R group", "All"], ans: 2, exp: "R group." },
+  { q: "Based upon the number of NH₂ and COOH amino acids are —", opts: ["3 types", "2 types", "4 types", "20 types"], ans: 0, exp: "3 types." },
+  { q: "Which one is correct?", opts: ["Acidic Amino Acids - Glutamic acid", "Basic Amino Acids - Lysine", "Neutral Amino Acid - Valine", "All"], ans: 3, exp: "All." },
+  { q: "The aromatic amino acid(s) is (are) —", opts: ["Tyrosine", "Phenylalanine", "tryptophan", "All"], ans: 3, exp: "All." },
+  { q: "The charged molecule which is electrically neutral is known as —", opts: ["Amide", "Aminoacid", "Zwitterion", "Polar amino acid"], ans: 2, exp: "Zwitterion." },
+  { q: "Types of amino acids universally used in protein synthesis are —", opts: ["20", "80", "64", "61"], ans: 0, exp: "20." },
+  { q: "Which of the following statements is false?", opts: ["In solutions of different pH, the structure of amino acid changes", "Protein is a homopolymer", "Non-essential amino acids are synthesised by animals", "Dietary proteins are source of essential amino acids"], ans: 1, exp: "Protein is a homopolymer." },
+  { q: "Which one is the most abundant organic biomolecule in a cell?", opts: ["Water", "Protein", "DNA", "mRNA"], ans: 1, exp: "Protein." },
+  { q: "All are proteins except —", opts: ["Receptors + Insulin", "Antibody + Trypsin", "GLUT-4 + Collagen", "CoQ"], ans: 3, exp: "CoQ." },
+  { q: "Match correctly between Column I and Column II: Column I: A. Collagen, B. Trypsin, C. Insulin, D. Antibody, E. Receptor, F. GLUT-4; Column II: I. Glucose transport, II. Binding with some chemical like for small taste and hormones, III. Hormones, IV. Enzyme, V. Intercellular ground substance, VI. Fight infectious agents", opts: ["A-V, B-IV, C-III, D-VI, E-II, F-I", "A-II, B-III, C-IV, D-V, E-VI, F-I", "A-VI, B-II, C-I, D-V, E-IV, F-III", "A-I, B-IV, C-III, D-VI, E-II, F-V"], ans: 0, exp: "A-V, B-IV, C-III, D-VI, E-II, F-I." },
+  { q: "In animal world the most abundant protein is _____ while in the whole biosphere the most abundant protein is _____", opts: ["Antibody, Collagen", "Collagen, RuBisCo", "RuBisCo, Collagen", "Collagen, Oxidase"], ans: 1, exp: "Collagen, RuBisCo." },
+  { q: "— C — N — is found in all except: (with H attached to N)", opts: ["Polypeptides", "Enzymes", "Amino acid", "Protein"], ans: 2, exp: "Amino acid." },
+  { q: "Primary structure of protein is due to —", opts: ["Peptide bonds", "Hydrogen bonds", "-S-S bridge", "Ionic bonds"], ans: 0, exp: "Peptide bonds." },
+  { q: "Formation of protein / formation peptide bonds is a type of —", opts: ["Hydration analysis", "Dehydration analysis", "Hydration synthesis", "Dehydration synthesis"], ans: 3, exp: "Dehydration synthesis." },
+  { q: "Which one of the following biomolecules will be different in different animals?", opts: ["Lipids", "Vitamins", "Carbohydrates", "Proteins"], ans: 3, exp: "Proteins." },
+  { q: "In some places a protein molecule may be folded back on itself. This is called ______ structure and folds or coils are held together in place by ______", opts: ["2°, H-bonds", "2°, Peptide bond", "3°, H-bonds", "1°, Peptide bond"], ans: 0, exp: "2°, H-bonds." },
+  { q: "A protein has how many terminal amino acids and are called _____?", opts: ["2; N-terminal amino acid and C-terminal amino acid", "3; N-terminal amino acid, C-terminal amino acid, R-terminal amino acid", "1; C-terminal amino acid", "4; N-terminal amino acids"], ans: 0, exp: "2; N-terminal amino acid and C-terminal amino acid." },
+  { q: "All proteins —", opts: ["Are enzymes", "Are homopolymer", "Consists of one or more polypeptide chains", "Have a linear or flat shape"], ans: 2, exp: "Consists of one or more polypeptide chains." },
+  { q: "The primary structure of a protein is determined by its —", opts: ["Disulfide brides", "α-helix structure", "Order of amino acids", "3D-structure"], ans: 2, exp: "Order of amino acids." },
+  { q: "The quaternary structure of a protein —", opts: ["Consists of 4 subunits - hence the name quaternary", "Is unrelated to the function of the protein", "Both a and b", "Depends on the 1° structure of subunits"], ans: 3, exp: "Depends on the 1° structure of subunits." },
+  { q: "Major classes of biologically significant large molecules include which of the following?", opts: ["Proteins", "Nucleic acids", "Carbohydrates and Lipid", "All"], ans: 3, exp: "All." },
+  { q: "Amino acids can be classified by the —", opts: ["number of peptide bonds", "Number of disulfide bridges they can form", "Number of carbon-carbon double", "Characteristics of their side chains"], ans: 3, exp: "Characteristics of their side chains." },
+  { q: "The shape of folded protein is often determined by —", opts: ["Its tertiary structure", "The sequence of its amino acids", "The number of peptide bonds", "The Chargaffs rule"], ans: 1, exp: "The sequence of its amino acids." },
+  { q: "The 20 different common amino acids have different —", opts: ["R-groups", "Acid groups", "Peptide bonds", "1° structure"], ans: 0, exp: "R-groups." },
+  { q: "A β-pleated sheet organization in a polypeptide chain is an example of —", opts: ["1° structure", "2° structure", "3° structure", "4° structure"], ans: 1, exp: "2° structure." },
+  { q: "Polysaccharides, polypeptides, and polynucleotides have in common that they all —", opts: ["contain amino acids", "Are formed in condensation reactions", "Contain nitrogen", "Come out in acid soluble pool"], ans: 1, exp: "Are formed in condensation reactions." },
+  { q: "The ____ structure of a protein relates to how separate polypeptides assemble together —", opts: ["1°", "2°", "3°", "4°"], ans: 3, exp: "4°." },
+  { q: "Which of the following statements concerning polymers is not true?", opts: ["Polymers are synthesised from monomers during condensation", "Polymers are synthesised from monomers by addition of water", "Polymers consist of atleast two types of monomers", "b and c"], ans: 3, exp: "b and c." },
+  { q: "An α helix is the example of which level of protein structure?", opts: ["1°", "2°", "3°", "4°"], ans: 1, exp: "2°." },
+  { q: "Adult human haemoglobin consists of —", opts: ["2 subunits (α, α)", "2 subunits (β, β)", "4 subunits (2α, 2β)", "3 subunits (2α, 1β)"], ans: 2, exp: "4 subunits (2α, 2β)." },
+  { q: "The overall three dimensional shape of polypeptide is called the —", opts: ["1° structure", "2° structure", "3° structure", "4° structure"], ans: 2, exp: "3° structure." },
+  { q: "Which of the following is incorrect?", opts: ["Quaternary structure refers to the spatial relations between individual polypeptide chains in a multichained protein", "The tertiary structure is absolutely necessary for many biological activities of protein", "Biologists describe the protein structures at 3 levels only", "Protein structure is correlated with protein function"], ans: 2, exp: "Biologists describe the protein structures at 3 levels only." },
+  { q: "Primary protein structure determines which of the following additional levels of protein organization?", opts: ["2°", "3°", "2°, 3°, 4°", "4°"], ans: 2, exp: "2°, 3°, 4°." },
+  { q: "Which is the highest structural organization found in all enzymes?", opts: ["2°", "3°", "1°", "4°"], ans: 1, exp: "3°." },
+  { q: "Plants produce an enormous diversity of substances that have no apparent roles in growth and development processes are classified under the heading of —", opts: ["Primary metabolites", "Secondary metabolites", "Necessary metabolites", "Tertiary metabolites"], ans: 1, exp: "Secondary metabolites." },
+  { q: "Which one is secondary metabolite —", opts: ["Amino acid", "Lipid", "Alkaloid", "Protein"], ans: 2, exp: "Alkaloid." },
+  { q: "Which of the following statements is false?", opts: ["The study of plant secondary metabolites has many practical application", "Some secondary metabolites have ecological importance", "The types of secondary metabolites in animal cells are more than that in plant cells", "Secondary metabolites are found in fungi, microbes and plants"], ans: 2, exp: "The types of secondary metabolites in animal cells are more than that in plant cells." },
+  { q: "Go through the following statements: A. Primary metabolites are biochemicals formed as intermediates and products of normal vital metabolic pathways of organisms. B. Plant tissues produce only secondary metabolites. C. Secondary metabolites have restricted distribution in the plant kingdoms only. D. Secondary metabolites are derivatives of primary metabolites. E. Many plants, fungi and microbes synthesise secondary metabolites. F. No secondary metabolite has ecological importance. G. We understand the role of all secondary metabolites in the host organisms. H. Many secondary metabolites are of economic importance to us. Which of the above statement are wrong?", opts: ["A, B, C are wrong", "D, E, F are wrong", "A, D, E are wrong", "B, C, F, G are wrong"], ans: 3, exp: "B, C, F, G are wrong." },
+  { q: "Which one of the following is not a polymeric substance?", opts: ["Rubber", "Morphine", "Gum", "Cellulose"], ans: 1, exp: "Morphine." },
+  { q: "Which of the following secondary metabolites are used as drugs?", opts: ["Abrin + Ricin", "Vinblastin + Curcumin", "Anthocyanine", "Ricin + Glucosinolates"], ans: 1, exp: "Vinblastin + Curcumin." },
+  { q: "Which one is the secondary metabolites?", opts: ["Lemon oil grass", "Sucrose", "Maltose", "Amino acid"], ans: 0, exp: "Lemon oil grass." },
+  { q: "Match the Column I with Column II correctly: Column I (Category): A. Pigments, B. Terpenoides, C. Alkaloids, D. Lectins; Column II (Secondary Metabolites): I. Concanavalin A, II. Monoterpenes, Diterpenes, III. Morphine, Cadeine, IV. Carotenoids, Anthocyanine", opts: ["A-IV, B-II, C-III, D-I", "A-IV, B-III, C-II, D-I", "A-I, B-IV, C-III, D-II", "A-I, B-III, C-II, D-IV"], ans: 0, exp: "A-IV, B-II, C-III, D-I." },
+  { q: "Which one(s) is (are) secondary metabolites?", opts: ["Flavonoids and Rubber", "Antiotics and coloured pigments", "Scents, gums, spices", "All"], ans: 3, exp: "All." },
+  { q: "Three important polysaccharides made up of glucose monomers are —", opts: ["Sucrose, Lactose, maltose", "Chitin, Glycogen, Starch", "Starch, Glycogen, Cellulose", "RNA, DNA, Starch"], ans: 2, exp: "Starch, Glycogen, Cellulose." },
+  { q: "Which one is homopolymer?", opts: ["Starch, Cellulose, Glycogen and Inulin", "Insulin, Chitin, Pectin", "Cellulose, Insulin, Polypeptide", "Protein, Lipid and polysaccharide"], ans: 0, exp: "Starch, Cellulose, Glycogen and Inulin." },
+  { q: "In a spontaneous reaction, the free energy of a system —", opts: ["Decreases", "Increases", "Becomes equal to zero", "Remains unchanged"], ans: 0, exp: "Decreases." },
+  { q: "Cells continue to function only when a metabolic disequilibrium is in effect. How do cells avoid reaching metabolic equilibrium?", opts: ["Providing constant supply of enzymes", "Cellular metabolism utilizes only those reactions that are irreversible", "Use feed back inhibition to turn off pathways", "The products of one reaction become the reactant of another reaction and are unable to accumulate"], ans: 3, exp: "The products of one reaction become the reactant of another reaction and are unable to accumulate." },
+  { q: "Choose the all incorrect statements: I. Assembly of a protein from amino acids requires energy. II. When glucose is degraded into lactic acid in our muscles energy is liberated. III. Bond energy (ATP) is utilized for biosynthesis, osmotic and mechanical work that we perform. IV. Majority of metabolic reactions can occur in isolation. V. There are many examples of uncatalysed metabolic reactions.", opts: ["All", "None", "IV and V", "I and III"], ans: 2, exp: "IV and V." },
+  { q: "I. Acetic acid can form cholesterol. II. Anabolic pathway is endergonic while catabolic pathway is exergonic. III. All biomolecules have a turn over i.e. they are constantly being changed into some other biomolecules and also made from other biomolecules. IV. Flow of metabolites through metabolic pathway has a definite rate and direction. It is called dynamic state of body constituents.", opts: ["All are correct", "All are wrong", "I and II are correct", "Only IV is correct"], ans: 0, exp: "All are correct." },
+  { q: "Complete the following sentence: ADP + Pi → ATP is an ______ reaction, ATP → ADP + Pi is an ____ reaction, and the conversion of ADP + Pi to ATP ______ energy.", opts: ["Exergonic, endergonic, releases", "Exergonic, endergonic, requires", "Endergonic, exergonic, requires", "Exergonic, endergonic does not involve"], ans: 2, exp: "Endergonic, exergonic, requires." },
+  { q: "Which one is false? I. Energy can enter and leave a cell. II. Matter can enter and leave a cell. III. A cell can use energy from other sources to increase its order and complexity. IV. Metabolic pathways are interlinked. V. Blood concentration of glucose in a normal healthy person is 4.5 - 5.0 mM, while that of hormones would be nanogram/ml. VI. Living process is a constant effort to promote falling into equilibrium.", opts: ["Only V", "Only VI", "Only I and IV", "Only IV"], ans: 1, exp: "Only VI." },
+  { q: "Choose the correct statement(s) —", opts: ["Living steady state has a self regulatory mechanism called homeostasis", "Energy flow and energy transformation of living system follow law of thermodynamics", "Metabolism is release and gain of energy", "All"], ans: 3, exp: "All." },
+  { q: "Which one is incorrect?", opts: ["Organisms live at the expense of free energy", "ATP powers the cellular work by coupling exergonic reaction to endergonic reactions", "All living organisms exist in a steady state characterized by concentrations of biomolecules. Biomolecules are in a metabolic flux", "None"], ans: 3, exp: "None." },
+  { q: "Choose the false statement —", opts: ["The living state is a non-equilibrium steady state to be able to perform work", "The constant flow of material or energy in and out of cell prevent from reaching equilibrium", "Living state and metabolism are synonymous", "None"], ans: 3, exp: "None." },
+  { q: "What is the most correct about enzymes?", opts: ["All enzymes are basically proteins", "All proteins are basically enzymes", "Some proteins are enzymes", "Some enzymes are proteins"], ans: 2, exp: "Some proteins are enzymes." },
+  { q: "Choose the incorrect statement —", opts: ["Active enzyme has tertiary structure having many active sites (substrate binding sites)", "Enzyme are different from catalyst in being proteinaceous", "Enzymes occur in viruses", "Enzymes are biocatalyst"], ans: 2, exp: "Enzymes occur in viruses." },
+  { q: "Which one is correct?", opts: ["Inorganic catalysts work efficiently at high temperature and high pressure while enzymes get damaged at temperature (above 40°C)", "Thermophilic organisms living in hot vents and sulphur springs have enzymes that are stable and retain catalytic power even at high temperature (80-90°C)", "Ribozymes are nucleic acids behaving like enzyme", "All"], ans: 3, exp: "All." },
+  { q: "CO₂ + H₂O → H₂CO₃ (Carbonic acid). Which one is incorrect about the above reaction?", opts: ["Without enzyme, the rate of H₂CO₃ formation is 200 molecules per hour", "When carbonic anhydrase catalyses the same reaction, there is no change in the rate of H₂CO₃ formation", "The reaction catalysed by the enzyme shows speeds with about 600,000 molecules being formed/sec (million times more rate)", "The enzymes occurs in cytoplasm of certain cells"], ans: 1, exp: "When carbonic anhydrase catalyses the same reaction, there is no change in the rate of H₂CO₃ formation." },
+  { q: "The energy required for life processes must be extracted from an organisms —", opts: ["Nucleus", "Biosynthesis", "Enzyme", "Environment"], ans: 3, exp: "Environment." },
+  { q: "Which of the following statements about enzymes is true? I. Enzymes do not alter the overall change in free energy for a reaction. II. Enzymes are proteins whose three dimensional shape is key to their functions. III. Enzymes speed up reactions by lowering activation energy. IV. Enzyme are highly specific for reactions. V. An enzyme like any protein has the secondary and tertiary structure. VI. The energy input needed to start a chemical reaction is called activation energy.", opts: ["All", "All except V", "V and VI", "II and IV"], ans: 0, exp: "All." },
+  { q: "Which of the following are unique features about the enzyme?", opts: ["They are not consumed by the enzyme-mediated reaction", "They are not altered by the enzyme-mediated reaction", "They lower the activation energy", "All"], ans: 3, exp: "All." },
+  { q: "Which statement about the enzymes is true?", opts: ["They act to speed up a biochemical reaction", "They are made up of protein or RNA in some cases", "They are sensitive to temperature and pH", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following statement is correct?", opts: ["Enzymes generally function in a narrow range of temperature and pH", "Enzymes show maximum activity at optimum temperature and optimum pH", "Enzymes remain in temporary inactive state at low temperature but higher temperature destroy enzymatic activity due to denaturation of proteins", "All"], ans: 3, exp: "All." },
+  { q: "Choose the correct statement(s) —", opts: ["Km (Michaelis - Menten) constant is the substrate concentration at which the enzymatic reaction attains half of its maximum velocity (1/2 Vmax)", "At lower Km, higher the substrate affinity for enzyme", "Vmax is reached when all the active sites of an enzyme are saturated with substrate", "All"], ans: 3, exp: "All." },
+  { q: "In competitive inhibition —", opts: ["Inhibitor resembles the substrate in molecular structure", "Competition between substrates and inhibitors to occupy active sites", "Binding of the inhibitors to activities sites declines the enzyme action", "All"], ans: 3, exp: "All." },
+  { q: "Sulpha drugs / sulphanilamides kill bacteria by inhibiting synthesis of folic acid from para-aminobenzoic acid. This type of control of bacterial pathogens is —", opts: ["Noncompetitive inhibition", "Allosteric inhibition", "Competitive inhibition", "Negative feed back"], ans: 2, exp: "Competitive inhibition." },
+  { q: "Inhibition of succinate dehydrogenase by malonate is the example of —", opts: ["Noncompetitive inhibition", "Competitive inhibition", "Allosteric inhibition", "Negative feed back"], ans: 1, exp: "Competitive inhibition." },
+  { q: "Enzymes are divided into —", opts: ["6 classes, each with 4 - 13 subclasses and named accordingly by a four-digit number", "7 classes, each with 4 - 13 subclasses and named accordingly by a four-digit number", "6 classes, each with 4 - 13 subclasses and named accordingly by a three-digit number", "6 classes, each with 4 - 20 subclasses and named accordingly by a four-digit number"], ans: 0, exp: "6 classes, each with 4-13 subclasses and named accordingly by a four-digit number." },
+  { q: "Match the column I with column II correctly: Column I: 1. Class - I, 2. Class - II, 3. Class - III, 4. Class - IV, 5. Class V, 6. Class VI; Column II: I. Ligases, II. Isomerases, III. Lyases, IV. Hydrolases, V. Transferase, VI. Oxidoreductase or dehydrogenase or Redox enzyme", opts: ["1-I, 2-II, 3-III, 4-IV, 5-V, 6-VI", "1-I, 2-III, 3-V, 4-II, 5-IV, 6-VI", "1-VI, 2-V, 3-IV, 4-III, 5-II, 6-I", "1-II, 2-IV, 3-VI, 4-I, 5-III, 6-V"], ans: 2, exp: "1-VI, 2-V, 3-IV, 4-III, 5-II, 6-I." },
+  { q: "According to IUB system, isomerases belong to which class?", opts: ["1", "III", "V", "IV"], ans: 1, exp: "III." },
+  { q: "Apoenzyme and coenzyme collectively produce —", opts: ["Holoenzyme", "Enzyme product complex", "Cofactor", "Prosthetic group"], ans: 0, exp: "Holoenzyme." },
+  { q: "The suffix '-' added to substrate for naming the enzyme is —", opts: ["-ase", "-in", "-sine", "-ose"], ans: 0, exp: "-ase." },
+  { q: "The Hexokinase in the following reaction is kept under which class? Glucose + ATP → (Hexokinase, Mg++) → Glucose 6-Phosphate + ADP", opts: ["Lyase", "Ligase", "Isomerase", "Transferase"], ans: 3, exp: "Transferase." },
+  { q: "The enzyme concerned with transfer of electrons is —", opts: ["Oxidoreductases", "Cytochrome oxidase", "Dehydrogenase", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Amylase is an example of —", opts: ["Oxidoreductase", "Transferase", "Hydrolase", "Ligase"], ans: 2, exp: "Hydrolase." },
+  { q: "Which of the following enzymes does not belong to the class V of enzyme classification?", opts: ["Isomerases", "Mutases", "Epimerases", "Dehydrogenases"], ans: 3, exp: "Dehydrogenases." },
+  { q: "A. Catalyses the transfer of a group (other than hydrogen). B. Catalyses removal group from substrates by mechanism other than hydrolysis leaving double bond. C. Catalyzing the linking of 2 molecules by using energy into one molecule. Identify the classes of enzymes for above functions: A, B, C", opts: ["Ligase, Lyase, Transferase", "Transferase, Lyase, Ligase", "Lyase, Ligase, Transferase", "Transferase, Ligase, Lyase"], ans: 1, exp: "Transferase, Lyase, Ligase." },
+  { q: "When apoenzyme is separated from its metal component its activity is —", opts: ["Decreased", "Increased", "Lost", "Not effected"], ans: 2, exp: "Lost." },
+  { q: "Cofactors are —", opts: ["Non protein organic molecules", "Certain vitamins", "Metallic ions", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Which of the following combinations is correct?", opts: ["Metal ions loosely attached with apoenzyme - Activators", "Non protein organic part attached to apoenzyme firmly - Prosthetic group", "Non protein organic part attached loosely to apoenzyme - Coenzyme", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Which one is not cofactor?", opts: ["Coenzyme", "Apoenzyme", "Prosthetic group", "Metal ions"], ans: 1, exp: "Apoenzyme." },
+  { q: "Which one is correct?", opts: ["Cofactor plays crucial role in catalytic activity of the enzymes", "Zn is activator of carboxypeptidase", "Catalase and peroxidase have haem as prosthetic group", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following statements is incorrect? I. Nearly 1/3rd of all enzymes requires the presence of metal ions for catalytic function. II. Metal ions form coordinate bond with side chain at active site of metalloenzyme and at the same time form more coordinate bonds with the substrate. III. NAD and NADP (coenzymes) contain niacin (vit.). IV. Coenzyme are organic compounds but their association with the apoenzyme is only transient, usually during catalysis.", opts: ["All", "Only III and IV", "Only IV", "None of the above"], ans: 3, exp: "None of the above." },
+  { q: "Macro molecule chitin is:", opts: ["Phosphorus containing polysaccharide", "Sulphur containing polysaccharide", "Simple polysaccharide", "Nitrogen containing polysaccharide"], ans: 3, exp: "Nitrogen containing polysaccharide." },
+  { q: "The essential chemical components of many coenzymes are:", opts: ["Nucleic acids", "Carbohydrates", "Vitamins", "Proteins"], ans: 2, exp: "Vitamins." },
+  { q: "Transition state structure of the substrate formed during an enzymatic reaction is —", opts: ["transient but stable", "permanent but unstable", "transient and unstable", "permanent and stable"], ans: 2, exp: "transient and unstable." },
+  { q: "Phosphoglyceride is always made up of:", opts: ["only a saturated fatty acid esterified to a glycerol molecule to which a phosphate group is also attached", "only an unsaturated fatty acid esterified to a glycerol molecule to which a phosphate group is also attached", "a saturated or unsaturated fatty acid esterified to a glycerol molecule to which a phosphate group is also attached", "a saturated or unsaturated fatty acid esterified to a phosphate group which is also attached to a glycerol molecule"], ans: 2, exp: "a saturated or unsaturated fatty acid esterified to a glycerol molecule to which a phosphate group is also attached." },
+  { q: "Select the option which is not correct with respect to enzyme action:", opts: ["Substrate binds with enzyme at its active site", "Addition of lot of succinate does not reverse the inhibition of succinic dehydrogenase by malonate", "A non-competitive inhibitor binds the enzyme at a site distinct from that which binds the substrate", "Malonate is a competitive inhibitor of succinic dehydrogenase"], ans: 1, exp: "Addition of lot of succinate does not reverse the inhibition of succinic dehydrogenase by malonate." },
+  { q: "Which one of the following is a non-reducing carbohydrate?", opts: ["Maltose", "Sucrose (table sugar)", "Lactose", "Ribose 5-phosphate"], ans: 1, exp: "Sucrose (table sugar)." },
+  { q: "Which of the following statements about enzymes is wrong?", opts: ["Enzymes require optimum pH and temperature for maximum activity", "Enzymes are denatured at high temperatures", "Enzymes are mostly proteins but some are lipids also", "Enzymes are highly specific"], ans: 2, exp: "Enzymes are mostly proteins but some are lipids also." },
+  { q: "One molecule of triglyceride is produced using —", opts: ["One fatty acid and one glycerol", "One fatty acid and three glycerols", "Three fatty acids and three glycerols", "Three fatty acids and one glycerol"], ans: 3, exp: "Three fatty acids and one glycerol." },
+  { q: "Gluten in is an important protein in —", opts: ["Potato", "Wheat", "Soyabean", "Spinach"], ans: 1, exp: "Wheat." },
+  { q: "Which of the following statements is wrong for sucrose?", opts: ["It is a disaccharide", "It is a non-reducing sugar", "It accumulates in the cytoplasm", "It is comprised of maltose and fructose"], ans: 3, exp: "It is comprised of maltose and fructose." },
+  { q: "The protein component of a holoenzyme is known as —", opts: ["Coenzyme", "Cofactor", "Prosthetic group", "Apoenzyme"], ans: 3, exp: "Apoenzyme." },
+  { q: "Km is —", opts: ["Product", "Enzyme", "Constant", "Unit"], ans: 2, exp: "Constant." },
+  { q: "Which of the following amino acids contains sulphur atom in its side chain?", opts: ["methionine", "alanine", "tryptophan", "phenylalanine"], ans: 0, exp: "methionine." },
+  { q: "Which of the following sugars cannot be hydrolyzed further to yield simple sugars?", opts: ["Ribose", "Maltose", "Sucrose", "Lactose"], ans: 0, exp: "Ribose." },
+  { q: "Enzymes which catalyse reactions involving changes in structure of a molecule are —", opts: ["Ligases", "Isomerases", "Hydrolyses", "Transferases"], ans: 1, exp: "Isomerases." },
+  { q: "Km value is dependent upon —", opts: ["Temperature", "Substrate concentration", "Enzyme concentration", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Starch is insoluble, yet it accumulates in large quantity in Potato tuber because —", opts: ["It is useful for storage", "Starch is synthesised in tubers", "Tubers respire slowly", "Translocated sucrose is polymerised here"], ans: 3, exp: "Translocated sucrose is polymerised here." },
+  { q: "Number of carbons in a ring of deoxyribose sugar is —", opts: ["Three", "Four", "Five", "Six"], ans: 2, exp: "Five." },
+  { q: "Which enzyme shows greatest substrate specificity?", opts: ["Nuclease", "Trypsin", "Pepsin", "Sucrase"], ans: 3, exp: "Sucrase." },
+  { q: "Catalytic efficiency of two different enzymes is compared by their —", opts: ["Product", "Molecular size", "Km value", "pH optimum value"], ans: 2, exp: "Km value." },
+  { q: "An important step in the manufacture of pulp in paper industry from woody tissues of plants is —", opts: ["Preparation of pure cellulose by removing lignin", "Treatment of wood with chemicals for breakdown of cellulose", "Removal of oil by suitable chemicals", "Removal of water from wood by prolonged heating at 50°C"], ans: 0, exp: "Preparation of pure cellulose by removing lignin." },
+  { q: "Wax is —", opts: ["Ester", "Cholesterol", "Acid", "Monohydric alcohol"], ans: 0, exp: "Ester." },
+  { q: "Which is least harmful —", opts: ["Saturated fat", "Oils", "Cholesterol", "Polyunsaturated fats"], ans: 3, exp: "Polyunsaturated fats." },
+  { q: "Which of the following properties of starch makes it useful as storage material? 1. Easily translocated, 2. Chemically nonreactive, 3. Easily digested by animals, 4. Osmotically inactive, 5. Synthesised during photosynthesis", opts: ["1, 3, 5", "1 and 5", "2 and 3", "2 and 4"], ans: 3, exp: "2 and 4." },
+  { q: "A typical homopolysaccharide is —", opts: ["Starch", "Lignin", "Insulin", "Suberin"], ans: 0, exp: "Starch." },
+  { q: "At isoelectric point, a protein has —", opts: ["No net charge", "Negative charge", "Positive charge", "Both (b) and (c)"], ans: 0, exp: "No net charge." },
+  { q: "Polymer of sucrose is —", opts: ["Cellulose", "Starch", "Glycogen", "Fluka Ficoll"], ans: 3, exp: "Fluka Ficoll." },
+  { q: "Prostaglandins are —", opts: ["Simple proteins", "Conjugated proteins", "Saturated fatty acids", "Unsaturated fatty acids"], ans: 3, exp: "Unsaturated fatty acids." },
+  { q: "In a 50 g living tissue, the amount of water would be —", opts: ["15-25g", "25-30g", "35-45g", "70-90g"], ans: 3, exp: "70-90g." },
+  { q: "The catalytic efficiency of two different enzymes can be compared by the —", opts: ["molecular size of the enzymes", "pH optimum values", "Km values", "formation of the product"], ans: 2, exp: "Km values." },
+  { q: "Which of the following statements about the structure of proteins is true?", opts: ["The sequence of amino acids in a protein represents the secondary structure", "The helices of proteins are always left handed", "Adult human haemoglobin consists of two subunits", "Proteins are heteropolymers containing strings of amino acids"], ans: 3, exp: "Proteins are heteropolymers containing strings of amino acids." },
+  { q: "The moiety present at the 5' end of ribose sugar in a polynucleotide is —", opts: ["OH", "CH₂", "phosphate", "adenine"], ans: 2, exp: "phosphate." },
+  { q: "In the ribose of RNA, unlike DNA, every nucleotide residue has an additional —", opts: ["COOH group in the 2' position", "OH group in the 5' position", "OH group in the 2' position", "Phosphate group in the 2' position"], ans: 2, exp: "OH group in the 2' position." },
+  { q: "Which enzyme can hydrolyse peptidoglycans?", opts: ["Amylase", "Lipase", "Trypsin", "Lysozyme"], ans: 3, exp: "Lysozyme." },
+  { q: "Not all proteins have a —", opts: ["Primary structure", "Secondary structure", "Tertiary structure", "Quaternary structure"], ans: 3, exp: "Quaternary structure." },
+  { q: "A tripeptide contains —", opts: ["3-amino acids", "4-amino acids", "6-amino acids", "2-amino acids"], ans: 0, exp: "3-amino acids." },
+  { q: "How many phosphodiester bonds are there in ATP?", opts: ["3", "2", "1", "0"], ans: 1, exp: "2." },
+  { q: "An allosteric inhibitor of the enzyme acts by binding to the —", opts: ["Substrate", "Product", "Catalytic site of the enzyme", "Non-catalytic site of the enzyme"], ans: 3, exp: "Non-catalytic site of the enzyme." },
+  { q: "Which one of the following natural polymers is found both in insects and fungi?", opts: ["Pectin", "Chitin", "Cellulose", "Suberin"], ans: 1, exp: "Chitin." },
+  { q: "Which one of the following combinations of all three fatty acids are essential for human beings?", opts: ["Oleic acid, linoleic acid and linolenic acid", "Palmitic acid, linoleic acid and arachidonic acid", "Oleic acid, linoleic acid and arachidonic acid", "Linoleic acid, linolenic acid and arachidonic acid"], ans: 3, exp: "Linoleic acid, linolenic acid and arachidonic acid." },
+  { q: "What is exhibited by lower km value?", opts: ["More affinity with substrate", "Less affinity with substrate", "More affinity with product", "less affinity with product"], ans: 0, exp: "More affinity with substrate." },
+  { q: "Which one of the following statements is incorrect?", opts: ["The competitive inhibitor does not affect the rate of breakdown of the enzyme-substrate complex", "The presence of the competitive inhibitor decreases the Km of the enzyme for the substrate", "A competitive inhibitor reacts reversibly with the enzyme to form an enzyme-inhibitor complex", "In competitive inhibition, the inhibitor molecule is not chemically changed by the enzyme"], ans: 1, exp: "The presence of the competitive inhibitor decreases the Km of the enzyme for the substrate." },
+  { q: "The chitinous exoskeleton of arthropods is formed by the polymerisation of —", opts: ["N-acetyle glucosamine", "Lipoglycans", "Keratin sulphate and chondroitin sulphate", "D-glucosamine"], ans: 0, exp: "N-acetyle glucosamine." },
+  { q: "Which of the following biomolecules does have a phosphodiester bond?", opts: ["Amino acids in a polypeptide", "Nucleic acids in a nucleotide", "Fatty acids in a diglyceride", "Monosaccharides in a polysaccharide"], ans: 1, exp: "Nucleic acids in a nucleotide." },
+  { q: "Mostly proteins which is present in protoplasm show which type of configuration?", opts: ["Primary", "Secondary", "Tertiary", "Quaternary"], ans: 2, exp: "Tertiary." },
+  { q: "A typical fat molecule is made up of:", opts: ["Three glycerol molecules and one fatty acid molecule", "One glycerol and three fatty acid molecules", "One glycerol and one fatty acid molecule", "Three glycerol and three fatty acid molecules"], ans: 1, exp: "One glycerol and three fatty acid molecules." },
+  { q: "Which one of the following statements is wrong?", opts: ["Sucrose is a disaccharide", "Cellulose is a polysaccharide", "Uracil is a pyrimidine", "Glycine is a sulphur containing amino acid"], ans: 3, exp: "Glycine is a sulphur containing amino acid." },
+  { q: "A non-proteinaceous enzyme is:", opts: ["Ligase", "Deoxyribonuclease", "Lysozyme", "Ribozyme"], ans: 3, exp: "Ribozyme." },
+  { q: "Phytochrome is a:", opts: ["Lipoprotein", "Chromoprotein", "Flavoprotein", "Glycoprotein"], ans: 1, exp: "Chromoprotein." },
+  { q: "Which of the following is the least likely to be involved in stabilizing the three-dimensional folding of most proteins?", opts: ["Hydrophobic interaction", "Ester bonds", "Hydrogen bonds", "Electrostatic interaction"], ans: 1, exp: "Ester bonds." },
+  { q: "Histone proteins are rich in:", opts: ["Alanine and glycine", "Arginine and lysine", "Histidine and serine", "Tyrosine and cysteine"], ans: 1, exp: "Arginine and lysine." },
+  { q: "Which of the following pair of amino acids are acidic?", opts: ["Glycine and glutamate", "Aspartate and valine", "Alanine and methionine", "Glutamate and aspartate"], ans: 3, exp: "Glutamate and aspartate." },
+  { q: "First discovered amino acid is ___", opts: ["Asparagine", "Aspartate", "Glutamate", "Glutamine"], ans: 0, exp: "Asparagine." },
+  { q: "Among the 20 standard protein coding amino acids, which was the last discovered amino acid?", opts: ["Leucine", "Isoleucine", "Threonine", "Serine"], ans: 2, exp: "Threonine." },
+  { q: "Which of the followings can bring about the denaturation of proteins? I. Reaction to salts of heavy metals. II. Reaction to acid and bases. III. Reaction to inorganic neutral salts. IV. Preservation at a temperature below -5°C.", opts: ["I and IV are correct", "II and IV are correct", "I, II and III are correct", "III and IV are correct"], ans: 2, exp: "I, II and III are correct." },
+  { q: "Which of the following is a coenzyme?", opts: ["Fe++", "Mucus", "NAD+", "Lyase"], ans: 2, exp: "NAD+." },
+  { q: "Which of the following nitrogenous base is double ringed?", opts: ["Guanine", "Thymine", "Uracil", "Cytosine"], ans: 0, exp: "Guanine." },
+  { q: "The cofactor for the enzyme carboxypeptidase is:", opts: ["Copper", "Iron", "Zinc", "Manganese"], ans: 2, exp: "Zinc." },
+  { q: "Which one of the following is a disaccharide —", opts: ["Maltose", "Ribose", "Glucose", "Fructose"], ans: 0, exp: "Maltose." },
+  { q: "First enzyme to be isolated in pure crystalline form was —", opts: ["Zymase", "Urease", "Invertase", "Diastase"], ans: 1, exp: "Urease." },
+  { q: "Reaction will proceed faster if activation energy is —", opts: ["high", "low", "remains constant", "none of above"], ans: 1, exp: "low." },
+  { q: "Which of the following statements about Michaelis-Menten kinetics is correct?", opts: ["Km, the Michaelis constant, is defined as the concentration of substrate required for the reaction to reach maximum velocity", "Km, the Michaelis constant, is defined as the dissociation constant of the enzyme-substrate complex", "Km, the Michaelis constant, is expressed in terms of the reaction velocity", "Km, the Michaelis constant, is a measure of the affinity the enzyme has for its substrate"], ans: 3, exp: "Km, the Michaelis constant, is a measure of the affinity the enzyme has for its substrate." },
+  { q: "Which of the following statements about Michaelis-Menten kinetics is correct? I. A high Michaelis constant (Km) indicates a high affinity of an enzyme for its substrate. II. A low Michaelis constant (Km) indicates a high affinity of an enzyme for its substrate. III. The Michaelis constant (Km) of an enzyme increases when the enzyme concentration is increased. IV. The Michaelis constant (Km) of an enzyme is unchanged when the enzyme concentration is increased.", opts: ["I and II are correct", "II and III are correct", "II and IV are correct", "I and III are correct"], ans: 2, exp: "II and IV are correct." },
+  { q: "Which one of the following statements is correct, with reference to enzymes?", opts: ["Holoenzyme = Apoenzyme + Coenzyme", "Coenzyme = Apoenzyme + Holoenzyme", "Holoenzyme = Coenzyme + Co-factor", "Apoenzyme = Holoenzyme + Coenzyme"], ans: 0, exp: "Holoenzyme = Apoenzyme + Coenzyme." },
+  { q: "Which of the following are not polymeric?", opts: ["Proteins", "Polysaccharides", "Lipids", "Nucleic acids"], ans: 2, exp: "Lipids." },
+  { q: "Fats and oils are the most preferred reserved foods. Choose the correct combination of statements given below to support this: i. They have density lower than most other molecules in a cell. ii. Their complete oxidation release energy greater than other organic polymers. iii. Being hydrophobic they get clustered and use lesser space for storage. iv. Being heteropolymeric they are the most convenient storage foods.", opts: ["ii & iii", "i & ii", "i & iv", "iii & iv"], ans: 0, exp: "ii & iii." },
+  { q: "The main difference between an enzyme catalyzed and uncatalyzed reaction is that the former has —", opts: ["lower energy of activation", "lower free energy", "ability to use all available substrate", "little influence of external conditions"], ans: 0, exp: "lower energy of activation." },
+  { q: "In palmitic acid and arachidonic acid, number of carbon atoms are respectively:", opts: ["18,16", "16,20", "20, 22", "18,22"], ans: 1, exp: "16, 20." },
+  { q: "Which of the following statement is correct?", opts: ["Arachidonic acid has 20 carbon atoms including the carboxyl carbon", "Palmitic acid has 16 carbon atoms", "Stearic acid is saturated fatty acid", "All are correct"], ans: 3, exp: "All are correct." },
+  { q: "Which of the following statements is false?", opts: ["Chitin, a complex or homopolysaccharide occurring in exoskeleton of arthropods consists of NAG", "Glucosamine and N-acetylglucosamine are modified sugar", "Cellulose shows blue colour when treated with I₂", "Starch shows blue colour when treated with I₂"], ans: 2, exp: "Cellulose shows blue colour when treated with I₂." },
+  { q: "I. Right end of polysaccharide is called reducing end while left end is called nonreducing end. II. Starch can hold I₂ molecules in its helical secondary structure but cellulose being nonhelical, cannot hold I₂. III. Starch and glycogen are branched molecule. IV. Starch in plant and glycogen in animal are store houses of energy.", opts: ["I and IV are correct", "II and III are correct", "Only IV is correct", "All are correct"], ans: 3, exp: "All are correct." },
+  { q: "In polysaccharide the individual monosaccharides are linked by a bond. This bond is formed by dehydration. The bond is —", opts: ["Ester bond", "Glycosidic bond", "H-bond", "Ionic bond"], ans: 1, exp: "Glycosidic bond." },
+  { q: "Which one(s) of the following statements is correct?", opts: ["Enzymes accelerate reactions by stabilizing transition state", "A chemical reaction of substrate to form product goes through a transition state that a higher free energy than either substrate or a product(s)", "The rate of formation of ES complex is the same as the rate of breakdown of this complex either to products or back to reactant", "All"], ans: 3, exp: "All." },
+  { q: "Select all false statements for an enzyme promoting a chemical reaction by: I. Lowering the energy of activation. II. Causing the release of heat, which acts as a primer. III. Increasing molecular motion. IV. Changing the free energy difference between substrate and product.", opts: ["I and IV", "II and III", "II, III, IV", "III and IV"], ans: 2, exp: "II, III, IV." },
+  { q: "Activation energy —", opts: ["Is the difference in the average energy content of 'S' from that of its transition state", "Helps to change reactants into unstable transition state before they can be converted into products", "Is the minimum energy required from outside to overcome the energy barrier of reactant or to start a reaction", "All are correct"], ans: 3, exp: "All are correct." },
+  { q: "The steps in catalytic cycle of an enzyme action are given in random order: I. The enzyme releases the products. Now enzyme is free to bind another substrate. II. The active sites, now in close proximity of substrate breaks the bond of substrate and E-P complex forms. III. Binding of substrate induces the enzyme to alter its shape fitting more tightly around the substrate. IV. The substrate binds to the active site of enzyme (i.e. fitting into the active site). The correct order is —", opts: ["I, II, III, IV", "IV, III, II, I", "I, III, II, IV", "I, II, IV, III"], ans: 1, exp: "IV, III, II, I." },
+  { q: "Which one is correct? (Enzyme mechanism)", opts: ["E + S → ES → E + P → EP", "E + S → ES → E-P → E + P", "E + S ↔ ES ↔ E-P ↔ E + P", "E + S → ES → E-P → E + P"], ans: 1, exp: "E + S → ES → E-P → E + P." },
+  { q: "Find out the correct one.", opts: ["Cellulose is the most abundant carbohydrate", "50% of all photosynthetic products constitute cellulose", "Rubisco is the most abundant protein on earth", "All"], ans: 3, exp: "All." },
+  { q: "Find out wrong one.", opts: ["Fevicol is a synthetic resin (polyvinyl alcohol)", "Biurets test, solubility test / Grease test and Ninhydrin test are done for protein, fat (oil) and AAs respectively", "Gums are heteropolysaccharide", "Low Km value indicates lower substrate affinity"], ans: 3, exp: "Low Km value indicates lower substrate affinity." },
+  { q: "What happens when milk is converted into curd or yoghurt?", opts: ["Bacterial enzymes convert lactose into lactic acid", "Globular milk protein is converted into fibrous protein", "Vit. C is changed into Thiamine", "Both a and b"], ans: 3, exp: "Both a and b." },
+  { q: "Which of the following is correct?", opts: ["I. Fruit juice shows positive test for Biuret's, Grease, Ninhydrin. II. Saliva shows positive test for Biuret's and Ninhydrin but negative test for Grease. III. Sweat shows negative test for Biuret's and Ninhydrin.", "I. Fruit juice shows negative test for Biuret's, Grease, Ninhydrin. II. Saliva shows positive test for Biuret's and Ninhydrin but negative test for Grease. III. Sweat shows positive test for Biuret's and Ninhydrin.", "I. Fruit juice shows positive test for Biuret's, Grease, Ninhydrin. II. Saliva shows negative test for Biuret's and Ninhydrin but positive test for Grease. III. Sweat shows negative test for Biuret's and Ninhydrin.", "I. Fruit juice shows negative test for Biuret's, Grease, Ninhydrin. II. Saliva shows negative test for Biuret's and Ninhydrin but positive test for Grease. III. Sweat shows negative test for Biuret's and Ninhydrin."], ans: 0, exp: "I. Fruit juice shows positive test for Biuret's, Grease, Ninhydrin. II. Saliva shows positive test for Biuret's and Ninhydrin but negative test for Grease. III. Sweat shows negative test for Biuret's and Ninhydrin." },
+  { q: "Which statement is incorrect about a 2-step reaction?", opts: ["The reaction may be exothermic or endothermic", "There are two intermediates", "Either step may be rate determining", "There are two transition states"], ans: 1, exp: "There are two intermediates." },
+  { q: "Consider the following statements: A. All enzymes require an additional chemical component called cofactor or coenzyme for their catalytic function. B. The cofactor for pyruvate kinase is K⁺. Which of the statements given above is/are correct?", opts: ["A only", "B only", "Both A and B", "Neither A nor B"], ans: 0, exp: "A only." },
+  { q: "The Michaelis constant is a measure of which one of the following?", opts: ["Concentration of the enzyme", "Catalytic efficiency of the enzyme", "Thermo-stability of the enzyme", "Affinity of the enzyme for its substrate"], ans: 3, exp: "Affinity of the enzyme for its substrate." },
+  { q: "The initial source of energy to all the varied forms of life is —", opts: ["A glucose molecule", "An ATP molecule", "The solar energy", "A protein molecule"], ans: 2, exp: "The solar energy." },
+  { q: "The bioenergetic reactions are peculiar in the fact that they keep on managing the body at —", opts: ["A megathermic level", "An isothermic level", "A microthermic level", "A hekistothermic level"], ans: 1, exp: "An isothermic level." },
+  { q: "In a living system, the chemical energy is principally stored in the form of —", opts: ["Nucleotide diphosphates", "Nucleoside triphosphates", "Nucleotide triphosphates", "Nucleoside diphosphates"], ans: 1, exp: "Nucleoside triphosphates." },
+  { q: "Which of the followings is an important attribute of life?", opts: ["Energy transformation", "Self-duplication", "Process of evolution", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "The life as such is an expression of a series of processes passing through a purely —", opts: ["Exergonic phase", "Endergonic phase", "Thermodynamic phase", "Nonthermic phase"], ans: 2, exp: "Thermodynamic phase." },
+  { q: "The series of reactions operating within the 'metabolic pool' of any living system brings about —", opts: ["Conservation of energy", "Transformation of energy", "Stagnation of energy", "Destruction of energy"], ans: 1, exp: "Transformation of energy." },
+  { q: "Even though starch and cellulose are made up of the same repeating units of glucose, they are very different in their properties. The main difference between starch and cellulose is that —", opts: ["cellulose has all its glucose repeats oriented in same direction", "starch has alternate glucose repeats oriented at 180° to each other", "starch has all its glucose repeats oriented perpendicular to each other", "cellulose has alternate glucose repeats oriented at 180° to each other"], ans: 3, exp: "cellulose has alternate glucose repeats oriented at 180° to each other." },
+  { q: "Which one of the following biomolecules is correctly characterised?", opts: ["Lecithin - a phosphorylated glyceride found in cell membrane", "Palmitic acid - an unsaturated fatty acid with 18 carbon atoms", "Adenylic acid - adenosine with a glucose phosphate molecule", "Alanine amino acid - Contains an amino group and an acidic group anywhere in the molecule"], ans: 0, exp: "Lecithin - a phosphorylated glyceride found in cell membrane." },
+  { q: "Which one is the most abundant protein in the animal world —", opts: ["Trypsin", "Hemoglobin", "Collagen", "Insulin"], ans: 2, exp: "Collagen." },
+  { q: "Prosthetic groups differ from co-enzymes in that —", opts: ["They can serve as co-factors in a number of enzyme-catalyzed reactions", "They require metal ions for their activity", "They (prosthetic groups) are tightly bound to apoenzymes", "Their association with apoenzymes is transient"], ans: 2, exp: "They (prosthetic groups) are tightly bound to apoenzymes." },
+  { q: "'Ramachandran plot' is used to confirm the structure of —", opts: ["DNA", "RNA", "Proteins", "Triacylglycerides"], ans: 2, exp: "Proteins." },
+  { q: "Which of the following organic compounds is the main constituent of Lecithin?", opts: ["Phosphoprotein", "Arachidonic acid", "Phospholipid", "Cholesterol"], ans: 2, exp: "Phospholipid." },
+  { q: "Which of the following statements about enzyme is/are correct? I. Enzyme used to partially pre-digested baby food has trypsin. II. The catalytic efficiency of two different enzymes can be compared by the Km values. III. An enzyme with high Km requires a high concentration of substrate to get Vmax. IV. A small Km indicates that the enzyme requires only a small amount of substrate to become saturated.", opts: ["I and II are correct", "II and III are correct", "II and IV are correct", "All are correct"], ans: 3, exp: "All are correct." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+  correctCount = 0; wrongCount = 0; currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 9; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 13: Photosynthesis in Higher Plants - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Photosynthesis in Higher Plants</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "1. Photosynthesis is -", opts: ["A physical process", "A chemical process", "A physio-chemical process", "An energy wasting process"], ans: 2, exp: "Photosynthesis is a physio-chemical process." },
+    { q: "2. Photosynthesis is important because -", opts: ["It is an important source of all foods on earth", "It is responsible for the release of O2", "It is responsible for the release of O2 in the environment in night", "a and b"], ans: 3, exp: "Both a and b are correct." },
+    { q: "3. Moll's half leaf experiment proves that -", opts: ["Light is essential for photosynthesis", "CO2 is essential for photosynthesis", "O2 releases during photosynthesis", "Chlorophyll is essential for photosynthesis"], ans: 1, exp: "Moll's half leaf experiment proves that CO2 is essential for photosynthesis." },
+    { q: "4. Who proved that vegetation purifies the air impured by burning of candle -", opts: ["Von Mayr", "De Saussure", "Sachs", "Joseph Priestley"], ans: 3, exp: "Joseph Priestley proved this." },
+    { q: "5. Who discovered the role of light and green parts of the plants in purifying the noxious air-", opts: ["Von Mayr", "De saussure", "Sachs", "Jan Ingenhousz"], ans: 3, exp: "Jan Ingenhousz discovered this." },
+    { q: "6. Who found that in green parts of plant glucose is made and glucose is stored as starch -", opts: ["Sach", "Arnon", "Arnold", "Englemann"], ans: 0, exp: "Sachs found this." },
+    { q: "7. Who used prism, white light, green alga, Cladophora and aerobic bacteria and plotted the action spectra for photosynthesis -", opts: ["Sachs", "Arnon", "Arnold", "Englemann"], ans: 3, exp: "Englemann used this setup." },
+    { q: "8. Who proved that O2 comes from water, not from CO2 in photosynthesis? It was based on the experiment of photosynthesis in purple and green bacteria.", opts: ["Van Neil", "Englemann", "Arnold", "Arnon"], ans: 0, exp: "Van Neil proved this." },
+    { q: "9. Which of the following statements is false?", opts: ["Usually chloroplasts align themselves along the walls of mesophyll cells, so that they get optimum quantity of incident light", "Within chloroplast there is a membranous system consisting of grana, stromal lamellae and stroma", "There is division of labour within chloroplast", "In grana CO2 is fixed"], ans: 3, exp: "CO2 is fixed in the stroma, not in grana." },
+    { q: "10. Which one is the correct summary equation of photosynthesis -", opts: ["C6H12O6 + 6O2 -> 6CO2 + 6H2O + energy", "C6H12O6 + 6O2 + 6H2O -> 6CO2 + 12H2O + energy", "6CO2 + 6H2O -> Chlorophyll, light -> 6O2 + C6H12O6", "6CO2 + 12H2O -> Chlorophyll, light -> 6O2 + C6H12O6 + 6H2O"], ans: 3, exp: "The correct summary equation is 6CO2 + 12H2O -> 6O2 + C6H12O6 + 6H2O." },
+    { q: "11. Which equation is the correct to prove that O2 comes from water during photosynthesis -", opts: ["6CO2 + 12H2O -> 6O2 + C6H12O6 + 6H2O", "6O2 + 12H2O -> 6O2 + C6H12O6 + 6H2O", "6CO2 + 12H2O -> 6CO2 + C6H12O6", "6CO2 + 12H2O -> 6O2 + C6H12O6 + 6H2O"], ans: 0, exp: "The correct equation is 6CO2 + 12H2O -> 6O2 + C6H12O6 + 6H2O." },
+    { q: "12. The membranous system of grana is responsible for-", opts: ["Trapping light energy but not ATP and NADPH2 formation", "Trapping light energy and also for fixation of CO2", "For ATP and NADPH2 formation but not for light trapping", "For light capturing and also for NADPH2 and ATP formation"], ans: 3, exp: "Grana is responsible for light capturing and also for NADPH2 and ATP formation." },
+    { q: "13. In stroma-", opts: ["Enzymatic reactions incorporate CO2 into the plant leading to ATP and NADH2 formation", "Enzymatic reactions incorporate CO2 into plant leading to the synthesis of sugar, which in turn forms starch", "Light energy is captured to form glucose", "ATP and NADPH2 are splitted and H2O and O2 comes out"], ans: 1, exp: "In stroma, enzymatic reactions incorporate CO2 into the plant leading to the synthesis of sugar, which in turn forms starch." },
+    { q: "14. Which one is correct?\nI. Light reaction occurs in stroma\nII. Light reaction occurs in grana and ATP + NADPH2 are formed\nIII. In stroma dark reaction occurs\nIV. Dark reaction is not directly light driven but is dependent on the products (ATP + NADPH2) formed in light reaction", opts: ["All are correct", "All are incorrect", "II, III and IV are correct", "I, II and IV are correct"], ans: 2, exp: "II, III and IV are correct." },
+    { q: "15. Leaf pigments, (Chl a, Chl b, Xanthophyll and carotene can be separated by -", opts: ["Paper chromatography", "Electrophoresis", "X-ray diffusion", "ELISA test"], ans: 0, exp: "Paper chromatography is used to separate leaf pigments." },
+    { q: "16. Which one is not an accessory photosynthetic pigment?", opts: ["Chl b", "Xanthophyll", "Carotene", "Chl a"], ans: 3, exp: "Chl a is the primary photosynthetic pigment, not an accessory pigment." },
+    { q: "17. What is/are the function(s) of accessory pigments?", opts: ["They enable a wider range of wavelength of incoming light to be utilized for photosynthesis", "They absorb light and transfer the energy to reaction centre", "They protect reaction centre from photooxidation", "All"], ans: 3, exp: "All the given functions are of accessory pigments." },
+    { q: "19. The rate of photosynthesis of a freshwater plant is measured using five spectral colours. Which sequence of colours would give an increasing photosynthetic response? Smallest -> Largest response", opts: ["Blue, Green, Yellow, Orange, Red", "Green, Yellow, Orange, Red, Blue", "Red, Orange, Yellow, Green, Blue", "Yellow, Green, Orange, Blue, Red"], ans: 1, exp: "Green < Yellow < Orange < Red < Blue." },
+    { q: "20. Accessory pigments -", opts: ["Play no role in photosynthesis", "release e- and get oxidised", "Transfere to NADP", "Allow plants to harvest visible light of wider range wavelengths"], ans: 3, exp: "Accessory pigments allow plants to harvest visible light of wider range wavelengths." },
+    { q: "21. A graph that plots the rate at which CO2 is converted to glucose versus the wavelength of light illuminating a leaf is called-", opts: ["An absorption spectrum", "An action spectrum", "A planck constant", "Enzyme kinetics"], ans: 1, exp: "It is called an action spectrum." },
+    { q: "22. Why are the absorption spectrum of Chl a and the action spectrum of photosynthesis are identical?", opts: ["Chl a absorbs both red and blue light maximumly", "Chl a reflects blue light", "Accessory pigments contribute energy to drive photosynthesis", "Different wave lengths of light have different energy"], ans: 2, exp: "Accessory pigments contribute energy to drive photosynthesis." },
+    { q: "23. Photosynthesis and respiration have which of the following in common?", opts: ["In eukaryotes, both processes occur in specialised organelles", "ATP synthesis in both processes relies on chemiosmotic mechanism", "Both use electron transport", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "24. Light reaction/photochemical phase includes -", opts: ["Absorption of light, water splitting, O2 release", "ATP and NADPH2 formation", "CO2 fixation and glucose formation", "a and b"], ans: 3, exp: "Light reaction includes absorption of light, water splitting, O2 release, ATP and NADPH2 formation." },
+    { q: "25. The expression \"We are creatures of chloroplasts\" means that-", opts: ["All life possesses chloroplast", "All life depends ultimately on photosynthesis", "Chloroplasts are models of all cell organelles", "a and c"], ans: 1, exp: "All life depends ultimately on photosynthesis." },
+    { q: "26. The main photosynthetic pigments in plants are -", opts: ["Chl a and Chl c", "Chl a and Chl b", "Chl x and Chl y", "Retinal pigments and accessory pigments"], ans: 1, exp: "Chl a and Chl b are the main photosynthetic pigments." },
+    { q: "27. After removal of carbon, the oxygen in carbon dioxide ends up in -", opts: ["Air", "Sugar", "Water molecules", "The sugar and water molecules"], ans: 1, exp: "The oxygen in carbon dioxide ends up in sugar." },
+    { q: "29. The main purpose of photosynthesis is to -", opts: ["Consume CO2", "Produce ATP", "Convert light energy into chemical energy", "Produce starch"], ans: 2, exp: "The main purpose is to convert light energy into chemical energy." },
+    { q: "30. Because of properties of chlorophyll, plants need adequate ___ light to grow properly-", opts: ["Green", "Blue and red", "Infrared", "Ultraviolet"], ans: 1, exp: "Plants need blue and red light." },
+    { q: "31. Photosystem I (PS I) and photosystem II (PS II) are named -", opts: ["In the sequence of their discovery", "In the sequence in which they function during light reaction", "In the sequence of their positions", "In the sequence of e transfer"], ans: 0, exp: "They are named in the sequence of their discovery." },
+    { q: "32. The light harvesting complex (LHC) is made up of-", opts: ["One molecule of Chl a", "Very few molecules of Chl a", "Hundreds of pigment molecules bound to proteins", "Chl a + Chl c + protein + DNA"], ans: 2, exp: "LHC is made up of hundreds of pigment molecules bound to proteins." },
+    { q: "33. PS consists of -", opts: ["Only antenna molecule", "Only reaction centre", "Both antenna molecule and reaction centre", "Only LHC"], ans: 2, exp: "PS consists of both antenna molecule and reaction centre." },
+    { q: "34. Reaction centre consists of -", opts: ["Single molecule of Chl b", "LHC", "Single molecule of Chl a", "Single molecule of Chl a but 2 molecules of Chl b"], ans: 2, exp: "Reaction centre consists of a single molecule of Chl a." },
+    { q: "35. Reaction centre of PS I is ______ and Reaction centre of PS II is _____ _", opts: ["P500, P700", "P700, P680", "P680, P500", "P700, P600"], ans: 1, exp: "PS I is P700 and PS II is P680." },
+    { q: "36. In PS I the reaction centre Chl a has absorption maxima at _____ , while in PS II the reaction centre Chl a has absorption maxima at ____ _", opts: ["700 nm, 680 nm", "680 nm, 700 nm", "400 nm, 500 nm", "700 nm, 800 nm"], ans: 0, exp: "PS I at 700 nm, PS II at 680 nm." },
+    { q: "37. Select the correct path that an e- could take during complete photosynthesis -", opts: ["CO2 -> RuBP -> G3P -> Glucose", "H2O -> PS I -> PS II -> NADPH + H+ -> G3P", "PS II -> H2O -> PS I -> NADP + H+ -> Glucose", "H2O -> PS II -> PS I -> NADPH + H+ -> G3P"], ans: 3, exp: "H2O -> PS II -> PS I -> NADPH + H+ -> G3P." },
+    { q: "38. When the chloroplast pigments absorb light-", opts: ["They become reduced", "They lose potential energy", "Their electrons become excited", "The calvin cycle is triggered"], ans: 2, exp: "Their electrons become excited." },
+    { q: "39. The light reactions of photosynthesis generate high-energy electrons, that end up in _____ . They produce ____ and ____ _", opts: ["ATP, NADPH2, O2", "O2, ATP, NADPH2", "Chl, O2, H2O", "NADPH2, ATP, O2"], ans: 3, exp: "NADPH2, ATP, O2." },
+    { q: "40. Which of the following is not a product of light reaction of photosynthesis?", opts: ["O2", "ATP, NADPH2", "High-energy electrons", "Sugar"], ans: 3, exp: "Sugar is not a product of light reaction." },
+    { q: "41. Which statement about the light reactions of photosynthesis is false?", opts: ["PS I and PS II are located in stroma of the chloroplast", "PS I and PS II are linked by e- carriers", "Chlorophylls have an absorption spectrum with pronounced peaks in red and blue light", "Protons diffuse through protein channels which are ATP-synthetase molecules"], ans: 0, exp: "PS I and PS II are located in the thylakoid membrane, not stroma." },
+    { q: "42. During photosynthesis, electrons are continuously lost from the reaction centre of PS II. What source is used to replace these electrons?", opts: ["Sunlight", "O2", "H2O", "O3"], ans: 2, exp: "H2O replaces the electrons." },
+    { q: "43. What does \"PS II splits water\" mean?", opts: ["Water is broken into monomers", "A condensation reaction occurs", "Water is reduced to yield hydrogen gas", "Water is oxidised to yield protons, electrons and oxygen"], ans: 3, exp: "Water is oxidised to yield protons, electrons and oxygen." },
+    { q: "44. Free energy is released in cyclic photophosphorylation.", opts: ["By the formation of ATP.", "During the excitation of chlorophyll", "During the fluorescence of chlorophyll", "During each of the redox reactions of the electron transport chain"], ans: 3, exp: "Free energy is released during each of the redox reactions of the electron transport chain." },
+    { q: "45. If green plant cells are incubated with O18-labelled CO2, what molecule will become radioactive as the cells are exposed to light?", opts: ["ATP", "Water", "Sugar", "O2"], ans: 2, exp: "Sugar will become radioactive." },
+    { q: "46. If green plant cells are incubated with O18-labelled water, what molecule will become radioactive as cells are exposed to light -", opts: ["O2", "CO2", "H2O", "Sugar"], ans: 0, exp: "O2 will become radioactive." },
+    { q: "47. Electrons excited by absorption of light in PS I are transferred to the primary acceptors, and therefore must be replaced. The replacements come directly from-", opts: ["NADP", "ATP", "PS II", "Water"], ans: 2, exp: "Replacements come from PS II." },
+    { q: "48. The biochemical objective of PS I is to", opts: ["Oxidise NADPH", "Hydrolyze ATP", "Phosphorylate ADP", "Reduce NADP+"], ans: 3, exp: "The objective is to reduce NADP+." },
+    { q: "49. The Z-scheme refers to-", opts: ["The type of photosynthesis used in plants found in areas with minimal precipitation", "The pattern of grana within the chloroplasts of photosynthetic plants", "The carbon-fixation process also known as the calvin cycle.", "An energy diagram for the transfer of electrons in the light reactions of photosynthesis in plants"], ans: 3, exp: "Z-scheme is an energy diagram for the transfer of electrons in the light reactions." },
+    { q: "50. The electron flow from PS II to NADP via ETS and PS I follows -", opts: ["Uphill -> Downhill -> Uphill -> Downhill", "Downhill -> Uphill -> Downhill -> Uphill", "Downhill -> Uphill -> Uphill -> Downhill", "Uphill -> Downhill -> Downhill -> Uphill"], ans: 0, exp: "Uphill -> Downhill -> Uphill -> Downhill." },
+    { q: "51. The whole scheme of transfer of electrons, starting from PS II, Uphill to the acceptor, down the e- transport chain to PS I, excitation of electrons, transfer to another acceptor, and finally downhill to NADP+ is called -", opts: ["Y-scheme", "()-scheme", "Z-scheme", "None"], ans: 2, exp: "It is called Z-scheme." },
+    { q: "52. If all the carriers involved in light reaction of green plants are placed in a sequence on a redox potential scale, a characteristic shape like _____ is formed.", opts: ["V", "Z", "Y", "0"], ans: 1, exp: "Z shape is formed." },
+    { q: "53. Water splitting complex is associated with -", opts: ["Outer membrane of chloroplast", "Inner membrane of chloroplast", "Stroma", "PS II"], ans: 3, exp: "Water splitting complex is associated with PS II." },
+    { q: "54. PS II is physically located on which side of the thylakoid membrane?", opts: ["Inner side", "Outer side", "Within the lumen of thylakoid", "Position of PS II shifts from inner to outer side or vice-versa"], ans: 0, exp: "PS II is located on the inner side of the thylakoid membrane." },
+    { q: "55. Phosphorylation occurs in -", opts: ["Mitochondria", "Chloroplast", "Both", "Cell wall"], ans: 2, exp: "Phosphorylation occurs in both mitochondria and chloroplast." },
+    { q: "56. In Z-scheme of photosynthesis which one(s) is involved?", opts: ["PS I", "PS II", "e- carriers", "All"], ans: 3, exp: "All are involved." },
+    { q: "57. In Z-scheme which one(s) is/are formed?", opts: ["ATP", "NADPH2", "Both", "All"], ans: 3, exp: "Both ATP and NADPH2 are formed." },
+    { q: "58. Cyclic and non cyclic flow of e- is used in plants to -", opts: ["Meet the ATP demands of Calvin-cycle", "Avoid producing excess NADPH + H+", "Balance ATP and NADPH + H+ ratio in chloroplasts", "All"], ans: 3, exp: "All the given functions are correct." },
+    { q: "59. In Cyclic electron Flow -", opts: ["O2 is released", "ATP is formed", "NADPH + H+ is formed", "Photolysis of water occurs"], ans: 1, exp: "ATP is formed in cyclic electron flow." },
+    { q: "60. Which one is false?", opts: ["H2S, not H2O, is involved in photosynthesis of purple sulphur bacteria", "Light and dark reactions are stopped in the absence of light", "Calvin cycle occurs in the grana of chloroplast", "ATP is produced during light reaction via chemiosmosis"], ans: 2, exp: "Calvin cycle occurs in the stroma, not grana." },
+    { q: "61. Which of the following materials are not recycled between dark and light reactions?", opts: ["NADPH + H", "ADP", "ATP", "O2 and CO2"], ans: 3, exp: "O2 and CO2 are not recycled." },
+    { q: "62. Which one of the following is false about the activities associated with PS I and PS II in noncyclic photophosphorylation -", opts: ["Water is oxidised in PS II, but not PS I", "Photons (light) are needed to activate both PS I and PS II", "Photolysis of water formation of ATP + NADPH + H occur", "Production of NADPH + H+ is associated with PS II, not PS I"], ans: 3, exp: "NADPH + H+ production is associated with PS I, not PS II." },
+    { q: "63. Which one of the following statements correctly describes Cyclic photophosphorylation -", opts: ["Cyclic photophosphorylation has both PS I and PS II", "Cyclic photosphorylation produces neither ATP nor NADPH + H+", "Water is the ultimate source of e- in cyclic phosphorylation", "Electrons are cycled in cyclic photophosphorylation"], ans: 3, exp: "Electrons are cycled in cyclic photophosphorylation." },
+    { q: "64. For NADPH + H+ formation -", opts: ["Only PS I is needed", "Only PS II is needed", "Both PS I and PS II are needed", "Only stroma is needed"], ans: 0, exp: "Only PS I is needed for NADPH + H+ formation." },
+    { q: "65. Where is the possible site for cyclic photophosphorylation?", opts: ["In PS II", "In Stroma", "In granal thylakoids/lamellae", "In stromal lamellae"], ans: 3, exp: "Stromal lamellae is the site for cyclic photophosphorylation." },
+    { q: "66. Stromal lamellae lack -", opts: ["PS II", "PS I", "NADP reductase", "a and c"], ans: 3, exp: "Stromal lamellae lack PS II and NADP reductase." },
+    { q: "67. The following (P through U) are the main steps of chemosynthetic ATP synthesis in the light reaction. Which answer places them in correct order?\nP. H+ concentration gradient established\nQ. H+ diffuses through ATP synthetase\nR. Carriers use energy from electrons to move H+ across the membrane\nS. Electrons from PS II pass along electron transport chain\nT. Light excites electrons in PS II\nU. Energy of H+ flow is used by ATP synthetase to make ATP", opts: ["PQTSRU", "STPQRU", "TSRPQU", "TSRUQP"], ans: 3, exp: "TSRUQP is the correct order." },
+    { q: "68. Photophosphorylation in a chloroplast is most similar to which of the following mitochondrial reactions?", opts: ["Oxidative phosphorylation", "Substrate level phosphorylation", "Hydrolysis", "None"], ans: 0, exp: "It is most similar to oxidative phosphorylation." },
+    { q: "69. In chemiosmotic hypothesis for energy generation in chloroplast-", opts: ["Electron transport carriers set up a proton gradient", "A pH gradient drives the hydrolysis of ATP to ADP", "ATP must be continuously translocated into the chloroplast", "The electron transport carriers use energy of moving electron in uphill direction to form ATP"], ans: 0, exp: "Electron transport carriers set up a proton gradient." },
+    { q: "70. Chemiosmosis needs -", opts: ["A membrane", "A proton pump", "A proton gradient and ATPase", "All"], ans: 3, exp: "All are needed." },
+    { q: "71. ATPase-", opts: ["Has no channel", "Has a channel that allows diffusion of e-", "Has a channel that allows H+ diffusion", "All"], ans: 2, exp: "ATPase has a channel that allows H+ diffusion." },
+    { q: "72. In chemiosmotic synthesis of ATP, H+ diffuses through ATP-synthetase -", opts: ["From the stroma into thylakoid lumen/space", "From thylakoid space into stroma", "From the cytoplasm into stroma", "From the periplastidal space to stroma"], ans: 1, exp: "H+ diffuses from thylakoid space into stroma." },
+    { q: "73. A difference between the chemiosmotic concept in photosynthesis and respiration is that in phosphorylation -", opts: ["No development of proton gradient takes palce in respiration", "As H+ cone. gradient rather than a proton-motive force drives phosphorylation", "ATP synthetase releases ATP into the stroma rather than into the cytosol", "The proton accumulates inside the membrane in the lumen of thylakoid while in respiration, protons accumulate in the intermembrane of the mitochondria."], ans: 3, exp: "The proton accumulates inside the thylakoid lumen while in respiration, protons accumulate in the intermembrane space." },
+    { q: "74. Chemiosmotic hypothesis attempts to explain -", opts: ["The movement of water into the chloroplast and its use in photosynthesis", "Coupling of ATP formation to e- flow in electron transport chain", "The movement of NADH from cytoplasm into plastid", "Coupling of chemical gradients to osmosis"], ans: 1, exp: "It explains coupling of ATP formation to e- flow in electron transport chain." },
+    { q: "75. During light-dependent reactions, light energy is converted to chemical potential energy through the process of chemiosmosis in the chloroplasts. Which of the following statement about this process is false -\nI. The electron carriers of phosphorylation are located in the thylakoid\nII. During phosphorylation, the chloroplast stroma becomes more acidic than the interior of thylakoid membrane\nIII. Protons diffuse through the protein channels which are ATP synthetase molecules\nIV. ATP is formed from ADP + Pi on the stroma side of the thylakoid in the chloroplast.\nV. During phosphorylation, water ionizes to form H+ + 2OH-, yielding an e- to PS II", opts: ["I, II, V", "Only II", "III, IV", "Only IV"], ans: 1, exp: "Only statement II is false." },
+    { q: "76. Both PS I and PS II operate -", opts: ["Separately", "One after the other", "PS I system first followed by PS II", "Simultaneously"], ans: 3, exp: "Both PS I and PS II operate simultaneously." },
+    { q: "77. Flow of electrons in non-cyclic photophosphorylation is -", opts: ["From PS I to PS II", "unidirectional", "PS II -> PS I", "Bidirectional"], ans: 2, exp: "Flow is PS II -> PS I." },
+    { q: "78. Photolysis of water results in the release of-", opts: ["Electrons, protons and oxygen", "Protons and O2", "e- and O2", "e- and H+ (Protons)"], ans: 0, exp: "Photolysis of water releases electrons, protons and oxygen." },
+    { q: "79. During the light reaction of photosynthesis which of the following phenomena, is observed in cyclic and noncyclic photophosphorylation?", opts: ["ATP formation", "Photolysis of water", "NADPH2 formation", "Involvement of both PS I and PS II"], ans: 0, exp: "ATP formation is observed in both." },
+    { q: "80. Excited pigment molecule shifts an e- to an outer orbit having -", opts: ["More energy", "Lesser energy", "Equal energy", "Lesser spin"], ans: 0, exp: "It shifts to an orbit having more energy." },
+    { q: "81. Photosynthesis is -", opts: ["Endergonic, photochemical, anabolic and reductive process", "Exergonic, reductive and catabolic process", "Exergonic reductive and anabolic process", "Exergonic, chemosynthetic process"], ans: 0, exp: "Photosynthesis is endergonic, photochemical, anabolic and reductive process." },
+    { q: "82. What happens during the light phase of photosynthesis?", opts: ["ADP is hydrolysed and NADPH oxidised", "ADP is phosphorylated and NADP reduced", "ATP is hydrolysed and NADPH oxidised", "ATP is hydrolysed and NADP reduced"], ans: 1, exp: "ADP is phosphorylated and NADP reduced." },
+    { q: "83. Which of the following statements concerning the light reaction of photosynthesis is true?", opts: ["PS I can operate independent of PS II", "PS I and II are activated by different wavelengths of light", "PS I and II transfer electrons and create proton gradients across the thylakoid membrane", "All of the above"], ans: 3, exp: "All of the above are true." },
+    { q: "84. Which one of the following is a correct outline of the main events in photosynthesis?", opts: ["Oxygen reacts with a carbohydrate to produce water and carbon dioxide in the presence of light", "Light joins carbon dioxide to an acceptor compound which is then reduced by hydrogen obtained from water", "Light splits water and the resulting hydroxyl group combines with a compound which has incorporated carbon dioxide", "Carbon dioxide combines with an acceptor compound and this is reduced by hydrogen split from water by light"], ans: 3, exp: "Carbon dioxide combines with an acceptor compound and this is reduced by hydrogen split from water by light." },
+    { q: "85. Which statement about photosynthesis is false?", opts: ["In green plants PS I and PS II are required for the synthesis of NADPH + H+", "Photosynthesis is a redox process; H2O is oxidised, CO2 is reduced", "Photosynthesis is a physic-chemical process", "None"], ans: 3, exp: "All the given statements are true." },
+    { q: "86. Mutation that inactives cytochrome system would -", opts: ["Inhibit movement of electrons from PS I to PS II", "Inhibit movement of e- from PS II to PS I", "Promote NADPH + H+ formation", "Promote photolysis of water"], ans: 1, exp: "It would inhibit movement of e- from PS II to PS I." },
+    { q: "87. Chemiosmosis-", opts: ["Depends on protein complexes in thylakoid membrane", "Depends on a difference in H+ concentration between the thylakoid space and the stroma", "Results in ATP formation", "All"], ans: 3, exp: "All are correct." },
+    { q: "88. Which one is correct?", opts: ["The final acceptor of electrons during non cyclic flow of electron is NADP+", "A photosystem consists of pigments, a reaction centre and an electron acceptor", "ATPase enzyme has 2 parts (membrane bound CF0 and F1 part is attached to the stromal side of membrane", "All"], ans: 3, exp: "All are correct." },
+    { q: "89. The thylakoid membrane bears several F0 - F1 particle/ATPase/ATP synthase. Which of following is correct for these particles?", opts: ["One of its part (F0) is embedded in the membrane and forms transmembrane channel that carries out facilitated diffusion of protons across the membrane", "Its other part (F1) protrudes out from the outer surface of the thylakoid membrane facing towards stroma", "The catalytic sites for ATP formation are located in F1 part", "All"], ans: 3, exp: "All are correct." },
+    { q: "90. In terms of the spatial organization of photosynthesis within the chloroplast, what is the advantage of light reactions producing ATP and NADPH2 on the stromal side of the thylakoid membrane-", opts: ["Water is more in thylakoid", "Light reaction occurs in stroma", "Dark reaction/Calvin cycle occurs in grana and needs ATP + NADPH2", "The Calvin Cycle, which consumes ATP and NADPH2 occurs in stroma"], ans: 3, exp: "The Calvin Cycle occurs in stroma." },
+    { q: "91. Following steps in random order are given below for photophosphorylation through chemiosmosis-\n1. ATP synthase produces ATP due to flow of H+ from thylakoid lumen to stroma\n2. NADP reductase, located on stroma side of membrane, obtains e- from PS I and protons from stroma to form NADPH2\n3. Cytochrome system (b & f) transport electrons and pumps H+ from stroma to thylakoid space\n4. PS II oxidises water\n5. Reaction centre of PS II gets photoexcited having released electrons.\nThe correct sequence is -", opts: ["1, 2, 3, 4, 5", "5, 4, 3, 2, 1", "1, 3, 2, 4, 5", "3, 5, 4, 2, 1"], ans: 1, exp: "5, 4, 3, 2, 1." },
+    { q: "92. When noncyclic photophosphorylation changes to cyclic photophosphorylation, the excited electrons leave PS I and go back to _____ to make more ___ _", opts: ["b6 - f complex, ATP", "b6 - f complex, ADP", "b6 - f complex, NADPH", "b6 - f complex, NADPH2"], ans: 0, exp: "b6 - f complex, ATP." },
+    { q: "93. During light reaction, as electrons move through photosystems, protons are transported across the membrane. This happens because of -", opts: ["The primary acceptor of e- (located towards the outer surface of the membrane) transfers its electron not to an e- carrier but to H carrier", "The primary acceptor of e- transfers only its e- to e- carrier", "The primary acceptor of e- transfers only H+ to the next carrier", "NADP - reductase is present in grana"], ans: 0, exp: "The primary acceptor transfers its electron to H carrier." },
+    { q: "94. Biosynthetic phase of photosynthesis needs -", opts: ["ATP, NADPH2, CO2 and H2O", "Only CO2", "Only ATP + NADPH2", "Only O2"], ans: 0, exp: "Biosynthetic phase needs ATP, NADPH2, CO2 and H2O." },
+    { q: "95. Immediately after light becomes unavailable biosynthetic processes -", opts: ["Stop immediately", "Remain continued for ever", "Stop and then starts", "Continue for some time and then stops"], ans: 3, exp: "They continue for some time and then stop." },
+    { q: "96. The enzyme ATPase couples the synthesis of ATP to -", opts: ["The diffusion of protons", "The reduction of NADP+", "The excitation of Chl.", "Carbon dioxide fixation"], ans: 0, exp: "It couples to the diffusion of protons." },
+    { q: "97. The enzyme rubisco is found in -", opts: ["Chloroplast", "mitochondria", "Cytoplasm", "Nucleus"], ans: 0, exp: "Rubisco is found in chloroplast." },
+    { q: "98. During carbon dioxide fixation/Calvin Cycle, CO2 combines with -", opts: ["NADPH2", "Water", "Ribulose biphosphate", "3PGAld"], ans: 2, exp: "CO2 combines with Ribulose biphosphate." },
+    { q: "99. The energy to hydrolyse water comes from -", opts: ["Oxidised chlorophyll", "Reduced Chl", "The proton gradient", "ATP"], ans: 0, exp: "Energy comes from oxidised chlorophyll." },
+    { q: "100. In bright light, the pH of the thylakoid space -", opts: ["Can become more acidic", "Can become more alkaline", "Never changes", "Can become neutral"], ans: 0, exp: "It can become more acidic." },
+    { q: "101. When carbon dioxide is added to Ru BP-the first stable product synthesized is -", opts: ["Phosphoglycerate (3C-compound)", "OAA", "ATP", "Pyruvate"], ans: 0, exp: "The first stable product is Phosphoglycerate." },
+    { q: "102. The net energy outcome of cyclic phosphorylation is -", opts: ["ATP + NADPH2", "ATP", "Sugar", "NADPH + H+"], ans: 1, exp: "The net outcome is ATP." },
+    { q: "103. Which of the following statements concerning the Calvin-Cycle are false?", opts: ["CO2 is assimilated into sugars", "RuBP is regenerated", "It needs ATP + NADPH + H+", "None"], ans: 3, exp: "All the given statements are true." },
+    { q: "104. Which of the following statements concerning rubisco is true?", opts: ["It is an enzyme", "It catalyze the beginning steps of both photorespiration and Calvin-Benson cycle", "It is the most abundant protein on earth", "All"], ans: 3, exp: "All are true." },
+    { q: "105. Which of the following begins the Calvin-Cycle and is the commitment step that results the entire pathway be carried out?", opts: ["3PGA ATP, NADPH -> 3PGAld", "The regeneration of Ru BP", "CO2 + RuBP -> 3PGA", "As a cycle, it can start at any point"], ans: 2, exp: "CO2 + RuBP -> 3PGA." },
+    { q: "106. The overall reaction CO2 + H2O + NADPH2 + ATP -> sugar + ADP + iP + NADP -", opts: ["Describes the light reaction of photosynthesis", "Is exergonic", "Occurs only at night", "Requires many enzymes"], ans: 3, exp: "It requires many enzymes." },
+    { q: "107. Which of the following serves as both reactant in photosynthesis and product in cellular respiration?", opts: ["O2", "CO2", "H2O", "b and c"], ans: 3, exp: "Both CO2 and H2O." },
+    { q: "108. The nature of ATP in both photosynthesis and cellular respiration is made possible by-", opts: ["The existance of proton gradient across the specific membrane", "The action of ATPase", "Energy from e- movements", "All"], ans: 3, exp: "All are correct." },
+    { q: "109. The majority of energy carrier molecules are oxidised or reduced in the-", opts: ["Nucleus", "Mitochondria and Chloroplast", "Nucleus", "Golgi Body"], ans: 1, exp: "In mitochondria and chloroplast." },
+    { q: "110. I. Initial CO2 acceptor\nII. Extent of photorespiration\nIII. Enzyme catalyzing reaction that fixes CO2\nIV. Presence of Calvin Cycle\nV. Leaf anatomy\nWhich one does not differ between a C3 and a C4 plant?", opts: ["I and V", "IV", "II and III", "II"], ans: 1, exp: "Presence of Calvin Cycle does not differ." },
+    { q: "111. The compound identified by Calvin, Benson and Basham as the first one made by CO2 fixation is-", opts: ["Ribulose bisphosphate", "Phosphoglycerate", "Triose-phosphate", "Malate"], ans: 1, exp: "Phosphoglycerate." },
+    { q: "112. PEP carboxylase is -", opts: ["Involved in at least some CO2 fixation in both C3 and C4 plants.", "Catalyzes the reaction fixing CO2 into pyruvic acid in bundle sheath cells", "Capable of fixing CO2 more efficiently at lower atmospheric CO2 concentration than RUBP carboxylase", "The most abundant enzyme in the world"], ans: 2, exp: "It is capable of fixing CO2 more efficiently at lower atmospheric CO2 concentration." },
+    { q: "113. The enzyme phosphoenol pyruvate carboxylase catalyses the combination of CO2 and phosphoenol pyruvate to form oxaloacetic acid in -", opts: ["Pea", "Sugarcane", "Pinus", "Apple"], ans: 1, exp: "Sugarcane is a C4 plant." },
+    { q: "114. The energy in photosynthesis for attaching a phosphate group to ADP comes from -", opts: ["Breaking down glucose", "Protons moving from the thylakoid compartment", "Taking a phosphate off of a sugar", "All of the above"], ans: 1, exp: "Protons moving from the thylakoid compartment." },
+    { q: "115. When Rubisco acts as an oxygenase-", opts: ["Phsophoglycerate and phosphoglycolate are produced", "Phosphoenol pyruvate is oxidized", "Net carbon fixation is enhanced", "It must mean that the plant is deprived of CO2"], ans: 0, exp: "Phosphoglycerate and phosphoglycolate are produced." },
+    { q: "116. Calvin Cycle represents which of the following phenomenon -", opts: ["Oxidative Carboxylation", "Substrate level phosphorylation", "Dark respiration", "Reductive carboxylation"], ans: 3, exp: "Reductive carboxylation." },
+    { q: "117. The mechanisms of ATP formation both in chloroplast and mitochondria is explained by-", opts: ["Relay pump theory of Godlewski", "Cholodny Went's model", "Chemiosmotic theory", "Munch's pressure/mass flow model"], ans: 2, exp: "Chemiosmotic theory." },
+    { q: "118. In which of the following cells of a C3 leaf would you find the highest concentration of enzyme rubisco-", opts: ["Epidermal cell", "Mesophyll cell", "Bundle sheath cell", "b and c"], ans: 1, exp: "Mesophyll cell." },
+    { q: "119. If photosynthesizing green algae (oxygenic photosynthesis) are provided with CO2 labelled with an isotope of oxygen (18O that is \"heavy\" but not radioactive), later analysis will show that all of the following compounds produced by the algae contain the 18O label except-", opts: ["PGA", "RuBP", "Glucose", "O2"], ans: 3, exp: "O2 will not contain the label." },
+    { q: "120. Thomas Engelmann illuminated a filament of algae with light that passed through a prism, thus exposing different segments of the algal filament to different wavelengths of light. He added aerobic bacteria and found that these bacteria congregated in the areas illuminated by red and blue light. If you ran the same experiment without passing light through a prism, what would you predict?", opts: ["There would be no difference in results", "The number of bacteria would decrease along the entire length of the filament", "The bacteria would be relatively evenly distributed along the length of the filament", "The number of bacteria would increase along the entire length of the filament"], ans: 2, exp: "The bacteria would be relatively evenly distributed." },
+    { q: "121. Cooperation of the two photosystems of the chloroplast is required for-", opts: ["ATP synthesis", "Reduction of NADP+", "Oxidation of the reaction center of photosystem", "Genration of a proton-motive force"], ans: 1, exp: "Reduction of NADP+." },
+    { q: "122. If radioactive carbondioxide (14CO2) is used in Calvin Cycle then which carbon atom of 3-phosphoglycerate will appear radioactive -", opts: ["Carbon-3", "Carbon-1", "Carbon-2", "None"], ans: 1, exp: "Carbon-1." },
+    { q: "123. Chloroplasts are disrupted and the stroma separated from the lamellae. The isolated stroma will fix CO2 if it is supplied with-", opts: ["Oxygen", "Carotenoid", "Light", "ATP + NADPH"], ans: 3, exp: "ATP + NADPH." },
+    { q: "124. Which of the following pigment involved directly in photochemical reaction in pigment system -", opts: ["Chl b", "Chl a", "Carotene", "Xanthophyllus"], ans: 1, exp: "Chl a." },
+    { q: "125. Conversion of pyruvate into PEP by use of ATP in C4 pathway occurs in -", opts: ["Mesophyll cell's cytoplasm", "Mesophyll cell's chloroplast", "Bundle sheath cell's cytoplasm", "Bundle sheath cell's chloroplast"], ans: 0, exp: "Mesophyll cell's cytoplasm." },
+    { q: "126. Total energy requirement for fixing one CO2 by combined C4 and C3 cycle is -", opts: ["5ATP + 4 NADPH", "3ATP + 4 NADPH", "5ATP + 2 NADPH", "8ATP + 2 NADPH"], ans: 2, exp: "5ATP + 2 NADPH." },
+    { q: "127. Why Calvin cycle is called C3-cycle?", opts: ["Primary CO2 acceptor is C3 - compound", "Many intermediate compounds are C3 - compounds", "1st stable product is 3 PGA which is a C3 - compound", "None"], ans: 2, exp: "1st stable product is 3 PGA which is a C3 - compound." },
+    { q: "128. Calvin Cycle has -", opts: ["Carboxylation, Regenration", "Oxygenation, Regeneration", "Reduction, Oxygenation", "Carboxylation, reduction and regeneration"], ans: 3, exp: "Carboxylation, reduction and regeneration." },
+    { q: "129. The reactions of Calvin cycle not directly dependent on light, but they usually do not occur at night- Why?", opts: ["Night is often too cold for these reactions to occur", "CO2 concentration in night is too high for these reactions to occur", "Plants usually open their stomata at night", "Calvin cycle is dependent on the products of light reaction"], ans: 3, exp: "Calvin cycle is dependent on the products of light reaction." },
+    { q: "130. PEPcase has an advantage to RuBisCO. The advantage is that-", opts: ["PEPCase conserves energy but RUBISCO does not", "RUBISCO combines with O2, but PEPCase does not", "PEPCase combines with O2 but RUBisCO does not", "PEPCase is present in both mesophyll and bundle sheath but RUBisCO is not"], ans: 1, exp: "RUBISCO combines with O2, but PEPCase does not." },
+    { q: "131. Calvin Cycle is -", opts: ["Only monocots and dicots", "In only C3-plant", "In only C4-plant", "In all photosynthetic plants"], ans: 3, exp: "In all photosynthetic plants." },
+    { q: "132. In Calvin Cycle, if one molecule of RUBP is carboxylated, how many PGA molecule(s) is resulted-", opts: ["1", "3", "6", "2"], ans: 3, exp: "2 molecules of PGA." },
+    { q: "133. Which of following ratio is correct for the production of one molecule of glucose through 6 rounds of calvin cyle?\nCO2 | ATP | NADPH2", opts: ["1 | 2 | 2", "6 | 18 | 12", "6 | 12 | 18", "5 | 6 | 9"], ans: 2, exp: "6 CO2, 12 ATP, 18 NADPH2." },
+    { q: "134. How many ATP is needed to generate one molecule of Ru DP in Calvin Cycle?", opts: ["6", "2", "1", "18"], ans: 2, exp: "1 ATP." },
+    { q: "135. In C3 plants, when O2 levels are high and CO2 levels are low _____ occurs, this produces no ___ _", opts: ["ATP synthesis, NADPH2", "Photorespiration, CO2", "Photorespiration, ATP/sugar/NADPH2", "C3 cycle, sugar"], ans: 2, exp: "Photorespiration, ATP/sugar/NADPH2." },
+    { q: "136. Matrix is to mitochondria as the ____ is to chloroplasts.", opts: ["Thylakoid space", "PS", "Thylakoid membrane", "Stroma"], ans: 3, exp: "Stroma." },
+    { q: "137. The scientists believed that since the first product was C3 acid, the primary CO2 acceptor would be -", opts: ["C2-compound", "C3-compound", "C5-compound", "C6-compound"], ans: 2, exp: "C5-compound." },
+    { q: "138. C4 plants are abundant in -", opts: ["Temperate region with more humid conditions", "Temperate region with more dry conditions", "Tropical region with more humid conditions", "Tropical region with more dry conditions"], ans: 3, exp: "Tropical region with more dry conditions." },
+    { q: "139. I. The most abundant enzyme in the world.\nII. Its active site can bind to both CO2 and O2 hence the name.\nIII. Has a much greater affinity for CO2 than O2.\nIV. The relative cone. of O2 and CO2 determines which of the two will bind to the enzyme.\nV. It is present in all photosynthetic plants.\nVI. It is present in chloroplast.\nThe above facts are characteristic of which enzyme?", opts: ["PEPCase", "RuBisCO", "Hexokinase", "Nitrogenase"], ans: 1, exp: "RuBisCO." },
+    { q: "140. C4 plants are able to minimize photorespiration because C4 plants -", opts: ["Do not carry out the Calvin cycle", "Use PEPCase to initiate CO2 fixat.ion.", "Exclude Calvin Cycle", "Do not show respiration"], ans: 1, exp: "Use PEPCase to initiate CO2 fixation." },
+    { q: "141. Which of the following statements regarding photorespiration are true?", opts: ["Photorespiration is a metabolically expensive pathway", "Photorespiration is avoided when CO2 is abundant", "Photorespiration results in a loss of usable carbon dioxide", "All"], ans: 3, exp: "All are true." },
+    { q: "142. After world War II who used radioactive C14 in algal photosynthesis and worked out the complete biosynthetic pathway of photosynthesis -", opts: ["Hatch", "Slack", "Melvin Calvin", "Hill"], ans: 2, exp: "Melvin Calvin." },
+    { q: "143. Function of photorespiration is -", opts: ["CO2 fixation", "unknown", "ATP production", "to form glucose"], ans: 1, exp: "Function is unknown." },
+    { q: "144. Photorespiration starts -", opts: ["In mitochondria", "In chloroplast", "In C4 plants", "In cytoplasm"], ans: 1, exp: "In chloroplast." },
+    { q: "145. During photorespiration RUBisCO uses _____ as a substrate-", opts: ["CO2", "NADPH", "O2", "3-PGA"], ans: 2, exp: "O2." },
+    { q: "146. I. They have a special type of leaf anatomy.\nII. They tolerate higher temperature.\nIII. They show a response to high light intensities.\nIV. They lack photorespiration.\nV. They have greater productivity of biomass\nThe above characters are shown by-", opts: ["All monocots", "C3-plants", "All C4-plants", "All C4-plants"], ans: 2, exp: "All C4-plants." },
+    { q: "147. The leaves of C4 plants show -", opts: ["No chloroplasts in cells of bundle sheath", "No chloroplasts in mesophyll", "Monomorphic chloroplasts", "Kranz anatomy"], ans: 3, exp: "Kranz anatomy." },
+    { q: "148. Hatch and Slack pathway (HSK pathway) is otherwise known as C4-cycle because -", opts: ["The first stable product is oxaloacetic acid/OAA which is a C4-compound", "The primary CO2 acceptor is OAA, a C4 compound", "All intermediate metabolites are C4-compounds", "At one time 4CO2 molecules take part in Carboxylation pathway"], ans: 0, exp: "The first stable product is oxaloacetic acid/OAA which is a C4-compound." },
+    { q: "149. The C2 oxidative photosynthetic carbon cycle is -", opts: ["C3 cycle", "Photorespiration", "C4 cycle", "CAM"], ans: 1, exp: "Photorespiration." },
+    { q: "150. Which one(s) is correct for C3 plants?", opts: ["Photosynthetic CO2 fixation and photorespiratory oxygenation are competing reactions.", "Competition between carboxylation and oxygenation decreases the efficiency of photosynthesis", "Carboxylation and oxygenation are closely interlocked in the intact leaf", "All"], ans: 3, exp: "All are correct." },
+    { q: "151. In Calvin cycle which stage needs ATP?", opts: ["Carboxylation only", "Only regeneration", "Both carboxylation and reduction", "Both reduction and regeneration"], ans: 3, exp: "Both reduction and regeneration." },
+    { q: "152. C4 acid, formed in the mesophyll of C4 plants leaf during photosynthesis is-", opts: ["OAA or Malic acid or Aspartic acid", "Pyruvic acid", "Succinic acid", "Fumaric acid"], ans: 0, exp: "OAA or Malic acid or Aspartic acid." },
+    { q: "153. In C4 plant, during photosynthesis C4 acid undergoes decarboxylation in ___ to produce C3 acid (pyruvic acid) and ___ _", opts: ["Mesophyll, O2", "Bundle sheath, O2", "Grana, CO2", "Bundle sheath, CO2"], ans: 3, exp: "Bundle sheath, CO2." },
+    { q: "154. During photosynthesis C3 acid is transported from cells of bundle sheath where it is converted to -", opts: ["Pyruvic acid", "PEP", "OAA", "malic acid"], ans: 1, exp: "PEP." },
+    { q: "155. Which one is correct for C4-plants?\nMesophyll | Bundle Sheath", opts: ["PEPCase, C4-Cycle | RUBisCO, C3-Cycle", "PEPCase, Calvin Cycle | RUBisCO, C4-Cycle", "RUBisCO, C4-Cycle | PEPCase, C3-Cycle", "RUBisCO, C3-Cycle | PEPCase, C3-Cycle"], ans: 0, exp: "PEPCase, C4-Cycle in mesophyll; RUBisCO, C3-Cycle in bundle sheath." },
+    { q: "158. Compared to retinal, chlorophyll can be described as a pigment that has a -", opts: ["Narrow absorption range but high efficiency", "Narrow absorption range but low efficiency", "Wide absorption range but low efficiency", "Wide absorption range but high efficiency"], ans: 3, exp: "Wide absorption range but high efficiency." },
+    { q: "161. What is the outline sequence by which CO2 may be incorporated into starch by photosynthesis?", opts: ["PGA + CO2 -> Ru BP -> Triose P -> Hexose P -> Starch", "PGA + CO2 -> Ru DP -> Hexose P -> Triose P -> Starch", "RuBP + CO2 -> PGA -> Hexose P -> Triose P -> Starch", "RuBP + CO2 -> PGA -> Triose P -> Hexose P -> Starch"], ans: 3, exp: "RuBP + CO2 -> PGA -> Triose P -> Hexose P -> Starch." },
+    { q: "162. All C4 plants show Kranz anatomy and it is -", opts: ["Environmentally determined", "Non-genetically determined", "Edaphically determined", "Genetically determined"], ans: 3, exp: "Genetically determined." },
+    { q: "163. The term Kranz (wreath) of Kranz-anatomy of leaf C4 plant refers to arrangement of cells. These cells are cells of-", opts: ["Mesophyll", "Spongy parenchyma", "Bundle sheath", "Both mesophyll and bundle sheath"], ans: 2, exp: "Bundle sheath." },
+    { q: "164. I. Photorespiration is favoured by high O2, low CO2, rise in temperature, high light intensity.\nII. Chloroplasts of cells of bundle sheath of C4 plants are granaless and have RUBisCO but no PEPCo.\nIII. Chloroplasts of mesophyll cells of C4 plant are granale, have PEPcase but no RUBisCo.\nIV. Maize and Sorghum are C4 plants", opts: ["All are correct", "I and IV are correct", "II and III are correct", "Only IV is correct"], ans: 0, exp: "All are correct." },
+    { q: "166. Plant factors affecting photosynthesis include-", opts: ["Number, age, size, and orientation of leaves, mesophyll cells and chloroplast; internal CO2 cone., the amount of chlorophyll.", "Nature of leaves, size of mesophyll cells and light", "Mesophyll cells distribution and temperature.", "Quantity of chlorophyll, size of leaves and CO2"], ans: 0, exp: "Number, age, size, and orientation of leaves, mesophyll cells and chloroplast; internal CO2 cone., the amount of chlorophyll." },
+    { q: "167. Law of limiting factors was given by-", opts: ["Blackman", "Whiteman", "Hill", "Calvin"], ans: 0, exp: "Blackman." },
+    { q: "168. Photosynthetic yield depends upon -", opts: ["Duration of exposure to light", "Light intensity", "Light quality", "All"], ans: 3, exp: "All." },
+    { q: "169. At low light intensities, the relation between the incident light and CO2 fixation rates is -", opts: ["Sigmoid", "Linear", "parabola", "hyperbola"], ans: 1, exp: "Linear." },
+    { q: "170. Rate of photosynthesis is independent of-", opts: ["Quality of light", "Intensity of light", "duration of exposure to light", "All"], ans: 3, exp: "All." },
+    { q: "171. At higher light intensities gradually photosynthesis rate does not show further increase-why?", opts: ["Higher light intensity activate more chlorophylls", "Higher light intensity causes more transpiration", "No need of more sugar formation", "Other factors become limiting"], ans: 3, exp: "Other factors become limiting." },
+    { q: "172. Light saturation occurs at ____ % of full sunlight -", opts: ["20", "100", "50", "10"], ans: 3, exp: "10%." },
+    { q: "173. Light is rarely a limiting factor in nature except in -", opts: ["Maize", "Sugarcane", "Sorghum", "Plants in shade or in dense forests"], ans: 3, exp: "Plants in shade or in dense forests." },
+    { q: "174. Increase in light intensity beyond saturation point causes-", opts: ["More photosynthesis", "Less photosynthesis", "Breakdown of the chlorophyll and a decrease in photosynthesis", "Heliotropism"], ans: 2, exp: "Breakdown of the chlorophyll and a decrease in photosynthesis." },
+    { q: "176. Under the normal condition which one is the major limiting factor?", opts: ["CO2 cone.", "Light", "Temperature", "Chl. Cone."], ans: 0, exp: "CO2 concentration." },
+    { q: "177. For photosynthesis the present atmospheric cone. of CO2 (0.03 and 0.04) is-", opts: ["Optimum", "Suboptimum", "Superaoptimum", "Sufficient"], ans: 1, exp: "Suboptimum." },
+    { q: "178. If CO2 cone. increases upto 0.05% the rate of photosynthesis is -", opts: ["Decreases", "Increases for short terms", "First decreases and then increases", "Becomes zero"], ans: 1, exp: "Increases for short terms." },
+    { q: "179. Which one is incorrect?", opts: ["The C3 and C4 plants respond similarly to CO2 concentration", "At low light conditions neither C3 nor C4 plants respond to high CO2 concentration", "C4 plants attain saturation at much lower CO2 concentration (about 360 µl L-1) than C3 plants (about 500 µl L-1)", "Current availability of CO2 levels is limiting to the C3 plants"], ans: 0, exp: "The C3 and C4 plants respond differently to CO2 concentration." },
+    { q: "180. Which green house crops are being grown in CO2 enriched atmosphere", opts: ["Mango + Bamboo", "Tomatoes + Bell pepper + Roses + cucumber + Lettuce", "Datura and Pinus", "Pinus and Cycas"], ans: 1, exp: "Tomatoes + Bell pepper + Roses + cucumber + Lettuce." },
+    { q: "181. Which is incorrect?", opts: ["C3 plants respond to higher temperature, show higher photosynthetic rate while C4 plants have lower optimum temperature", "Tropical plants have higher temperature optimum than the plants adapted to temperate climate", "Light reaction is less temperature sensitive than dark reaction", "The effect of water as a factor is more through its effect on plant, rather than directly on photosynthesis"], ans: 0, exp: "C3 plants have lower optimum temperature than C4 plants." },
+    { q: "182. Under water stress, the rate of photosynthesis declines because of-", opts: ["Stomatal closure leading to decrease in CO2 supply", "Reduced water potential that decreases leaf surface areas for photosynthesis", "Both", "Turgidity of leaf"], ans: 2, exp: "Both." },
+    { q: "183. At higher light intensities the rate of photosynthesis decreases because of-", opts: ["Other factors becoming limiting", "Destruction/photoxidation of chlorophyll", "Both a and b", "Carotenoids are killed"], ans: 2, exp: "Both a and b." },
+    { q: "184. Which one is correct about sciophytes/shade loving plants -", opts: ["Larger photosynthetic unit", "Have more total chlorophyll/reaction centre", "Higher rate of photosynthesis", "Both a and b"], ans: 3, exp: "Both a and b." },
+    { q: "186. Assume a thylakoid is somehow punctured so that the interior of the thylakoid is no longer separated from the stroma. This damage will have the most direct effect on which of the following processes?", opts: ["The splitting of water", "The absorption of light energy by chlorophyll", "The flow of electrons from photosystem II to photosystem I", "The synthesis of ATP"], ans: 3, exp: "The synthesis of ATP." },
+    { q: "187. In an experiment studying photosynthesis performed during the day, you provide a plant with radioactive carbon dioxide (14CO2) as a metabolic tracer. The 14C is incorporated first into oxaloacetic acid. The plant is best characterized as a", opts: ["C4 plant", "C3 plant", "CAM plant", "Heterotroph"], ans: 0, exp: "C4 plant." },
+    { q: "192. Which of the following changes in concentration of chemicals would occur if an illuminated green plant cell's source of carbon dioxide were removed?", opts: ["Ribulose bisphosphate: increase, Glycerate phosphate: increase", "Ribulose bisphosphate: decrease, Glycerate phosphate: decrease", "Ribulose bisphosphate: increase, Glycerate phosphate: decrease", "Ribulose bisphosphate: decrease, Glycerate phosphate: increase"], ans: 2, exp: "Ribulose bisphosphate: increase, Glycerate phosphate: decrease." },
+    { q: "193. Which of the following correctly ranks the following structures in terms of size, largest to smallest? Chloroplast (C), mesophyll cell (MC), pigment system (P), chlorophyll molecule (M), thylakoid (T).", opts: ["P-MC-T-C-M", "MC-C-T-M-P", "P-MC-C-T-M", "MC-T-P-C-M"], ans: 1, exp: "MC-C-T-M-P." },
+    { q: "194. In an experiment, mature leaves on the plant were enclosed for a fixed amount of time in a transparent bag that had radioactive CO2. In which part of the plant will maximum radioactivity be found after some time?", opts: ["Actively growing leaves.", "Guard cells of all the leaves.", "In mature leaves.", "Senescing leaves and roots."], ans: 0, exp: "Actively growing leaves." },
+    { q: "197. DCMU also called 'DIURON' is a potent non selective herbicide it kills plant by-", opts: ["Inhibiting light reaction - I", "Inhibiting light reaction - II", "Inhibiting dark reaction/calvin cycle", "Inhibiting respiration/Kreb's cycle"], ans: 1, exp: "Inhibiting light reaction - II." },
+    { q: "198. What is the effect of high CO2 concentration and higher values of ATP/ADP ratio -", opts: ["Rate of Calvin cycle is increased", "Rate of Kreb's cycle is decreased", "Rate of Calvin cycle is decreased and Kreb's cycle is increased", "Rate of Calvin cycle is increased and that of Kreb's cycle and Glycolate cycle is decreased"], ans: 3, exp: "Rate of Calvin cycle is increased and that of Kreb's cycle and Glycolate cycle is decreased." },
+    { q: "199. The requirement for the reduction of each molecule of CO2 through C3 cycle is", opts: ["3 NADH2, 2ATP", "2 NADPH2, 2ATP", "2 NADPH2, 3ATP", "3 NADPH2, 3ATP"], ans: 2, exp: "2 NADPH2, 3ATP." },
+    { q: "200. The experimental material that has largely been responsible for making rapid advances in tracing path of carbon in Calvin cycle & other photosynthetic research is -", opts: ["Chlorella and Scenedesmus", "Chalmydomonas and Chlorella", "Hydrilla", "Spinach"], ans: 0, exp: "Chlorella and Scenedesmus." },
+    { q: "201. Melvin Calvin conducted two sets of experiments. In first set the Chlorella was fed with 14CO2 for 3 seconds and in the second set for 60 seconds. The radioactivity of 14C was found to be present in-", opts: ["1-C of PGA in both the exposure", "3-C of PGA in both the exposure", "The radioactivity of short-exposure in 1-C and long exposure in 3-C of PGA", "The radioactivity of long exposure in 1-C and of short exposure in 3-C of PGA"], ans: 1, exp: "3-C of PGA in both the exposure." },
+    { q: "202. While Chlorella is rapidly growing in an environment of CO2. The light is turned off and 14CO2 is introduced. The distribution of radioactivity during this light to dark change is then studied: There was a marked increase in compound A and decreases in compound B-", opts: ["A is PGA1 and B is PGA", "A is PGA and B is DHAP", "A is RUBP and B is PGA", "A is PGA and B is RUBP"], ans: 2, exp: "A is RUBP and B is PGA." },
+    { q: "203. One plant is grown in the shade of a green house and the other is grown under a forest canopy (i.e. under the shade of trees). What would be the effect of these two type of shades on the rate of photosynthesis -", opts: ["The rate of photosynthesis would be equally low in both the types of shade", "The rate of photosynthesis would be greater under the forest canopy", "The rate of photosynthesis would be greater in the shade of a green house", "The shade of green house or a forest canopy would not influence the rate of photosynthesis because only 1 % of sunlight is used in photosynthesis"], ans: 2, exp: "The rate of photosynthesis would be greater in the shade of a green house." },
+    { q: "204. Two groups of isolated thylakoids are placed in an acidic bathing solution so that H+ diffuses into the thylakoids. They are then transferred to a basic bathing solution, and one group is placed in the light, while the other group is kept in the dark. Select below the choice that describes what you expect each group of thylakoids to produce.", opts: ["In Light: ATP only, In Dark: Nothing", "In Light: ATP, O2, In Dark: ATP only", "In Light: ATP, O2, glucose, In Dark: ATP, O2", "In Light: ATP, O2, In Dark: O2"], ans: 0, exp: "In Light: ATP only, In Dark: Nothing." },
+    { q: "205. To make one molecule of glucose 6 turns of the calvin cycle are required. Select incorrect pair that goes in and comes out of the calvin cycle.", opts: ["In: Six CO2, Out: One glucose", "In: 18ATP, Out: 18ADP", "In: 12 NADPH, Out: 12 NADP", "In: 12ATP, Out: 12ADP"], ans: 3, exp: "In: 12ATP, Out: 12ADP." },
+    { q: "206. CAM helps the plants in", opts: ["Reproduction", "Conserving water", "Secondary growth", "Disease resistance"], ans: 1, exp: "Conserving water." },
+    { q: "207. A student sets up an experiment on photosynthesis and it is as follows: He takes soda water in a glass tumbler and adds chlorophyll extract into the contents and keeps the tumbler exposed to sunlight, hoping that he has provided the necessary ingredients. What will happen after, say, a few hours of exposure to light? Choose the correct answer.", opts: ["Photosynthesis takes place and glucose would be produced turning the mixture sweet.", "Photosynthesis will take place and starch would be produced which will turn the mixture turbid.", "Photosynthesis does not occur and CO2 dissolved in soda water escapes into the atmosphere.", "Photosynthesis will not take place because intact chloroplasts are needed for the process."], ans: 3, exp: "Photosynthesis will not take place because intact chloroplasts are needed for the process." },
+    { q: "208. In Kranz anatomy; the bundle sheath cells have :", opts: ["thin walls, many intercellular spaces and no chloroplasts", "thick walls, no intercellular spaces and large number of chloroplasts", "thin walls, no intercellular spaces and several chloroplasts", "thick walls, many intercellular spaces and few chloroplasts"], ans: 1, exp: "thick walls, no intercellular spaces and large number of chloroplasts." },
+    { q: "209. Which one of the following is essential for photolysis of water?", opts: ["Manganese", "Zinc", "Copper", "Boron"], ans: 0, exp: "Manganese." },
+    { q: "210. The possible advantages of absence of Grana in chloroplast of C4 leaves is", opts: ["Division of labour", "More formation of malic acid", "No competition between oxygen and carbon dioxide for active sites of enzyme RuBisCo", "Occurrence of excessive photolysis of water"], ans: 2, exp: "No competition between oxygen and carbon dioxide for active sites of enzyme RuBisCo." },
+    { q: "211. In the overall process of photosynthesis, the number of CO2, water, sugar and O2 molecules utilized and produced is", opts: ["12", "13", "19", "31"], ans: 3, exp: "31." },
+    { q: "212. During Calvin cycle the total number of CO2, ATP and NADPH molecules utilized and glucose, ADP and NADP molecules generated is", opts: ["31", "36", "61", "67"], ans: 2, exp: "61." },
+    { q: "214. C3 pathways require _____ ATP for CO2 fixation while C4 pathways require _____ ATP for CO2 fixation. Which of the following alternative complete the statement above?", opts: ["I-2; II-3", "I-3; II-5", "I-5; II-2", "I-3; II-2"], ans: 1, exp: "I-3; II-5." },
+    { q: "216. A process that makes important difference between C3 and C4 plants is:", opts: ["Transpiration", "Glycolysis", "Photosynthesis", "Photorespiration"], ans: 3, exp: "Photorespiration." },
+    { q: "217. Best defined function of Manganese in green plants is :", opts: ["Photolysis of water", "Calvin cycle", "Nitrogen fixation", "Water absorption"], ans: 0, exp: "Photolysis of water." },
+    { q: "218. The correct sequence of cell organelles during photorespiration is :", opts: ["Chloroplast,-Golgibodies,-mitochondria", "Chloroplast,-RoughEndoplasmic reticulum, Dictyosomes", "Chloroplast,-mitochondria, -peroxisome", "Chloroplast, -vacuole,-peroxisome"], ans: 2, exp: "Chloroplast,-mitochondria, -peroxisome." },
+    { q: "219. During the process of aerobic respiration, _____ gets oxidized and its molecules get transferred to the electron transport chain while in photosynthesis, _____ gets oxidized to transfer molecules to the electron transport chain.", opts: ["i-glucose; ii-xanthophyll", "i-carbon dioxide; ii-xanthophyll", "i-carbon dioxide; ii-chlorophyll-a", "i-glucose; ii-chlorophyll-a"], ans: 3, exp: "i-glucose; ii-chlorophyll-a." },
+    { q: "220. During glycolysis, one glucose molecule splits into _____ molecules of glyceraldehyde 3-phosphate while during Calvin cycle, _____ molecules of glyceraldehyde 3-phosphate give rise to one molecule of glucose.", opts: ["i-one; ii-two", "i-two; ii-two", "i-two; ii-three", "i-three; ii-three"], ans: 1, exp: "i-two; ii-two." },
+    { q: "221. A source of protons for proton gradient within a chloroplast is", opts: ["Water", "CH2O", "Chlorophyll", "Phospholipids within the thylakoid membrane"], ans: 0, exp: "Water." },
+    { q: "222. What are the products of linear photophosphorylation?", opts: ["heat and fluorescence", "ATP and P700", "ATP and NADPH", "ADP and NADP"], ans: 2, exp: "ATP and NADPH." },
+    { q: "223. As a research scientist, you measure the amount of ATP and NADPH consumed by the Calvin cycle in 1 hour. You find 30,000 molecules of ATP consumed, but only 20,000 molecules of NADPH. Where did the extra ATP molecules come from?", opts: ["photosystem II", "photosystem I", "cyclic electron flow", "linear electron flow"], ans: 2, exp: "cyclic electron flow." },
+    { q: "224. P680+ is said to be the strongest biological oxidizing agent. Why?", opts: ["It is the receptor for the most excited electron in either photosystem.", "It is the molecule that transfers electrons to plastoquinone (Pq) of the electron transfer system.", "It transfers its electrons to reduce NADP+ to NADPH.", "This molecule has a stronger attraction for electrons than oxygen, to obtain electrons from water."], ans: 3, exp: "This molecule has a stronger attraction for electrons than oxygen, to obtain electrons from water." },
+    { q: "225. In 1772, Joseph Priestley demonstrated that", opts: ["Plants foul the air.", "Animals purify the air during day time.", "Plants and animals restore air for each other.", "Plants get killed in the air produced by animals."], ans: 2, exp: "Plants and animals restore air for each other." },
+    { q: "226. The first hypothesis that oxygen released during photosynthesis is derived from water, was proposed by", opts: ["Engelmann", "Priestley", "Van Niel", "Blackman"], ans: 2, exp: "Van Niel." },
+    { q: "227. Who stated that in photosynthesis light energy is converted into chemical energy?", opts: ["R. Mayer", "Willstatter and Stoll", "Arnon", "Calvin"], ans: 0, exp: "R. Mayer." },
+    { q: "228. In an experiment on O2 evolution by photosynthesising Hydrilla plant, pinch of sodium bicarbonate is added to water. The rate of photosynthesis or O2 evolution will", opts: ["Increase", "Decrease", "Stop", "Not be affected"], ans: 0, exp: "Increase." },
+    { q: "229. Why is it possible for the Calvin cycle to occur in the dark?", opts: ["The Calvin cycle uses energy stored previously during the light-dependent reactions of photosynthesis.", "It is not possible for any part of photosynthesis to occur without light.", "The Calvin cycle obtains energy from sugars made previously by the light-dependent reactions of photosynthesis.", "None of the products of the light-dependent reactions are involved in the Calvin cycle."], ans: 0, exp: "The Calvin cycle uses energy stored previously during the light-dependent reactions of photosynthesis." },
+    { q: "230. Who first of all indicated that water is electron donor in photosynthesis?", opts: ["Arnon", "Calvin", "Blakeslee", "Van Niel"], ans: 3, exp: "Van Niel." },
+    { q: "231. Who demonstrated for the first time that in photosynthesis, oxygen is evolved from water?", opts: ["Ruben and Kamen", "Calvin", "R. Hill", "Govindji"], ans: 0, exp: "Ruben and Kamen." },
+    { q: "233. Statement A : Photorespiration decreases photosynthetic output.\nStatement B: In photorespiratory pathway, neither ATP nor NADPH is produced.", opts: ["Statement A is correct and Statement B is wrong.", "Both the statements A and B are correct.", "Statement B is correct and statement A is wrong.", "Both statements A and B are wrong."], ans: 1, exp: "Both the statements A and B are correct." },
+    { q: "234. ____ are the most abundant proteins in the living world.", opts: ["PEPcase of plants and keratin of animals", "Ribozyme of plants and collagen of animals", "Alcohol dehydrogenase of plants and melanin of animals.", "RuBisCO of plants and collagen of animals"], ans: 3, exp: "RuBisCO of plants and collagen of animals." },
+    { q: "235. Bundle sheath cells", opts: ["Are rich in RuBisCO", "Are rich in PEP carboxylase", "Lack RuBisCO", "Lack both RuBisCO and PEP carboxylase"], ans: 0, exp: "Are rich in RuBisCO." },
+    { q: "236. The correct sequence of organelles in which glycolate and glyoxylate are produced sequentially in photorespiration, is", opts: ["Chloroplast and mitochondria", "Chloroplast and peroxisome", "Peroxisome and mitochondria", "Peroxisome and chloroplast"], ans: 1, exp: "Chloroplast and peroxisome." },
+    { q: "237. Identify the correct statement (s) in relation to C4 photosynthesis\n(A) Kranz anatomy is an essential feature for C4 plants\n(B) C4 plants have higher water use efficiency than C3 plants\n(C) Photorespiration can be minimized when C4 pathway is in operation\n(D) Conversion of oxaloacetate to malate occurs in the bundle sheath cells", opts: ["A, B, C are correct", "B, C, D are correct", "A, C, D are correct", "All are correct"], ans: 0, exp: "A, B, C are correct." },
+    { q: "238. Step at which NADPH2 is required in Calvin cycle is", opts: ["carboxylation", "regeneration", "reduction", "phosphorylation"], ans: 2, exp: "reduction." },
+    { q: "239. Oxygen evolution is connected with", opts: ["photosystem II", "photosystem I", "Cyclic photophosphorylation", "RUBP enzyme"], ans: 0, exp: "photosystem II." },
+    { q: "240. Which of the following step/event is required to increase the intracellular concentration of CO2 ensuring minimal oxygenase activity in dry tropical plants?", opts: ["Transport of fixed carbon as PGA from mesophyll cells.", "C4 acid from the bundle sheath cells is broken down in the mesophyll cells to release CO2.", "Aspartic acid or malic acid is translocated to bundle sheath cells through plasmodesmata", "ATP dependant decarboxylation of malic acid in bundle sheath cells"], ans: 3, exp: "ATP dependant decarboxylation of malic acid in bundle sheath cells." },
+    { q: "242. 3-phosphoglyceric acid (PGA) as the first CO2 fixation product in algal photosynthesis was discovered by", opts: ["Joseph Priestley", "Jan Ingenhousz", "T. W. Engelmann", "Melvin Calvin"], ans: 3, exp: "Melvin Calvin." },
+    { q: "243. Maximum absorption of light by chlorophyll a occurs in which regions of the absorption spectrum?\nA Blue\nB. Red\nC. Green\nD. Yellow", opts: ["A and B only", "B and C only", "A and D only", "B and D only"], ans: 0, exp: "A and B only." },
+    { q: "244. Manganese, calcium and chloride ions present in PS II play an important role in", opts: ["Absorption of light", "CO2 assimilation", "Photolysis of water", "ATP synthesis"], ans: 2, exp: "Photolysis of water." },
+    { q: "245. The visible portion of light spectrum useful in photosynthesis is referred to as", opts: ["RFLP", "PAR", "VAM", "VNTR"], ans: 1, exp: "PAR." },
+    { q: "246. The time taken from the fixation of CO2 to the formation of one glucose molecule is about ___ seconds.", opts: ["20", "40", "60", "90"], ans: 3, exp: "90." },
+    { q: "247. Greenhouse crops such as tomatoes and bell pepper produce higher yields. This is due to", opts: ["CO2 enriched atmosphere leads to higher yields", "CO2 is a limiting factor to photosynthesis", "Diffused light in green house", "Tomatoes and bell pepper are not C3 plants."], ans: 0, exp: "CO2 enriched atmosphere leads to higher yields." },
+    { q: "248. C4 pathway is advantageous over C3 pathway in plants as it", opts: ["Occurs in relatively low CO2 concentration", "Uses more amount of water", "Occurs in relatively low O2 concentration", "Is less efficient in energy utilisation"], ans: 0, exp: "Occurs in relatively low CO2 concentration." },
+    { q: "249. The oxygen evolved during photosynthesis, comes from water molecules. Which one of the following pairs of elements is involved in this reaction?", opts: ["Magnesium and Molybdenum", "Magnesium and Chlorine", "Manganese and Chlorine", "Manganese and Potassium"], ans: 2, exp: "Manganese and Chlorine." },
+    { q: "250. In photosynthesis the light-independent reactions take place at", opts: ["Photosystem II", "Stromal matrix", "Thylakoid lumen", "Photosystem I"], ans: 1, exp: "Stromal matrix." },
+    { q: "251. Number of chlorophyll molecules arranged per reaction centre in the light harvesting complex are", opts: ["100", "200", "300", "400"], ans: 1, exp: "200." },
+    { q: "252. How much oxygen is formed from 264 g of CO2 and 216 g of H2O?", opts: ["96 g", "216 g", "264 g", "192 g"], ans: 3, exp: "192 g." },
+    { q: "253. Photolysis of a water molecule yields", opts: ["2 electrons and 4 protons", "4 electrons and 4 protons", "4 electrons and 2 protons", "2 electrons and 2 protons"], ans: 0, exp: "2 electrons and 4 protons." },
+    { q: "254. How many molecules of H2O would be consumed to support one Calvin Cycle?", opts: ["1", "2", "4", "6"], ans: 3, exp: "6." },
+    { q: "255. Emerson's enhancement effect and Red drop have been instrumental in the discovery of :-", opts: ["Photophosphorylation and non-cyclic electron transport", "Two photosystems operating simultaneously", "Photophosphorylation and cyclic electron transport", "Oxidative phosphorylation"], ans: 1, exp: "Two photosystems operating simultaneously." },
+    { q: "256. A plant in your garden avoids photorespiratory losses, has improved water use efficiency shows high rates of photosynthesis at high temperatures and has improved efficiency of nitrogen utilisation. In which of the following physiological groups would you assign this plant?", opts: ["C3", "C4", "CAM", "Nitrogen fixer"], ans: 1, exp: "C4." },
+    { q: "257. The process which makes major difference between C3 and C4 plants is :-", opts: ["Photorespiration", "Respiration", "Glycolysis", "Calvin cycle"], ans: 0, exp: "Photorespiration." },
+    { q: "258. The expected advantage for the bundle sheath chloroplast having no grana is", opts: ["O2 does not compete with CO2 for active site of RuBisCO.", "O2 would destroy granal membrane.", "O2 would denature enzymes of Calvin Cycle.", "O2 would stop ETS."], ans: 0, exp: "O2 does not compete with CO2 for active site of RuBisCO." },
+    { q: "259. Go through the following statements.\nI. Chloroplasts may be phototaxis.\nII. In monocotyledonous leaf, spongy mesophyll has large intercellular spaces for efficient gaseous exchange.\nIII. Higher oxygen concentration stimulates C3 photosynthesis.\nIV. Chlorophyll absorbs blue and red light.\nV. Chlorophyll a absorption in red light is about twice that of chlorophyll b.", opts: ["I and II are correct", "I, IV and V are correct", "II and III are correct", "II and IV are correct"], ans: 1, exp: "I, IV and V are correct." },
+    { q: "260. What did Engelmann observe from his prism experiments?", opts: ["Bacteria could not detect the sites of O2 evolution.", "Bacteria released excess carbon dioxide in red and blue light.", "Bacteria accumulated due to the increase in temperature caused by increase in oxygen concentration.", "Bacteria get accumulated towards red and blue light."], ans: 3, exp: "Bacteria get accumulated towards red and blue light." },
+    { q: "261. The empirical formula of 'chlorophyll a' is :", opts: ["C55H72O5N4Mg", "C55H70O6N4Mg", "C55H72O5N4Mg", "C55H70O6N4Mg"], ans: 0, exp: "C55H72O5N4Mg." },
+    { q: "262. Stomata remain open at night in :", opts: ["C3 plants", "C4 plants", "CAM plants", "Hydrophytic plants"], ans: 2, exp: "CAM plants." },
+    { q: "263. Photorespiratory reactions are operated in :", opts: ["Chloroplasts, ribosomes and peroxisomes", "Chloroplasts, mitochondria and peroxisomes", "Mitochondria, peroxisomes and lysosomes", "Mitochondria, chloroplasts and ribosomes"], ans: 1, exp: "Chloroplasts, mitochondria and peroxisomes." },
+    { q: "264. Kranz type of leaf anatomy is observed in", opts: ["C3 plants", "C4 plants", "C3 and C4 plants", "Hydrophytic plants"], ans: 1, exp: "C4 plants." },
+    { q: "265. The entire reactions of C4 pathway takes place in", opts: ["Mesophyll and bundle sheath", "Vascular bundle and palisade tissue", "Mitochondria and peroxisome", "Bundle sheath and endoplasmic reticulum"], ans: 0, exp: "Mesophyll and bundle sheath." },
+    { q: "266. Photosynthesis cannot be operated in :", opts: ["Red light", "Yellow light", "Green light", "Blue light"], ans: 2, exp: "Green light." },
+    { q: "267. Ferrodoxin (Fd) is a", opts: ["Non-heme iron protein", "Heme iron protein", "Copper containing protein", "None of the above"], ans: 0, exp: "Non-heme iron protein." },
+    { q: "268. Photosynthetic reaction centre from the photosynthetic bacterium was crystallized by", opts: ["Gulierrez", "Burnell and Hatch", "Fluggs and Heldt", "Huber, Mitchel and Deisenhofer"], ans: 3, exp: "Huber, Mitchel and Deisenhofer." },
+    { q: "270. With reference to factors affecting the rate of photosynthesis, which of the following statements is not correct?", opts: ["Increasing atmospheric CO2 concentration up to 0.05% can enhance CO2 fixation rate", "C3 plants respond to higher temperatures with enhanced photosynthesis while C4 plants have much lower temperature optimum", "Tomato is a greenhouse crop which can be grown in CO2 enriched atmosphere for higher yield", "Light saturation for CO2 fixation occurs at 10% of full sunlight"], ans: 1, exp: "C3 plants respond to higher temperatures with enhanced photosynthesis while C4 plants have much lower temperature optimum." },
+    { q: "271. Phosphoenol pyruvate (PEP) is the primary CO2 acceptor in:", opts: ["C4 plants", "C2 plants", "C3 and C4 plants", "C3 plants"], ans: 0, exp: "C4 plants." },
+    { q: "272. In C4 plants, dimorphism of chloroplasts is an adaptation to:", opts: ["absorb light efficiently.", "absorb light in blue-violet and red regions.", "carry out cyclic and non-cyclic electron transfer.", "minimize photorespiration."], ans: 3, exp: "minimize photorespiration." },
+    { q: "273. In C2 (photorespiration) cycle, RUBISCO utilizes:", opts: ["CO2", "O2", "NADPH2", "Inorganic phosphate"], ans: 1, exp: "O2." },
+    { q: "274. Which of the following statements is true for photosynthesis ?", opts: ["Dark reactions occurs only in dark", "Dark and light reactions always occur simultaneously", "Dark reactions occur only when light reactions stop", "Dark reactions may also occur in dark"], ans: 3, exp: "Dark reactions may also occur in dark." },
+    { q: "275. During the opening of stomata, the organic malate ions are produced in the guard cells for maintaining the :", opts: ["Negative voltage to take in potassium ions", "Photosynthetic products in active osmotic form", "Calcium ions in lesser concentration", "Respiratory pathway in aerobic mode"], ans: 0, exp: "Negative voltage to take in potassium ions." },
+    { q: "278. Photosynthetic yield is increased when shorter and longer light wavelength are simultaneously irradiated to a photosynthetic cell. This proves that", opts: ["There are two pigment systems in chloroplasts", "The two pigment systems are interconnected", "Photolysis of water is essential for formation of assimilatory power.", "More than one option is correct"], ans: 3, exp: "More than one option is correct." },
+    { q: "279. Consider following four (I - IV) statements and choose correct option :-\nI. In stroma lamella only PS-I is present\nII. C4 plants loose nearly half of water for fixing same amount of CO2 than C3 plants\nIII. Cu (copper) is essential for over all metabolism in plant\nIV. Ethylene increase male flowers in cucumber", opts: ["I, II, III and IV", "I, III and IV", "I, II and III", "I and II"], ans: 2, exp: "I, II and III." },
+    { q: "280. The common feature between cyclic and non cyclic photophosphorylation is :-", opts: ["Photosystem - II", "Source of electrons", "Proton gradient", "Release of O2"], ans: 2, exp: "Proton gradient." },
+    { q: "282. In which portion of the chloroplast, pH is higher when sunlight is on the chloroplast?", opts: ["Stroma", "Cytosol", "Space enclosed by the inner & outer membrane", "Space enclosed by the thylakoid membrane"], ans: 0, exp: "Stroma." },
+    { q: "283. Read the following functions carefully :\nI. H2O splitting\nII. O2 release\nIII. NADH formation\nIV. ATP consumption\nHow many functions among the above carried by PS-I during Z-scheme?", opts: ["Four", "Zero", "Two", "One"], ans: 1, exp: "Zero." },
+    { q: "286. A minimum ratio of transpiration to photosynthesis will be observed in a", opts: ["humid and cloudy day", "humid day and sunny day", "sunny day with no winds", "sunny day with strong winds"], ans: 0, exp: "humid and cloudy day." },
+    { q: "287. If X is the rate of photosynthesis at shorter wave length radiation, Y at higher wavelength, Z is the rate at the combination of shorter and higher wavelength, then Emerson effect is", opts: ["X > Z + Y", "Z = X + Y", "Z = X = Y", "Z > X + Y"], ans: 3, exp: "Z > X + Y." },
+    { q: "288. Arrange the two following lists into their most appropriate pairs.\nA. Antennae pigment molecules\nB. Thylakoid membrane\nC. Photosystem II\nD. Photosystem I\nE. The mobile lipophilic e- carrier of many photosynthetic organisms.\nI. Reduction of ferredoxin\nII. O2 generation\nIII. ET chain\nIV. Absorption of light\nV. Plastoquinone", opts: ["A- IV, B - III, C - II, D - I, E - V", "A- V, B - IV, C - III, D - II, E - I", "A- I, B - II, C - III, D - IV, E - V", "A - IV, B - II, C - III, D - I, E - V"], ans: 0, exp: "A- IV, B - III, C - II, D - I, E - V." },
+    { q: "289. Oxygen is not produced during photosynthesis by", opts: ["Cycas", "Nostoc", "Green sulphur bacteria", "Chara"], ans: 2, exp: "Green sulphur bacteria." },
+    { q: "290. Which of the following is not a product of light reaction of photosynthesis?", opts: ["NADPH", "NADH", "ATP", "Oxygen"], ans: 1, exp: "NADH." },
+    { q: "291. Why C4 plants are more efficient?", opts: ["They show photorespiration", "They have RuBisCO in mesophyll cells", "They can tolerate high temperature", "They have a mechanism of concentrating CO2 at the place of RuBisCO enzyme action."], ans: 3, exp: "They have a mechanism of concentrating CO2 at the place of RuBisCO enzyme action." },
+    { q: "292. Which of the following statements is correct?", opts: ["RuBisCO is present in the mesophyll cells of C4 plants", "RuBisCO is present in the mesophyll cells of C3 plants", "PEP case is present in the bundle sheath cells of C4 plants", "Both RuBisCO and PEPcase are present in mesophyll cells of C4 plants"], ans: 1, exp: "RuBisCO is present in the mesophyll cells of C3 plants." },
+    { q: "293. Why are C4 plants able to photosynthesize with no apparent photorespiration?", opts: ["They do not participate in the Calvin cycle.", "They use PEP carboxylase to initially fix CO2.", "They are adapted to cold, wet climates.", "They conserve water more efficiently."], ans: 1, exp: "They use PEP carboxylase to initially fix CO2." },
+    { q: "294. In which of the following phosphorylation is absent:", opts: ["Glycolysis", "kreb cycle", "C4 cycle", "ETS"], ans: 2, exp: "C4 cycle." },
+    { q: "295. In Hatch and Slack pathway, the primary CO2 acceptor is", opts: ["Rubisco", "Oxaloacetic acid", "Phosphoglyceric acid", "Phosphoenol pyruvate"], ans: 3, exp: "Phosphoenol pyruvate." },
+    { q: "296. One scientist cultured Cladophora in a suspension of Azotobacter and illuminated the culture by splitting light through a prism. He observed that bacteria accumulated mainly in the region of :", opts: ["Blue and red light", "Indigo and green light", "Violet and green light", "Orange and yellow light"], ans: 0, exp: "Blue and red light." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 11; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - NEET 2027 CBT</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(30, 41, 59, 0.85);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 20px;
+    font-size: 13px;
+  }
+  .admin-table th, .admin-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  }
+  .admin-table th {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .admin-table tr:hover {
+    background: rgba(59, 130, 246, 0.08);
+  }
+  .admin-table tr.best-row {
+    background: rgba(74, 222, 128, 0.08);
+  }
+  .admin-table td.score {
+    color: #4ade80;
+    font-weight: 700;
+  }
+  .admin-table td.low {
+    color: #f87171;
+    font-weight: 700;
+  }
+  .admin-card {
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 20px;
+  }
+  .admin-card h2 {
+    color: #60a5fa;
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+  .no-data {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
+    font-size: 14px;
+  }
+  .table-scroll {
+    overflow-x: auto;
+  }
+</style>
+</head>
+<body>
+<div class="dashboard-container">
+  <div class="dash-header">
+    <h1>👑 Admin Panel - NEET 2027 CBT</h1>
+    <div class="user-info">
+      <span class="user-badge">👑 Master Admin</span>
+      <a href="dashboard.html" class="btn-logout" style="text-decoration:none;">📚 Dashboard</a>
+      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>📊 Overall Statistics</h2>
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="num" id="totalFriends">12</div>
+        <div class="label">Total Friends</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="totalAttempts">0</div>
+        <div class="label">Total Attempts</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="attemptedChapters">0</div>
+        <div class="label">Chapters Attempted</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="avgScore">0%</div>
+        <div class="label">Average Score</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>📋 Complete Test History</h2>
+    <div id="historyTable"></div>
+  </div>
+
+  <div class="admin-card">
+    <h2>🔑 All Passkeys</h2>
+    <div class="table-scroll">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Passkey</th>
+          </tr>
+        </thead>
+        <tbody id="keysTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="keys.js"></script>
+<script>
+// ========================================
+// LOGIN CHECK - ONLY MASTER
+// ========================================
+const userData = localStorage.getItem('cbt_user');
+if (!userData) {
+  window.location.href = 'index.html';
+}
+const user = JSON.parse(userData);
+if (user.role !== 'master') {
+  alert('⚠️ Access Denied! Only Admin can view this page.');
+  window.location.href = 'dashboard.html';
+}
+
+// ========================================
+// CHAPTER NAMES
+// ========================================
+const chapterNames = [
+  "The Living World",
+  "Biological Classification",
+  "Plant Kingdom",
+  "Animal Kingdom",
+  "Morphology of Flowering Plants",
+  "Anatomy of Flowering Plants",
+  "Structural Organisation in Animals",
+  "Cell: The Unit of Life",
+  "Biomolecules",
+  "Cell Cycle and Cell Division",
+  "Photosynthesis in Higher Plants",
+  "Respiration in Plants",
+  "Plant Growth and Development",
+  "Breathing and Exchange of Gases",
+  "Body Fluids and Circulation",
+  "Excretory Products and their Elimination",
+  "Locomotion and Movement",
+  "Neural Control and Coordination",
+  "Chemical Coordination and Integration"
+];
+
+// ========================================
+// LOAD RESULTS
+// ========================================
+const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+
+let totalAttempts = 0;
+let attemptedChapters = 0;
+let totalPercent = 0;
+let percentCount = 0;
+
+// ========================================
+// BUILD HISTORY TABLE
+// ========================================
+const historyDiv = document.getElementById('historyTable');
+
+if (Object.keys(results).length === 0) {
+  historyDiv.innerHTML = '<div class="no-data">📭 Abhi tak koi test nahi diya gaya is device par.<br><br>Jab aap ya aapke dost test denge, unke results yahan dikhenge.</div>';
+} else {
+  let tableHTML = `
+    <div class="table-scroll">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Chapter</th>
+            <th>Chapter Name</th>
+            <th>User</th>
+            <th>Correct</th>
+            <th>Wrong</th>
+            <th>Total</th>
+            <th>Marks</th>
+            <th>Percent</th>
+            <th>Attempt</th>
+            <th>Date & Time</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  for (let i = 1; i <= 19; i++) {
+    const r = results['chapter' + i];
+    if (r && r.attempts && r.attempts.length > 0) {
+      attemptedChapters++;
+      totalAttempts += r.attempts.length;
+      
+      // Show all attempts for this chapter (latest first)
+      const sortedAttempts = [...r.attempts].reverse();
+      sortedAttempts.forEach((attempt, idx) => {
+        const scoreClass = attempt.percent >= 50 ? 'score' : 'low';
+        const date = new Date(attempt.date).toLocaleString('en-IN', {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+        const isBest = r.best && attempt.percent === r.best.percent;
+        const attemptNum = r.attempts.length - idx;
+        
+        totalPercent += parseFloat(attempt.percent);
+        percentCount++;
+        
+        tableHTML += `
+          <tr class="${isBest ? 'best-row' : ''}">
+            <td>Ch ${i}${isBest ? ' 🏆' : ''}</td>
+            <td>${chapterNames[i-1]}</td>
+            <td>${attempt.userName || '-'}</td>
+            <td class="score">${attempt.correct}</td>
+            <td class="low">${attempt.wrong}</td>
+            <td>${attempt.total}</td>
+            <td>${attempt.marks}</td>
+            <td class="${scoreClass}">${attempt.percent}%</td>
+            <td>#${attemptNum}</td>
+            <td>${date}</td>
+          </tr>
+        `;
+      });
+    }
+  }
+
+  tableHTML += '</tbody></table></div>';
+  historyDiv.innerHTML = tableHTML;
+}
+
+// ========================================
+// UPDATE STATS
+// ========================================
+document.getElementById('totalAttempts').textContent = totalAttempts;
+document.getElementById('attemptedChapters').textContent = attemptedChapters;
+document.getElementById('avgScore').textContent = percentCount > 0 
+  ? (totalPercent / percentCount).toFixed(1) + '%' 
+  : '0%';
+
+// ========================================
+// KEYS TABLE
+// ========================================
+const keysTable = document.getElementById('keysTable');
+let keysHTML = `<tr><td>👑</td><td>Master (Admin)</td><td><code>${MASTER_KEY}</code></td></tr>`;
+let i = 1;
+for (const k in FRIEND_KEYS) {
+  keysHTML += `<tr><td>${i}</td><td>${FRIEND_KEYS[k].name}</td><td><code>${FRIEND_KEYS[k].key}</code></td></tr>`;
+  i++;
+}
+keysTable.innerHTML = keysHTML;
+
+// ========================================
+// LOGOUT
+// ========================================
+function logout() {
+  localStorage.removeItem('cbt_user');
+  localStorage.removeItem('cbt_login_time');
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 7: Structural Organisation in Animals - CBT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+  .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+  .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+  .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+  .stat-box .lbl { font-size: 11px; color: #4a5568; }
+  .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+  .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+  .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+  .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+  .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+  .question-box { flex: 1; margin-bottom: 15px; }
+  .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; }
+  .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+  .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+  .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+  .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+  .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+  .option.disabled { pointer-events: none; opacity: 0.8; }
+  .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+  .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+  .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+  .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+  .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+  .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+  .result-item .label { font-size: 12px; color: #4a5568; }
+  .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+  .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+  .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+      <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+      <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+      <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+      <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+      <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+      <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Structural Organisation in Animals</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+      <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+      <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+      <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+      <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q: "Metathoracic wings in cockroaches are —", opts: ["Halteres", "Tegmina", "Hemielytra", "None of these"], ans: 3, exp: "None of these." },
+  { q: "Which of the following statements are correct about the forewings in cockroach?", opts: ["They are mesothoracic", "They are opaque, dark and leathery and cover hindwing when at rest", "They are not used in flight", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following statements are correct about the hindwings in cockroach?", opts: ["They are transparent and membranous", "They are metathoracic", "They are used in flight", "All"], ans: 3, exp: "All." },
+  { q: "In cockroach, thorax is divided into how many segments?", opts: ["3", "4", "5", "6"], ans: 0, exp: "3." },
+  { q: "The abdomen in both male and female cockroach consists of —", opts: ["10 segments", "8 segments", "12 segments", "18 segments"], ans: 0, exp: "10 segments." },
+  { q: "In female cockroach, 7th sternum is —", opts: ["Annular", "Filamentous", "Boat shaped", "Spiral"], ans: 2, exp: "Boat shaped." },
+  { q: "In female cockroach, 7th sternum together with 8th and 9th sterna forms —", opts: ["A brood / genital pouch", "Anal cercus", "Anal style", "None"], ans: 0, exp: "A brood / genital pouch." },
+  { q: "Anterior part of genital pouch in female cockroach contains —", opts: ["Gonopore", "Spermathecal pores", "Collateral glands", "All"], ans: 3, exp: "All." },
+  { q: "Stink glands are found in cockroach:", opts: ["6/7 Thorasic segment", "6/7 Abdominal segment", "5/6 Abdominal segment", "4/5 Abdominal segment"], ans: 1, exp: "6/7 Abdominal segment." },
+  { q: "Which of the following is correct about cockroach?", opts: ["Sexual dimorphism is distinct", "The anal styles are present on 9th sternite of male only", "In both sexes the 10th segment bears a pair of jointed filamentous structures called anal cerci", "All"], ans: 3, exp: "All." },
+  { q: "Male cockroach has —", opts: ["Dorsal anus, ventral genital pore and gonapophysis", "Ventral anus, dorsal genital pore and gonapophysis", "Dorsal anus, ventral genital pore but no gonapophysis", "Dorsal anus, ventral genital pore, gonapophysis but no anal styles"], ans: 0, exp: "Dorsal anus, ventral genital pore and gonapophysis." },
+  { q: "The largest part of the alimentary canal of cockroach is —", opts: ["Crop", "Rectum", "Gizzard", "Ileum"], ans: 0, exp: "Crop." },
+  { q: "Which part of alimentary canal of cockroach contributes to crushing food?", opts: ["Crop", "Rectum", "Gizzard", "Ileum"], ans: 2, exp: "Gizzard." },
+  { q: "The gizzard or proventriculus has an outer layer of thick muscles and thick inner cuticle forming ____ highly chitinous plates called teeth.", opts: ["3", "6", "9", "12"], ans: 1, exp: "6." },
+  { q: "A ring of 6-8 blind tubules called hepatic / gastric caecae are present at —", opts: ["Fore gut", "Hindgut", "midgut", "junction of foregut and midgut"], ans: 3, exp: "junction of foregut and midgut." },
+  { q: "The hepatic caecae in cockroach —", opts: ["Store excess food", "Produce digestive enzymes", "Absorb fully digested food", "Are helpful in egestion"], ans: 1, exp: "Produce digestive enzymes." },
+  { q: "Which of the following is correct about the alimentary canal of cockroach?", opts: ["The entire fore gut is lined by cuticle", "Hindgut is broader than midgut", "Hindgut is differentiated into ileum, colon and rectum", "All"], ans: 0, exp: "The entire fore gut is lined by cuticle." },
+  { q: "The respiratory system in the body of cockroach consists of —", opts: ["Bronchi", "Bronchioles", "Network of trachea", "Haemocyanin"], ans: 2, exp: "Network of trachea." },
+  { q: "Number of spiracles in cockroach are —", opts: ["2 pairs on thorax and 8 pairs on abdomen", "3 pairs on thorax and 7 pairs on abdomen", "3 pairs on thorax and 9 pairs on abdomen", "1 pair on thorax and 6 pairs on abdomen"], ans: 0, exp: "2 pairs on thorax and 8 pairs on abdomen." },
+  { q: "Spiracles in cockroach are small holes present on _____ side of body.", opts: ["Dorsal", "Ventral", "Lateral", "Mid-dorsal"], ans: 2, exp: "Lateral." },
+  { q: "The blood of cockroach contains no respiratory pigment. It means that —", opts: ["Respiration is anaerobic", "Cockroach has no respiration", "Oxygen goes into tissues with H₂O from outside", "Oxygen goes directly into tissues through tracheal system"], ans: 3, exp: "Oxygen goes directly into tissues through tracheal system." },
+  { q: "Which of the following is false regarding the respiratory system of cockroach?", opts: ["Opening of spiracles is regulated by sphincters", "Exchange of gases takes place at the tracheoles by diffusion", "Oxygen carrying respiratory pigment is haemoerythrin", "Trachea has non-collapsible wall"], ans: 2, exp: "Oxygen carrying respiratory pigment is haemoerythrin." },
+  { q: "The excretory organs in cockroach are —", opts: ["Green glands", "Hepatic caecae", "Malpighian tubules", "Malpighian corpuscles"], ans: 2, exp: "Malpighian tubules." },
+  { q: "Cockroach is —", opts: ["Uricotelic", "Ureotelic", "Ammonotelic", "Guanotelic"], ans: 0, exp: "Uricotelic." },
+  { q: "Malpighian tubules remove excretory products from —", opts: ["haemolymph", "Gut", "Both a and b", "Kidney"], ans: 0, exp: "haemolymph." },
+  { q: "Malpighian tubules in cockroach open at the junction of —", opts: ["Gizzard and midgut", "Midgut and ileum (hind gut)", "Ileum and colon", "Colon and rectum"], ans: 1, exp: "Midgut and ileum (hind gut)." },
+  { q: "The main excretory product in cockroach is —", opts: ["Urea", "Ammonia", "Guanine", "Uric acid"], ans: 3, exp: "Uric acid." },
+  { q: "In addition to Malpighian tubules, which of the following also helps in excretion in cockroach?", opts: ["Nephrocytes", "Urecose glands", "Fat body", "All"], ans: 3, exp: "All." },
+  { q: "Go through the paragraph - 'It is lined by glandular and ciliated cells. It absorbs nitrogenous waste products from haemocoel and convert them into uric acid which is excreted out through the hindgut'. The above functions are related to which of the following structures in cockroach?", opts: ["Trachea", "Hepatic caecae", "Terga", "Malpighian tubules"], ans: 3, exp: "Malpighian tubules." },
+  { q: "Common feature of earthworm and cockroach is —", opts: ["Hermaphrodism", "Ventral nerve cord", "Moulting of cuticle", "Excretion by nephridia"], ans: 1, exp: "Ventral nerve cord." },
+  { q: "Number of thoracic and abdominal ganglia (in pairs) in cockroach are —", opts: ["3 and 6 respectively", "3 and 3 respectively", "6 and 6 respectively", "6 and 3 respectively"], ans: 0, exp: "3 and 6 respectively." },
+  { q: "The nervous system in cockroach —", opts: ["Is spread throughout the body", "Is represented by segmentally arranged ganglia and ventral nerve cord", "Both a and b are correct", "Consists of supra-oesopharyngeal ganglia in head and dorsal nerve cord"], ans: 2, exp: "Both a and b are correct." },
+  { q: "In cockroach, the brain is represented by —", opts: ["Supra-oesopharyngeal ganglion", "Basal ganglion", "Sub-oesopharyngeal ganglion", "Ventral nerve cord"], ans: 0, exp: "Supra-oesopharyngeal ganglion." },
+  { q: "If the head of cockroach is cut off, it will still live for as long as one week. It is because of —", opts: ["Body is covered with a hard chitinous exoskeleton", "Head holds a bit of nervous system", "Head is of no use", "Food capturing apparatus is found elsewhere"], ans: 1, exp: "Head holds a bit of nervous system." },
+  { q: "In cockroach, supra-oesopharyngeal ganglion supplies nerves to —", opts: ["Compound eyes", "Antennae", "Both", "Abdomen area"], ans: 2, exp: "Both." },
+  { q: "The visual unit of cockroach are —", opts: ["Ocelli", "Ctenidia", "Ommatidia", "Rhabdoma"], ans: 2, exp: "Ommatidia." },
+  { q: "In cockroach, each compound eye consists of about —", opts: ["200 hexagonal ommatidia", "2000 hexagonal ommatidia", "20000 hexagonal ommatidia", "20 hexagonal ommatidia"], ans: 1, exp: "2000 hexagonal ommatidia." },
+  { q: "Which of the following is correct of mosaic vision in cockroach?", opts: ["With the help of several ommatidia, a cockroach receives several images of an object", "It is with more sensitivity but has less resolution", "Being common during night, it is called nocturnal vision also", "All"], ans: 3, exp: "All." },
+  { q: "Besides eyes and antenna which of the following is the sense organ in cockroach?", opts: ["Maxillary palps", "Labial palps", "Anal cerci", "All"], ans: 3, exp: "All." },
+  { q: "Cockroach are —", opts: ["Dioecious and without sexual dimorphism", "Monoecious and without sexual dimorphism", "Monoecious and with sexual dimorphism", "Dioecious with sexual dimorphism"], ans: 3, exp: "Dioecious with sexual dimorphism." },
+  { q: "In male cockroach, a pair of testis are located one on each lateral side in the abdominal segment —", opts: ["6th-10th", "6th-8th", "4th-6th", "10th-12th"], ans: 2, exp: "4th-6th." },
+  { q: "In male cockroach, from each testis arises a thin vas deferens, which open into _____ through seminal vesicle.", opts: ["Anal cercus", "Caudal style", "Collateral gland", "Ejaculatory duct"], ans: 3, exp: "Ejaculatory duct." },
+  { q: "In male cockroach, the ejaculatory duct opens into a pore situated ventral to anus. This pore is —", opts: ["Gonopore", "Genital papilla", "Nephridiopore", "Peristomium"], ans: 0, exp: "Gonopore." },
+  { q: "In male cockroach, mushroom gland, acting as an accessory reproductive gland, is situated in the abdominal segments —", opts: ["4th-5th", "6th-7th", "7th-8th", "8th-10th"], ans: 1, exp: "6th-7th." },
+  { q: "Chitinous asymmetrical structures, called male gonapophyses or phallomere represent external genitalia. They surround male gonopore. The male cockroach has —", opts: ["2 phallomeres", "3 phallomeres", "4 phallomeres", "5 phallomeres"], ans: 1, exp: "3 phallomeres." },
+  { q: "During copulation, cockroach transfers male gametes in the form of —", opts: ["Sperms", "Spermatophore", "Seminal vesicles", "Spermatid"], ans: 1, exp: "Spermatophore." },
+  { q: "The ovaries of cockroach are located in the abdominal segments —", opts: ["2-6", "5-6", "1-2", "5-8"], ans: 0, exp: "2-6." },
+  { q: "Each ovary of cockroach consists of how many ovarian tubules / ovarioles —", opts: ["6", "8", "10", "12"], ans: 1, exp: "8." },
+  { q: "In female cockroach, two oviducts from each side open into a common oviduct / vagina which opens into the genital chamber. A pair of which structures located in the 6th segment opens in the genital chamber?", opts: ["Spermathecae", "Gonapophyses", "Ejaculatory duct", "Pseudopenis"], ans: 0, exp: "Spermathecae." },
+  { q: "The function of spermathecae is —", opts: ["Stores egg", "Stores sperm", "Helps in ootheca formation", "Secretes an odoriferous fluid"], ans: 1, exp: "Stores sperm." },
+  { q: "Collateral glands are present in —", opts: ["Male cockroach", "Female cockroach", "In both", "Absent in cockroach"], ans: 1, exp: "Female cockroach." },
+  { q: "Eggs of cockroach are fertilized in —", opts: ["Cocoon", "Ootheca", "Fallopian tube", "Genital pouch of female"], ans: 1, exp: "Ootheca." },
+  { q: "Collateral glands of cockroach help in —", opts: ["Fertilization", "Formation of ootheca", "Copulation", "Formation of oothecal chamber"], ans: 1, exp: "Formation of ootheca." },
+  { q: "Ootheca of cockroach has how many fertilized eggs?", opts: ["14-16", "20-25", "25-30", "30-40"], ans: 0, exp: "14-16." },
+  { q: "Development of Periplanata americana is —", opts: ["Ametabolous", "Paurometabolous", "Hemimetabolous", "Holometabolous"], ans: 1, exp: "Paurometabolous." },
+  { q: "Young cockroach is called —", opts: ["Maggot", "Nymph", "Ephyra", "Pupa"], ans: 1, exp: "Nymph." },
+  { q: "In cockroach, the nymph grows by moulting / ecdysis about how many times to reach the adult form?", opts: ["16", "13", "3", "18"], ans: 1, exp: "13." },
+  { q: "On an average, female cockroach produces how many oothecae? Each ooteca has 14-16 eggs —", opts: ["9-10", "14-16", "50-75", "75-100"], ans: 0, exp: "9-10." },
+  { q: "In cockroach life cycle, the nymph looks very much similar like adult. The nymph —", opts: ["lacks wing", "Has wings", "Has wing pads", "a and c"], ans: 3, exp: "a and c." },
+  { q: "Bull frog of India is —", opts: ["Rana tigrina", "Rana esculenta", "Rana styvatica", "All"], ans: 0, exp: "Rana tigrina." },
+  { q: "Frogs belonging to class _____ of phylum chordata are _____ animals and show hibernation in ____ and aestivation in ____.", opts: ["Hemichordata, poikilothermic, winter, summer", "Amphibia, poikilothermic, summer, rainy season", "Amphibia, poikilothermic, winter, summer", "Amphibia, warmblooded, winter, summer"], ans: 2, exp: "Amphibia, poikilothermic, winter, summer." },
+  { q: "The frogs have the ability to change the colour to hide them from enemies (camouflage). This protective coloration called —", opts: ["Mimicry", "Antagonism", "Burrowing", "Symbiosis"], ans: 0, exp: "Mimicry." },
+  { q: "The body of frog is divisible into —", opts: ["Head and trunk", "Head, neck, trunk and tail", "Head, neck, thorax, abdomen and tail", "Head, trunk and tail"], ans: 0, exp: "Head and trunk." },
+  { q: "Neck is absent in frog. This helps in —", opts: ["Respiration", "Catching prey", "Jumping on ground", "Swimming in water"], ans: 0, exp: "Respiration." },
+  { q: "Which of the following is false about the frog? I. Eyes are bulged out and covered by a nictitating membrane that protects them while in water. II. On either side of the eyes a membranous tympanum (ear) receives sound signals. III. The forelimbs and hind limbs help in swimming, walking, leaping and burrowing. IV. The hind limbs end in five digits and they are larger and muscular than fore limbs that end in four digits. V. Feet have webbed digits that help in swimming. VI. Frogs exhibit sexual dimorphism.", opts: ["Only I and VI", "Only III", "Only IV and V", "None"], ans: 3, exp: "None." },
+  { q: "Both male and female frogs have —", opts: ["Long hindlimbs with five webbed fingers", "Short forelimbs with four unwebbed fingers", "Both a and b", "External ears"], ans: 2, exp: "Both a and b." },
+  { q: "Frog has —", opts: ["5 fingers in hand and 5 toes in foot", "5 fingers in hand and 4 toes in foot", "4 fingers in hand and 5 toes in foot", "6 fingers in hand and 5 toes in foot"], ans: 2, exp: "4 fingers in hand and 5 toes in foot." },
+  { q: "The number of fingers in the hindlimbs of frog is —", opts: ["4", "5", "6", "7"], ans: 1, exp: "5." },
+  { q: "The glands present in the skin of frogs are —", opts: ["Sweat and mucous", "Sweat and mammary", "Sweat and sebaceous", "Mucous and poisonous"], ans: 3, exp: "Mucous and poisonous." },
+  { q: "One of the main function of frog's skin is —", opts: ["Diffusion of respiratory gases", "Absorption of ultraviolet rays to produce vitamin D", "Storage of excess food in the form of subcutaneous fat", "Excretion of nitrogenous waste in the form of uric acid"], ans: 0, exp: "Diffusion of respiratory gases." },
+  { q: "What is not found in skin of frog?", opts: ["Scales", "Epidermis", "Poison glands", "Mucous glands"], ans: 0, exp: "Scales." },
+  { q: "The adult frog is —", opts: ["Herbivorous", "Carnivorous", "Omnivorous", "None of these"], ans: 1, exp: "Carnivorous." },
+  { q: "The structure present in man but absent in frog is —", opts: ["Pancreas", "Salivary gland", "Thyroid gland", "Adrenal gland"], ans: 1, exp: "Salivary gland." },
+  { q: "In frog, digestion of fats occurs mostly in —", opts: ["Rectum", "Stomach", "Duodenum", "Small intestine"], ans: 3, exp: "Small intestine." },
+  { q: "In frog, food is captured by —", opts: ["Trilobed tongue", "Bilobed tongue", "Tentacles", "Limbs"], ans: 1, exp: "Bilobed tongue." },
+  { q: "In frog, undigested solid wastes pass out through —", opts: ["Anus", "Cloaca", "Kidney", "Genital pore"], ans: 1, exp: "Cloaca." },
+  { q: "In frog, which one of the following opens into the duodenum?", opts: ["Pancreatic duct", "Bile duct", "Hepatic duct", "Hepato-pancreatic duct"], ans: 3, exp: "Hepato-pancreatic duct." },
+  { q: "Which of the following is false about the respiration of frog?", opts: ["Frogs respire on land and in water by the same method", "In water, skin acts as aquatic respiratory organ (Cutaneous respiration)", "Dissolved oxygen in water is exchanged through the skin by diffusion", "On land, the buccal cavity, skin and lungs act as respiratory organs"], ans: 0, exp: "Frogs respire on land and in water by the same method." },
+  { q: "Which one is correct about the respiration of frog? I. In frog, cutaneous and pulmonary respiration are found. II. A pair of elongated pink hollow lungs are found in thorax. III. Atmospheric O₂ → Nostril → Buccal cavity → Lungs. IV. During aestivation and hibernation, gaseous exchange takes place through skin.", opts: ["All", "I, II, III", "III", "None"], ans: 0, exp: "All." },
+  { q: "In frog, cutaneous respiration occurs —", opts: ["Always", "Only on land", "Only in water", "Only during aestivation or hibernation"], ans: 0, exp: "Always." },
+  { q: "RBC of frog is —", opts: ["Oval and nucleate", "Circular and nucleate", "Oval and enucleate", "Biconcave and enucleate"], ans: 0, exp: "Oval and nucleate." },
+  { q: "Amphibian heart is —", opts: ["2-chambered", "3-chambered", "4-chambered", "5-chambered"], ans: 1, exp: "3-chambered." },
+  { q: "Heart of frog differs from that of man by the presence of —", opts: ["Auricle", "Ventricle", "Sinus venosus and truncus arteriosus", "Pericardium"], ans: 2, exp: "Sinus venosus and truncus arteriosus." },
+  { q: "Amphibian heart consists of —", opts: ["Two auricles and one ventricle", "One auricle and two ventricles", "Two auricles and two ventricles", "One sinus venosus, one auricle and 2 ventricles"], ans: 0, exp: "Two auricles and one ventricle." },
+  { q: "In frog, ventricle opens into _____ on the _____ side of heart.", opts: ["Sinus venosus, dorsal", "Sinus venosus, ventral", "Conus arteriosus, ventral", "Conus arteriosus, dorsal"], ans: 2, exp: "Conus arteriosus, ventral." },
+  { q: "In frog, a triangular structure called _____ joins the right _____.", opts: ["Conus arteriosus, ventricle", "Conus arteriosus, auricle", "Sinus venosus, auricle", "Sinus venosus, ventricle"], ans: 0, exp: "Conus arteriosus, ventricle." },
+  { q: "In frog, which of the following receives blood through vena cava?", opts: ["Sinus venosus", "Conus arteriosus", "Auricle", "Ventricle"], ans: 0, exp: "Sinus venosus." },
+  { q: "Which of the following special venous system is present in frog?", opts: ["Hepatic portal system", "Renal portal system", "Both a and b", "Neither hepatic nor renal portal system is present"], ans: 2, exp: "Both a and b." },
+  { q: "Which of the following is incorrect about the portal venous system?", opts: ["Hepatic portal vein exists between liver and intestine", "Hepatic vein exists between both the lobes of liver", "Renal portal occurs between the kidney and lower parts of body", "All"], ans: 3, exp: "All." },
+  { q: "In frog, the excretory system consists of —", opts: ["Kidneys, ureters and urinary bladder only", "Kidneys and urinary bladder only", "Kidneys, ureters, urinary bladder and cloaca only", "Kidneys and cloaca only"], ans: 2, exp: "Kidneys, ureters, urinary bladder and cloaca only." },
+  { q: "In frog, urinary bladder is —", opts: ["Absent", "Paired", "Bilobed", "Pentalobed"], ans: 2, exp: "Bilobed." },
+  { q: "Frog is —", opts: ["Ammonotelic", "Uricotelic", "Ureotelic", "Guanotelic"], ans: 2, exp: "Ureotelic." },
+  { q: "Chief nitrogenous waste product in frog is —", opts: ["Ammonia", "Urea", "Uric acid", "Allantoin"], ans: 1, exp: "Urea." },
+  { q: "In frog, the ureter acts as urinogenital duct in —", opts: ["Male", "Female", "Male or female", "Neither in male nor female"], ans: 0, exp: "Male." },
+  { q: "In frog, how many pairs of cranial nerves are found?", opts: ["10", "12", "8", "31"], ans: 0, exp: "10." },
+  { q: "The medulla oblongata passes out through —", opts: ["Foramen magnum", "Foramen obturator", "Foramen of Magendie", "None of the above"], ans: 0, exp: "Foramen magnum." },
+  { q: "Which of the following is false about the nervous system of frog?", opts: ["Fore-brain includes paired olfactory lobes, paired cerebral hemispheres and unpaired diencephalon", "Mid-brain comprises paired optic lobes and paired crura cerebri", "Hind-brain comprises cerebellum and medulla oblongata", "There are 9 pairs of spinal nerves"], ans: 3, exp: "There are 9 pairs of spinal nerves." },
+  { q: "Frog has sense organs like sensory papillae (for touch), taste buds, nasal epithelium (smell), eyes, tympanum with internal ear (for hearing) out of these, which of the following is well-organised structure?", opts: ["Eyes and internal ears", "Eyes and sensory papillae", "Internal ears and taste buds", "Taste buds and sensory papillae"], ans: 0, exp: "Eyes and internal ears." },
+  { q: "In frog, all are cellular aggregations around nerve endings except —", opts: ["Sensory papillae", "Taste buds", "Nasal epithelium", "Eyes and internal ear"], ans: 3, exp: "Eyes and internal ear." },
+  { q: "Frog shows sexual dimorphism. Male frog can be distinguished from female one in having —", opts: ["Sound producing vocal sac", "Copulatory pad on the first digit of the fore arm", "Cloaca", "a and b"], ans: 3, exp: "a and b." },
+  { q: "Mesorchium in frog refers to —", opts: ["Fold of peritoneum between kidney and testis", "Internal tissue of kidney", "Internal tissue of testis", "Capsule of kidney"], ans: 0, exp: "Fold of peritoneum between kidney and testis." },
+  { q: "In male frog, 10-12 vasa efferentia (arising from testis) enter the kidney and open into —", opts: ["urinogenital duct", "Seminal vesicle", "Bidder's canal", "Spermatophore"], ans: 2, exp: "Bidder's canal." },
+  { q: "Bidder's canal is meant for passage of —", opts: ["Ova", "Urine", "Sperms", "All of these"], ans: 2, exp: "Sperms." },
+  { q: "Which of the following sequences is correct for the passage of sperms in frog (male)?", opts: ["Testis → Bidder's canal → Vasa efferentia → Urinogenital duct → cloaca → cloacal aperture", "Testis → Vasa efferentia → Bidder's canal → Urinogenital duct → cloaca → cloacal aperture", "Testis → Urinogenital duct → Bidder's canal → Vasa efferentia → cloaca → cloacal aperture", "Testis → Vasa efferentia → Urinogenital duct → Bidder's canal → cloaca → cloacal aperture"], ans: 1, exp: "Testis → Vasa efferentia → Bidder's canal → Urinogenital duct → cloaca → cloacal aperture." },
+  { q: "In male frog, cloaca is used to pass out —", opts: ["Faecal matter only", "Urine only", "Sperms only", "Faeces, urine and sperm"], ans: 3, exp: "Faeces, urine and sperm." },
+  { q: "Bidder's canal in frog is found in —", opts: ["Liver", "Testis", "Ovary", "Kidney"], ans: 3, exp: "Kidney." },
+  { q: "Which of the following is correct?", opts: ["In earthworm body wall's epidermis consists of a single layer of columnar epithelial cells which contain secretory gland cells", "Myocardium is contractile heart tissue", "A connective sheath surrounds skeletal muscle", "All"], ans: 3, exp: "All." },
+  { q: "Intercalated disc / communication junctions in myocardium allow the cells to contract as a unit. It means :", opts: ["When a cell receives a signal to contract, its neighbours are stimulated to contract", "All myocardial fibres of heart contract at the same time", "Only a single myocardial cell contract", "Contractile stimuli cannot cross from one cell to another"], ans: 0, exp: "When a cell receives a signal to contract, its neighbours are stimulated to contract." },
+  { q: "One very special feature in the earthworm Pheretima is that :", opts: ["fertilization of eggs occurs inside the body", "The typhlosole greatly increases the effective absorption area of the digested food in the intestine", "The S-shaped setae embedded in the integument are the defensive weapons used against the enemies", "It has a long dorsal tubular heart"], ans: 1, exp: "The typhlosole greatly increases the effective absorption area of the digested food in the intestine." },
+  { q: "The ciliated columnar epithelial cells in humans are known to occur in —", opts: ["Fallopian tubes and urethra", "Eustachian tube and stomach lining", "Bronchioles and Fallopian tubes", "Bile duct and oesophagus"], ans: 2, exp: "Bronchioles and Fallopian tubes." },
+  { q: "Out of the four basic types of tissues, which is not the one?", opts: ["Muscular tissue", "Skeletal tissue", "Neural tissue", "Epithelial tissue"], ans: 1, exp: "Skeletal tissue." },
+  { q: "The outside or inside lining of a body organ is formed by —", opts: ["Epithelial tissue", "neural tissue", "Muscular tissue", "Variable and differs from organ to organ"], ans: 0, exp: "Epithelial tissue." },
+  { q: "The epithelium of air sacs of lungs and the walls of blood vessels is —", opts: ["Simple cuboidal epithelium", "Simple squamous epithelium", "Stratified squamous epithelium", "Simple columnar epithelium"], ans: 1, exp: "Simple squamous epithelium." },
+  { q: "The function of following epithelium is not secretion and absorption —", opts: ["Simple cuboidal epithelium", "Simple columnar epithelium", "Simple squamous epithelium", "Brush bordered epithelium"], ans: 2, exp: "Simple squamous epithelium." },
+  { q: "The inner surface of hollow tubes, like bronchioles and fallopian tubes, have —", opts: ["Brush bordered epithelium", "Stratified squamous epithelium", "Ciliated epithelium", "Simple cuboidal epithelium"], ans: 2, exp: "Ciliated epithelium." },
+  { q: "Goblet glands are —", opts: ["Unicellular exocrine glands of intestine", "Unicellular endocrine glands of intestine", "Multicellular exocrine glands of gut", "Multicellular endocrine glands of gut"], ans: 0, exp: "Unicellular exocrine glands of intestine." },
+  { q: "The epithelium of following structure provides protection against chemical and mechanical stresses —", opts: ["Skin", "Pharynx", "Buccal cavity", "All of these"], ans: 3, exp: "All of these." },
+  { q: "Which of the following type of cell junction is not found in animal tissues —", opts: ["Desmosome", "Tight junction", "Gap junction", "Plasmodesmata"], ans: 3, exp: "Plasmodesmata." },
+  { q: "Following is the most abundant tissue in animals —", opts: ["Epithelial tissue", "Neural tissue", "Muscular tissue", "Connective tissue"], ans: 3, exp: "Connective tissue." },
+  { q: "Dermis of skin has —", opts: ["Loose connective tissue", "Dense regular c.t.", "Dense Irregular c.t.", "Epithelial tissue"], ans: 2, exp: "Dense Irregular c.t." },
+  { q: "Mast cells are associated with —", opts: ["Exocrine glands", "Endocrine glands", "Areolar connective tissue", "Neural tissue"], ans: 2, exp: "Areolar connective tissue." },
+  { q: "In all connective tissues except the following the cells secretes the fibres of collagen or elastin protein —", opts: ["Bone", "Cartilage", "Areolar connective tissue", "Fluid connective tissue"], ans: 3, exp: "Fluid connective tissue." },
+  { q: "The fibres of the following muscles are fusiform and do not show striations —", opts: ["Skeletal muscles", "Cardiac muscles", "Both of these", "Smooth muscles"], ans: 3, exp: "Smooth muscles." },
+  { q: "The chondrocytes of connective tissue are —", opts: ["fibre secreting cells", "Bone forming cells", "Cartilage cells", "Bone eating cells"], ans: 2, exp: "Cartilage cells." },
+  { q: "Muscles of intestine and blood vessels are —", opts: ["Involuntary and smooth", "Voluntary and smooth", "Involuntary and striated", "Voluntary and striated"], ans: 0, exp: "Involuntary and smooth." },
+  { q: "Intercalated discs are the communication junctions between the cells of —", opts: ["Cardiac muscles", "Striped muscles", "Adipose tissue", "Nerve and Striated muscles"], ans: 0, exp: "Cardiac muscles." },
+  { q: "Neuroglia are —", opts: ["Excitable cells of neural tissue", "Supporting and non-excitable cells of neural tissue", "Two to three times in volume of neural tissue", "Protective and excitable cells of neural tissue"], ans: 1, exp: "Supporting and non-excitable cells of neural tissue." },
+  { q: "The following are the major proteins of plasma —", opts: ["Globulin, Bilirubin and fibrinogen", "Haemoglobin, fibrinogen and albumin", "Globulin, albumin and Haemoglobin", "Albumin, globulin and fibrinogen"], ans: 3, exp: "Albumin, globulin and fibrinogen." },
+  { q: "Consider the following three statements and mark the right options: A. The plasma without clotting factor is called semen. B. Thymus is called the graveyard of RBCs. C. Thrombocytes are the cell fragments produced from megakaryocytes.", opts: ["Only A is correct", "Both A and C are correct", "Both B and C are correct", "Only C is correct"], ans: 3, exp: "Only C is correct." },
+  { q: "Albumin in plasma helps in —", opts: ["Osmotic balance", "Defense mechanism", "Blood clotting", "Nourishing the blood elements"], ans: 0, exp: "Osmotic balance." },
+  { q: "RBCs in human are —", opts: ["Biconcave and nucleated", "Biconvex and nucleated", "Biconcave and enucleated", "Biconvex and enucleated"], ans: 2, exp: "Biconcave and enucleated." },
+  { q: "The most and the least abundant leucocytes are respectively —", opts: ["Neutrophils and basophils", "Lymphocytes and monocytes", "Lymphocytes and basophils", "Neutrophils and monocytes"], ans: 0, exp: "Neutrophils and basophils." },
+  { q: "Histamine, serotonin and heparin are secreted by —", opts: ["Thrombocytes", "Lymphocytes", "Monocytes", "Basophils"], ans: 3, exp: "Basophils." },
+  { q: "B and T forms, responsible for the immune response are the type of —", opts: ["Thrombocytes", "Lymphocytes", "Eosinophils", "Granulocytes"], ans: 1, exp: "Lymphocytes." },
+  { q: "Read the following statements and mark the right option: A. A healthy person has 12 to 16 g. of haemoglobin per 100 ml of blood. B. The number of platelets in a normal individual is 1.5 lac to 3.5 lac per mm of blood. C. Eosinophils are involved in allergic reactions.", opts: ["Only B is correct", "Only B and C are correct", "Only A and C are correct", "All A, B and C are correct"], ans: 3, exp: "All A, B and C are correct." },
+  { q: "The haemoglobin content per 100 ml of blood of a normal healthy human adult is —", opts: ["5-11 g", "25-30 g", "17-20 g", "12-16 g"], ans: 3, exp: "12-16 g." },
+  { q: "Which of the following is correctly stated as happens in the common cockroach?", opts: ["The food is grinding by mandibles an gizzard", "Malpighian tubules are excretory organ projecting out from the colon", "Oxygen is transported by haemoglobin blood", "Nitrogenous excretory product is urea"], ans: 0, exp: "The food is grinding by mandibles an gizzard." },
+  { q: "The cells lining the blood vessels belong to the category of —", opts: ["Columnar epithelium", "Connective tissue", "Smooth muscle tissue", "Squamous epithelium"], ans: 3, exp: "Squamous epithelium." },
+  { q: "With reference to the external features of cockroach which among the following statements is NOT correct —", opts: ["It has pulvillus between claws", "Gonapophysis help in copulation", "Fore wings are elytra", "Hind wings are protective and are not useful in flight"], ans: 3, exp: "Hind wings are protective and are not useful in flight." },
+  { q: "Which one is correct? I. Vermicompost is an organic Biofertilizer. II. Worm castings of the earthworms are of manurial value. III. The nitrogenous wastes and other secretions of this worm also form important plant food. The process of increasing fertility of soil by earthworm is called vermicomposting.", opts: ["All are correct", "Only statement I is correct", "Only statement II is correct", "Only statement III is correct"], ans: 0, exp: "All are correct." },
+  { q: "Vermicompost is eco-friendly because _____", opts: ["earth worms consume less food and produce vermicompost", "earth worms consume leftovers and produce vermicompost", "earth worms consume microbes and vermicompost is microbe free", "vermicompost does not alter soil quality as that of synthetic fertilizers"], ans: 3, exp: "vermicompost does not alter soil quality as that of synthetic fertilizers." },
+  { q: "Which one among the following components of vermicompost contains plant growth factors?", opts: ["Microbes", "Humic acid", "Nitrogen", "Phosphorous"], ans: 1, exp: "Humic acid." },
+  { q: "Frogs differ from humans in possessing :", opts: ["paired cerebral hemispheres", "hepatic portal system", "nucleated red blood cells", "thyroid as well as parathyroid"], ans: 2, exp: "nucleated red blood cells." },
+  { q: "Consider the following four statements (A-D) related to the common frog Rana tigrina, and select the correct option stating which ones are true (T) and which ones are false (F). (A) On dry land it would die due to lack of O₂ if its mouth is forcibly kept closed for a few days. (B) It has four-chambered heart. (C) On dry land it turns uricotelic from ureotelic. (D) Its life-history is carried out in pond water.", opts: ["T F F T", "T T F F", "F F T T", "F T T F"], ans: 0, exp: "T F F T." },
+  { q: "Which one of the following structures in Pheretima is correctly matched with its function?", opts: ["Clitellum - secretes cocoon", "Gizzard - absorbs digested food", "Setae - defence against predators", "Typhlosole - storage of extra nutrients"], ans: 0, exp: "Clitellum - secretes cocoon." },
+  { q: "The type of muscles present in our :", opts: ["heart are involuntary and unstriated smooth muscles", "intestine are striated and involuntary", "thigh are striated and voluntary", "upper arm are smooth muscle fibres fusiform in shape"], ans: 2, exp: "thigh are striated and voluntary." },
+  { q: "The mouth parts of cockroach consist of _____ which forms the upper lip and _____ which acts as the lower lip.", opts: ["i-labrum; ii-labium", "i-labrum; ii-maxilla", "i-maxilla; ii-mandible", "i-mandible; ii-labrum"], ans: 0, exp: "i-labrum; ii-labium." },
+  { q: "In _____, the collagen fibres are present in rows between parallel bundles of fibres. It is an example of dense _____ connective tissue.", opts: ["i-cartilage; ii-regular", "i-cartilage; ii-irregular", "i-tendon; ii-irregular", "i-tendon; ii-regular"], ans: 3, exp: "i-tendon; ii-regular." },
+  { q: "In the mouth parts of a cockroach, the labium forms _____ while _____ acts as a tongue.", opts: ["i-upper lip; ii-maxilla", "i-upper lip; ii-hypopharynx", "i-lower lip; ii-maxilla", "i-lower lip; ii-hypopharynx"], ans: 3, exp: "i-lower lip; ii-hypopharynx." },
+  { q: "In dense _____ tissues, fibroblasts and collagen are arranged differently. These tissues are present in the _____.", opts: ["i-regular; ii-skin", "i-irregular; ii-skin", "i-regular; ii-tendons", "i-irregular; ii-tendons"], ans: 1, exp: "i-irregular; ii-skin." },
+  { q: "_____ and adipose tissues are examples of _____ connective tissues.", opts: ["i-Areolar; ii-loose", "i-Tendons; ii-dense", "i-Tendons; ii-loose", "i-Areolar; ii-dense"], ans: 0, exp: "i-Areolar; ii-loose." },
+  { q: "The supportive skeletal structures in the human external ears and in the nose tip are examples of :", opts: ["ligament", "areolar tissue", "bone", "cartilage"], ans: 3, exp: "cartilage." },
+  { q: "Which one of the following salts predominates in bone matrix?", opts: ["Sodium chloride", "Magnesium phosphate", "Calcium phosphate", "Sodium carbonate"], ans: 2, exp: "Calcium phosphate." },
+  { q: "The nerve chord in earthworm originates from —", opts: ["supra-pharyngeal ganglia and has a fused pair of ganglia in each segment from the 3th to the last", "supra-pharyngeal ganglia and has a fused pair of ganglia in each segment from the 4th to the last", "sub-pharyngeal ganglia and has fused pair of ganglia in each segment from the 5th to the last", "sub-pharyngeal ganglia and has a fused pair of ganglia in each segment from the 6th to the last"], ans: 2, exp: "sub-pharyngeal ganglia and has fused pair of ganglia in each segment from the 5th to the last." },
+  { q: "Pheretima and its close relatives derive nourishment from :", opts: ["sugarcane roots", "decaying fallen leaves and soil organic matter", "soil insects", "small pieces of fresh fallen leaves of maize, etc."], ans: 1, exp: "decaying fallen leaves and soil organic matter." },
+  { q: "Compared to those of humans, the erythrocytes in frog are —", opts: ["Without nucleus but with haemoglobin", "nucleated and with haemoglobin", "very much smaller and fewer", "nucleated and without haemoglobin"], ans: 1, exp: "nucleated and with haemoglobin." },
+  { q: "Select the correct statement from the ones given below with respect to Periplaneta americana.", opts: ["Nervous system located dorsally, consists of segmentally arranged ganglia joined by a pair of longitudinal connectives", "Males bear a pair of short thread like anal styles", "There are 16 very long Malpighian tubules present at the junctions of midgut and hindgut", "Grinding of food is carried out only by the mouth parts"], ans: 1, exp: "Males bear a pair of short thread like anal styles." },
+  { q: "What external changes are visible after the last moult of a cockroach nymph?", opts: ["Anal cerci develop", "Both fore wings and hind wings develop", "Labium develops", "Mandibles become harder"], ans: 1, exp: "Both fore wings and hind wings develop." },
+  { q: "Choose the correctly matched pair :", opts: ["Tendon - Specialized connective tissue", "Adipose tissue - Dense connective tissue", "Areolar tissue - Loose connective tissue", "Cartilage - Loose connective tissue"], ans: 2, exp: "Areolar tissue - Loose connective tissue." },
+  { q: "Statement A: The section of collateral gland forms the egg case in cockroach. Statement B: The development in cockroach is hemimetabolous.", opts: ["Statement A is correct and statement B is wrong", "Both the statements A and B are correct and B is the reason for A", "Statement B is correct and statement A is wrong", "Both statements A and B are correct and B is not the reason for A"], ans: 3, exp: "Both statements A and B are correct and B is not the reason for A." },
+  { q: "Select the correct option with respect to cockroaches —", opts: ["The fore wings are tegmina which are used in flight", "Malpighian tubules convert nitrogenous wastes into urea", "Males bear short anal styles not present in females", "Nervous system comprises of a dorsal nervecord and ten pairs of ganglion"], ans: 2, exp: "Males bear short anal styles not present in females." },
+  { q: "Which one of the following is one of the paths followed by air/O₂ during respiration in an adult male Periplaneta americana as it enters the animal body?", opts: ["Hypopharynx, mouth, pharynx, trachea, tissues", "Spiracle in metathorax, trachea, tracheoles, oxygen diffuses into cells", "Mouth, bronchial tube, trachea, oxygen enters cells", "Spiracles in prothorax, tracheoles, trachea, oxygen diffuses into cells"], ans: 1, exp: "Spiracle in metathorax, trachea, tracheoles, oxygen diffuses into cells." },
+  { q: "What is true about cockroach?", opts: ["Ureotelic animal", "Entire foregut is lined by cuticle", "Male have spermatheca in 6th segment", "Female have caudal style"], ans: 1, exp: "Entire foregut is lined by cuticle." },
+  { q: "Consider the following statements (A-D) related to Periplaneta americana and select the correct option stating which ones are true (T) and which ones are false (F). A. In male cockroach, 10th segment bears a pair of short, thread like anal styles which are absent in female. B. The first pair of wings arise from mesothorax and are used in flight. C. Opening of 10 pairs abdominal spiracles is regulated by sphincters. D. In male cockroach, a mushroom gland is present in the 6th-7th abdominal segments.", opts: ["T F F T", "T F T T", "T F T F", "F F F T"], ans: 0, exp: "T F F T." },
+  { q: "Some cells of connective tissue are given below: A. Fibroblast, B. Mast cell, C. Chondrocytes, D. Macrophage, E. Osteocytes, F. Plasma cells. How many of them are present in lacuna?", opts: ["Three", "Two", "Four", "Five"], ans: 1, exp: "Two." },
+  { q: "The terga, sterna and pleura of cockroach body are joined by —", opts: ["Arthrodial membrane", "Cartilage", "Cementing glue", "Muscular tissue"], ans: 0, exp: "Arthrodial membrane." },
+  { q: "The body cells in cockroach discharge their nitrogenous waste in the haemolymph mainly in the form of —", opts: ["Urea", "Calcium carbonate", "Ammonia", "Potassium urate"], ans: 3, exp: "Potassium urate." },
+  { q: "The function of the gap junction is to —", opts: ["Separate two cells from each other", "Stop substance from leaking across a tissue", "Performing cementing to keep neighbouring cells together", "Facilitate communication between adjoining cells by connecting the cytoplasm for rapid transfer of ions, small molecules and some large molecules"], ans: 3, exp: "Facilitate communication between adjoining cells by connecting the cytoplasm for rapid transfer of ions, small molecules and some large molecules." },
+  { q: "Which of the following features is not present in Periplaneta americana?", opts: ["Schizocoelom as body cavity", "Indeterminate and radial cleavage during embryonic development", "Exoskeleton composed of N-acetylglucosamine", "Metamerically segmented body"], ans: 1, exp: "Indeterminate and radial cleavage during embryonic development." },
+  { q: "In male cockroaches, sperms are stored in which part of the reproductive system?", opts: ["Testes", "Vas deferens", "Seminal vesicles", "Mushroom glands"], ans: 2, exp: "Seminal vesicles." },
+  { q: "Smooth muscles are :", opts: ["Involuntary, cylindrical, striated", "Voluntary, spindle-shaped, uninucleate", "Involuntary, fusiform, non-striated", "Voluntary, multinucleate, cylindrical"], ans: 2, exp: "Involuntary, fusiform, non-striated." },
+  { q: "The cells in the human body are in contact with an internal environment consisting of —", opts: ["Blood", "Connective tissue", "Interstitial fluid", "Matrix"], ans: 2, exp: "Interstitial fluid." },
+  { q: "Connective tissue includes the following types of tissues.", opts: ["nervous and connective", "epithelium and muscle", "muscle and nervous", "lymph and cartilage"], ans: 3, exp: "lymph and cartilage." },
+  { q: "Cells are to tissues as tissues are to —", opts: ["membranes", "organelles", "organs", "organisms"], ans: 2, exp: "organs." },
+  { q: "The epithelium best adapted for a body surface subject to abrasion is —", opts: ["stratified columnar", "simple squamous", "stratified squamous", "simple cuboidal"], ans: 2, exp: "stratified squamous." },
+  { q: "Which of the following tissues lines the kidney ducts?", opts: ["smooth muscle", "adipose", "epithelial", "nervous"], ans: 2, exp: "epithelial." },
+  { q: "What do fibroblasts secret?", opts: ["fats", "calcium phosphate for bone", "interstitial fluids", "proteins for connective fibers"], ans: 3, exp: "proteins for connective fibers." },
+  { q: "Select the correct route for the passage of sperms in male frogs:", opts: ["Testes → Vasa efferentia → Kidney → Seminal Vesicle → Urinogenital duct → Cloaca", "Testes → Vasa efferentia → Bidder's canal → Ureter → Cloaca", "Testes → Vasa efferentia → Kidney → Bidder's canal → Urinogenital duct → Cloaca", "Testes → Bidder's canal → Kidney → Vasa efferentia → Urinogenital duct → Cloaca"], ans: 2, exp: "Testes → Vasa efferentia → Kidney → Bidder's canal → Urinogenital duct → Cloaca." },
+  { q: "Which of the following structures facilitate the transport of materials between two cells? i. Desmosome, ii. Tight junction, iii. Gap junction, iv. Plasmodesmata", opts: ["i & ii only", "ii & iv only", "I, iii & iv only", "i, ii & iii only"], ans: 2, exp: "I, iii & iv only." },
+  { q: "The three types of muscle tissue are —", opts: ["Cardiac, Smooth, Cartilage", "Cardiac, Skeletal, Cartilage", "Nervous, Skeletal, Cardiac", "Cardiac, Skeletal, Smooth"], ans: 3, exp: "Cardiac, Skeletal, Smooth." },
+  { q: "Name the animal tissue, which are most abundant and widely distributed in the body of complex animals —", opts: ["Epithelial", "Muscular", "Connective", "Neural"], ans: 2, exp: "Connective." },
+  { q: "In arthropodes which of the following is not true —", opts: ["Circulatory system is of open type and are dioecious", "Eyes are compound and simple both type", "Fertilisation is external only", "They are mostly oviparous with direct or indirect development"], ans: 2, exp: "Fertilisation is external only." },
+  { q: "Involuntary muscles are not found in —", opts: ["iris", "bronchi of the lungs", "tongue", "heart"], ans: 2, exp: "tongue." },
+  { q: "Which of the following features is used to identify a male cockroach from a female cockroach?", opts: ["Forewings with darker tegmina", "Presence of caudal styles", "Presence of a boat shaped sternum on the 9th abdominal segment", "Presence of anal cerci"], ans: 1, exp: "Presence of caudal styles." },
+  { q: "Select the correct matching —", opts: ["Cuboidal epithelium - Alveolar wall", "Columnar epithelium - Stomach", "Ciliated epithelium - Intestine", "Squamous epithelium - Germinal epithelium"], ans: 1, exp: "Columnar epithelium - Stomach." },
+  { q: "In smooth and cardiac muscles, cell junctions are represented by —", opts: ["Gap junction", "Desmosomes", "Tight junction", "Zonula occuludens"], ans: 0, exp: "Gap junction." },
+  { q: "Arthrodial membrane is found in __ A __ and the function of __ B __. Select the option with correct representation of A and B respectively :", opts: ["Earthworm, Respiration", "Frog, Articulation", "Cockroach, Circulation", "Cockroach, Joining / Articulation"], ans: 3, exp: "Cockroach, Joining / Articulation." },
+  { q: "Which of these epithelia can stretch to increase the volume of the organ base on internal water pressure —", opts: ["Simple squamous epithelia", "Simple columnar epithelia", "Transitional epithelia", "Stratified columnar epithelia"], ans: 2, exp: "Transitional epithelia." },
+  { q: "Ligaments and tendons are —", opts: ["Connective tissue", "Muscular tissue", "Fibrous connective tissue", "Skeletal tissue"], ans: 2, exp: "Fibrous connective tissue." },
+  { q: "Mark the correct one —", opts: ["Labeo - Internal fertilization", "Frog - Internal fertilization", "Birds - external fertilization", "Balaenoptera - internal fertilization"], ans: 3, exp: "Balaenoptera - internal fertilization." },
+  { q: "Choose the correct statement for Periplaneta americana —", opts: ["It has 6 muscular hearts", "It has 10 thoracic segments", "Anal style is present in both male and female", "It is nocturnal and present in damp places"], ans: 3, exp: "It is nocturnal and present in damp places." },
+  { q: "The ciliated epithelial cells are required to move particles or mucus in a specific direction. In humans, these cells are mainly present in —", opts: ["Bile duct and Bronchioles", "Fallopian tubes and Pancreatic duct", "Eustachian tube and Salivary duct", "Bronchioles and Fallopian tubes"], ans: 3, exp: "Bronchioles and Fallopian tubes." },
+  { q: "Match the following cell structure with its characteristic feature: (A) Tight junctions - (i) Cement neighbouring cells together to form sheet; (B) Adhering - (ii) Transmit information through chemical to another cells; (C) Gap junctions - (iii) Establish a barrier to prevent leakage of fluid across epithelial cells; (D) Synaptic - (iv) Cytoplasmic channels to facilitate communication between adjacent cells.", opts: ["(A)-(iv), (B)-(iii), (C)-(i), (D)-(ii)", "(A)-(ii), (B)-(iv), (C)-(i), (D)-(iii)", "(A)-(iv), (B)-(ii), (C)-(i), (D)-(iii)", "(A)-(iii), (B)-(i), (C)-(iv), (D)-(ii)"], ans: 3, exp: "(A)-(iii), (B)-(i), (C)-(iv), (D)-(ii)." },
+  { q: "Which of the following statements is INCORRECT?", opts: ["Female cockroach possesses sixteen ovarioles in the ovaries", "Cockroaches exhibit mosaic vision with less sensitivity and more resolution", "A mushroom-shaped gland is present in the 6th-7th abdominal segments of male cockroach", "A pair of spermatheca is present in the 6th segment of female cockroach"], ans: 1, exp: "Cockroaches exhibit mosaic vision with less sensitivity and more resolution." },
+  { q: "Cockroach is —", opts: ["Not a pest but a vector of several diseases", "A pest but not vector of any disease", "A serious pest and vector of several diseases", "Is neither a pest nor a vector of diseases"], ans: 2, exp: "A serious pest and vector of several diseases." },
+  { q: "The body of cockroach is segmented and divisible into —", opts: ["Head and thorax", "Head and abdomen", "Abdomen and thorax", "Head, thorax and abdomen"], ans: 3, exp: "Head, thorax and abdomen." },
+  { q: "Exoskeleton of cockroach is formed of —", opts: ["Keratin", "Amino acids", "Chitinous cuticle", "Non-chitinous cuticle"], ans: 2, exp: "Chitinous cuticle." },
+  { q: "In cockroach, the body, inspite of being covered by an exoskeleton of strong chitinous cuticle remains flexible due to —", opts: ["Tergites", "Sternites", "Pleurites", "Arthrodial membrane or Articular membrane"], ans: 3, exp: "Arthrodial membrane or Articular membrane." },
+  { q: "In each segment of cockroach, the exoskeleton has hardened plates called —", opts: ["Sclerites", "Arthrodial membrane", "Ossicles", "None"], ans: 0, exp: "Sclerites." },
+  { q: "The dorsal sclerites and ventral sclerites are called —", opts: ["Sternites and tergites respectively", "Tergites and sternites respectively", "Sternites and pleurites respectively", "Tergites and pleurites respectively"], ans: 1, exp: "Tergites and sternites respectively." },
+  { q: "The head of cockroach consists of fusion of —", opts: ["6 segments", "10 segments", "14 segments", "18 segments"], ans: 0, exp: "6 segments." },
+  { q: "In cockroach, head can move in all directions due to —", opts: ["Absence of neck", "Fusion of all 6 segments of head", "Flexible neck", "Head is small and light in weight"], ans: 2, exp: "Flexible neck." },
+  { q: "In cockroach, a pair of antennae arises from membranous socket. Antennae are —", opts: ["Without any sensory receptors", "Many segmented", "Sensory receptors that help in monitoring the environment", "b and c are correct"], ans: 3, exp: "b and c are correct." },
+  { q: "Mouth parts of cockroach are —", opts: ["Sponging type", "Biting and sucking type", "Biting and chewing type", "Piercing and sucking type"], ans: 2, exp: "Biting and chewing type." },
+  { q: "Tongue of cockroach is —", opts: ["Labrum", "Mandibles", "Labium", "Hypopharynx"], ans: 3, exp: "Hypopharynx." },
+  { q: "Mandibles of cockroach are —", opts: ["Long and pointed", "Short without teeth", "Perforated, syringe like", "With grinding and incising regions"], ans: 3, exp: "With grinding and incising regions." },
+  { q: "In cockroach mouth part consists of a labrum, a pair of mandibles, a pair of maxillae and a labium. Labrum and labium act as —", opts: ["Upper and lower jaws respectively", "Lower and upper jaws respectively", "Upper jaw and lips respectively", "Upper and lower lips respectively"], ans: 3, exp: "Upper and lower lips respectively." },
+  { q: "Open blood vascular system without haemoglobin is found in —", opts: ["Earthworm", "Frog", "Rat", "Cockroach"], ans: 3, exp: "Cockroach." },
+  { q: "The position of heart in cockroach is —", opts: ["Lateral", "Dorsal", "Ventral", "Mid-dorsal line of thorax and abdomen"], ans: 3, exp: "Mid-dorsal line of thorax and abdomen." },
+  { q: "Which of the following is a character of cockroach?", opts: ["Reduced wing", "Cocoon formation", "13-chambered heart", "Absence of salivary gland"], ans: 2, exp: "13-chambered heart." },
+  { q: "Heart of cockroach is —", opts: ["Membranous", "Muscular and tube like", "Absent", "Filled with blood having RBC"], ans: 1, exp: "Muscular and tube like." },
+  { q: "Which of the following is false about the heart of cockroach?", opts: ["It is differentiated into funnel shaped chambers with ostia on either side", "It is myogenic", "Blood from sinuses enter the heart through ostia and is pumped anteriorly to sinuses again", "Alary muscles are related to heart"], ans: 3, exp: "Alary muscles are related to heart." },
+  { q: "The principal function of blood vascular system in cockroach is —", opts: ["Transport of heat", "Transport of oxygen", "Transport of enzyme", "Distribution of digested food + Transport of excretory products"], ans: 3, exp: "Distribution of digested food + Transport of excretory products." },
+  { q: "Which of the following is correct?", opts: ["In cockroach, blood vessels are poorly developed and open into haemocoel", "In cockroach, visceral organs located in haemocoel are bathed in blood (haemolymph)", "The haemolymph consists of colourless plasma and haemocytes", "All"], ans: 3, exp: "All." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+  correctCount = 0; wrongCount = 0; currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 7; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

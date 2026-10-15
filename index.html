@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEET 2027 CBT - Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="login-container">
+  <div class="login-box">
+    <div class="logo">🧬</div>
+    <h1>NEET 2027 CBT</h1>
+    <p class="subtitle">Class 11 Biology - Complete Test Series</p>
+    <div class="input-group">
+      <label>Enter Your Passkey</label>
+      <input type="password" id="passkeyInput" placeholder="XXXX-XXXX-XXXX" autocomplete="off">
+    </div>
+    <button onclick="checkPasskey()" class="btn-login">🔓 Unlock Now</button>
+    <div id="errorMsg" class="error-msg"></div>
+    <p class="footer-text">© 2027 NEET CBT | All Rights Reserved</p>
+  </div>
+</div>
+<script src="keys.js"></script>
+<script>
+function checkPasskey() {
+  const input = document.getElementById('passkeyInput').value.trim().toUpperCase();
+  const errorMsg = document.getElementById('errorMsg');
+
+  if (!input) {
+    errorMsg.textContent = '⚠️ Please enter a passkey';
+    errorMsg.style.display = 'block';
+    return;
+  }
+
+  let user = null;
+  let isMaster = false;
+
+  if (input === MASTER_KEY) {
+    isMaster = true;
+    user = { name: 'Admin', role: 'master' };
+  } else {
+    for (const key in FRIEND_KEYS) {
+      if (FRIEND_KEYS[key].key === input) {
+        user = { name: FRIEND_KEYS[key].name, role: 'friend' };
+        break;
+      }
+    }
+  }
+
+  if (user) {
+    localStorage.setItem('cbt_user', JSON.stringify(user));
+    localStorage.setItem('cbt_login_time', new Date().toISOString());
+    errorMsg.style.display = 'none';
+    window.location.href = 'dashboard.html';
+  } else {
+    errorMsg.textContent = '❌ Invalid Passkey. Please try again.';
+    errorMsg.style.display = 'block';
+    document.getElementById('passkeyInput').value = '';
+    document.getElementById('passkeyInput').focus();
+  }
+}
+
+document.getElementById('passkeyInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') checkPasskey();
+});
+</script>
+</body>
+</html>

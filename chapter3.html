@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 3: Plant Kingdom - CBT (272 Questions)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    line-height: 1.6;
+    padding: 10px;
+  }
+  .main-container {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 15px;
+    height: calc(100vh - 20px);
+  }
+  .sidebar {
+    width: 300px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 15px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar h3 {
+    color: #2b6cb0;
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+  .stat-box {
+    background: #ebf8ff;
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .stat-box .num {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c5282;
+  }
+  .stat-box .lbl {
+    font-size: 11px;
+    color: #4a5568;
+  }
+  .stat-box.green { background: #f0fff4; }
+  .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; }
+  .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; }
+  .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; }
+  .stat-box.purple .num { color: #44337a; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    justify-content: center;
+  }
+  .legend span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .legend .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .palette-btn {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    background: #f7fafc;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+
+  .quiz-area {
+    flex: 1;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 25px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .quiz-header h2 {
+    color: #2b6cb0;
+    font-size: 18px;
+  }
+  .q-counter {
+    background: #4299e1;
+    color: #fff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .question-box {
+    flex: 1;
+    margin-bottom: 15px;
+  }
+  .q-text {
+    font-weight: 600;
+    margin-bottom: 15px;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  .q-num-badge {
+    display: inline-block;
+    background: #4299e1;
+    color: #fff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    font-size: 14px;
+    margin-right: 10px;
+  }
+  .option {
+    display: block;
+    padding: 12px 16px;
+    margin: 8px 0;
+    background: #f7fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 15px;
+  }
+  .option:hover {
+    border-color: #90cdf4;
+    background: #ebf8ff;
+  }
+  .option.selected {
+    border-color: #4299e1;
+    background: #bee3f8;
+  }
+  .option.correct-ans {
+    border-color: #38a169;
+    background: #c6f6d5;
+    font-weight: 600;
+  }
+  .option.wrong-ans {
+    border-color: #e53e3e;
+    background: #fed7d7;
+  }
+  .option.disabled {
+    pointer-events: none;
+    opacity: 0.8;
+  }
+  .feedback {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb {
+    background: #c6f6d5;
+    color: #22543d;
+    border-left: 4px solid #38a169;
+  }
+  .feedback.wrong-fb {
+    background: #fed7d7;
+    color: #742a2a;
+    border-left: 4px solid #e53e3e;
+  }
+  .feedback .exp {
+    margin-top: 6px;
+    font-style: italic;
+    color: #4a5568;
+  }
+  .nav-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-top: 10px;
+    border-top: 2px solid #e2e8f0;
+  }
+  .btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: #4299e1; color: #fff; }
+  .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; }
+  .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; }
+  .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; }
+  .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; }
+  .btn-danger:hover { background: #c53030; }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-marked {
+    background: #805ad5;
+    color: #fff;
+  }
+  .btn-marked:hover { background: #6b46c1; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    text-align: center;
+  }
+  .modal-box h2 {
+    color: #2b6cb0;
+    margin-bottom: 20px;
+  }
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .result-item {
+    background: #ebf8ff;
+    padding: 15px;
+    border-radius: 10px;
+  }
+  .result-item .label {
+    font-size: 12px;
+    color: #4a5568;
+  }
+  .result-item .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c5282;
+    margin-top: 4px;
+  }
+  .result-item.green { background: #f0fff4; }
+  .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; }
+  .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; }
+  .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; }
+  .result-item.orange .value { color: #7b341e; }
+
+  .mobile-palette-toggle {
+    display: none;
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    z-index: 500;
+    background: #4299e1;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar {
+      width: 100%;
+      max-height: 300px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 600;
+      transform: translateY(-100%);
+      transition: transform 0.3s;
+      border-radius: 0 0 12px 12px;
+    }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="num" id="sbTotal">0</div>
+        <div class="lbl">Total</div>
+      </div>
+      <div class="stat-box green">
+        <div class="num" id="sbAttempted">0</div>
+        <div class="lbl">Attempted</div>
+      </div>
+      <div class="stat-box red">
+        <div class="num" id="sbNotAnswered">0</div>
+        <div class="lbl">Not Answered</div>
+      </div>
+      <div class="stat-box orange">
+        <div class="num" id="sbNotVisited">0</div>
+        <div class="lbl">Not Visited</div>
+      </div>
+      <div class="stat-box purple">
+        <div class="num" id="sbMarked">0</div>
+        <div class="lbl">Marked</div>
+      </div>
+      <div class="stat-box green">
+        <div class="num" id="sbCorrect">0</div>
+        <div class="lbl">Correct</div>
+      </div>
+      <div class="stat-box red">
+        <div class="num" id="sbWrong">0</div>
+        <div class="lbl">Wrong</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="sbMarks">0</div>
+        <div class="lbl">Marks</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+
+    <div class="palette" id="palette"></div>
+  </div>
+
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Plant Kingdom</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+
+    <div class="question-box" id="questionBox"></div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="label">Total Questions</div>
+        <div class="value" id="rTotal">0</div>
+      </div>
+      <div class="result-item green">
+        <div class="label">Correct</div>
+        <div class="value" id="rCorrect">0</div>
+      </div>
+      <div class="result-item red">
+        <div class="label">Wrong</div>
+        <div class="value" id="rWrong">0</div>
+      </div>
+      <div class="result-item orange">
+        <div class="label">Marks Obtained</div>
+        <div class="value" id="rMarks">0</div>
+      </div>
+      <div class="result-item purple">
+        <div class="label">Percentage</div>
+        <div class="value" id="rPercent">0%</div>
+      </div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CHAPTER 3: PLANT KINGDOM - 272 QUESTIONS
+// (Diagram/Table wale 13 questions skip kiye)
+// ============================================================
+const questions = [
+  { q: "Algae are mostly —", opts: ["Aquatic", "Terrestrial", "Parasite", "Lithophytes"], ans: 0, exp: "Algae are mostly aquatic." },
+  { q: "Algae are —", opts: ["Chlorophyllous autotroph", "Thalloid", "Both", "Archegoniate"], ans: 2, exp: "Both chlorophyllous autotroph and thalloid." },
+  { q: "Select the correct options about algae —", opts: ["Some algae are associated with fungi (in lichen) and animals (on sloth bear)", "Great range in form and size", "Reproduce by vegetative, asexual and sexual method", "All"], ans: 3, exp: "All of the above." },
+  { q: "Asexual reproduction occurs by production of different types of spores in algae. The most common type of spore is —", opts: ["Aplanospore", "Zoospore", "Hyphospore", "Chlamydospores"], ans: 1, exp: "Zoospore." },
+  { q: "The flagellate/motile spore is called —", opts: ["Aplanospore", "Zoospore", "Hyphospore", "Chlamydospore"], ans: 1, exp: "Zoospore." },
+  { q: "In algae we find —", opts: ["Isogamy", "Anisogamy", "Oogamy", "All"], ans: 3, exp: "All." },
+  { q: "Chlamydomonas shows —", opts: ["Isogamy", "Anisogamy", "Both", "Akinetes formation"], ans: 2, exp: "Both isogamy and anisogamy." },
+  { q: "Oogamy is seen in —", opts: ["Volvox", "Fucus", "Both", "Spirogyra"], ans: 2, exp: "Both." },
+  { q: "Flagellate isogametes as well as flagellate anisogametes are produced by —", opts: ["Spirogyra", "Fucus", "Angiosperms", "Chlamydomonas"], ans: 3, exp: "Chlamydomonas." },
+  { q: "In oogamy —", opts: ["Male gamete and female gamete are flagellate", "Male gamete and female gamete are non-flagellate", "Male gamete is small, motile and produced in large number but female gamete is single passive or static and produced singly", "Male gamete is non-motile and female gamete is motile"], ans: 2, exp: "Male small motile, female large non-motile." },
+  { q: "At least a half of the total CO₂ fixation on earth is carried out through photosynthesis by —", opts: ["Angiosperms", "Lycopods", "Algae", "Bryophytes"], ans: 2, exp: "Algae." },
+  { q: "In aquatic ecosystems which one(s) is of paramount importance as primary producer in food chain?", opts: ["Algae", "Angiosperms", "Pistia", "Gelidium"], ans: 0, exp: "Algae." },
+  { q: "Choose the correct statement —", opts: ["Many species of Porphyra, Laminaria and Sargassum are among 70 species of marine algae used as food", "Agar is used to grow microbes and in preparations of ice-creams and jellies", "Algae are useful to man in a variety of way", "All"], ans: 3, exp: "All." },
+  { q: "The members of class chlorophyceae are commonly called —", opts: ["Red Algae", "Blue green algae", "Green Algae", "Brown algae"], ans: 2, exp: "Green Algae." },
+  { q: "The plant body of green algae may be —", opts: ["Unicellular", "Colonial", "Filamentous", "All"], ans: 3, exp: "All." },
+  { q: "The major pigments in green algae are ____ and ____ and stored food is ____", opts: ["Chl a, Chl d, Starch", "Chl a, Chl c, Floridean starch", "Chl a, Chl b, Starch", "Chl a, Chl c, mannitol"], ans: 2, exp: "Chl a, Chl b, Starch." },
+  { q: "In green algae we meet which type of chloroplasts —", opts: ["Spiral and reticulate", "Plate like and cup shaped", "Discoid", "All"], ans: 3, exp: "All." },
+  { q: "Pyrenoids are present in ____ in most of the green algae —", opts: ["Mitochondria", "Chloroplast", "In cytosol", "In nucleus"], ans: 1, exp: "Chloroplast." },
+  { q: "Pyrenoid contains —", opts: ["Polysaccharide + Lipid", "Starch + Lipid", "Protein + Starch", "Starch + Glycogen"], ans: 2, exp: "Protein + Starch." },
+  { q: "No of pyrenoids in members of green algae —", opts: ["Always 1", "Always 2", "One to many", "Always many"], ans: 2, exp: "One to many." },
+  { q: "Green algae have cell wall made up of —", opts: ["Outer layer of pectose and inner layer of cellulose", "Inner layer of pectose and outer layer of cell wall", "Cellulose + Algin", "Cellulose + Peptidoglycan"], ans: 0, exp: "Outer pectose, inner cellulose." },
+  { q: "In green algae —", opts: ["Some members show vegetative reproduction by fragmentation", "Asexual reproduction by production of various spores", "Sexual reproduction may be isogamous, anisogamous or oogamous", "All"], ans: 3, exp: "All." },
+  { q: "Chlamydomonas, Volvox, Ulothrix, Spirogyra and Chara belong to —", opts: ["Phaeophyceae", "Rhodophyceae", "Chlorophyceae", "Cyanophyceae"], ans: 2, exp: "Chlorophyceae." },
+  { q: "Which pigments are found in brown algae?", opts: ["Chl a, Chl c", "Chl a, Chl d", "Chl a, Chl c and Fucoxanthin", "Chl a, Phycoerythrin"], ans: 2, exp: "Chl a, Chl c, Fucoxanthin." },
+  { q: "The members of phaeophyceae or brown algae are found primarily in —", opts: ["Fresh water", "Marine habitat", "Terrestrial habitat", "On rock"], ans: 1, exp: "Marine habitat." },
+  { q: "Laminarin and Mannitol, reserve food in brown algae are —", opts: ["Lipids", "Complex carbohydrate", "Proteins", "Lipoprotein"], ans: 1, exp: "Complex carbohydrate." },
+  { q: "Laminaria, Ectocarpus, Dictyota, Sargassum and Fucus are the examples —", opts: ["Red algae", "B.G.A", "Brown Algae", "Green algae"], ans: 2, exp: "Brown Algae." },
+  { q: "Which of the following is not a feature of the brown algae?", opts: ["Multicellularity and large size", "Almost exclusively marine", "Attached forms have hold fast", "Most common pigment is chl b"], ans: 3, exp: "Brown algae have chl a and c, not chl b." },
+  { q: "Giant kelps may reach upto 100m long. These brown algae are placed under class —", opts: ["Rhodophyceae", "Phaeophyceae", "Chlorophyceae", "Chrysophyceae"], ans: 1, exp: "Phaeophyceae." },
+  { q: "The brown algae have pigments —", opts: ["Chl a, Chl c, Carotene, fucoxanthin", "Chl a, chl b, fucoxanthin", "Chl a, chl d, fucoxanthin", "Chl a + Chl d + phycoerythrin"], ans: 0, exp: "Chl a, Chl c, Carotene, fucoxanthin." },
+  { q: "Usually plant body of brown algae consists of —", opts: ["Hold fast", "Stipe", "Frond", "All"], ans: 3, exp: "All." },
+  { q: "In most of the brown algae asexual reproduction takes place by —", opts: ["Auxospores", "Aplanospores", "Pear shaped/pyriform biflagellate zoospores", "Multiflagellate zoospore"], ans: 2, exp: "Pyriform biflagellate zoospores." },
+  { q: "In brown algae the gametes are —", opts: ["Only isogametes", "Only coenoplanogamete", "Only multiflagellate gamete", "Pyriform/pea shaped gametes having unequal 2 laterally attached flagella"], ans: 3, exp: "Pyriform gametes with 2 lateral flagella." },
+  { q: "Which one is correct about sexual reproduction in brown algae?", opts: ["Sexual reproduction may be isogamous, anisogamous or oogamous", "In isogamy and anisogamy fertilization is external", "In oogamy fertilization occurs in oogonium", "All are correct"], ans: 3, exp: "All are correct." },
+  { q: "Which of the following is correct?", opts: ["In brown algae as well as red algae vegetative reproduction takes place by fragmentation", "In red algae algal predominant pigment is r-phycoerythrin", "Reserved food, floridean starch in red algae is very similar to amylopectin and glycogen in structure", "All are correct"], ans: 3, exp: "All are correct." },
+  { q: "Chl a + Chl d + r-phycoerythrin are the pigments in the members of —", opts: ["Rhodophyceae", "Phaeophyceae", "Chlorophyceae", "Cyanophyceae"], ans: 0, exp: "Rhodophyceae." },
+  { q: "Which of the following statements does not characterize the red algae —", opts: ["Floridean starch (reserve food)", "Both spores and gametes are nonmotile", "Post fertilization development is like other algae", "Red algae can vary their ratio of photosynthetic pigments depending upon the light conditions"], ans: 2, exp: "Post fertilization development is different." },
+  { q: "Porphyra and Polysiphonia belong to —", opts: ["Chlorophyceae", "Rhodophyceae", "Xanthophyceae", "Phaeophyceae"], ans: 1, exp: "Rhodophyceae." },
+  { q: "I. Green algae occur in fresh water, brackish water salt water. II. Habitat of Brown algae - fresh water (rare), brackish water, salt water. III. Some red algae are found in fresh water, mostly occur in salt water, some are in brackish water. IV. Most of the red algae are multicellular. V. Red algae may occur in both well lighted regions close to water-surface and also at great depths in oceans. VI. Cell wall of red algae consists of cellulose + polysulphate esters. VII. 2-8, equal and apical flagella in green algae.", opts: ["All are correct", "All are false", "I and VI are correct", "II, III and V are correct"], ans: 3, exp: "II, III and V are correct." },
+  { q: "Bryophytes include —", opts: ["Mosses", "Lycopods", "Horse tail", "Liverworts + mosses"], ans: 3, exp: "Liverworts + mosses." },
+  { q: "Bryophytes mostly grow —", opts: ["in dry area", "In snow", "In moist shaded areas in hills, damp + humid + shaded localities", "In water"], ans: 2, exp: "Moist shaded areas." },
+  { q: "Bryophytes are called 'Amphibians of the plant kingdom' because —", opts: ["They are found in only water", "Plants live in soil but are dependent on water for sexual reproduction", "It needs water for spores formation", "Water is essential for its survival"], ans: 1, exp: "Live in soil but need water for sexual reproduction." },
+  { q: "Plant body of bryophyte is —", opts: ["Less differentiated than that of algae", "Equally differentiated to that of Algae", "More differentiated to that of algae", "Is not differentiated at all"], ans: 2, exp: "More differentiated." },
+  { q: "The plant body of bryophytes is thallus-like and prostate or erect, and attached to substratum by —", opts: ["Unicellular roots", "Multicellular roots", "Unicellular or multicellular rhizoids", "Adhesive"], ans: 2, exp: "Unicellular or multicellular rhizoids." },
+  { q: "The plant body of all bryophytes are gametophyte, haploid and thallus like having —", opts: ["Root + Stem + Leaf", "No root + no stem + no leaf", "Xylem and phloem", "Wood"], ans: 1, exp: "No root, no stem, no leaf." },
+  { q: "The gametophytes in bryophytes produces biflagellate gametes (anterozoids) in ____ and produces ovum (female gamete) in ____", opts: ["Antheridium, carpogonium", "Anther, ovary", "Archegonium, antheridium", "Antheridium, archegonium"], ans: 3, exp: "Antheridium, archegonium." },
+  { q: "Choose the correct option —", opts: ["In bryophytes sexual reproduction is oogamous type", "Sex organs are unicellular in algae and fungi but multicellular in bryophytes to angiosperms", "Archegonium is flask shaped", "All"], ans: 3, exp: "All." },
+  { q: "Which is the prominent phase in the life cycle of bryophytes —", opts: ["Gametophyte", "Sporophyte", "Seta", "Sporogonium"], ans: 0, exp: "Gametophyte." },
+  { q: "Gametophytic generation is dominant in —", opts: ["Gymnosperms", "Bryophyte", "Pteridophytes", "Angiosperms"], ans: 1, exp: "Bryophyte." },
+  { q: "Which is the correct statement about bryophytes?", opts: ["Sporophyte is multicellular, not free living but attached with plant body (gametophyte) for nourishment", "Some cells of the sporophyte undergo meiosis to produce haploid homospores", "Spores germinate to produce gametophyte", "All"], ans: 3, exp: "All." },
+  { q: "Sphagnum is used as a packing material for transportation of living materials because of its —", opts: ["Acidic nature as it does not undergo decay", "Creeping capacity", "Water holding capacity", "Both a and c"], ans: 3, exp: "Both a and c." },
+  { q: "Sphagnum is also called —", opts: ["Bog or peat moss", "Club moss", "Spike moss", "Reindeer moss"], ans: 0, exp: "Bog or peat moss." },
+  { q: "Sphagnum (a moss) provides —", opts: ["oil", "Peat (fuel)", "Agar", "Antibiotics"], ans: 1, exp: "Peat (fuel)." },
+  { q: "Mosses are of great ecological importance because of —", opts: ["Its contribution to prevent soil erosion", "Its contribution in ecological succession", "Both", "Its capability to remove CO from the atmosphere"], ans: 2, exp: "Both." },
+  { q: "The mosses which form dense extensive mats on the soil prevents —", opts: ["Uprooting of trees", "Soil erosion", "Falling of leaves", "Evaporation of water from the soil"], ans: 1, exp: "Soil erosion." },
+  { q: "Bryophytes are not characterised by —", opts: ["Well developed root system and vascular tissue", "Rhizoids", "Alternation of generation", "Presence of chlorophyll"], ans: 0, exp: "Well developed root system and vascular tissue." },
+  { q: "Bryophytes show —", opts: ["Asexual reproduction and zygotic meiosis immediately", "Asexual reproduction and sporic meiosis", "No asexual reproduction but sporic meiosis", "Gametophytic dominance and zygotic meiosis immediately"], ans: 1, exp: "Asexual reproduction and sporic meiosis." },
+  { q: "Gemmae are multicellular green structures for vegetative propagation. These are found in gemma cups in —", opts: ["Riccia thallus", "Marchantia thallus", "Funaria protonema", "Fern prothallus"], ans: 1, exp: "Marchantia thallus." },
+  { q: "A true moss is that —", opts: ["Which has leafy, radially symmetrical body and grows in tufts", "Which has a protonema stage and multicellular rhizoids with oblique septa", "Both a and b", "Which has vascular tissues"], ans: 2, exp: "Both a and b." },
+  { q: "Funaria requires water because —", opts: ["fertilization occurs in water only", "Funaria is a hydrophyte", "plants dry up and die without water", "no branching and sex organs cannot develop without water"], ans: 0, exp: "Fertilization occurs in water only." },
+  { q: "Sphagnum is also called peat moss because —", opts: ["It grows in acidic marshes (bog) and helps in peat formation", "It is found in peat", "it decays to form peat", "it fossilized quickly"], ans: 0, exp: "Grows in acidic marshes and helps in peat formation." },
+  { q: "Which one is correct about Marchantia (Liverwort)?", opts: ["Plant body is monoecious or dioecious", "Sporophyte is differentiated into foot, seta and capsule", "Spore germinates to produce thallus", "All"], ans: 3, exp: "All." },
+  { q: "Which one is not a true moss —", opts: ["Nest moss", "Funaria", "Sphagnum", "Polytrichum"], ans: 0, exp: "Nest moss." },
+  { q: "Asexual reproduction in liverworts takes place by —", opts: ["Fragmentation of thalli + gemmae formation", "Gemmae formation + Diploid spores formation", "Spores formation + isogamy", "Fragmentation + zoospores formation"], ans: 0, exp: "Fragmentation + gemmae formation." },
+  { q: "In mosses gametophyte has 2 stages. What are these stages?", opts: ["1st stage is sporogonium phase and 2nd protonema stage", "1st stage is protonema and the second stage is leafy stage", "1st stage is gemmae formation and 2nd one is meiosis", "1st stage is zygote and 2nd one is Spore mother cell"], ans: 1, exp: "Protonema and leafy stage." },
+  { q: "Protonema —", opts: ["Is a stage of gametophytic generation", "Is a creeping, green, branched stages and develops directly from a spore", "Produces lateral bud which forms leafy plant body", "All"], ans: 3, exp: "All." },
+  { q: "In mosses asexual reproduction occurs by —", opts: ["fragmentation and budding in the secondary protonema", "Gemmae and adventious bud formation", "Gemmae and tubers formation", "By multiflagellate spores formation"], ans: 0, exp: "Fragmentation and budding in secondary protonema." },
+  { q: "The sporophyte in mosses is —", opts: ["Less elaborated than that in liverworts", "More elaborated than that in liverworts", "Equally elaborated than that in liverworts", "Independent of gametophyte"], ans: 1, exp: "More elaborated." },
+  { q: "Spores dispersal in mosses occurs by —", opts: ["simple mechanism", "elaters", "elaterophores", "elaborate mechanism"], ans: 3, exp: "Elaborate mechanism." },
+  { q: "In bryophytes meiosis occurs in —", opts: ["Spores", "Gametes mother cells", "Gametes", "Spore mother cells in capsule/sporophyte/sporogonium"], ans: 3, exp: "Spore mother cells in capsule." },
+  { q: "Multicellular sporophytic phase is expected in the life cycle of —", opts: ["Euglenoids", "Green algae", "Diatoms", "Bryophytes"], ans: 3, exp: "Bryophytes." },
+  { q: "You are given an unknown plants to study in the laboratory. You find that it has chlorophyll, no xylem. Its multicellular sex organs are enclosed in a layer of jacket cells. Its gametophyte stage is free living. The plant probably belongs to —", opts: ["Chlorophyceae", "Bryophyte", "Pteridophyte", "Gymnosperm"], ans: 1, exp: "Bryophyte." },
+  { q: "Place the following groups of plants in order, beginning with those that first appeared on the earth and progressing toward those that appeared most recently in time —", opts: ["Gymnosperms, angiosperms, ferns, moss, algae", "Algae, moss, ferns, gymnosperms, angiosperms", "Moss, algae, ferns, angiosperms, gymnosperms", "Algae, ferns, angiosperms, gymnosperms, Moss"], ans: 1, exp: "Algae, moss, ferns, gymnosperms, angiosperms." },
+  { q: "A moss sperm moves by means of —", opts: ["Cilia", "3 flagella", "2 flagella", "Many flagella"], ans: 2, exp: "2 flagella." },
+  { q: "The embryonic development in bryophyte takes place in the —", opts: ["Protonema", "Sporangium", "Antheridium", "Archegonium"], ans: 3, exp: "Archegonium." },
+  { q: "In alternation of generations the sporophyte generation is ____ and the gametophyte generation is ____", opts: ["N, 2N", "2N, 2N", "2N, N", "N, N"], ans: 2, exp: "2N, N." },
+  { q: "Cone is found in —", opts: ["Equisetum", "Salvinia", "Selaginella", "a and c"], ans: 3, exp: "a and c." },
+  { q: "Prothallus in pteridophyte is —", opts: ["Nonvascular, haploid, multicellular small mostly photosynthetic thalloid gametophyte", "Vascular, N, Multicellular sporophyte", "2N, Free-living gametophyte", "Is thallus/plant body in same pteridophytes"], ans: 0, exp: "Nonvascular, haploid, multicellular gametophyte." },
+  { q: "In pteridophytes spore germinates to produce —", opts: ["Sporophyte", "Synangium", "Prothallus", "Sporocarp"], ans: 2, exp: "Prothallus." },
+  { q: "Which one is wrongly matched?", opts: ["Gemma cups - Marchantia", "Biflagellate zoospores - Brown algae", "Uniflagellate gametes - Polysiphonia", "Unicellular organism - Chlorella"], ans: 2, exp: "Polysiphonia has non-motile gametes." },
+  { q: "The main differentiating factor between non-vascular and vascular plants is —", opts: ["Lack of gametophyte", "Spore production", "The presence of tracheids", "All"], ans: 2, exp: "Presence of tracheids." },
+  { q: "In pteridophytes prothallus produces —", opts: ["Sporangia", "Antheridia and archegonia", "Vascular tissues", "Root, stem and leaf"], ans: 1, exp: "Antheridia and archegonia." },
+  { q: "The heterosporous pteridophytes are —", opts: ["Lycopodium and Pteris", "Selaginella and Psilotum", "Selaginella and Salvinia", "Dryopteris and Adiantum"], ans: 2, exp: "Selaginella and Salvinia." },
+  { q: "The sporophyte is dominant phase in —", opts: ["Pteridophytes", "Gymnosperms", "Angiosperms", "All"], ans: 3, exp: "All." },
+  { q: "In homosporous pteridophyte the gametophyte is —", opts: ["Vascular", "Monoecious", "Dioecious", "Dependent on sporophyte"], ans: 1, exp: "Monoecious." },
+  { q: "In heterosporous pteridophytes the gametophyte —", opts: ["May be monoecious or dioecious", "Is always dioecious", "Is vascular", "Has root and leaves, hence independent"], ans: 0, exp: "May be monoecious or dioecious." },
+  { q: "Which one is correct about heterosporous pteridophytes?", opts: ["microspore and megaspores develop into the male and the female gametophytes respectively", "The female gametophyte are retained on the parent sporophyte for variable period", "The development of the zygote into the embryo takes place within female gametophyte", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following group does not have free living gametophyte —", opts: ["Bryophytes only", "Pteridophytes only", "Gymnosperms only", "Gymnosperms + Angiosperms"], ans: 3, exp: "Gymnosperms + Angiosperms." },
+  { q: "Seed plants are all —", opts: ["Heterosporous", "Dioecious", "Monoecious", "Homosporous"], ans: 0, exp: "Heterosporous." },
+  { q: "Why are gymnosperms referred to as 'naked seed plants'?", opts: ["They lack ovule", "They lack ovaries", "They have no seed coat", "The embryo is unprotected"], ans: 1, exp: "They lack ovaries." },
+  { q: "The product(s) of fertilization in gymnosperms is/are ____ and in angiosperms is/are ____", opts: ["Endosperm, embryo and endosperm", "Embryo, endosperm and embryo", "Embryo, embryo", "Embryo, endosperm"], ans: 1, exp: "Embryo, endosperm and embryo." },
+  { q: "In gymnosperms ovule —", opts: ["Is not enclosed before fertilization but enclosed after fertilization", "Remains enclosed before fertilization only", "Is not enclosed by any ovary wall and remains exposed, both before and after fertilization", "Is never formed"], ans: 2, exp: "Not enclosed by ovary wall." },
+  { q: "Gymnosperms include —", opts: ["Medium sized trees", "Tall tree", "Shrubs", "All"], ans: 3, exp: "All." },
+  { q: "Which is the tallest gymnospermic plant?", opts: ["Redwood tree Sequoia", "Pinus", "Ginkgo", "Cycas"], ans: 0, exp: "Sequoia." },
+  { q: "In gymnosperms roots are generally —", opts: ["Fibrous root", "Adventitious root", "Tap root", "Prop root"], ans: 2, exp: "Tap root." },
+  { q: "In which of the following gymnosperms coralloid root having N₂-fixing cyanobacteria (Nostoc) is found —", opts: ["Pinus", "Ginkgo", "Cycas", "Cedrus"], ans: 2, exp: "Cycas." },
+  { q: "Mycorrhizal root (having symbiotic fungi) is found —", opts: ["Pinus", "Ginkgo", "Cycas", "None"], ans: 0, exp: "Pinus." },
+  { q: "Which one is not the characteristic of Cycas?", opts: ["Unbranched stem", "Compound leaves (pinnate)", "Dioecious (male and female cone on separate plants)", "Non-archegoniate"], ans: 3, exp: "Cycas is archegoniate." },
+  { q: "Branched stem is found in —", opts: ["Cycas + Pinus", "Cycas + Cedrus", "Pinus + Cedrus", "Cycas only"], ans: 2, exp: "Pinus + Cedrus." },
+  { q: "The leaves of gymnosperms are well-adapted to withstand extremes of temperature, humidity and wind. In conifers what are the xerophytic characters?", opts: ["Needle like leaves", "Thick cuticle", "Sunken stomata", "All"], ans: 3, exp: "All." },
+  { q: "All are archegoniate except —", opts: ["Bryophytes", "Angiosperms", "Pteridophytes", "Gymnosperms"], ans: 1, exp: "Angiosperms." },
+  { q: "Which one is conifer?", opts: ["Gnetum", "Cycas", "Pinus", "All"], ans: 2, exp: "Pinus." },
+  { q: "Which one is correct about Pinus?", opts: ["Monoecious - Male and female cones are produced on same plant", "Monoecious - Male and female sporophylls born on same strobilus", "Dioecious - Male and female cones are produced on different plants", "None"], ans: 0, exp: "Monoecious." },
+  { q: "Megasporangium (Nucellus) is —", opts: ["Anther", "Ovary", "Ovule", "Megaspore mother cell"], ans: 2, exp: "Ovule." },
+  { q: "The nucellus is protected by envelopes (integument) and this composite structure is called —", opts: ["Antheridium", "Ovule", "Ovary", "Megaspore mother cell"], ans: 1, exp: "Ovule." },
+  { q: "Megaspore mother cell is differentiated from one of the cells of the —", opts: ["Nucellus", "Ovary", "megaspore", "Microspore"], ans: 0, exp: "Nucellus." },
+  { q: "Megaspore mother cell undergoes ____ division to form megaspore —", opts: ["Mitotic", "Meiotic", "Amiotic", "Dinomitotic"], ans: 1, exp: "Meiotic." },
+  { q: "Megaspore develops into multicellular structure called —", opts: ["Male gametophyte", "Female gamete", "Female gametophyte", "Megaspore mother cell"], ans: 2, exp: "Female gametophyte." },
+  { q: "In gymnosperms, the female gametophyte is retained within —", opts: ["Ovary", "Microsporangiate cone", "Archegonia", "Megasporangium or ovule"], ans: 3, exp: "Megasporangium or ovule." },
+  { q: "Pollen grain is —", opts: ["Female gamete", "Reduced male gametophyte", "Megaspore", "Male cone"], ans: 1, exp: "Reduced male gametophyte." },
+  { q: "The development of pollen grains occurs within —", opts: ["Ovary", "Ovule", "Megasporangium", "Microsporangium"], ans: 3, exp: "Microsporangium." },
+  { q: "Which one is correct about male and female gametophyte?", opts: ["In bryophytes and pteridophytes they have independent free-living existence", "In gymnosperms and angiosperms they have no independent free-living existence", "Both a and b", "In bryophytes, pteridophytes and angiosperms they have free-living life"], ans: 2, exp: "Both a and b." },
+  { q: "Where are the female sex organs/archegonia (2 or more in number) found in —", opts: ["Microgametophyte", "Megagametophyte", "Microsporangium", "Antheridia"], ans: 1, exp: "Megagametophyte." },
+  { q: "In gymnosperms male gametophyte —", opts: ["Is highly developed", "Has an independent life", "Is highly reduced and confined to only a limited number of cells", "Is produced in macrosporangiate cone"], ans: 2, exp: "Highly reduced." },
+  { q: "In gymnosperms pollination takes place by —", opts: ["Wind", "Water", "insects", "Animals"], ans: 0, exp: "Wind." },
+  { q: "In gymnospermic plants, during pollination pollen grains are transferred to —", opts: ["Stigma", "On archegonia", "On ovary", "Micropyle end of ovule"], ans: 3, exp: "Micropyle end of ovule." },
+  { q: "Resin and turpentine are obtained from —", opts: ["Teak", "Eucalyptus", "Oak", "Pine"], ans: 3, exp: "Pine." },
+  { q: "Chilgoza used as fruit is obtained from —", opts: ["Pinus gerardiana", "Cycas", "Gnetum", "Angiosperm"], ans: 0, exp: "Pinus gerardiana." },
+  { q: "Sago is obtained from —", opts: ["Cycas revoluta", "Pinus", "Cedrus", "Gnetum"], ans: 0, exp: "Cycas revoluta." },
+  { q: "Red wood of china is obtained from —", opts: ["Cycas revoluta", "Pinus longifolia", "Gnetum", "Cedrus"], ans: 1, exp: "Pinus longifolia." },
+  { q: "Source of Canada balsam (a mounting agent to make permanent slide) is obtained from —", opts: ["Abies", "Pinus", "Cedrus", "Angiosperm"], ans: 0, exp: "Abies." },
+  { q: "Ephedrine obtained from the stem of Ephedra is given to cure —", opts: ["Asthma", "Respiratory disorder", "Cold and cough", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Cedar wood oil is obtained from —", opts: ["Pinus", "Ginkgo", "Juniperus", "Cycas"], ans: 2, exp: "Juniperus." },
+  { q: "Which one is the source of wood —", opts: ["Pinus roxburghii", "Cedrus", "Abies, Sequoia", "All"], ans: 3, exp: "All." },
+  { q: "Which one forms coal?", opts: ["Fern + Cycas", "Fern + Cycadofilicales or pteridospermales", "Ginkgo + Cedrus", "Cycas + Pinus"], ans: 1, exp: "Fern + Cycadofilicales." },
+  { q: "The correct sequence of the ploidy in moss protonemal cell, primary endosperm nucleus in dicots, leaf cell of a moss, prothallus cell of a fern, gemma cell in Marchantia, meristematic cell of monocot, ovum of liverwort, and zygote of fern-", opts: ["N, 3N, N, N, N, 2N, N, 2N", "3N, 2N, N, N, N, 2N, N, N", "2N, 3N, 2N, N, N, N, N, N", "N, 3N, N, N, N, N, 2N, 2N"], ans: 0, exp: "N, 3N, N, N, N, 2N, N, 2N." },
+  { q: "Phylogeny and inter-relationship found between taxa on the basis of number, type and arrangement of chromosomes is —", opts: ["Cytotaxonomy", "Chromataxonomy", "Karyotaxonomy", "Chemotaxonomy"], ans: 2, exp: "Karyotaxonomy." },
+  { q: "Cytotaxonomy is connected with —", opts: ["Chemical composition of cytoplasm", "Cell organelles", "Cytochromes", "Shape and size of cells"], ans: 2, exp: "Cytochromes." },
+  { q: "Natural system of classification is based on —", opts: ["Ontogeny", "Phylogeny", "Morphology", "Morphology and affinities"], ans: 3, exp: "Morphology and affinities." },
+  { q: "A system of classification in which a large number of traits are considered is —", opts: ["Artificial system", "Phylogenetic system", "Synthetic system", "Natural system"], ans: 3, exp: "Natural system." },
+  { q: "In artificial system, the organisms are classified on the basis of —", opts: ["All the possible characters", "Phylogenetic trends", "One or few characters", "None"], ans: 2, exp: "One or few characters." },
+  { q: "Natural system of classification differs from artificial system in —", opts: ["Employing only one floral trait", "Taking only one vegetative trait", "Bringing out similarities and dissimilarities", "Developing evolutionary trends"], ans: 3, exp: "Developing evolutionary trends." },
+  { q: "Plant classification proposed by Carolus Linnaeus was artificial because it was based on —", opts: ["Only a few morphological characters", "Evolutionary tendencies which are diverse", "Anatomical characters which are adaptive in nature", "Physiological traits alongwith morphological characters"], ans: 0, exp: "Only a few morphological characters." },
+  { q: "Phylogenetic system brings out —", opts: ["Reproductive similarities", "Grouping according to morphological characters", "Grouping on the basis of increasing complexities", "Grouping according to evolutionary trends and genetic relationships"], ans: 3, exp: "Evolutionary trends and genetic relationships." },
+  { q: "System of classification used by Linnaeus was —", opts: ["Natural system", "Artificial system", "Phylogenetic system", "Asexual system"], ans: 1, exp: "Artificial system." },
+  { q: "Phylogenetic system of classification was proposed by —", opts: ["Hutchinson/Engler and Prantl", "Bentham and Hooker", "Linnaeus", "Santapau"], ans: 0, exp: "Hutchinson/Engler and Prantl." },
+  { q: "Karyotaxonomy is based on —", opts: ["Trinomial nomenclature", "Organic evolution", "Number of chromosomes", "Bands formed on chromosomes"], ans: 2, exp: "Number of chromosomes." },
+  { q: "Chemotaxonomy is connected with —", opts: ["Classification of chemicals found in plants", "Use of phytochemical data in systematic botany", "Application of chemicals on herbarium sheets", "Use of statistical methods in chemical yielding plants"], ans: 1, exp: "Use of phytochemical data." },
+  { q: "Phenetic classification is based on —", opts: ["Ancestral lineage of existing organisms", "Observable characteristics of existing organisms", "Dendrograms based on DNA characteristics", "Sexual characteristics"], ans: 1, exp: "Observable characteristics." },
+  { q: "Natural system of classification was proposed by —", opts: ["Bentham and Hooker", "Hutchinson", "Whittaker", "Engler and Prantl"], ans: 0, exp: "Bentham and Hooker." },
+  { q: "Phylogenetic system of classification is based on —", opts: ["Morphological features", "Chemical constituents", "Evolutionary relationships", "Floral characters"], ans: 2, exp: "Evolutionary relationships." },
+  { q: "System of classification that employs numerical data to evaluate similarities and differences is known as —", opts: ["Cytotaxonomy", "Biosystematics", "Phenetics", "Chemotaxonomy"], ans: 2, exp: "Phenetics." },
+  { q: "Classification based on a few morphological characters is —", opts: ["Artificial", "Natural", "Phylogenetic", "Both b and c"], ans: 0, exp: "Artificial." },
+  { q: "The major difference between the mosses and ferns is:", opts: ["Ferns lack alternation of generation while mosses show the same", "Mosses are facultative aerobes while ferns are obligate aerobes", "Vascular bundles of ferns show xylem vessels while those of mosses lack it", "Sporophytes of ferns live much longer as compared to the sporophytes of mosses"], ans: 3, exp: "Fern sporophytes live longer." },
+  { q: "Dicot and Monocot characters are respectively —", opts: ["A, C, F, H, I; and B, D, E, G, J", "A, D, F, H, I; and B, C, E, G, J", "A, C, E, G, I; and B, D, F, H, J", "B, C, F, H, I; and A, D, E, G, J"], ans: 1, exp: "A, D, F, H, I; and B, C, E, G, J." },
+  { q: "Archegoniophore is present in —", opts: ["Funaria", "Marchantia", "Chara", "Adiantum"], ans: 1, exp: "Marchantia." },
+  { q: "Compared with the gametophytes of the bryophytes the gametophytes of vascular plants tend to be —", opts: ["Smaller and to have smaller sex organs", "Smaller but to have larger sex organs", "Larger but to have smaller sex organs", "Larger and to have larger sex organs"], ans: 0, exp: "Smaller and smaller sex organs." },
+  { q: "The gametophyte is not an independent, free-living generation in —", opts: ["Pinus", "Polytrichum", "Adiantum", "Marchantia"], ans: 0, exp: "Pinus." },
+  { q: "Which one of the following is wrongly matched?", opts: ["Cassia - Imbricate aestivation", "Root pressure - Guttation", "Puccinia - Smut", "Root - Exarch protoxylem"], ans: 2, exp: "Puccinia is rust." },
+  { q: "Selaginella and Salvinia are considered to represent a significant step toward evolution of seed habit because —", opts: ["Megaspores possess endosperm and embryo surrounded by seed coat", "Embryo develops in female gametophyte which is retained on parent sporophyte", "Female gametophyte is free and gets dispersed like seeds", "Female gametophyte lacks archegonia"], ans: 1, exp: "Embryo develops in retained female gametophyte." },
+  { q: "Among the following, which structure is not functionally similar to others?", opts: ["antheridium", "archegonium", "oogonium", "ovum"], ans: 3, exp: "Ovum." },
+  { q: "Consider the following four statements whether they are correct or wrong: (a) The sporophyte in liverworts is more elaborate than that in mosses. (b) Salvinia is heterosporous. (c) The life-cycle in all seed-bearing plants is diplontic. (d) In Pinus male and female cones are born on different trees. The two wrong statements together are:", opts: ["Statements (A) and (C)", "Statements (A) and (D)", "Statements (B) and (C)", "Statements (A) and (B)"], ans: 1, exp: "(A) and (D) are wrong." },
+  { q: "In angiosperms, functional megaspore develops into:", opts: ["Embryo sac", "Ovule", "Endosperm", "Pollen sac"], ans: 0, exp: "Embryo sac." },
+  { q: "Multicellular sex organs, formation of embryo, dominant gametophytic phase, requirement of water during sexual reproduction and absence of true root, stem and leaves are some important characters of —", opts: ["Bryophytes", "Pteridophytes", "Angiosperms", "Gymnosperms"], ans: 0, exp: "Bryophytes." },
+  { q: "Identify odd one w.r.t ploidy level —", opts: ["Leaf cell of a dicot", "Ovum of a liverwort", "Zygote of a fern", "Meristem cell of monocot"], ans: 1, exp: "Ovum of a liverwort is haploid; rest are diploid." },
+  { q: "Heterospory is found in some members of ____ and all members of ____", opts: ["Bryophyta, Pteridophyta", "Pteridophyta, Bryophyta", "Bryophyta, Gymnospermae", "Pteridophyta, Spermatophyta"], ans: 3, exp: "Pteridophyta, Spermatophyta." },
+  { q: "In gymnosperms, microspore develops into a male gametophytic generation which is highly reduced and is confined to only a limited number of cells. This reduced gametophyte is known as —", opts: ["Pollen grain", "Endosperm", "Prothallus", "Embryo sac"], ans: 0, exp: "Pollen grain." },
+  { q: "Gemmae are the specialised structures produced in liverworts. These are —", opts: ["Non-green, multicellular, asexual buds develop in gemma cups", "Green, multicellular, asexual buds develop in gemma cups", "Non-green, multicellular, diploid, sexual spores", "Green, unicellular, diploid, sexual spores"], ans: 1, exp: "Green, multicellular, asexual buds." },
+  { q: "Horsetails and ferns —", opts: ["Lack archegonia", "Possess vascular tissues in main plant body", "Lack vascular tissues", "None"], ans: 1, exp: "Possess vascular tissues." },
+  { q: "Which one of the following is common to multicellular fungi, filamentous algae and protonema of mosses —", opts: ["Diplontic life cycle", "Members of kingdom plantae", "Mode of Nutrition", "Multiplication by fragmentation"], ans: 3, exp: "Multiplication by fragmentation." },
+  { q: "Gymnosperms are characterized by the —", opts: ["absence of seeds", "presence of flowers", "presence of seeds in cones", "absence of vascular tissues"], ans: 2, exp: "Presence of seeds in cones." },
+  { q: "Which one of the following is a correct statement —", opts: ["In Pteridophyte gametophyte has a protonema and leafy stage", "In gymnosperms female gametophyte is free-living", "Antheridiophores and archegoniophores are present in pteridophytes", "Origin of seed habit can be traced in pteridophytes"], ans: 3, exp: "Origin of seed habit in pteridophytes." },
+  { q: "Go through the statements - A. Oogamous sexual reproduction involves fusion of motile and nonmotile gametes. B. A bryophyte of considerable economic importance is Sphagnum. C. In Selaginella sporophyte is dominant. D. The term prothallus is used for reduced gametophyte. E. Iodine can be obtained from Porphyra. Which of the above statement is correct?", opts: ["A, B, E only", "B, C, E only", "A, D, E only", "A, B, C, D only"], ans: 0, exp: "A, B, E only." },
+  { q: "Which one of the following is a correct statement?", opts: ["Fronds are found in Bryophytes", "Heterocysts are found in Nostoc", "Diatoms produce basidiospores", "Multiciliated sperms are found in Angiosperms"], ans: 1, exp: "Heterocysts are found in Nostoc." },
+  { q: "In the prothallus of a vascular cryptogam, the anthozooids and eggs mature at different times. As a result:", opts: ["There is high degree of sterility", "There is no change in success rate of fertilization", "Self fertilization is prevented", "One can conclude that the plant is apomictic"], ans: 2, exp: "Self fertilization is prevented." },
+  { q: "Winged pollen grains are present in —", opts: ["Mango", "Cycas", "Mustard", "Pinus"], ans: 3, exp: "Pinus." },
+  { q: "In which of the following, all listed genera belong to the same class of algae —", opts: ["Porphyra, Ectocarpus, Ulothrix", "Volvox, Spirogyra, Chlamydomonas", "Chara, Fucus, Polysiphonia", "Sargassum, Laminaria, Gracilaria"], ans: 1, exp: "Volvox, Spirogyra, Chlamydomonas (Chlorophyceae)." },
+  { q: "In a moss the sporophyte —", opts: ["Arises from a spore produced from the gametophyte", "produces gametes that give rise to the gametophyte", "is partially parasitic on the gametophyte", "Manufactures food for itself, as well as for the gametophyte"], ans: 2, exp: "Partially parasitic on gametophyte." },
+  { q: "Isogamous condition with non-flagellated gametes is found in:", opts: ["Chlamydomonas", "Spirogyra", "Volvox", "Fucus"], ans: 1, exp: "Spirogyra." },
+  { q: "Besides paddy fields, cyanobacteria are also found inside vegetative part of:", opts: ["Pinus", "Cycas", "Equisetum", "Psilotum"], ans: 1, exp: "Cycas." },
+  { q: "Read the following statements (A-E): (A) In liverworts, mosses, and ferns gametophytes are free-living. (B) Gymnosperms and some ferns are heterosporous. (C) Sexual reproduction in Fucus, Volvox and Albugo is oogamous. (D) The sporophyte in liverworts is more elaborate than that in mosses. (E) Both, Pinus and Marchantia are dioecious. How many of the above statements are correct?", opts: ["One", "Two", "Three", "Four"], ans: 2, exp: "Three." },
+  { q: "Which one of the following shows isogamy with non-flagellated gametes?", opts: ["Sargassum", "Ectocarpus", "Ulothrix", "Spirogyra"], ans: 3, exp: "Spirogyra." },
+  { q: "Which one of the following is wrong about Chara?", opts: ["Upper oogonium and lower round antheridium", "Globule and nucule present on the same plant", "Upper antheridium and lower oogonium", "Globule is male reproductive structure"], ans: 2, exp: "Upper antheridium and lower oogonium is wrong." },
+  { q: "Which of the following is responsible for peat formation?", opts: ["Marchantia", "Riccia", "Funaria", "Sphagnum"], ans: 3, exp: "Sphagnum." },
+  { q: "Male gametophyte with least number of cell is present in:", opts: ["Pteris", "Funaria", "Lilium", "Pinus"], ans: 3, exp: "Pinus." },
+  { q: "Match the storage products listed under Column-I with the organisms given under Column-II: A. Glycogen - p. Sargassum; B. Pyrenoids - q. Nostoc; C. Laminarin and mannitol - r. Polysiphonia; D. Floridean starch - s. Spirogyra; t. Agaricus", opts: ["A-t, B-s, C-p, D-r", "A-r, B-s, C-p, D-t", "A-q, B-p, C-s, D-r", "A-s, B-r, C-t, D-q"], ans: 0, exp: "A-t, B-s, C-p, D-r." },
+  { q: "Marchantia is considered as a heterothallic plant because it is —", opts: ["monoecious", "heterogametic", "dioecious", "bisexual"], ans: 2, exp: "Dioecious." },
+  { q: "The plant body is thalloid in —", opts: ["Funaria", "Sphagnum", "Salvinia", "Marchantia"], ans: 3, exp: "Marchantia." },
+  { q: "What is common in all the three, Funaria, Dryopteris and Ginkgo?", opts: ["Independent sporophyte", "Presence of archegonia", "Well developed vascular tissues", "Independent gametophyte"], ans: 1, exp: "Presence of archegonia." },
+  { q: "Which one of the following is wrongly matched?", opts: ["Nostoc-Water blooms", "Spirogyra-Motile gametes", "Sargassum-Chlorophyll c", "Basidiomycetes-Puffballs"], ans: 1, exp: "Spirogyra has non-motile gametes." },
+  { q: "Syngamy can occur outside the body of the organism in —", opts: ["Fungi", "Mosses", "Algae", "Ferns"], ans: 2, exp: "Algae." },
+  { q: "Which one of the following is the unique feature of angiosperms?", opts: ["haploid endosperm", "Circinate vernation", "Coralloid roots", "Double fertilization"], ans: 3, exp: "Double fertilization." },
+  { q: "Besides water, light and a few nutrients, what do algae need in order to grow?", opts: ["Carbon dioxide", "Methane", "Nitrogen", "Oxygen"], ans: 0, exp: "Carbon dioxide." },
+  { q: "What kinds of water can algae grow in?", opts: ["Saltwater", "Freshwater", "Polluted water", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Which of the following statement is incorrect regarding bryophytes?", opts: ["The female sex organ is flask shaped", "The antherozoids are released into water", "The antherozoids are biflagellated", "Zygote formed undergoes meiosis immediately"], ans: 3, exp: "Zygote does not undergo meiosis immediately." },
+  { q: "Pteridophytes are also called —", opts: ["Vascular amphibians of plant kingdom", "First tracheophytes", "Botanical snakes", "All of these"], ans: 3, exp: "All of these." },
+  { q: "A. Companion cells and sieve tubes are absent in pteridophytes. B. Gametophyte of pteridophytes require cool, dry and shady places to grow. C. Prothallus is found in Dryopteris.", opts: ["Only C is correct", "Only A is correct", "A and B are correct", "Only B is incorrect"], ans: 0, exp: "Only C is correct." },
+  { q: "Find the correct option w.r.t pteropsida —", opts: ["Selaginella", "Equisetum", "Dryopteris", "Lycopodium"], ans: 2, exp: "Dryopteris." },
+  { q: "In which of the following fertilization or reproduction is possible without water —", opts: ["Ulothrix", "Dryopteris", "Funaria", "Cycas"], ans: 3, exp: "Cycas." },
+  { q: "In gymnosperms, the endosperm is formed by the —", opts: ["Fusion of one male gamete with two polar nuclei", "Fusion of one male gamete with one polar nuclei", "Fusion of male gamete with the egg", "Germination of a megaspore"], ans: 3, exp: "Germination of a megaspore." },
+  { q: "Which of the following is not correct?", opts: ["Non flagellated unicellular algae - Chlorella", "Leaf like algae - Laminaria", "Maiden hair fern/walking fern - Adiantum", "Brown algae - Batrachospermum"], ans: 3, exp: "Batrachospermum is red algae." },
+  { q: "Which of the following generations occur in seed of gymnosperms?", opts: ["Two gametophytic generation", "One sporophytic and one gametophytic", "Two sporophytic and one gametophytic generation", "Three sporophytic generation"], ans: 1, exp: "One sporophytic and one gametophytic." },
+  { q: "In which of the following groups of plants does the description given below fits - they have no roots, flower and seeds, the plant body is characterised by a forked shoot, ribbon like green thallus or sometimes erect shoot and female reproductive organ is archegonia.", opts: ["Gymnosperm", "Bryophyta", "Pteridophyta", "Angiosperm"], ans: 1, exp: "Bryophyta." },
+  { q: "Seed ferns belong to —", opts: ["Pteridophyta", "Gymnosperm", "In both pteridophyta and gymnosperm", "Bryophyta"], ans: 1, exp: "Gymnosperm." },
+  { q: "Which structures can be observed in the life cycle of vascular cryptogams?", opts: ["Gemmae, Prothallus, Archegonium", "Vascular tissue, Prothallus, Ovule formation", "Double fertilisation, Haploid endosperm, Vascular tissue", "Prothallus, Archegonium, Vascular tissue"], ans: 3, exp: "Prothallus, Archegonium, Vascular tissue." },
+  { q: "How many plants in the list given below are the members of nonvascular embryophytes? Spirogyra, Volvox, Fucus, Polysiphonia, Polytrichum, Sphagnum, Marchantia, Funaria, Selaginella, Equisetum", opts: ["Six", "Three", "Four", "Five"], ans: 3, exp: "Five." },
+  { q: "Some characters/structures are given below. How many of them are found in both bryophyta and pteridophyta? A. Archegonium, B. Protonema, C. Embryo, D. Ovule, E. Vascular tissue, F. Antheridium", opts: ["Two", "Three", "Four", "Five"], ans: 1, exp: "Three." },
+  { q: "According to five kingdom system of classification Chlamydomonas, Chlorella and Yeast should be placed under —", opts: ["Protista", "Plantae", "Fungi", "Animalia"], ans: 0, exp: "Protista." },
+  { q: "Find the correct from the following — (A) Ectocarpus, Dictyota, Laminaria are brown algae. (B) Marchantia, Funaria, Sphagnum are liverworts. (C) Selaginella, Pteris, Lycopodium are member of Lycopsida. (D) Wolfia, Eucalyptus, Mangifera are angiosperms.", opts: ["A, B", "B, C", "C, D", "A, D"], ans: 3, exp: "A, D." },
+  { q: "List of some pteridophytes are given below. Selaginella, Salvinia, Lycopodium, Psilotum, Dryopteris, Marsilea, Azolla, Pteridium. How many of the above plants are homosporous fern?", opts: ["Three", "Two", "Four", "Five"], ans: 1, exp: "Two." },
+  { q: "Read the following statements and give answer. A. Heterospory is found in all members of pteropsida. B. Selaginella is advance among pteridophytes as it approaches towards the seed formation. C. Pinus leaves are monomorphic, pinnate compound and have sunken stomata as adaptation against transpiration. D. Sporic meiosis is characteristic of life cycle in many organisms like Volvox, Chlamydomonas and Ulothrix.", opts: ["All are incorrect", "Both B and C are correct", "Only B is correct", "Only D is incorrect"], ans: 1, exp: "Both B and C are correct." },
+  { q: "Pick out the statement that does not apply to bryophytes.", opts: ["Include the ferns and horsetails", "Thallus is a gametophyte", "Sporophyte shows foot, seta and capsule", "Gemmae help in reproduction"], ans: 0, exp: "Ferns and horsetails are pteridophytes." },
+  { q: "Which one of the following considered important in the development of seed habit?", opts: ["Homospory", "Heterospory", "Dependent sporophyte", "Free living gametophyte"], ans: 1, exp: "Heterospory." },
+  { q: "Select the wrong statement.", opts: ["Indigofera is used as a dye", "Ashwagandha is a medicinal plant", "Seeds are non-endospermous in Fabaceae", "Ovary superior, bicarpellary with ovules on axile placentation in Liliaceae"], ans: 3, exp: "Liliaceae has superior ovary, tricarpellary." },
+  { q: "Pick out the wrong statement.", opts: ["Gymnosperms lack vessels in their xylem", "The cell wall of parenchyma is made up of pectin", "The first formed primary xylem elements are called protoxylem", "Gymnosperms have albuminous cells and have sieve cells in their phloem"], ans: 1, exp: "Parenchyma cell wall is made of cellulose." },
+  { q: "Pick out the wrong statement. A. Apoplast is the system of adjacent cell walls that is continuous throughout the plant. B. Endodermis is impervious to water molecules. C. Pinus seeds germinate and establish without the presence of mycorrhizae.", opts: ["A and B", "B and C", "C only", "B only"], ans: 1, exp: "B and C are wrong." },
+  { q: "From internal fertilization point of view, which of the following plant group is the odd one:", opts: ["Algae", "Bryophytes", "Pteridophytes", "Gymnosperms"], ans: 3, exp: "Gymnosperms." },
+  { q: "Which of the following statements is correct?", opts: ["Leaf is a lateral outgrowth of stem developed endogenously at the node", "Seeds of flowering plants vary in shape, size and period of viability", "Members of family Liliaceae are annual trees", "Floral formula provides information about placentation and arrangement of sepals"], ans: 1, exp: "Seeds vary in shape, size, viability." },
+  { q: "Sequoia plant differs from Eucalyptus —", opts: ["Having many celled female gametophytes", "Ovules lie exposed on the ovary", "Presence of non-motile male gametophytes", "having stigma and style in pistil"], ans: 1, exp: "Ovules lie exposed." },
+  { q: "The spreading of living pteridophytes is limited and restricted to narrow geographical regions because —", opts: ["They need water for the syngamy of motile female and male gametes", "Prothallus requires cool, damp and shady places to grow", "Both", "None"], ans: 2, exp: "Both." },
+  { q: "Sporophyte is multicellular but attached to the photosynthetic gametophyte and derives nourishment from it in the life cycle of —", opts: ["Ficus, Sphagnum", "Polytrichum, Porella", "Ulothrix, Funaria", "Spirogyra, Marchantia"], ans: 1, exp: "Polytrichum, Porella." },
+  { q: "Sexual reproduction shows considerable variation in the type and formation of sex cells in genus —", opts: ["Chlamydomonas", "Pinus", "Porphyra", "Solanum"], ans: 0, exp: "Chlamydomonas." },
+  { q: "Which is not a Bryophyta?", opts: ["Hepatocpsida", "Anthocerotopsida", "Bryopsida", "Lycopsida"], ans: 3, exp: "Lycopsida is pteridophyte." },
+  { q: "This provides brown colour to the algae —", opts: ["Chlorophyll-a", "Phycocyanin", "fucoxanthin", "chlorophyll-b"], ans: 2, exp: "Fucoxanthin." },
+  { q: "Which one of the following statements is wrong?", opts: ["Chlorella and Spirulina are used as space food", "Mannitol is stored food in Rhodophyceae", "Algin and carrageenan are products of algae", "Agar-agar is obtained from Gelidium and Gracilaria"], ans: 1, exp: "Mannitol is in Phaeophyceae." },
+  { q: "Male gametes are flagellated in —", opts: ["Ectocarpus", "Spirogyra", "Polysiphonia", "Anabaena"], ans: 0, exp: "Ectocarpus." },
+  { q: "Read the following five statements (A to E): A. Mosses and lichens are the first organisms to colonise a bare rock. B. Selaginella is a homosporous pteridophyte. C. Coralloid roots in Cycas have VAM. D. Main plant body in bryophytes is gametophytic, whereas in pteridophytes it is sporophytic. E. In gymnosperms, male and female gametophytes are present within sporangia located on sporophyte.", opts: ["A, D and E", "B, C and E", "A, C and D", "B, C and D"], ans: 0, exp: "A, D and E." },
+  { q: "In which of the following, gametophyte is not independent free living?", opts: ["Pteris", "Pinus", "Funaria", "Marchantia"], ans: 1, exp: "Pinus." },
+  { q: "Which one is a wrong statement?", opts: ["Haploid endosperm is typical feature of Gymnosperms", "Brown algae have chlorophyll a and c and fucoxanthin", "Archegonia are found in Bryophyta, Pteridophyta and Gymnosperms", "Mucor has biflagellate zoospores"], ans: 3, exp: "Mucor has non-motile spores." },
+  { q: "Mosses are gregarious because they —", opts: ["Have vascular tissue", "Have indirect germination of spores", "Have direct germination of spore", "Have S.M.C"], ans: 1, exp: "Indirect germination of spores." },
+  { q: "Select the correct statement —", opts: ["Gymnosperms are both homosporous and heterosporous", "Salvinia, Ginkgo and Pinus all are gymnosperms", "Sequoia is one of the tallest trees", "The leaves of gymnosperms are not well adapted to extremes of climate"], ans: 2, exp: "Sequoia is tallest tree." },
+  { q: "In bryophytes and pteridophytes, transport of male gametes requires —", opts: ["Wind", "Insects", "Birds", "Water"], ans: 3, exp: "Water." },
+  { q: "Conifers are adapted to tolerate extreme environmental conditions because of —", opts: ["thick cuticle", "presence of vessels", "broad hardy leaves", "superficial stomata"], ans: 0, exp: "Thick cuticle." },
+  { q: "Which one of the following statements is wrong?", opts: ["Agar-agar is obtained from Gelidium and Gracilaria", "Laminaria and Sargassum are used as food", "Algae increase the level of dissolved oxygen in the immediate environment", "Algin is obtained from red algae, and carrageenan from brown algae"], ans: 3, exp: "Algin is from brown, carrageenan from red." },
+  { q: "Which of the following statements is correct?", opts: ["Horsetails are gymnosperms", "Selaginella is heterosporous, while Salvinia is homosporous", "Ovules are not enclosed by ovary wall in gymnosperms", "Stems are usually unbranched in both Cycas and Cedrus"], ans: 2, exp: "Ovules not enclosed by ovary wall." },
+  { q: "In algae syngamy take place where —", opts: ["In archaeoganium", "In water", "In ovary", "In the soil"], ans: 1, exp: "In water." },
+  { q: "During alternation of generations in seaweeds, spores give rise to —", opts: ["gametes", "gametophytes", "sporophytes", "sporozoids"], ans: 1, exp: "Gametophytes." },
+  { q: "The reproductive cells involved in asexual reproduction in seaweeds that undergo alternation of generations are called —", opts: ["spores", "sperm", "gametes", "eggs"], ans: 0, exp: "Spores." },
+  { q: "An example of colonial alga is:", opts: ["Volvox", "Ulothrix", "Spirogyra", "Chlorella"], ans: 0, exp: "Volvox." },
+  { q: "Zygotic meiosis is characteristic of:", opts: ["Fucus", "Funaria", "Chlamydomonas", "Marchantia"], ans: 2, exp: "Chlamydomonas." },
+  { q: "Life cycle of Ectocarpus and Fucus respectively are:", opts: ["Diplontic, Haplodiplontic", "Haplodiplontic, Diplontic", "Haplodiplontic, Haplontic", "Haplontic, Diplontic"], ans: 1, exp: "Haplodiplontic, Diplontic." },
+  { q: "Select the mismatch —", opts: ["Cycas - Dioecious", "Salvinia - Heterosporous", "Equisetum - Homosporous", "Pinus - Dioecious"], ans: 3, exp: "Pinus is monoecious." },
+  { q: "Double fertilization is exhibited by:", opts: ["Algae", "Fungi", "Angiosperms", "Gymnosperms"], ans: 2, exp: "Angiosperms." },
+  { q: "Given picture is of a bryophyte. The correct ploidy levels of the indicated structures are:", opts: ["(1): 2n, (2): 2n, (3): n, (4): n", "(1): n, (2): n, (3): n, (4): 2n", "(1): 2n, (2): n, (3): n, (4): 2n", "(1): 2n, (2): n, (3): 2n, (4): 2n"], ans: 2, exp: "(1): 2n, (2): n, (3): n, (4): 2n." },
+  { q: "Natural system of classification of flowering plants is based on similarities and differences in — i. Flower morphology, ii. Sequence of nucleotides in mitochondrial DNA, iii. Nature and arrangement of vascular strands, iv. Fruit and seed morphology", opts: ["i, iii and iv", "i and iv only", "only ii", "only i"], ans: 0, exp: "i, iii and iv." },
+  { q: "Most common asexual spores among algae is —", opts: ["Parthenospores", "Akinetes", "Aplanospores", "Zoospores"], ans: 3, exp: "Zoospores." },
+  { q: "Naked seeded plants differ from bryophytes and pteridophytes in —", opts: ["Possessing true stem, root and leaves", "Absence of fertilisation through pollen tube", "Absence of independent free living gametophytes", "Presence of non-integumented megasporangium"], ans: 2, exp: "Absence of independent free living gametophytes." },
+  { q: "Evolutionary important character of Selaginella is —", opts: ["heterosporous nature", "rhizophore", "strobili", "ligule"], ans: 0, exp: "Heterosporous nature." },
+  { q: "Which one has the largest gametophyte?", opts: ["Cycas", "Angiosperm", "Selaginella", "Moss"], ans: 3, exp: "Moss." },
+  { q: "Go through the following statements: I. Cycas has largest ovule, sperm and male cone. II. Selaginella has ligule. III. Algae will be the source of future food. IV. Cycas does not have a well organized female flower. V. It becomes quite evident that Selaginella has considerably advanced towards the seed habit in a few species, but its approach to the true seed is not complete. How many statement(s) is/are correct?", opts: ["1", "2", "3", "4"], ans: 3, exp: "4." },
+  { q: "Heterospory and development of the zygotes into young embryos within female gametophytes is precursor to the:", opts: ["Seed habits", "Terrestrial habits", "Bryophytes", "All of these"], ans: 0, exp: "Seed habits." },
+  { q: "A plant has Anaemophyll, unigemic, orthotropus ovule and haploid endosperm. This plant belongs to:", opts: ["Pteridophyte", "Gymnosperms", "Angiosperm", "Mosses"], ans: 1, exp: "Gymnosperms." },
+  { q: "After fertilization on the entire megasporangium used as dry fruits in case of —", opts: ["Cycas", "Pinus rauxberghi", "Pinus girardiana", "Cedrus"], ans: 2, exp: "Pinus girardiana." },
+  { q: "A green alga having fixed number of cells in it's thallus is called —", opts: ["Coenobium", "Daughter cell", "Heterocyst", "Harmogonia"], ans: 0, exp: "Coenobium." },
+  { q: "Apogeotropic roots in Cycas look like corals of anthozoans (coelenterata) showing mutual association with —", opts: ["Cyanobacteria", "Bacteria", "Fungi", "Obligate parasite"], ans: 0, exp: "Cyanobacteria." },
+  { q: "Common ancestor of cycads and dicotyledons is:", opts: ["Seed ferns", "Lycopods", "Psilophyton", "Conifers"], ans: 0, exp: "Seed ferns." },
+  { q: "Read the following statements and select how many is/are correct: (i) In Cycas and Pinus gametophytes are not free-living. (ii) Ferns and some gymnosperms are heterosporous. (iii) Sexual reproduction in volvox, gracilaria and gelidium is oogamus. (iv) Spores in Funaria are formed after meiosis. (v) Both Cycas and Marchantia are dioecious.", opts: ["One", "Two", "Three", "Four"], ans: 3, exp: "Four." },
+  { q: "In above diagram, the labeling 'C' is —", opts: ["Leaf", "Third leaf", "Third leaf is modified into root", "None"], ans: 0, exp: "Leaf." },
+  { q: "Which of the following group does not represent monocot? Apricot, mango, guava, apple, coconut, strawberry", opts: ["Apricot, mango, Guava", "Apple, strawberry", "Coconut, apple, cashewnut", "None"], ans: 0, exp: "Apricot, mango, Guava." },
+  { q: "Flagellated male gametes are present in all the three of which one of the following sets?", opts: ["Riccia, Dryopteris, and Cycas", "Anthoceros, Funaria and Spirogyra", "Fucus, Marsilea and Calotropis", "Zygenema, Saprolegnia and Hydnilla"], ans: 0, exp: "Riccia, Dryopteris, and Cycas." },
+  { q: "Which of the following set of plants exhibit homospory and homophily?", opts: ["Selaginella, Salvinia, Azolla", "Equisetum, Dryopteris, Lycopodium", "Selaginella, Dryopteris, Adiantum", "Salvinia, Equisetum, Azolla"], ans: 1, exp: "Equisetum, Dryopteris, Lycopodium." },
+  { q: "'Natural classification' is the best classification system because —", opts: ["It involves few vegetative characters", "It involves only two morphological characters", "It involves complete morphological characters", "It involves the economic importance of the plants"], ans: 2, exp: "Complete morphological characters." },
+  { q: "From evolutionary point of view, retention of the female gametophyte with developing young embryo on the parent sporophyte for some time, is first observed in:", opts: ["Liverworts", "Mosses", "Pteridophytes", "Gymnosperms"], ans: 3, exp: "Gymnosperms." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})">
+      <strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}
+    </div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) {
+  currentQ = idx;
+  renderQuestion();
+  document.querySelector('.sidebar').classList.remove('open');
+}
+
+function nextQuestion() {
+  if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); }
+}
+function prevQuestion() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+function toggleMark() {
+  marked[currentQ] = !marked[currentQ];
+  renderQuestion();
+}
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) {
+    userAnswers[i] = null;
+    marked[i] = false;
+    visited[i] = false;
+  }
+  correctCount = 0;
+  wrongCount = 0;
+  currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 3; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

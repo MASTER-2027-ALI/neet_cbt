@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 1: The Living World - CBT (141 Questions)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    line-height: 1.6;
+    padding: 10px;
+  }
+  .main-container {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 15px;
+    height: calc(100vh - 20px);
+  }
+  .sidebar {
+    width: 300px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 15px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar h3 {
+    color: #2b6cb0;
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+  .stat-box {
+    background: #ebf8ff;
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .stat-box .num {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c5282;
+  }
+  .stat-box .lbl {
+    font-size: 11px;
+    color: #4a5568;
+  }
+  .stat-box.green { background: #f0fff4; }
+  .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; }
+  .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; }
+  .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; }
+  .stat-box.purple .num { color: #44337a; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    justify-content: center;
+  }
+  .legend span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .legend .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .palette-btn {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    background: #f7fafc;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+
+  .quiz-area {
+    flex: 1;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 25px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .quiz-header h2 {
+    color: #2b6cb0;
+    font-size: 18px;
+  }
+  .q-counter {
+    background: #4299e1;
+    color: #fff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .question-box {
+    flex: 1;
+    margin-bottom: 15px;
+  }
+  .q-text {
+    font-weight: 600;
+    margin-bottom: 15px;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  .q-num-badge {
+    display: inline-block;
+    background: #4299e1;
+    color: #fff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    font-size: 14px;
+    margin-right: 10px;
+  }
+  .option {
+    display: block;
+    padding: 12px 16px;
+    margin: 8px 0;
+    background: #f7fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 15px;
+  }
+  .option:hover {
+    border-color: #90cdf4;
+    background: #ebf8ff;
+  }
+  .option.selected {
+    border-color: #4299e1;
+    background: #bee3f8;
+  }
+  .option.correct-ans {
+    border-color: #38a169;
+    background: #c6f6d5;
+    font-weight: 600;
+  }
+  .option.wrong-ans {
+    border-color: #e53e3e;
+    background: #fed7d7;
+  }
+  .option.disabled {
+    pointer-events: none;
+    opacity: 0.8;
+  }
+  .feedback {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb {
+    background: #c6f6d5;
+    color: #22543d;
+    border-left: 4px solid #38a169;
+  }
+  .feedback.wrong-fb {
+    background: #fed7d7;
+    color: #742a2a;
+    border-left: 4px solid #e53e3e;
+  }
+  .feedback .exp {
+    margin-top: 6px;
+    font-style: italic;
+    color: #4a5568;
+  }
+  .nav-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-top: 10px;
+    border-top: 2px solid #e2e8f0;
+  }
+  .btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: #4299e1; color: #fff; }
+  .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; }
+  .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; }
+  .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; }
+  .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; }
+  .btn-danger:hover { background: #c53030; }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-marked {
+    background: #805ad5;
+    color: #fff;
+  }
+  .btn-marked:hover { background: #6b46c1; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    text-align: center;
+  }
+  .modal-box h2 {
+    color: #2b6cb0;
+    margin-bottom: 20px;
+  }
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .result-item {
+    background: #ebf8ff;
+    padding: 15px;
+    border-radius: 10px;
+  }
+  .result-item .label {
+    font-size: 12px;
+    color: #4a5568;
+  }
+  .result-item .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c5282;
+    margin-top: 4px;
+  }
+  .result-item.green { background: #f0fff4; }
+  .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; }
+  .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; }
+  .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; }
+  .result-item.orange .value { color: #7b341e; }
+
+  .mobile-palette-toggle {
+    display: none;
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    z-index: 500;
+    background: #4299e1;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar {
+      width: 100%;
+      max-height: 300px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 600;
+      transform: translateY(-100%);
+      transition: transform 0.3s;
+      border-radius: 0 0 12px 12px;
+    }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="num" id="sbTotal">0</div>
+        <div class="lbl">Total</div>
+      </div>
+      <div class="stat-box green">
+        <div class="num" id="sbAttempted">0</div>
+        <div class="lbl">Attempted</div>
+      </div>
+      <div class="stat-box red">
+        <div class="num" id="sbNotAnswered">0</div>
+        <div class="lbl">Not Answered</div>
+      </div>
+      <div class="stat-box orange">
+        <div class="num" id="sbNotVisited">0</div>
+        <div class="lbl">Not Visited</div>
+      </div>
+      <div class="stat-box purple">
+        <div class="num" id="sbMarked">0</div>
+        <div class="lbl">Marked</div>
+      </div>
+      <div class="stat-box green">
+        <div class="num" id="sbCorrect">0</div>
+        <div class="lbl">Correct</div>
+      </div>
+      <div class="stat-box red">
+        <div class="num" id="sbWrong">0</div>
+        <div class="lbl">Wrong</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="sbMarks">0</div>
+        <div class="lbl">Marks</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+
+    <div class="palette" id="palette"></div>
+  </div>
+
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 The Living World</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+
+    <div class="question-box" id="questionBox"></div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="label">Total Questions</div>
+        <div class="value" id="rTotal">0</div>
+      </div>
+      <div class="result-item green">
+        <div class="label">Correct</div>
+        <div class="value" id="rCorrect">0</div>
+      </div>
+      <div class="result-item red">
+        <div class="label">Wrong</div>
+        <div class="value" id="rWrong">0</div>
+      </div>
+      <div class="result-item orange">
+        <div class="label">Marks Obtained</div>
+        <div class="value" id="rMarks">0</div>
+      </div>
+      <div class="result-item purple">
+        <div class="label">Percentage</div>
+        <div class="value" id="rPercent">0%</div>
+      </div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CHAPTER 1: THE LIVING WORLD - 141 QUESTIONS (Diagram wale skip)
+// ============================================================
+const questions = [
+  { q: "I. Increase in mass, II. Differentiation, III. Increase in number of individuals, IV. Response to stimuli. Which two points are known as the twin characteristics of growth?", opts: ["I and II", "I and IV", "II and III", "I and III"], ans: 3, exp: "Growth and reproduction are twin characteristics; increase in mass and increase in number are twin characteristics of growth." },
+  { q: "Cell division occurs in plants and in animals —", opts: ["Continuously, only upto a certain age", "Only upto a certain age, continuously", "Continuously, never", "Once, twice"], ans: 0, exp: "Plants show continuous growth throughout life; animals grow only up to a certain age." },
+  { q: "Generally growth and reproduction are —", opts: ["Mutually inclusive events", "Mutually exclusive events", "Either a or b", "None"], ans: 1, exp: "Growth and reproduction are mutually exclusive in higher plants and animals." },
+  { q: "Which set of organisms multiply by fragmentation?", opts: ["Earthworm, Amoeba, fungi", "Earthworm, fungi, bacteria", "Fungi, filamentous algae, protonema of mosses", "Amoeba, Hydra, bacteria"], ans: 2, exp: "Fungi, filamentous algae and protonema of mosses multiply by fragmentation." },
+  { q: "Which of the following organisms do not reproduce?", opts: ["Mules", "Sterile worker bees", "both a and b", "None"], ans: 2, exp: "Mules and sterile worker bees do not reproduce." },
+  { q: "Metabolic reactions take place —", opts: ["In isolated cell-free systems", "In living systems", "Both a and b", "Either a or b"], ans: 2, exp: "Metabolic reactions occur both in isolated cell-free systems and in living systems." },
+  { q: "Organisms that can respond to stimuli are —", opts: ["Eukaryotes only", "Prokaryotes only", "Both Prokaryotes and eukaryotes", "Those with a well developed nervous system"], ans: 2, exp: "Both prokaryotes and eukaryotes respond to stimuli." },
+  { q: "I. Growth, II. Reproduction, III. Response to stimuli, IV. Metabolism, V. Cellular organisation. Which of the above features are generally characteristic of life?", opts: ["I, II, IV, V", "All", "II, III, IV", "I, II, III, V"], ans: 1, exp: "All the listed features are characteristic of life." },
+  { q: "Growth, development and functioning of living body is due to —", opts: ["Order", "Homeostasis", "Metabolism", "Adaptations"], ans: 2, exp: "Metabolism is responsible for growth, development and functioning." },
+  { q: "Which type of organisation is found in only living beings?", opts: ["Atomic", "Molecular", "Mixture", "Subcellular"], ans: 3, exp: "Subcellular organisation is found only in living beings." },
+  { q: "Organisation levels in living beings are —", opts: ["Subcellular → cellular → individual → community → population", "Atomic → molecular → subcellular → cellular → tissue → organ → individual", "Cellular → subcellular → individual → population → community", "Molecular → atomic → cellular → tissue → organ → individual"], ans: 1, exp: "Correct order: Atomic → molecular → subcellular → cellular → tissue → organ → individual." },
+  { q: "Given below are assertion and reason. Point out if both are true and the reason is correct explanation (I), both are true but reason is not correct explanation (II), assertion is true but reason is wrong (III) and both are wrong (IV). Assertion: Reproduction is not an all-inclusive defining characteristic of living organisms. Reason: It avoids over-crowding caused by continuous reproduction.", opts: ["I", "II", "III", "IV"], ans: 0, exp: "Both assertion and reason are true and reason correctly explains assertion." },
+  { q: "Biological organisation begins at —", opts: ["Cellular level", "Atomic level", "Organismic level", "Submicroscopic molecular level"], ans: 3, exp: "Biological organisation begins at submicroscopic molecular level." },
+  { q: "A living organism can be exceptionally differentiated from a nonliving thing on the basis of its ability for —", opts: ["reproduction", "Growth and movement", "Responsiveness to touch", "Interaction with environment and progressive evolution"], ans: 0, exp: "Reproduction is the most defining characteristic." },
+  { q: "Linnaeus evolved a system of nomenclature called —", opts: ["Mononomial", "Vernacular", "Binomial", "Polynomial"], ans: 2, exp: "Linnaeus gave binomial nomenclature." },
+  { q: "Which one is the species?", opts: ["Carnivora", "Canis", "familiaris", "Canis familiaris"], ans: 3, exp: "Canis familiaris is the species name." },
+  { q: "Binomial nomenclature seems to be difficult because a scientific name is derived from —", opts: ["English", "Sanskrit", "Latin", "French"], ans: 2, exp: "Scientific names are in Latin." },
+  { q: "Two plants are taxonomically related if —", opts: ["They store carbohydrate in the same type of molecule", "Both obtain energy from hydrolysis of ATP into ADP and inorganic phosphate", "Both have similarly lobed palmate leaves", "Both have pinnately veined leaves"], ans: 0, exp: "Taxonomic relationship is based on biochemical similarities." },
+  { q: "A group of plants or animals with similar traits of any rank is —", opts: ["Species", "Genus", "Order", "Taxon"], ans: 3, exp: "Taxon is a group of any rank." },
+  { q: "Binomial nomenclature means —", opts: ["One name given by two scientists", "One scientific name consisting of a generic and specific epithet", "Two names, one latinised, other of a person", "Two names, one scientific, other local"], ans: 1, exp: "Binomial nomenclature = generic name + specific epithet." },
+  { q: "Basic unit or smallest taxon of taxonomy/classification is —", opts: ["Species", "Kingdom", "Family", "Variety"], ans: 0, exp: "Species is the basic unit." },
+  { q: "Father of taxonomy is —", opts: ["De Candolle", "Hooker", "Linnaeus", "Aristotle"], ans: 2, exp: "Linnaeus is father of taxonomy." },
+  { q: "A scientist connected with the study of variations, evolution and origin along with classification is known as —", opts: ["Classical taxonomist", "Herbal taxonomist", "Modern taxonomist", "New taxonomist"], ans: 2, exp: "Modern taxonomist." },
+  { q: "Linnaeus system of classification was based on —", opts: ["Morphology", "Ecology", "Embryology", "Cytology"], ans: 0, exp: "Based on morphology." },
+  { q: "First act in taxonomy is —", opts: ["Description", "Identification", "Naming", "Classification"], ans: 1, exp: "Identification is the first act." },
+  { q: "Taxonomy based on determination of genetic relationships is —", opts: ["Cytotaxonomy", "Numerical taxonomy", "Biochemical taxonomy", "Experimental taxonomy"], ans: 3, exp: "Experimental taxonomy." },
+  { q: "A group of interbreeding organisms is —", opts: ["Genus", "Family", "Order", "Species"], ans: 3, exp: "Species is a group of interbreeding organisms." },
+  { q: "A taxon is —", opts: ["A group of related families", "A group of related species", "A type of living organisms", "A taxonomic group of any ranking"], ans: 3, exp: "Taxon is a taxonomic group of any ranking." },
+  { q: "Branch connected with nomenclature, identification and classification is —", opts: ["Ecology", "Taxonomy", "Morphology", "Physiology"], ans: 1, exp: "Taxonomy." },
+  { q: "Sequence of taxonomic categories is —", opts: ["Class - Phylum - Tribe - Order - Family - Genus - Species", "Division - Class - Family - Tribe - Order - Genus - Species", "Division - Class - Order - Family - Tribe - Genus - Species", "Phylum - Order - Class - Tribe - Family - Genus - Species"], ans: 2, exp: "Division - Class - Order - Family - Tribe - Genus - Species." },
+  { q: "The third name in trinomial nomenclature is —", opts: ["Species", "Subgenus", "Subspecies", "Ecotype"], ans: 2, exp: "Subspecies." },
+  { q: "In nomenclature —", opts: ["Both genus and species are printed in italics", "Genus and species may be of same name", "Both in genus & species, the first letter is capital", "Genus is written after the species"], ans: 0, exp: "Both genus and species are italicized." },
+  { q: "In fish, Catla catla the specific name is identical with the generic name, thus it is an example of —", opts: ["antonym", "tautonym", "synonym", "homonym"], ans: 1, exp: "Tautonym." },
+  { q: "Species A and species B are in the same phylum. Species A and species C, but not species B, are in the same order. From this information you can conclude that —", opts: ["species C could be in the same class as species A and B", "all three species are members of the same genus", "all three species are not members of the same phylum", "species A and species B are in the same family"], ans: 0, exp: "Species C could be in same class." },
+  { q: "Which one of the following is not a correct statement?", opts: ["Herbarium houses dried, pressed and preserved plant specimens", "Botanical gardens have collection of living plants for reference", "A museum has collection of photographs of plants and animals", "Key is a taxonomic aid for identification of specimens"], ans: 2, exp: "Museum has preserved specimens, not photographs." },
+  { q: "Mayer's biological concepts of species is mainly based on —", opts: ["Morphological traits", "Reproductive isolation", "Modes of reproduction", "Morphology and reproduction"], ans: 1, exp: "Reproductive isolation." },
+  { q: "Which of the following statements best describes 'emergent properties'?", opts: ["The properties of individual molecules which perform a specific chemical function", "The function of a group of molecules is more than the abilities of a single molecule in the group", "The magical interaction of molecules in water", "All of these statements are examples of 'emergent properties'"], ans: 1, exp: "Emergent properties." },
+  { q: "'Properties of cellular organelles are not present in the molecular constituents of the organelle but arise as a result of interactions among the molecular components comprising the organelle. These interactions result in emergent properties at a higher level of organisation'. The above statement best describes the —", opts: ["emergent properties", "Individual properties", "synergistic properties", "None"], ans: 0, exp: "Emergent properties." },
+  { q: "A taxonomic key used to identify organisms is labeled:", opts: ["phylogenetic key", "evergreen key", "dichotomous key", "none of the above"], ans: 2, exp: "Dichotomous key." },
+  { q: "Which one of the following has least similar characters?", opts: ["Family", "Class", "Genus", "Species"], ans: 1, exp: "Class has least similar characters." },
+  { q: "On which of the following, five kingdom classification is based?", opts: ["Cell wall", "Genetic material", "Types of organelles", "Mode of nutrition"], ans: 3, exp: "Mode of nutrition." },
+  { q: "Number of criteria used in classifying organisms in five-kingdom classification is —", opts: ["5", "4", "3", "2"], ans: 0, exp: "5 criteria." },
+  { q: "Which of the following is less general in characters as compared to genus?", opts: ["Species", "Family", "Class", "Division"], ans: 0, exp: "Species." },
+  { q: "What is correct?", opts: ["APIS INDICA", "Trypansoma gambiense", "Ficus Bengalensis", "Mangifera indica"], ans: 3, exp: "Mangifera indica is correctly written." },
+  { q: "Descending arrangement of categories is called —", opts: ["Classification", "Taxonomy", "Hierarchy", "Key"], ans: 2, exp: "Hierarchy." },
+  { q: "Nicotiana is —", opts: ["Variety", "Subspecies", "Species", "Genus"], ans: 3, exp: "Genus." },
+  { q: "Which one is odd/not a category?", opts: ["Species", "Class", "Phylum", "Glumaceae / Malvaceae"], ans: 3, exp: "Glumaceae/Malvaceae are families, not categories." },
+  { q: "In hierarchical classification, class is interpolated between —", opts: ["Family and genus", "Phylum and order", "Order and family", "Kingdom and phylum"], ans: 1, exp: "Phylum and order." },
+  { q: "The disadvantage of using common names for species is that:", opts: ["the names may change", "one name does not apply universally", "one species may have several common names and one common name may be applied to two species", "all of the above"], ans: 3, exp: "All of the above." },
+  { q: "Place of keeping and studying dry plants is —", opts: ["Arboretum", "Museum", "Vasculum", "Herbarium"], ans: 3, exp: "Herbarium." },
+  { q: "Hierarchy of categories of Carolus Linnaeus had categories except —", opts: ["Genus and species", "Order and class", "Kingdom and class", "Phylum and family"], ans: 3, exp: "Phylum and family were not in Linnaeus's hierarchy." },
+  { q: "An important function of botanical garden is —", opts: ["Providing beautiful area for recreation", "One can observe tropical plants over there", "They allow ex-situ conservation of germ plasm", "They provide natural habitat to wildlife"], ans: 2, exp: "Ex-situ conservation." },
+  { q: "Two plants belong to same species if they —", opts: ["Have more than 90% similar genes", "Look similar and possess identical secondary metabolites", "Have similar number of chromosomes", "Can reproduce freely with each other and form seeds"], ans: 3, exp: "Reproduce freely and form seeds." },
+  { q: "In Oryza sativa, sativa stands for —", opts: ["Name of species", "Genus", "Specific epithet", "Family"], ans: 2, exp: "Specific epithet." },
+  { q: "An organism is in the same class but not in the same family. It may belong to same —", opts: ["Genus", "Species", "Variety", "Order"], ans: 3, exp: "Order." },
+  { q: "Largest herbarium in India is at —", opts: ["National Botanical Garden, Lucknow", "Lloyd Botanical garden, Darjeeling", "Forest Research Institute, Dehradun", "Indian Botanical Garden, Sibpur"], ans: 3, exp: "Indian Botanical Garden, Sibpur." },
+  { q: "The famous botanical garden of Kew is located in —", opts: ["India", "England", "Germany", "France"], ans: 1, exp: "England." },
+  { q: "Related genera belong to same —", opts: ["Variety", "Family", "Species", "None of these"], ans: 1, exp: "Family." },
+  { q: "Which is not applicable to biological species concept?", opts: ["Hybridisation", "Reproductive isolation", "Natural selection", "Gene pool"], ans: 0, exp: "Hybridisation." },
+  { q: "Which taxonomic aid gives comprehensive account of complete compiled information of a genus or family at a particular time?", opts: ["Taxonomic key", "Herbarium", "Monograph", "Flora"], ans: 2, exp: "Monograph." },
+  { q: "ICBN is —", opts: ["International Code of Biological Naming", "International Code of Botanical Nomenclature", "Internal Class of Biological Nomenclature", "International Classification of Biological Nomenclature"], ans: 1, exp: "International Code of Botanical Nomenclature." },
+  { q: "Who did write 'Species Plantarum' and provide a basis for classification of plants?", opts: ["Carolus Linnaeus", "Charles Darwin", "Robert Hooke", "Leeuwenhoek"], ans: 0, exp: "Carolus Linnaeus." },
+  { q: "Identify the true statements from below: I. Father of taxonomy is John Ray. II. Homo sapiens is the scientific name of man. III. A taxon is a group of related plants or animals. IV. Basic unit or lowest taxonomic category is species. V. The first step in taxonomy is naming. VI. Modern classification is based on phylogeny. VII. First time binomial nomenclature was written in Latin. VIII. The number of species that are known and described, range between 1.7-1.8 million.", opts: ["I, II, III and IV", "II, IV, VI, VII and VIII", "I, III, V and VII", "II, III, V and VI"], ans: 1, exp: "II, IV, VI, VII, VIII are true." },
+  { q: "Classification systems have many uses. Which of the following is not a goal of biological classification?", opts: ["To depict convergent evolution", "To clarify relationships among organisms", "To help us remember organisms and their traits", "To clearly identify organisms being studied"], ans: 0, exp: "Convergent evolution is not a goal." },
+  { q: "Taxonomic systems used by biologists are hierarchical; that is,", opts: ["taxonomic groups reflect shared characters, not evolutionary relationships", "each higher taxonomic group contains all the groups below it", "taxonomic groups reflect common habitats", "a hierarchy of traits is used to establish classifications"], ans: 1, exp: "Higher groups contain lower groups." },
+  { q: "Classification systems serve four important roles. Which of the following is not one of those roles?", opts: ["To help us remember characteristics of a large number of different things", "To help us identify shared traits, such as hair, mammary glands and constant high body temperature in mammals", "To reveal the harmony of nature", "To provide stable, unique, unequivocal names for organisms and to help reconstruct evolutionary pathways"], ans: 2, exp: "Revealing harmony of nature is not a role." },
+  { q: "In referring to an organism in writing, such as in a newspaper, textbook, or lab report, which of these rules should be followed? 1. Underline or italicize genus, 2. Underline or italicize species, 3. First letter of species should be uppercase, 4. First letter of genus should be uppercase", opts: ["1, 2, 4", "1, 2, 3", "2, 3, 4", "1, 3, 4"], ans: 0, exp: "1, 2, 4 are correct." },
+  { q: "Which of the following statements about classification is not true? I. Members of a family are less similar than members of an included genus. II. An order has more members than the number of members in an included genus. III. Families have more members than phyla. IV. Members of a family share a common ancestor in the more distant past than members of an included genus. V. The number of species in a taxon depends on their relative degree of similarity.", opts: ["Only III", "Only IV", "Only V", "None"], ans: 2, exp: "Only V is not true." },
+  { q: "Select the true statement for reproduction. I. It is not an all-exclusive defining characteristic of living organisms. II. It is not an all-inclusive defining characteristic of living organisms. III. It is an all-inclusive defining characteristic of plants and fungi only. IV. Photoperiod affects reproduction in seasonal plant breeders only. V. Photoperiod affects reproduction in seasonal breeders both plants and animals. VI. Photoperiod has no role in reproduction.", opts: ["II and V", "III and IV", "IV and VI", "All"], ans: 0, exp: "II and V are true." },
+  { q: "Reproduction is synonymous with growth/cell division in — I. Bacteria, II. Hydra, III. Planaria, IV. Unicellular algae, V. Amoeba", opts: ["I, III and V", "I, II and IV", "I, IV and V", "All"], ans: 2, exp: "I, IV and V." },
+  { q: "Choose the correct statement —", opts: ["Growth in multicellular organisms cannot take place in in vitro culture", "Growth by cell division in unicellular organisms can be observed in in vivo culture", "Growth by cell division in unicellular organisms can be observed in in vitro culture", "Growth by cell division in unicellular organisms cannot be observed by any method"], ans: 2, exp: "In vitro culture." },
+  { q: "Which one of the following constitutes the two best reasons for distinguishing the living from the non living?", opts: ["Growth and locomotion", "Irritability and locomotion", "Respiration and excretion", "Reproduction and locomotion"], ans: 2, exp: "Respiration and excretion." },
+  { q: "Which of the following biological processes do not operate within the life span of a given organism?", opts: ["Birth and nutrition", "Growth and maturation", "Metabolism and excretion", "Decomposition and mineralization"], ans: 3, exp: "Decomposition and mineralization." },
+  { q: "The life can be attempted to be defined as a peculiar series of functions associated with —", opts: ["Transformation and utilization of energy", "Transmission and utilization of genetic information", "Metabolism and response to the environmental variations", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "The process called evolution, exhibited by the living organisms is the manifestation of —", opts: ["Only short term changes in the environment", "Reasonably long term changes in the environment", "A fully stable conditions of the environment", "The own desire of the organism to change the environment"], ans: 1, exp: "Long term changes." },
+  { q: "The living organisms of all hierarchical levels share in common, which one of the following features?", opts: ["Nature of protoplasmic constituent", "Method of cell division", "Degree of body organization", "Mode of nutrition"], ans: 0, exp: "Nature of protoplasmic constituent." },
+  { q: "Mark the incorrect statement concerning life —", opts: ["It is a self-regulated thermodynamic system", "It is capable of catalyzing the metabolic reactions", "It is a self-replicating system", "It is a non-equilibrium system"], ans: 3, exp: "Life is a non-equilibrium system is correct; incorrect statement is not given clearly." },
+  { q: "Which one of the following aspects is an exclusive characteristic of living things?", opts: ["Isolated metabolic reactions occur in vitro", "Increase in mass from inside only", "Perception of events happening in the environment and their memory", "Increase in mass by accumulation of material both on surface as well as internally"], ans: 2, exp: "Perception and memory." },
+  { q: "Which of the following is self-conscious?", opts: ["Human being", "Tiger", "Lion", "Amoeba"], ans: 0, exp: "Human being." },
+  { q: "Living organisms can be unexceptionally distinguished from the nonliving thing on the basis of their ability for —", opts: ["Reproduction", "Growth and movement", "Interaction with environment and progressive evolution", "responsiveness to touch"], ans: 2, exp: "Interaction with environment and progressive evolution." },
+  { q: "All living organism present, past and future are —", opts: ["Not linked to any extent", "Linked to one another in their cell membrane", "Linked to one another by the sharing of the common genetic materials, but to varying degrees", "Linked to another by the sharing of the common genetic materials to 100% extent"], ans: 2, exp: "Common genetic material sharing." },
+  { q: "Choose the correct one: I. Growth cannot be taken as a defining property of living organism. II. Dead organism does not grow. III. Reproduction cannot be an all inclusive defining characteristic of living organisms. IV. No nonliving object is capable of replicating itself. V. Metabolism in a test tube is nonliving. VI. Metabolism is a defining feature of all living organism.", opts: ["I and III", "All except V", "All except III", "All"], ans: 1, exp: "All except V." },
+  { q: "Properties of tissues —", opts: ["Are present in the constituent cells", "Are due to similar cells in them", "Are due to their similar origin", "Arise as a result of interactions among the constituent cells"], ans: 3, exp: "Arise from interactions." },
+  { q: "Which of the following statement is false?", opts: ["Properties of cellular organelles are present in the molecular constituents of the organelles", "Interactions among the molecular components of the organelles result into properties of cell organelles", "Biology is the story of life on earth", "Biology is the story of evolution of living organisms on earth"], ans: 0, exp: "Properties are not present in molecular constituents." },
+  { q: "The growth and reproduction are mutually exclusive events in —", opts: ["Plants only", "Animals only", "Higher animal and plants", "Lower organisms"], ans: 2, exp: "Higher animals and plants." },
+  { q: "The sum total of chemical reactions occurring in our body is called —", opts: ["Metabolism", "Homeostasis", "Irritability", "Catabolism"], ans: 0, exp: "Metabolism." },
+  { q: "Mark the correct statement —", opts: ["Only living organisms grow", "Plants grow only up to a certain age", "The growth in living organisms is from inside", "All of these"], ans: 2, exp: "Growth is from inside." },
+  { q: "Which of the following multiply by the process of fragmentation?", opts: ["Planaria", "Filamentous algae", "Fungi", "All of these"], ans: 3, exp: "All of these." },
+  { q: "Given below is the botanical name of mango. Mark the option in which the name is correctly written —", opts: ["Magnifera Indica", "Mangifera indica", "Mangifera Indica", "Mangifera indica"], ans: 3, exp: "Mangifera indica." },
+  { q: "Identify the correct sequence of taxonomic categories —", opts: ["Species-order-kingdom-phylum", "Species-family-genus-class", "Genus-species-order-phylum", "Species-genus-order-phylum"], ans: 3, exp: "Species-genus-order-phylum." },
+  { q: "The 'Birds' taxonomically represent —", opts: ["Family", "Order", "Class", "Phylum"], ans: 2, exp: "Class." },
+  { q: "The Indian Botanical garden is located in —", opts: ["Howrah", "Lucknow", "Mumbai", "Mysore"], ans: 0, exp: "Howrah." },
+  { q: "Following taxonomic aid provides information for the identification of names of species found in an area —", opts: ["Monograph", "Manual", "Memoir", "Periodical"], ans: 1, exp: "Manual." },
+  { q: "Why did Linnaeus choose Latin language for Binomial Nomenclature?", opts: ["Because this language was scientific", "Because this language was modern", "Because this language was dead", "Because this language was ancient"], ans: 2, exp: "Dead language." },
+  { q: "The binomial nomenclature was given by —", opts: ["Lamarck", "Ernst Mayr", "Carolus Linnaeus", "Cuvier"], ans: 2, exp: "Carolus Linnaeus." },
+  { q: "Which one of the following organisms is scientifically correctly named, correctly printed according to the International Rules of Nomenclature and correctly described?", opts: ["Musca domestica - The common house lizard, a reptile", "Plasmodium falciparum - A protozoan pathogen causing the most serious type of malaria", "Felis tigris - The Indian tiger, well protected in Gir forests", "E.coli - Full name Entamoeba coli, a commonly occurring bacterium in human intestine"], ans: 1, exp: "Plasmodium falciparum is correct." },
+  { q: "Exclusive character of human being, which separate human from other organism is —", opts: ["Consciousness", "Self regulation", "Self Consciousness", "Both (b) and (c)"], ans: 2, exp: "Self consciousness." },
+  { q: "Who has been called as 'The Darwin of 20th century and Alexander Agassiz professor of Zoology Emeritus'. He was awarded the triple crown of biology also —", opts: ["Linnaens", "Mayr", "Mayers", "Aristotle"], ans: 1, exp: "Mayr." },
+  { q: "Which one has real existence?", opts: ["Phylum", "Class", "Genus", "Species"], ans: 3, exp: "Species." },
+  { q: "Sensitivity is the —", opts: ["Ability to grow", "Ability to reproduce", "Ability to detect changes in the environment", "Ability to capture sunlight"], ans: 2, exp: "Detect changes in environment." },
+  { q: "Homeostasis is —", opts: ["Tendency to change with change in environment", "Tendency to resist change/self regulatory mechanism", "Disturbance in regulatory control", "Plants and animal extracts used in homeopathy"], ans: 1, exp: "Self regulatory mechanism." },
+  { q: "Carnivora includes —", opts: ["Group of organisms belonging to related genera", "Group of organisms belonging to related species", "Group of organisms belonging to related families", "Group of organisms which are similar in all features"], ans: 2, exp: "Related families." },
+  { q: "Different organisms belonging to different orders are placed in a single class due to the fact that —", opts: ["They have all similar morphological and reproductive characters", "They have similar place of origin", "They share a common habitat", "They have few similar or common characters"], ans: 3, exp: "Few similar characters." },
+  { q: "Botanical gardens consist of —", opts: ["Dried and preserved plant specimens", "Living plants and animals specimens", "Living plants specimens", "Dead specimens of plants are preserved in jars"], ans: 2, exp: "Living plant specimens." },
+  { q: "Select the odd one out w.r.t. Botanical gardens —", opts: ["Collection of living plants for reference", "Indian Botanical garden is at Howrah", "It is a method of ex-situ study", "Collections of preserved plants and animals specimens"], ans: 3, exp: "Preserved specimens are not in botanical gardens." },
+  { q: "Read the following statements carefully and select correct option: (i) In zoological parks, conditions similar to natural habitats are provided to animals. (ii) Keys are generally analytical in nature. (iii) In herbarium sheet, local names are not mentioned. (iv) Taxonomical aids are useful in knowing bioresources.", opts: ["Only (i) and (ii)", "(i), (iii) and (iv)", "(i), (ii) and (iv)", "All of the above"], ans: 2, exp: "(i), (ii), (iv) are correct." },
+  { q: "Nomenclature is very much in taxonomy. Which of the following is not correct about scientific nomenclature?", opts: ["They ensure that each organism has only one name", "They also ensure that such a name has not been used for any other known organism", "Scientific nomenclature is a standardised naming system", "Different countries of the world use different kinds of scientific nomenclature system"], ans: 3, exp: "Scientific nomenclature is universal." },
+  { q: "In potato, brinjal, makoi, lion and leopard. How many species, genera and families are there?", opts: ["Species: Five, Genus: Three, Family: Two", "Species: Four, Genus: Two, Family: Three", "Species: Five, Genus: Two, Family: Two", "Species: Four, Genus: Three, Family: Two"], ans: 2, exp: "Five species, two genera, two families." },
+  { q: "Who gave the nomenclature according to which humans are called Homo sapiens?", opts: ["Darwin", "Mendel", "Aristotle", "Linnaeus"], ans: 3, exp: "Linnaeus." },
+  { q: "Which is highest in the hierarchy of taxonomic category?", opts: ["Genus", "Family", "Order", "Class"], ans: 3, exp: "Class." },
+  { q: "Which of the following is correctly matched with its particular taxonomic category?", opts: ["Triticum aestivum - Species", "Fishes - Pisces - Phylum", "Man - Primatae - Family", "Mango - Sapindales - Class"], ans: 0, exp: "Triticum aestivum - Species." },
+  { q: "Most obvious and technically complicated feature of all living organism is —", opts: ["Metabolism", "Growth", "Replication", "Ability to sense their environment"], ans: 3, exp: "Ability to sense environment." },
+  { q: "Select out incorrect statement —", opts: ["Herbaria serve as quick referral system in taxonomy", "Monographs contains information on any one taxon", "Manual provide the index to the plant species found in particular area", "Separate taxonomic Keys are required for each taxonomic category"], ans: 3, exp: "Separate keys not required for each category." },
+  { q: "Which of the following statements is/are correct about Herbarium?", opts: ["It is a store house of collected plant specimens that are dried and preserved on sheets", "Herbarium sheets contain information about date and place of collection, names family, collector's name, etc.", "It serves as quick referral systems in taxonomical studies", "All of these"], ans: 3, exp: "All of these." },
+  { q: "The label of a herbarium sheet does not carry information on:", opts: ["Local names", "height of the plant", "date of collection", "name of collector"], ans: 1, exp: "Height of plant." },
+  { q: "Study the four statements (A-D) given below and select the two correct ones out of them: (A) Definition of biological species was given by Ernst Mayr. (B) Photoperiod does not affect reproduction in plants. (C) Binomial nomenclature system was given by R.H. Whittaker. (D) In unicellular organisms, reproduction is synonymous with growth.", opts: ["A and D", "A and B", "B and C", "C and D"], ans: 0, exp: "A and D are correct." },
+  { q: "Tautonym is:", opts: ["Unscientific explanation of a phenomenon", "Common name used as scientific name", "Same name for genus and species", "Non-latinised name"], ans: 2, exp: "Same name for genus and species." },
+  { q: "An organism's ability to detect stimuli from either the internal or external environment is called —", opts: ["natural selection", "evolution", "mutation", "responsiveness"], ans: 3, exp: "Responsiveness." },
+  { q: "Which of the following is a characteristic of living organisms?", opts: ["Have membrane-bound organelles", "Maintenance and regulation of internal conditions", "Ability to produce energy", "Have a nucleus"], ans: 1, exp: "Maintenance and regulation of internal conditions." },
+  { q: "All of the following are true of all living organisms EXCEPT that they —", opts: ["are made of cells", "can reproduce themselves", "can grow", "possess either DNA or RNA"], ans: 2, exp: "Can grow - not all living organisms grow." },
+  { q: "Consider the following (A to D) and find out the correct sequence of taxonomical categories: A. Petunia, B. Polymoniales, C. Dicotyledonae, D. Solanaceae", opts: ["A→D→B→C", "C→D→B→A", "A→B→C→D", "C→B→A→D"], ans: 0, exp: "A→D→B→C." },
+  { q: "A group of very closely related species that share a number of similar traits is called a(an) —", opts: ["phylum", "order", "genus", "class"], ans: 2, exp: "Genus." },
+  { q: "Systematics is the —", opts: ["Branch of biology concerned with evolutionary relationships among organisms", "Branch of biology concerned with the scientific classification of organisms", "Branch of biology concerned with the diversity of life", "Branch of biology concerned with the study of multicellular organisms"], ans: 0, exp: "Evolutionary relationships." },
+  { q: "A group of interbreeding individuals that is reproductively isolated from other groups is called a(n) —", opts: ["phylum", "organism", "family", "species"], ans: 3, exp: "Species." },
+  { q: "An animal phylum is defined on the basis of —", opts: ["the uniqueness of its DNA content", "the uniqueness of its body plan", "its type of body plan symmetry", "its fundamental habitat (aquatic, terrestrial, etc.)"], ans: 1, exp: "Uniqueness of body plan." },
+  { q: "Which one of the following categories of taxonomic classification is the least inclusive?", opts: ["class", "family", "genus", "order"], ans: 2, exp: "Genus." },
+  { q: "Which of the following levels in the hierarchy of biology organization includes all of the other levels in the list?", opts: ["Cells", "Biological molecules", "Atoms", "Tissues"], ans: 3, exp: "Tissues." },
+  { q: "Two species belonging to the same class must also belong to the same —", opts: ["species", "order", "genus", "phylum"], ans: 3, exp: "Phylum." },
+  { q: "Arrange the following taxa to form the correct sequence of classification of man: (i) Primata, (ii) Chordata, (iii) Mammalia, (iv) Hominidae", opts: ["i, iii, iv, ii", "ii, iii, i, iv", "iv, ii, i, iii", "iii, ii, iv, i"], ans: 1, exp: "ii, iii, i, iv." },
+  { q: "A species can be distinguished from the other closely related species on the basis of —", opts: ["Common ancestor", "Distinct morphological features", "Sharing a common gene pool", "Being biologically interfertile"], ans: 1, exp: "Distinct morphological features." },
+  { q: "Information on any one phylum, class, order is related to the —", opts: ["Flora", "Manuals", "Monograph", "Key"], ans: 2, exp: "Monograph." },
+  { q: "Which of the following is the correct sequence in the increasing order of complexity?", opts: ["molecules, tissues, community, population", "cell, tissues, community, population", "tissues, organisms, population, community", "molecules, tissues, community, cells"], ans: 2, exp: "tissues, organisms, population, community." },
+  { q: "The total words in binomial nomenclature are —", opts: ["5", "3", "2", "4"], ans: 2, exp: "2 words." },
+  { q: "Two organisms of same class but different families will be kept under the same —", opts: ["genera", "species", "order", "family"], ans: 2, exp: "Order." },
+  { q: "Which of the following will form a new species?", opts: ["interbreeding", "variations", "differential reproduction", "none of the above"], ans: 2, exp: "Differential reproduction." },
+  { q: "Nomenclature is governed by certain universal rules. Which one of the following is contrary to the rules of nomenclature?", opts: ["Biological names can be written in any language", "The first word in a biological name represents the genus name, and the second is a specific epithet", "The names are written in Latin and are italicised", "When written by hand, the names are to be underlined"], ans: 0, exp: "Names can be written in any language is contrary." },
+  { q: "Who is known as Darwin of 20th Century?", opts: ["R.H. Whittaker", "D.J. Ivanowsky", "Ernst Mayr", "T.O. Diener"], ans: 2, exp: "Ernst Mayr." },
+  { q: "Extrinsic and intrinsic growth are found respectively in —", opts: ["Mountain, Boulders", "Humans, Mango tree", "House fly, Mountains", "Sand mounds, Moss"], ans: 1, exp: "Humans, Mango tree." },
+  { q: "Scientific name of 'brinjal' is standardised through rules given in —", opts: ["ICZN", "ICNB", "ICNB", "ICNCP"], ans: 1, exp: "ICNB." },
+  { q: "The living organisms of all hierarchical levels share in common, which one of the following features?", opts: ["Nature of protoplasmic constituent", "Method of cell division", "Degree of body organization", "Mode of nutrition"], ans: 0, exp: "Nature of protoplasmic constituent." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})">
+      <strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}
+    </div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) {
+  currentQ = idx;
+  renderQuestion();
+  document.querySelector('.sidebar').classList.remove('open');
+}
+
+function nextQuestion() {
+  if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); }
+}
+function prevQuestion() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+function toggleMark() {
+  marked[currentQ] = !marked[currentQ];
+  renderQuestion();
+}
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) {
+    userAnswers[i] = null;
+    marked[i] = false;
+    visited[i] = false;
+  }
+  correctCount = 0;
+  wrongCount = 0;
+  currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 1; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

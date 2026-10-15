@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 20: Locomotion and Movement - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Locomotion and Movement</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "1. Streaming of cytoplasm/cyclosis is seen in -", opts: ["Amoeba", "Macrophages", "Leucocytes", "All"], ans: 3, exp: "All are correct." },
+    { q: "2. Which of the following statements is correct?", opts: ["Cytoplasmic streaming helps in pseudopodia formation or amoeboid movement", "Cytoplasmic streaming is caused by contracting microfilament", "Both a and b", "Locomotion is not a voluntary movement"], ans: 2, exp: "Both a and b." },
+    { q: "3. I. Paramecium employs cilia for pushing food in cytopharynx and in locomotion\nII. Hydra takes help of tentacles for both food capturing and locomotion\nIII. All locomotions are movements and vice-versa\nIV. Methods of locomotion vary with habitats and the demands of situation\nV. Ciliated epithelium is found in respiratory tract, renal tubules and reproductive tracts\nWhich of the above statements is false?", opts: ["I and III", "III", "III and V", "IV and V"], ans: 1, exp: "III." },
+    { q: "4. Which of the following statements is false?", opts: ["Locomotion and many other movements required coordinated muscular activities", "Muscle is a specialised tissues of endodermal in origin", "There are about 639 muscles which contribute about 40 - 50 % of adult body wall", "Muscles show contractibility, excitability and conductivity"], ans: 1, exp: "Muscle is a specialised tissues of endodermal in origin." },
+    { q: "5. Which of the following statements about the skeletal muscles is correct?", opts: ["They are striated muscles", "They are voluntary muscles", "They are primarily involved in locomotory actions", "All"], ans: 3, exp: "All are correct." },
+    { q: "6. Which of the following statements about visceral muscles is correct?", opts: ["They are non-striated muscles (smooth muscles)", "They are involuntary muscles", "They have various functions", "All"], ans: 3, exp: "All are correct." },
+    { q: "7. Cardiac/heart muscles are -", opts: ["Striated and involuntary", "Branched", "Not fatigued", "All"], ans: 3, exp: "All are correct." },
+    { q: "8. Which of the following statements is false?", opts: ["Smooth muscles are found in urinary bladder, alimentary canal and genital tract", "A striated muscle is syncytium (multinucleate)", "The cytoplasm of striated muscle is called endoplasm", "The plasma membrane and ER of striated muscles are called sarcolemma and sarcoplasmic reticulum respectively"], ans: 2, exp: "The cytoplasm of striated muscle is called endoplasm." },
+    { q: "9. The source of Ca+2 for the muscle is -", opts: ["T-tubule", "Sarcosome", "Sarcolemma", "Sarcoplasmic reticulum"], ans: 3, exp: "Sarcoplasmic reticulum." },
+    { q: "10. The fascia surrounding a muscle is made up of -", opts: ["Cartilage", "Collagenous connective tissues", "Adipose tissue", "Blood vessels"], ans: 1, exp: "Collagenous connective tissues." },
+    { q: "11. Contractile fibrils of muscles are called -", opts: ["Neurofibrils", "Collagen fibres", "Myofibrils", "Yellow fibres"], ans: 2, exp: "Myofibrils." },
+    { q: "12. Myofibrils show alternate dark and light bands in -", opts: ["Cardiac muscles", "Smooth muscles", "Striped muscles", "a and c"], ans: 3, exp: "a and c." },
+    { q: "13. Select the true statement(s) -", opts: ["A-band is present in the middle of sarcomere", "H-zone is present in the middle of A-band", "M-line is present in the middle of H-zone", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "14. Which is the smallest one?", opts: ["Muscle fibre", "Myofibril", "Actin", "Sarcomere"], ans: 2, exp: "Actin." },
+    { q: "15. Match Column I with Column II -\nColumn I: A Structural and functional unit of a myofibril, B. Protein of thin filament, C. Protein of thick filament, D. The central part of thick filament not overlapped by thin filament\nColumn II: I. H-zone, II. Myosin, III. Sarcomere, IV. Actin", opts: ["A-1, B-11, C-111, D-IV", "A-1, B-111, C-11, D-IV", "A- I, B - IV, C - Ill, D - II", "A- Ill, B - IV, C - II, D - I"], ans: 3, exp: "A- Ill, B - IV, C - II, D - I." },
+    { q: "16. Z-line divides the myofibrils into -", opts: ["Sarcomere", "Sarcolemma", "Sarcosome", "Microtubules"], ans: 0, exp: "Sarcomere." },
+    { q: "17. Sarcomere is the area between -", opts: ["2 H-zones", "2 Z-lines", "2 M-lines", "2 A-bands"], ans: 1, exp: "2 Z-lines." },
+    { q: "18. Light bands (thin filaments) contain actin and are called -", opts: ["A-bands or Isotropic band", "A-bands or Anisotropic bands", "I-bands or Isotropic bands", "I-bands or Anisotropic bands"], ans: 2, exp: "I-bands or Isotropic bands." },
+    { q: "19. Dark bands (thick filaments) contain myosin and are called -", opts: ["A-bands or Isotropic band", "A-bands or Anisotropic bands", "I-bands or Isotropic bands", "I-bands or Anisotropic bands"], ans: 1, exp: "A-bands or Anisotropic bands." },
+    { q: "20. Which of the following statements about the striated muscles is false?\nI. In the centre of each I-band is an elastic fibre (Z-line) which bisects it\nII. Thin filaments are firmly attached to the Z-line\nIII. M-line is a fibrous membrane in the middle of A-bands\nIV. A sarcomere comprises one full A-bands and 2 half I-bands", opts: ["All", "IV", "I and II", "None"], ans: 3, exp: "None." },
+    { q: "21. The region between the ends of the A-bands of 2-adjoining sarcomeres is called -", opts: ["The Z-band", "The H-zone", "The T-tubule", "The I-band"], ans: 3, exp: "The I-band." },
+    { q: "23. An individual sarcomere consist of -", opts: ["A stack of actin fibres", "A stack of myosin units", "Overlapping actin and myosin", "Overlapping myosin and membrane"], ans: 2, exp: "Overlapping actin and myosin." },
+    { q: "24. Which of the following statements about the molecular arrangement of actin and myosin in myofibrils is false?\nI. Each actin (thin filament) is made of 2F (filamentous) actins\nII. F-actin is the polymer of G (globular) actin.\nIII. 2F-actins are twisted into a helix\nIV. Two strands of tropomyosin (protein) lie in the grooves of F-actin\nV Troponin molecules (complex proteins) are distributed at regular intervals on the tropomyosin\nVI. Troponin forms the head of the myosin molecule\nVII. The myosin is a polymerised protein", opts: ["I, III, VII", "Only VII", "Only VI", "Only III"], ans: 2, exp: "Only VI." },
+    { q: "25. One myosin filament in the myofibril of skeletal muscle fibres is surrounded by how many actin filaments -", opts: ["8", "2", "6", "4"], ans: 2, exp: "6." },
+    { q: "26. The cross bridges of the sarcomere in skeletal muscle are made up of -", opts: ["Actin", "Myosin", "Troponin", "Myelin"], ans: 1, exp: "Myosin." },
+    { q: "27. The functions of tropomyosin in skeletal muscle include -", opts: ["Sliding on actin to produce shortening.", "Release Ca+2 after initiation of contraction", "Acting as \"relaxing protein\" at rest by covering up the sites where myosin binds to actin", "Generates ATP"], ans: 2, exp: "Acting as \"relaxing protein\" at rest by covering up the sites where myosin binds to actin." },
+    { q: "28. Tropomysin is moved by which of following proteins -", opts: ["Calmodulin", "Actin", "Troponin", "Acetylcholine"], ans: 2, exp: "Troponin." },
+    { q: "29. Ca+2 bind _____ in the skeletal muscles and leads to exposure of the binding site for ____ on the filament ____ _", opts: ["Troponin, myosin, actin", "Troponin, actin, relaxin", "Actin, myosin, troponin", "Tropomysin, myosin, actin"], ans: 0, exp: "Troponin, myosin, actin." },
+    { q: "32. Which of the following statements is false?", opts: ["Each myosin is a polymerised protein", "Many meromysin constitute one thick filament (myosin)", "Each meromyosin's tail is called heavy meromyosin (HMM) and head is called light meromyosin (LMM)", "The globular head is an active ATPase enzyme and has binding sites for ATP and active sites for actin"], ans: 2, exp: "Each meromyosin's tail is called heavy meromyosin (HMM) and head is called light meromyosin (LMM)." },
+    { q: "33. The action potential that triggers a muscle contraction travels deep within the muscle cell by means of -", opts: ["Sarcoplasmic reticulum", "Transverse tubules", "Synapse", "Motor end plates"], ans: 1, exp: "Transverse tubules." },
+    { q: "34. ATP provides energy for muscle contraction by allowing for -", opts: ["An action potential formation in the muscle cell", "Cross-bridge detachment of myosin from actin", "Cross-bridge attachment of myosin to actin", "Release of Ca+2 from sarcoplasmic reticulum"], ans: 1, exp: "Cross-bridge detachment of myosin from actin." },
+    { q: "35. A motor unit is best described as -", opts: ["All the nerve fibres and muscle fibres in a single muscle bundle", "One muscle fibre and its single nerve fibre", "A single motor neuron and all the muscle fibres that it innervates", "It is the neuron which carries the message from muscle to CNS"], ans: 2, exp: "A single motor neuron and all the muscle fibres that it innervates." },
+    { q: "36. Motor end plate is a -", opts: ["Neuromuscular junction", "Plate of motor neuron", "Dendron of motor neuron", "Gradient of proton motive force"], ans: 0, exp: "Neuromuscular junction." },
+    { q: "37. Electrical excitation in a muscle fibre most directly causes -", opts: ["Movement of tropomyosin", "Attachment of the cross bridges to actin", "Release of Ca+2 from sarcoplasmic reticulum", "Splitting of ATP"], ans: 2, exp: "Release of Ca+2 from sarcoplasmic reticulum." },
+    { q: "38. The energy for muscle contraction is most directly obtained from -", opts: ["Phosphocreatine", "ATP", "Anaerobic respiration", "Aerobic respiration"], ans: 1, exp: "ATP." },
+    { q: "39. According to the sliding filament theory -", opts: ["Actin (thin filament) moves past myosin (thick filament)", "Myosin moves past actin", "Both myosin and actin move past each other", "None of these is correct"], ans: 0, exp: "Actin (thin filament) moves past myosin (thick filament)." },
+    { q: "40. Put the following phrases in proper order to describe what occurs at the neuromuscular junction to trigger muscle contraction.\nI. Receptor sites on sarcolemma.\nII. Nerve impulse.\nIII. Release of Ca+2 from sarcoplasmic reticulum\nIV. The neurotransmitter acetylcholine is released\nV. Sarcomere shortens\nVI. Synaptic cleft\nVII. Spread of impulses over sarcolemma on T-tubules", opts: ["II, IV, I, VI, VII, III, V", "II, IV, VI, I, VII, III, V", "I, II, III, IV, V, VI, VII", "VII, VI, V, IV, III, II, I"], ans: 1, exp: "II, IV, VI, I, VII, III, V." },
+    { q: "42. How does the troponin-tropomyosin complex affect cross-bridge cycling?", opts: ["When [Ca2+] is low, the troponin-tropomyosin complex blocks actin's binding site for myosin. When [Ca2+] is high, the complex rolls out of the way, allowing myosin to bind to actin and initiate the cross-bridge cycle.", "The troponin-tropomyosin complex regenerates ATP for the myosin ATPase.", "The troponin-tropomyosin complex regulates calcium release from the terminal cisternae.", "The troponin-tropomyosin complex binds to the myosin head, facilitating contact with the actin filaments"], ans: 0, exp: "When [Ca2+] is low, the troponin-tropomyosin complex blocks actin's binding site for myosin. When [Ca2+] is high, the complex rolls out of the way, allowing myosin to bind to actin and initiate the cross-bridge cycle." },
+    { q: "43. Relaxation of muscle is due to -", opts: ["Pumping of Ca+2 into sarcoplasmic cisternae", "Presence of ATP", "Confirmational change in troponin and masking of actin filaments", "a and c"], ans: 3, exp: "a and c." },
+    { q: "45. When a skeletal muscle shortens during contraction which of these statements is false?", opts: ["The I-band shortens", "The A-band shortens", "The H-zone becomes narrow", "The sarcomeres shorten"], ans: 1, exp: "The A-band shortens." },
+    { q: "46. The muscle band that remains unchanged during muscle contraction and relaxation of the skeletal muscle is -", opts: ["I", "A", "H", "Z-line"], ans: 1, exp: "A." },
+    { q: "47. Which of the following statements is correct?", opts: ["During muscle contraction chemical energy changes into mechanical energy", "Muscle fatigue is due to lactic acid formation due to anaerobic respiration", "The reaction time of the fibres can vary in different muscles", "All"], ans: 3, exp: "All." },
+    { q: "48. The compound or pigment acting as an oxygen store in skeletal muscles is -", opts: ["Myoglobin", "Haemoglobin", "Myokinase or ATP", "Cytochrome"], ans: 0, exp: "Myoglobin." },
+    { q: "49. I. Number of mitochondria less.\nII. Number of mitochondria more\nIII. Sarcoplasmic reticulum is abundant\nIV. Myoglobin content high\nV. Sarcoplasmic reticulum moderate\nVI. Aerobic muscles\nVII. Depend on anaerobic respiration for energy\nVIII. Less myoglobin content\nA Red muscles\nB. White muscles\nIdentify above (I to VIII) traits as characteristic of A and B types of muscles-", opts: ["A- I, III, VII, VIII; B -II, IV, V, VI", "A-II, IV, V, VI; B- I, III, VII, VIII", "A-1, 111, IV, VII; B - II, V, VI, VIII", "A- 11, V, VI, VIII; B - I, III, IV, VII"], ans: 1, exp: "A-II, IV, V, VI; B- I, III, VII, VIII." },
+    { q: "50. Skeletal system consists of -", opts: ["Only bones", "Only cartilage", "A framework of bones and a few cartilage", "A framework of cartilage and a few bone"], ans: 2, exp: "A framework of bones and a few cartilage." },
+    { q: "51. Bone has a very hard matrix due to presence of -", opts: ["NaCl", "Ca-salts", "K-salts", "Fe-salts"], ans: 1, exp: "Ca-salts." },
+    { q: "52. Cartilage has slightly pliable matrix due to -", opts: ["Chondroitin salts", "Osteoblast", "Chondroclasts", "Osteoclast"], ans: 0, exp: "Chondroitin salts." },
+    { q: "53. How many bones make up the human skeleton?", opts: ["948", "96", "796", "206"], ans: 3, exp: "206." },
+    { q: "54. Number of bones in human axial skeleton is -", opts: ["80", "106", "206", "None"], ans: 0, exp: "80." },
+    { q: "55. Match Column I with Column II -\nColumn I: A Cranium, B. Skull (Cranial and facial bones), C. Face, D. Hind limb, E. Ribs\nColumn II (Number of bones): I. 29, II. 8, III. 14, IV. 12 pairs, V. 30", opts: ["A-1, B-11, C-111, D-V, E-IV", "A- II, B - I, C - Ill, D - V, E - IV", "A - I, B - II, C- 111, D - IV, E - V", "A- V, B - IV, C - Ill, D - II, A- I"], ans: 1, exp: "A- II, B - I, C - Ill, D - V, E - IV." },
+    { q: "56. Hyoid/Tongue bone is -", opts: ["T-shaped", "J-shaped", "U-shaped", "L-shaped"], ans: 2, exp: "U-shaped." },
+    { q: "57. Sonia Gandhi has how many ear ossicles -", opts: ["3", "6", "9", "None"], ans: 1, exp: "6." },
+    { q: "58. Which one of the following is not included under ear ossicles -", opts: ["Malleus", "Ileum", "Incus", "Stapes"], ans: 1, exp: "Ileum." },
+    { q: "59. Human Cranium has small protuberance(s) at the posterior end called _____ , and ____ in number that articulates with first vertebra (atlas vertebra)-", opts: ["occipital condyle, 6", "occipital condyle, 2", "occipital condyle, 4", "occipital condyle, 3"], ans: 1, exp: "occipital condyle, 2." },
+    { q: "60. Human skull is -", opts: ["dicondylic", "Monocondylic", "Procoelous", "Hetercoelous"], ans: 0, exp: "dicondylic." },
+    { q: "61. Which of the following statements about human vertebral column is false -", opts: ["Vertebral column consists of 26 vertebrae", "It is ventrally placed", "It extends from the base of skull and constitutes the main framework of the trunk", "Neural canal in vertebra is the passage for spinal cord"], ans: 1, exp: "It is ventrally placed." },
+    { q: "62. Human adult vertebral formula is -", opts: ["C4 T8 L4 S8 C8", "C7 T12 L5 S5 C7", "C7 T12 L5 S1 C1", "C7 T12 L5 S5 C1"], ans: 1, exp: "C7 T12 L5 S5 C7." },
+    { q: "63. Which of the following vertebra in adult human are fused ones?", opts: ["Thoracic and lumber", "Thoracic and cervical", "Sacral and coccygeal", "Cervical and coccygeal"], ans: 2, exp: "Sacral and coccygeal." },
+    { q: "64. Which of the following is not the function of vertebral column?", opts: ["Protects spinal cord and supports the head", "Serves as the point of attachment for ribs and musculature of the back", "Both", "Supports Tarsals and Metacarpals"], ans: 3, exp: "Supports Tarsals and Metacarpals." },
+    { q: "65. Which of the following is not correct about sternum?", opts: ["It is commonly called breast bone", "It is flat bone", "It is 2 in number", "It is located on the ventral mid line of thorax"], ans: 2, exp: "It is 2 in number." },
+    { q: "66. Each typical rib is a thin flat bone connected ____ to the vertebral column and _____ to the sternum-", opts: ["Dorsally, ventrally", "Ventrally, dorsally", "Dorsally, dorsally", "Ventrally, Ventrally"], ans: 0, exp: "Dorsally, ventrally." },
+    { q: "67. Typical ribs are -", opts: ["Monocephalic", "Dicephalic", "Tricephalic", "Tetracephalic"], ans: 1, exp: "Dicephalic." },
+    { q: "68. Match the Column I with Column II -\nColumn I: A True ribs, B. False ribs, C. Floating ribs\nColumn II: I. 3 pairs, II. 2 pairs, III. 7 pairs", opts: ["A-1, B-11, C-111", "A-111, B-1, C-11", "A- Ill, B - II, C - I", "A-ll, B-l, C-111"], ans: 1, exp: "A-111, B-1, C-11." },
+    { q: "69. Pick up the correct match -\nA False ribs | I. 1st to 7th pair\nB. True ribs | II. 11th and 12th pair\nC. Floating ribs | III. 8th to 10th pair\nD. Sternum | IV. One", opts: ["A-1, B-ll, C-111, D-IV", "A- IV, B - Ill, C - II, D - I", "A - I, B - 111, C - II, D - IV", "A - 111, B - I, C - II, D - IV"], ans: 3, exp: "A - 111, B - I, C - II, D - IV." },
+    { q: "70. Identify the ribs -\nA. Ribs are attached to the sternum ventrally and to the vertebrae dorsally.\nB. Ribs are attached to sternum through costal cartilage (hyaline) of 7th rib\nC. Ribs are not attached to sternum\nI. True ribs\nII. False ribs\nIII. Floating ribs", opts: ["A-l, B-11, C-111", "A- I, B - Ill, C - II", "A-11, B-1, C-111", "A-111, B -11, C-1"], ans: 0, exp: "A-l, B-11, C-111." },
+    { q: "71. Which of the following ribs are called vertebrochondral ribs?", opts: ["true ribs", "False ribs", "Gorilla ribs", "Floating ribs"], ans: 1, exp: "False ribs." },
+    { q: "72. Rib cage is formed by all except -", opts: ["Thoracic vertebrae", "Lumbar vertebrae", "Ribs", "Sternum"], ans: 1, exp: "Lumbar vertebrae." },
+    { q: "73. Each limb (upper or lower) consists of how many bones -", opts: ["30", "60", "101", "8"], ans: 0, exp: "30." },
+    { q: "76. Number of bone in each upper limb is -", opts: ["1, 1, 1", "8, 5, 14", "2, 2, 2, 16, 10, 28", "1, 1, 1, 8, 5, 14"], ans: 3, exp: "1, 1, 1, 8, 5, 14." },
+    { q: "77. Phalangeal/digital formula for human hand/foot is-", opts: ["0, 2, 2, 3", "0, 2, 3, 3, 3", "2, 2, 3, 3, 3", "2, 3, 3, 3, 3"], ans: 3, exp: "2, 3, 3, 3, 3." },
+    { q: "78. The hand contains ____ carpals (wrist bones), ____ metacarpals (palm bones), and ___ phalanges-", opts: ["14, 5, 8", "5, 8, 14", "8, 5, 14", "1, 5, 5"], ans: 2, exp: "8, 5, 14." },
+    { q: "80. An acromion process is characteristically found in -", opts: ["Pelvic girdle of mammals", "Pectoral girdle of mammals", "Skull bone", "Vertebrae of mammals"], ans: 1, exp: "Pectoral girdle of mammals." },
+    { q: "81. The shoulder blade is large triangular bone situated in the dorsal part of the thorax between the 2nd and the 7th ribs. It is called -", opts: ["Clavicle", "Ilium", "Scapula", "Carpals"], ans: 2, exp: "Scapula." },
+    { q: "82. For articulation of head of humerus a depression found in scapula is called -", opts: ["Acetabulum", "Manubrium", "Occipital condyle", "Glenoid cavity"], ans: 3, exp: "Glenoid cavity." },
+    { q: "83. Which of the following statement is correct?", opts: ["Pectoral and pelvic girdle bones help in the articulation of the upper and lower limbs respectively with the axial skeleton", "Each girdle is formed of 2 halves", "Each half of pectoral girdle consists of a clavicle (collar bone) and Scapula", "All"], ans: 3, exp: "All." },
+    { q: "84. Which of the following statements is false?", opts: ["Scapula has the spine which projects as acromion process", "below acromion process is a glenoid cavity", "Each clavicle (collar bone) articulates with acromion", "Clavicle is long S-shaped bone with 4 curvatures"], ans: 3, exp: "Clavicle is long S-shaped bone with 4 curvatures." },
+    { q: "85. Which one of the following is the longest bone in human?", opts: ["Radius", "Tibia", "Femur (Thigh bone)", "Clavicle (Collar bone)"], ans: 2, exp: "Femur (Thigh bone)." },
+    { q: "86. Human foot consists of 26 bones. What are the number of tarsals (ankle bones), metatarsals and phalanges?", opts: ["7, 5, 14", "5, 7, 14", "1, 1, 5", "5, 5, 5"], ans: 0, exp: "7, 5, 14." },
+    { q: "87. A cup shaped bone covering knee ventrally is called -", opts: ["Cuneiform", "tarsal", "patella", "Carpal"], ans: 2, exp: "patella." },
+    { q: "89. Acetabulum occurs in -", opts: ["Cranium", "Pectoral girdle", "Pelvic girdle", "Vertebrae"], ans: 2, exp: "Pelvic girdle." },
+    { q: "90. Pelvic girdle (hip girdle) is composed ____ coxal (hip) bones-", opts: ["3", "2", "4", "5"], ans: 1, exp: "2." },
+    { q: "91. Pelvic girdle consists of -", opts: ["Ileum, ischium and pubis", "Ilium, ischium and pubis", "Ilium, ischium and Clavicle", "Coracoid, Ischium and Pubis"], ans: 1, exp: "Ilium, ischium and pubis." },
+    { q: "92. Two halves of pelvic girdle articulate ventrally at a fibrocartilaginous joint called -", opts: ["Pubic symphysis", "Synchodroses", "Gamphoses", "Sutures"], ans: 0, exp: "Pubic symphysis." },
+    { q: "93. Each coxal bone is formed by the fusion of 3 bones named as -", opts: ["ileum, ischium and pubis", "ilium, ischium and pubis", "ilium, ischium and clavicle", "Coracoid, ischium and pubis"], ans: 1, exp: "ilium, ischium and pubis." },
+    { q: "94. In the middle lateral side a cup shaped cavity or acetabulum (for head of femur) is present in the region of union of -", opts: ["ilium and ischium", "ilium and pubis", "ilium, ischium and pubis", "ischium and pubis"], ans: 2, exp: "ilium, ischium and pubis." },
+    { q: "95. Which of the following statements about the joints is false?", opts: ["Joints are essential for all types of movements involving bony parts", "Joints are contact between bones or between bones and cartilages", "Fibrous joints are immovable", "Cartilaginous joint permit great movement"], ans: 3, exp: "Cartilaginous joint permit great movement." },
+    { q: "96. Force generated by the muscles is used to carry out movement through joints. In this case joint acts as -", opts: ["Frenulum", "Clavicle", "Ligament", "Fulcrum"], ans: 3, exp: "Fulcrum." },
+    { q: "97. Match the following and mark the correct option -\nColumn I: A. Hinge joint, B. Pivot joint, C. Gliding joint, D. Saddle joint, E. Ball and Socket joint\nColumn II: I. Between humerus and pectoral girdle, II. Between carpals and Metacarpals of thumb, III. Between the carpals, IV. Between atlas and axis, V. Knee joint", opts: ["A- V, B - IV, C - Ill, D - 11, E - I", "A- I, B - II, C - 11, D - V, E - IV", "A- I, B - 111, C - II, D - V, E - IV", "A-V, B-111, C-ll, D-1, E-11"], ans: 0, exp: "A- V, B - IV, C - Ill, D - 11, E - I." },
+    { q: "98. Which of the following statements is correct?", opts: ["Synovial joints are characterised by synovial cavity with fluid between the articulating surface of two bones", "Synovial joints are freely movable", "Ball and socket, hinge joint, gliding joints, pivot joints and saddle joints are the types of synovial joints", "All"], ans: 3, exp: "All." },
+    { q: "99. Joint between bones in the form of sutures of human skull is -", opts: ["Hinge joint", "Synovial joint", "Cartilaginous joint", "Fibrous joint"], ans: 3, exp: "Fibrous joint." },
+    { q: "100. Which of the following statements is correct?", opts: ["Movable skull bone is mandible", "We move our hands while walking for balancing", "Cartilaginous joints have little mobility due to fibrocartilage disc between its articular ends e.g. intervertebral disc between centre of vertebrae", "All"], ans: 3, exp: "All." },
+    { q: "101. A disease associated with joint is -", opts: ["Glaucoma", "Arthritis", "Paget's disease", "Homer's syndrome"], ans: 1, exp: "Arthritis." },
+    { q: "102. Gout is the inflammation of joints due to accumulation of -", opts: ["Urea crystal", "NH3", "Uric acid crystal", "CaCO3 crystals"], ans: 2, exp: "Uric acid crystal." },
+    { q: "103. I. Age-related disorder characterised by decreased bone mass and increased chances of fracture\nII. Causative factor deficiency of estrogen is common.\nThe above characters are associated with -", opts: ["Gout", "Osteoporosis", "Arthritis", "Polio"], ans: 1, exp: "Osteoporosis." },
+    { q: "104. Myasthenia is an ____ disorder affecting neuromuscular junction leading to fatigue, weakening and paralysis of skeletal muscles -", opts: ["Arthritis", "Autoimmune", "Agnosic", "Amnesic"], ans: 1, exp: "Autoimmune." },
+    { q: "105. Tetany is the rapid spasm in muscles due to -", opts: ["High Ca+2 in body fluid", "Low Ca+2 in body fluid", "High uric acid in body fluid", "High urea in blood"], ans: 1, exp: "Low Ca+2 in body fluid." },
+    { q: "106. Progressive degeneration of skeletal muscles due to genetic disorder is called -", opts: ["Myasthenia gravis", "Tetany", "Muscular dystrophy", "Myopia"], ans: 2, exp: "Muscular dystrophy." },
+    { q: "107. Arthritis is -", opts: ["Inflammation of muscles", "Inflammation of joints", "Inflammation of bone", "Inflammation of tongue"], ans: 1, exp: "Inflammation of joints." },
+    { q: "108. Joints have been classified into three major structural forms as follows except.", opts: ["Bony", "Fibrous", "Cartilaginous", "Synovial"], ans: 0, exp: "Bony." },
+    { q: "111. The macrophages in human body exhibit", opts: ["Ciliary movement", "Amoeboid movement", "No movement", "Movement with the blood flow only"], ans: 1, exp: "Amoeboid movement." },
+    { q: "112. Mark the incorrect statement in the following.", opts: ["All movement lead to locomotion", "Ciliary movement help in passage of ova through female reproductive tract", "Microfilaments are involved in amoeboid movement", "In Paramecium the cilia help in movement of food through cytopharynx and in locomotion as well"], ans: 0, exp: "All movement lead to locomotion." },
+    { q: "113. Read the following 4-statements (i - iv) and accordingly mark the option that has both correct statements\n(i) Cardiac fibres are branched with one nucleus\n(ii) Smooth muscles are unbranched and cylindrical\n(iii) Striated muscles can be branched or unbranched\n(iv) Involuntary muscles are non-striated", opts: ["(i) and (iv)", "(ii) and (iii)", "(iii) and (iv)", "(i) and (iii)"], ans: 0, exp: "(i) and (iv)." },
+    { q: "114. Which of the following is not the feature of red muscle fibres", opts: ["They have plenty of mitochondria", "They have high content of Myoglobin", "They have high amount of Sarcoplasmic reticulum", "They are called aerobic muscles"], ans: 2, exp: "They have high amount of Sarcoplasmic reticulum." },
+    { q: "115. What is not true about human skull", opts: ["It is dicondylic", "It includes 6 ear ossicles", "It includes 14 facial bones", "Hyoid is not included in skull bones"], ans: 3, exp: "Hyoid is not included in skull bones." },
+    { q: "116. Which of the following is not the bone of cranium", opts: ["Occipital bone", "Zygomatic bone", "Ethmoid bone", "Sphenoid bone"], ans: 1, exp: "Zygomatic bone." },
+    { q: "117. In which option the number of bones of two corresponding parts are not the same", opts: ["Thigh and upper arm", "Sole and Palm", "Ankle and wrist", "Leg and arm"], ans: 1, exp: "Sole and Palm." },
+    { q: "118. The clavicle or collar bone articulates with", opts: ["Glenoid cavity", "Cervical vertebrae", "Coxal bone", "Acromion process"], ans: 3, exp: "Acromion process." },
+    { q: "119. Look at the following sets of bones and the type of joints, and select the correct combination of the two sets\n(i) Atlas and Axis - (p) Cartilaginous joint\n(ii) Two Parietals - (q) Fibrous joint\n(iii) Two pubis bones - (r) Saddle joint\n(iv) First carpal and first metacarpal - (s) Pivot joint", opts: ["(i-q) (ii-p)", "(ii-q) (iii-r)", "(iii-q) (iv-r)", "(iv-r) (i-s)"], ans: 3, exp: "(iv-r) (i-s)." },
+    { q: "120. Mark the correct statement", opts: ["All striated muscles are voluntary", "Visceral muscles are faintly striated", "Cardiac muscles are not striated", "All non-striated muscles are involuntary"], ans: 3, exp: "All non-striated muscles are involuntary." },
+    { q: "121. Read the following A to D statements and select the one option that contains both correct statements\nA Z-line is present in the centre of the light band.\nB. Thin filaments are firmly attached to the M-line\nC. The central part of thick filaments, not overlapped by thin filaments is called Z-band\nD. Light band contains only thin filaments", opts: ["A and D", "B and C", "A and C", "B and D"], ans: 0, exp: "A and D." },
+    { q: "122. The cross arm that forms the cross bridges during muscle contraction, is formed by", opts: ["HMM", "LLM", "Troponin", "Both (a) and (b)"], ans: 0, exp: "HMM." },
+    { q: "123. During resting stage the binding site of actin for myosin remains masked by", opts: ["Troponin", "G actin", "Tropomyosin", "Meromyosin"], ans: 2, exp: "Tropomyosin." },
+    { q: "124. There are three blanks in the following statement. Mark the correct option having suitable words for filling the blanks\nThe thin filaments of myofibril contain A actin and two filaments of B protein along with C protein for masking binding site for myosin.\nA | B | C", opts: ["1 F | Troponin | Tropomyosin", "1 F | Tropomyosin | Troponin", "2F | Troponin | Tropomyosin", "2F | Tropomyosin | Troponin"], ans: 3, exp: "2F | Tropomyosin | Troponin." },
+    { q: "125. Which one of the following is the correct description of a certain part of the normal human skeleton?", opts: ["parietal bone and the temporal bone of the skull are joined by fibrous joint", "First vertebra is axis which articulates with the occipital condyles", "The 9th and 10th pairs of ribs are called the floating ribs", "Glenoid cavity is a depression to which the thigh bone articulates."], ans: 0, exp: "parietal bone and the temporal bone of the skull are joined by fibrous joint." },
+    { q: "126. Three of the following pairs of the human skeletal parts are correctly matched with their respective inclusive skeletal category and one pair is not matched. Identify the non-matching pair.\nPairs of skeletal parts | Category", opts: ["Sternum and Ribs | Axial skeleton", "Clavicle and Glenoid cavity | Pelvic girdle", "Humerus and Ulna | Appendicular skeleton", "Malleus and Stapes | Ear ossicles"], ans: 1, exp: "Clavicle and Glenoid cavity | Pelvic girdle." },
+    { q: "128. Which alternative lists the names of the bones present in the hind limb?\nBone 1 | Bone 2 | Bone 3 | Bone 4", opts: ["Humerus | Radius | Ulna | Carpals", "Humerus | Tibia | Fibula | Carpals", "Femur | Radius | Ulna | Tarsals", "Femur | Tibia | Fibula | Tarsals"], ans: 3, exp: "Femur | Tibia | Fibula | Tarsals." },
+    { q: "129. _____ and _____ pairs of ribs do not articulate directly with the sternum. The information in which alternative completes the given statement?", opts: ["i-6th; ii-7th", "i-8th; ii-9th", "i-10th; ii-11th", "i-11th; ii-12th"], ans: 2, exp: "i-10th; ii-11th." },
+    { q: "130. Which alternative lists the names of the skeletal parts present in the axial skeleton?\nSkeletal part 1 | Skeletal part 2 | Skeletal part 3 | Skeletal part 4", opts: ["Pectoral girdle | Pelvic girdle | Forelimbs | Vertebral column", "Pectoral girdle | Skull girdle | Hind limbs | Forelimbs", "Skull | Sternum | Pectoral girdle | Forelimbs", "Skull | Ribs | Sternum | Vertebral column"], ans: 3, exp: "Skull | Ribs | Sternum | Vertebral column." },
+    { q: "132. Which one of the following pairs of chemical substances, is correctly categorised ?", opts: ["Calcitonin and thymosin - Thyroid hormones", "Pepsin and prolactin - Two digestive enzymes secreted in stomach", "Troponin and myosin - Complex proteins in striated muscles", "Secretin and rhodopsin - Polypeptide hormones"], ans: 2, exp: "Troponin and myosin - Complex proteins in striated muscles." },
+    { q: "133. The important muscle proteins that help in movement are", opts: ["actin and myosin", "tropomyosin", "troponin", "all of these."], ans: 3, exp: "all of these." },
+    { q: "134. Select the correct statement regarding the specific disorder of muscular or skeletal system :-", opts: ["Muscular dystrophy - age related shortening of muscles.", "Osteoporosis - decrease in bone mass and higher chance of fractures with advancing age.", "Myasthenia gravis - Auto immune disorder which inhibits sliding of myosin filaments", "Gout - inflammation of joints due to extra deposition of calcium."], ans: 1, exp: "Osteoporosis - decrease in bone mass and higher chance of fractures with advancing age." },
+    { q: "135. Match the following and mark the correct option\nColumn I: (A) Fast muscle fibres, (B) Slow muscle fibres, (C) Actin filament, (D) Sarcomere\nColumn II: i. Myoglobin, ii. Lactic acid, iii. Contractile unit, iv. I-band", opts: ["A-i, B-ii, C-iv, D-iii", "A-ii, B-i, C-iii, D-iv", "A-ii, B-i, C-iv, D-iii", "A-iii, B-ii, C-iv, D-i"], ans: 1, exp: "A-ii, B-i, C-iii, D-iv." },
+    { q: "136. Ribs are attached to", opts: ["Scapula", "Sternum", "Clavicle", "Ilium"], ans: 1, exp: "Sternum." },
+    { q: "137. What is the type of movable joint present between the atlas and axis?", opts: ["Pivot", "Saddle", "Hinge", "Gliding"], ans: 0, exp: "Pivot." },
+    { q: "138. ATPase of the muscle is located in", opts: ["Actinin", "Troponin", "Myosin", "Actin"], ans: 2, exp: "Myosin." },
+    { q: "139. Intervertebral disc is found in the vertebral column of", opts: ["Birds", "Reptiles", "Mammals", "Amphibians"], ans: 2, exp: "Mammals." },
+    { q: "140. Which one of the following is showing the correct sequential order of vertebrae in the vertebral column of human beings?", opts: ["Cervical - lumbar - thoracic - sacral - coccygeal", "Cervical - thoracic - sacral - lumbar - coccygeal", "Cervical - sacral - thoracic - lumbar - coccygeal", "Cervical - thoracic - lumbar - sacral - coccygeal"], ans: 3, exp: "Cervical - thoracic - lumbar - sacral - coccygeal." },
+    { q: "141. Which one of the following options is incorrect?", opts: ["Hinge joint - between Humerus and Pectoral girdle", "Pivot joint - between atlas, axis and occipital condyle", "Gliding joint - between the carpals", "Saddle joint - between carpal and metacarpals of thumb"], ans: 0, exp: "Hinge joint - between Humerus and Pectoral girdle." },
+    { q: "142. Knee joint and elbow joints are examples of", opts: ["Saddle joint", "Ball and socket joint", "Pivot joint", "Hinge joint"], ans: 3, exp: "Hinge joint." },
+    { q: "143. Macrophages and leucocytes exhibit", opts: ["Ciliary movement", "Flagellar movement", "Amoeboid movement", "Gliding movement"], ans: 2, exp: "Amoeboid movement." },
+    { q: "144. Which one of the following is not a disorder of bone?", opts: ["Arthritis", "Osteoporosis", "Rickets", "Atherosclerosis"], ans: 3, exp: "Atherosclerosis." },
+    { q: "145. Which one of the following statement is incorrect?", opts: ["Heart muscles are striated and involuntary", "The muscles of hands and legs are striated and voluntary", "The muscles located in the inner walls of alimentary canal are striated and involuntary", "Muscles located in the reproductive tracts are unstriated and involuntary"], ans: 2, exp: "The muscles located in the inner walls of alimentary canal are striated and involuntary." },
+    { q: "146. Which one of the following statements is true:", opts: ["Head of humerus bone articulates with acetabulum of pectoral girdle.", "Head of humerus bone articulates with glenoid cavity of pectoral girdle.", "Head of humerus bone articulates with a cavity called acetabulum of pelvic girdle.", "Head of humerus bone articulates with a glenoid cavity of pelvic girdle."], ans: 1, exp: "Head of humerus bone articulates with glenoid cavity of pectoral girdle." },
+    { q: "147. Muscles with characteristic striations and involuntary are", opts: ["Muscles in the wall of alimentary canal", "Muscles of the heart", "Muscles assisting locomotion", "Muscles of the eyelids"], ans: 1, exp: "Muscles of the heart." },
+    { q: "148. Match the following and mark the correct option\nColumn I: (A) Sternum, (B) Glenoid Cavity, (C) Freely movable joint, (D) Cartilaginous joint\nColumn II: i. Synovial fluid, ii. Vertebrae, iii. Pectoral girdle, iv. Flat bone", opts: ["A-ii, B-i, C-iii, D-iv", "A-iv, B-iii, C-i, D-ii", "A-ii, B-i, C-iv, D-iii", "A-iv, B-i, C-ii, D-iii"], ans: 1, exp: "A-iv, B-iii, C-i, D-ii." },
+    { q: "149. The H-zone in the skeletal muscle fibre is due to:", opts: ["The central gap between myosin filaments in the (a)-band.", "The central gap between actin filaments extending through myosin filaments in the (a) band.", "Extension of myosin filaments in the central portion of the A-band.", "The absence of myofibrils in the central portion of A-band."], ans: 1, exp: "The central gap between actin filaments extending through myosin filaments in the (a) band." },
+    { q: "150. The characteristics and an example of a synovial joint in humans is :\nCharacteristics | Examples", opts: ["Fluid filled between two joints, provides cushion | Skull bones", "Fluid filled synovial cavity between two bones | joint between atlas and axis", "Lymph filled between two bones, limited movement | gliding joint between carpals", "fluid cartilage between two bones, limited movements | Knee joint"], ans: 1, exp: "Fluid filled synovial cavity between two bones | joint between atlas and axis." },
+    { q: "151. Select the correct matching of the type of the joint with the example in human skeletal system :\nType of joint | Example", opts: ["Cartilaginous joint | between frontal and parietal", "Pivot joint | between third and fourth cervical vertebrae", "Hinge joint | between humerus and pectoral girdle", "Gliding joint | between carpals"], ans: 3, exp: "Gliding joint | between carpals." },
+    { q: "152. Stimulation of a muscle fiber by a motor neuron occurs at :", opts: ["the neuromuscular junction", "the transverse tubules", "the myofibril", "the sarcoplasmic reticulum"], ans: 0, exp: "the neuromuscular junction." },
+    { q: "153. Knee joint is an example for", opts: ["pivot joint", "ball and socket", "gliding joint", "hinge joint."], ans: 3, exp: "hinge joint." },
+    { q: "154. During muscle contraction in humans the", opts: ["Actin filaments shorten", "Sarcomere does not shorten", "A-band remain same", "A, H and I-bands shorten"], ans: 2, exp: "A-band remain same." },
+    { q: "155. Which of the followings is NOT involved in muscular contraction?", opts: ["Calcium ion", "Troponin", "Actin", "Magnesium ion"], ans: 3, exp: "Magnesium ion." },
+    { q: "156. What type of cartilaginous tissue is found in the inter-vertebral discs?", opts: ["Costal cartilage", "Hyaline cartilage", "White fibrous cartilage", "Yellow elastic cartilage"], ans: 2, exp: "White fibrous cartilage." },
+    { q: "157. The monomeric actin is called", opts: ["F-actin", "M-actin", "G-actin", "N-actin"], ans: 2, exp: "G-actin." },
+    { q: "158. How many types of synovial joints are there?", opts: ["4", "3", "2", "5"], ans: 3, exp: "5." },
+    { q: "159. Glenoid cavity articulates", opts: ["Clavicle with scapula", "Humerus with scapula", "Clavicle with acromion", "Scapula with acromion"], ans: 1, exp: "Humerus with scapula." },
+    { q: "160. Sliding filament theory can be best explained as", opts: ["Actin and myosin filaments do not shorten but rather slide pass each other", "When myofilaments slide pass each other, myosin filaments, shorten while actin filaments do not shorten", "When myofilaments slide pass each other actin filaments shorten while myosin filaments do not shorten", "Actin and myosin filaments shorten and slide pass each other"], ans: 0, exp: "Actin and myosin filaments do not shorten but rather slide pass each other." },
+    { q: "161. Which of the following is not a function of the skeletal system?", opts: ["production of body heat", "Locomotion", "Production of erythrocytes", "Storage of minerals"], ans: 0, exp: "production of body heat." },
+    { q: "162. Which of the following joints would allow no movements?", opts: ["Synovial joint", "Ball and Socket joint", "Fibrous joint", "Cartilaginous joint"], ans: 2, exp: "Fibrous joint." },
+    { q: "163. Lack of relaxation between successive stimuli in sustained muscle contraction is known as:-", opts: ["Spasm", "Fatigue", "Tetanus", "Tonus"], ans: 2, exp: "Tetanus." },
+    { q: "164. Which type of tissue correctly matches with its location?\nTissue | Location", opts: ["Smooth muscle | Wall of intestine", "Areolar tissue | Tendons", "Transitional epithelium | Tip nose", "Cuboidal epithelium | Lining of stomach"], ans: 0, exp: "Smooth muscle | Wall of intestine." },
+    { q: "165. Osteoporosis, an age-related disease of skeletal system, may occur due to:-", opts: ["Decreased level of estrogen", "Accumulation of uric acid leading to inflammation of joints.", "Immune disorder affecting neuro-muscular junction leading to fatigue.", "High concentration of Ca++ and Na+."], ans: 0, exp: "Decreased level of estrogen." },
+    { q: "166. Name the ion responsible for unmasking of active sites for myosin for cross-bridge activity during muscle contraction.", opts: ["Sodium", "Potassium", "Calcium", "Magnesium"], ans: 2, exp: "Calcium." },
+    { q: "167. In the muscles carbohydrates are stored in the form of :", opts: ["Glycolipid", "Cellulose", "Starch", "Glycogen"], ans: 3, exp: "Glycogen." },
+    { q: "168. Which one of the following is not related with bone disorder?", opts: ["Arthritis", "Osteoporosis", "Atherosclerosis", "Ricket"], ans: 2, exp: "Atherosclerosis." },
+    { q: "169. Read the given statements each with one or two blanks.\nA Repeated activation of the muscles can lead to the accumulation of _____ due to anaerobic breakdown of glycogen in them, causing fatigue.\nB. The globular head of meromyosin is an active ATPase enzyme and has binding sites for _____ and active sites for _____\nC. The central part of thick filament, not overlapped by thin filaments is called _____\nWhich of the following options correctly fills the blanks in the given statements?", opts: ["I - Pyruvic acid, II - ATP, III - Myosin, IV - A band.", "I - Pyruvic acid, II - Troponin, III - Myosin, IV - H band.", "I - Lactic acid, II - ATP, III - Actin, IV - H band.", "I - Lactic acid, II - ATP, III - Troponin, IV - I band."], ans: 2, exp: "I - Lactic acid, II - ATP, III - Actin, IV - H band." },
+    { q: "170. Which of the following does not belong with the others?", opts: ["multinucleated", "skeletal", "striated", "involuntary"], ans: 3, exp: "involuntary." },
+    { q: "171. Which term is the smallest subdivision in this group?", opts: ["fiber", "fibril", "filament", "actin"], ans: 3, exp: "actin." },
+    { q: "172. The pivot joint between atlas and axis is a type of :", opts: ["Cartilaginous joint", "Synovial joint", "Saddle joint", "Fibrous joint"], ans: 1, exp: "Synovial joint." },
+    { q: "173. Out of 'X' pairs of ribs in humans only 'Y' pairs are true ribs. Select the option that correctly represents values of X and Y and provides their explanation:", opts: ["X = 12, Y = 5 True ribs are attached dorsally to vertebral column and sternum on the two ends.", "X = 24, Y = 7 True ribs are dorsally attached to vertebral column but are free on ventral side.", "X = 24, Y = 12 True ribs are dorsally attached to vertebral column but are free on ventral side.", "X = 12, Y = 7 True ribs are attached dorsally to vertebral column and ventrally to the sternum."], ans: 3, exp: "X = 12, Y = 7 True ribs are attached dorsally to vertebral column and ventrally to the sternum." },
+    { q: "174. Floating ribs are named so since they are", opts: ["the only ribs surrounded by body fluid", "without intercostal muscles", "not connected to sternum", "not connected to vertebral column"], ans: 2, exp: "not connected to sternum." },
+    { q: "175. Which of the following joints are found only in children till puberty :", opts: ["Symphysis", "Synchondrosis", "Synarthrosis (Fibrous joint)", "Synovial"], ans: 1, exp: "Synchondrosis." },
+    { q: "176. Fused vertebrae in human are :\nI. Sacral\nII. Coccygeal\nIII. Lumbar\nIV. Cervical\nV. Thoracic", opts: ["II and III", "I and III", "I and V", "I and II"], ans: 3, exp: "I and II." },
+    { q: "177. Major protein in the thick filament of skeletal muscle fibre is :", opts: ["Tropomyosin", "Myosin", "Actin", "Troponin"], ans: 1, exp: "Myosin." },
+    { q: "178. What is the type of joint between ribs and sternum?", opts: ["Cartilagenous joint", "Synovial joint", "Fibrous joint", "Angular joint"], ans: 0, exp: "Cartilagenous joint." },
+    { q: "179. The linear protein that has catalytic function is -", opts: ["actin", "collagen", "myosin", "trypsin"], ans: 2, exp: "myosin." },
+    { q: "180. Calcium is important in skeletal muscle contraction because it", opts: ["Detaches the myosin head from the actin filament.", "Activates the myosin ATPase by binding to it.", "Binds to troponin to remove the masking of active sites on actin for myosin.", "Prevents the formation of bonds between the myosin cross bridges and the actin filament."], ans: 2, exp: "Binds to troponin to remove the masking of active sites on actin for myosin." },
+    { q: "181. Largest ear ossicle in human is -", opts: ["Malleus", "Incus", "Stapes", "Columella Auris"], ans: 0, exp: "Malleus." },
+    { q: "182. Weakness of muscles & bones in elderly occurs due to deficiency of-", opts: ["Vitamin D", "Vitamin C", "Vitamin B complex", "Vitamin A"], ans: 0, exp: "Vitamin D." },
+    { q: "183. Select the incorrect statement with respect to actin filament", opts: ["G-actin has an active site for binding with the head of myosin molecule", "The actin filament has a spiral groove to accommodate tropomyosin", "Troponin is a calcium binding protein which is attached to tropomyosin at regular intervals", "When a muscle fibre contracts, tropomyosin blocks the active site of G-protein and prevents myosin head from binding to it"], ans: 3, exp: "When a muscle fibre contracts, tropomyosin blocks the active site of G-protein and prevents myosin head from binding to it." },
+    { q: "184. One of the following statement is not true with respect to red muscle fibres -", opts: ["Faster in contraction rate", "Rich in mitochondria", "Rich in myoglobin", "Carry out aerobic contraction without accumulating much lactic acid"], ans: 0, exp: "Faster in contraction rate." },
+    { q: "185. Each organised skeletal muscle in our body is made of a number of muscle bundles or fascicles held together by a common collagenous connective tissue layer called _____ _", opts: ["Endomysium", "Epimysium", "Aponeurosis", "Fascia"], ans: 3, exp: "Fascia." },
+    { q: "186. Which one is the contractile protein?", opts: ["Troponin", "Myosin", "Tropomyosin", "All"], ans: 1, exp: "Myosin." },
+    { q: "187. Component of Actin filament of a sarcomere is", opts: ["Troponin and Actin", "Myosin and Troponin", "Actin and Myosin", "Actin, Troponin and Tropomyosin"], ans: 3, exp: "Actin, Troponin and Tropomyosin." },
+    { q: "188. When muscle cells are oxygen deprived, the heart still pumps. What must the heart cells be able to do?", opts: ["Derive sufficient energy from fermentation", "Continue aerobic metabolism when skeletal muscle cannot", "Transform lactate to pyruvate again", "Remove lactate from the blood"], ans: 1, exp: "Continue aerobic metabolism when skeletal muscle cannot." },
+    { q: "189. Cervical vertebrae differ from other vertebra in having -", opts: ["Spinous process", "Centrum", "Transverse process", "Transverse foramen"], ans: 3, exp: "Transverse foramen." },
+    { q: "190. Skeletal muscles are controlled by -", opts: ["Sympathetic nervous system", "Parasympathetic nervous system", "Somatic nervous system", "Sympathetic and parasympathetic both"], ans: 2, exp: "Somatic nervous system." },
+    { q: "191. Which of the following muscular disorders is inherited?", opts: ["Tetany", "Muscular dystrophy", "Myasthenia gravis", "Botulism"], ans: 1, exp: "Muscular dystrophy." },
+    { q: "192. Select the correct option.", opts: ["8th, 9th and 10th pairs of ribs articulate directly with the sternum.", "11th and 12th pairs of ribs are connected to the sternum with the help of hyaline cartilage.", "Each rib is a flat thin bone and all the ribs are connected dorsally to the thoracic vertebrae and ventrally to the sternum.", "There are seven pairs of vertebrosternal, three pairs of vertebrochondral and two pairs of vertebral ribs."], ans: 3, exp: "There are seven pairs of vertebrosternal, three pairs of vertebrochondral and two pairs of vertebral ribs." },
+    { q: "193. Match the following joints with the bones involved:\n1. Gliding joint - (i) Between carpal and metacarpal of thumb\n2. Hinge joint - (ii) Between Atlas and Axis\n3. Pivot joint - (iii) Between the Carpals\n4. Saddle joint - (iv) Between Humerus and Ulna\nSelect the correct option from the following :", opts: ["1.-(i), 2.-(iii), 3.-(ii), 4.-(iv)", "1.-(iii), 2.-(iv), 3.-(ii), 4.-(i)", "1.-(iv), 2.-(i), 3.-(ii), 4.-(iii)", "1.-(iv), 2.-(ii), 3.-(iii), 4.-(i)"], ans: 1, exp: "1.-(iii), 2.-(iv), 3.-(ii), 4.-(i)." },
+    { q: "194. Which of the following diseases is an autoimmune disorder?", opts: ["Gout", "Myasthenia gravis", "Arthritis", "Osteoporosis"], ans: 1, exp: "Myasthenia gravis." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 17; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

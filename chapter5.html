@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 5: Morphology of Flowering Plants - CBT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+  .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+  .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+  .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+  .stat-box .lbl { font-size: 11px; color: #4a5568; }
+  .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+  .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+  .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+  .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+  .dot.attempted { background: #38a169; }
+  .dot.not-answered { background: #e53e3e; }
+  .dot.marked { background: #805ad5; }
+  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+  .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .palette-btn:hover { transform: scale(1.05); }
+  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+  .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+  .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+  .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+  .question-box { flex: 1; margin-bottom: 15px; }
+  .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; }
+  .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+  .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+  .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+  .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+  .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+  .option.disabled { pointer-events: none; opacity: 0.8; }
+  .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+  .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+  .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+  .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+  .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+  .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+  .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+  .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+  .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+  .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+  .result-item .label { font-size: 12px; color: #4a5568; }
+  .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+  .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+  .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+  .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+  .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+  .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  @media (max-width: 850px) {
+    .main-container { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+    .sidebar.open { transform: translateY(0); }
+    .mobile-palette-toggle { display: block; }
+    .quiz-area { min-height: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h3>📋 Question Palette</h3>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+      <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+      <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+      <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+      <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+      <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+      <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot not-visited"></span> Not Visited</span>
+      <span><span class="dot attempted"></span> Attempted</span>
+      <span><span class="dot not-answered"></span> Not Answered</span>
+      <span><span class="dot marked"></span> Marked</span>
+      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+  <div class="quiz-area">
+    <div class="quiz-header">
+      <h2>📚 Morphology of Flowering Plants</h2>
+      <div class="q-counter" id="qCounter">Q 1 / 0</div>
+    </div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box">
+    <h2>📋 Final Result</h2>
+    <div class="result-grid">
+      <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+      <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+      <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+      <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+      <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+    </div>
+    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+    <br>
+    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q: "Roots developing from plant parts other than radicle are —", opts: ["Epiphyllous", "Epicaulous", "Adventitious", "Fibrous"], ans: 2, exp: "Adventitious." },
+  { q: "Primary roots and its branches constitute —", opts: ["Adventitious root system", "Tap root system", "Fibrous roots", "Seminal roots"], ans: 1, exp: "Tap root system." },
+  { q: "In monocotyledonous plants e.g. wheat, the primary root is short lived and is replaced by a large number of roots. These roots originate from the base of the stem and constitute the —", opts: ["Prop roots", "Pneumatophores", "Napiform", "Fibrous roots"], ans: 3, exp: "Fibrous roots." },
+  { q: "Root formed from prolongation of radicle is —", opts: ["Primary root", "Secondary root", "Tertiary root", "Seminal root"], ans: 0, exp: "Primary root." },
+  { q: "Adventitious roots are adventitious in their —", opts: ["Function", "Position", "Place of origin", "Internal structure"], ans: 2, exp: "Place of origin." },
+  { q: "Root is distinguishable from stem in —", opts: ["Having a root cap", "having root hairs", "Absence of nodes and internodes", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Pneumatophores are useful in —", opts: ["Respiration", "Transpiration", "Guttation", "Protein synthesis"], ans: 0, exp: "Respiration." },
+  { q: "Root hairs develop from —", opts: ["Region of maturation", "Zone of elongation", "Meristematic region", "Region of mature cells"], ans: 0, exp: "Region of maturation." },
+  { q: "Regions of root from base to root tip are —", opts: ["Maturation zone - Cell division zone - Elongation zone", "Maturation zone - Elongation zone - Cell division zone", "Cell division zone - Elongation zone - Maturation zone", "Elongation zone - Cell division zone - Maturation zone"], ans: 1, exp: "Maturation zone - Elongation zone - Cell division zone." },
+  { q: "Root is meant for —", opts: ["The fixation of plant", "Absorption of water", "Storage of food", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "Stilt roots are reported from —", opts: ["Maize", "Radish", "Mango, Ginger", "Bryophyllum"], ans: 0, exp: "Maize." },
+  { q: "Prop or pillar roots in Banyan tree are —", opts: ["Fasciculated roots", "Tap roots", "Adventitious roots", "Secondary roots"], ans: 2, exp: "Adventitious roots." },
+  { q: "A few millimeters above the root cap is the region of —", opts: ["Elongation", "Maturation", "Meristematic activity", "Root hairs"], ans: 2, exp: "Meristematic activity." },
+  { q: "Pneumatophores are found in plants growing in swampy areas. Such roots are seen in —", opts: ["Ficus", "Colocasia", "Rhizophora", "Alstonia"], ans: 2, exp: "Rhizophora." },
+  { q: "Which of the following is correct —", opts: ["In Asparagus, root is modified for food storage", "Prop root is for mechanical support", "Underground stems of potato, ginger, turmeric, zaminkand and Colocasia are modified to store food in them", "All"], ans: 3, exp: "All." },
+  { q: "Function of stem is —", opts: ["To bear leaves and branches", "Conduction of water and minerals", "Conduction and storage of food", "All"], ans: 3, exp: "All." },
+  { q: "One of the following is not a root vegetable —", opts: ["Sweet potato", "Potato", "Turnip", "Carrot"], ans: 1, exp: "Potato is a stem vegetable." },
+  { q: "Primary function of stem is to —", opts: ["Bear and hold leaves", "Absorb water and minerals", "Fixation of plants", "Help in vegetative reproduction"], ans: 0, exp: "Bear and hold leaves." },
+  { q: "The stem develops from —", opts: ["Hypocotyl", "Epicotyl", "Radicle", "Plumule"], ans: 3, exp: "Plumule." },
+  { q: "Stem tendrils (climbing in function) develop from axillary bud. Stem tendrils are in all of the following except —", opts: ["Cucumber", "Citrus", "Pumpkin", "Watermelon and gravenives"], ans: 1, exp: "Citrus has thorns." },
+  { q: "Thorn of Citrus and Bougainvillea is modified —", opts: ["Stem", "Root", "Leaf", "Inflorescence"], ans: 0, exp: "Stem." },
+  { q: "Thorn develops from —", opts: ["Axillary bud", "Terminal bud", "Leaf", "Root"], ans: 0, exp: "Axillary bud." },
+  { q: "Some plants of arid regions modify their stems into flattened (Opuntia), or fleshy cylindrical (Euphorbia) green structures called —", opts: ["Phyllode", "Rhizome", "Phylloclade", "Cladode"], ans: 2, exp: "Phylloclade." },
+  { q: "In Banana, Pineapple and Chrysanthemum, the lateral branches originate from the basal and underground portion of main stem and then come obliquely upward giving rise to leafy shoots. These branches are called —", opts: ["Runner", "Sucker", "Napiform", "Phylloclade"], ans: 1, exp: "Sucker." },
+  { q: "Offset is one internode long runner and its each node bears rosette of leaves and a tuft of roots. It is found in aquatic plants like —", opts: ["Hydrilla", "Pistia", "Eichhornia", "Both b and c"], ans: 3, exp: "Both b and c." },
+  { q: "In plants like Jasmine and Mint, a slender lateral branch arises from the base of main axis and after growing aerially for some time arch downwards to touch the ground and forms new plant. Such lateral branches are called —", opts: ["Offset", "Sucker", "Stolon", "Scramblers"], ans: 2, exp: "Stolon." },
+  { q: "In which of the following plants, underground stems spread to new niches and when older parts die new plants are formed —", opts: ["Pistia", "Grasses and strawberry", "Crocus", "None of these"], ans: 1, exp: "Grasses and strawberry." },
+  { q: "Leaves —", opts: ["originate from shoot apical meristem", "Are arranged in an acropetal order", "Are the most important vegetative organs for photosynthesis", "All"], ans: 3, exp: "All." },
+  { q: "Which of the following is correct?", opts: ["The leaf is a lateral, generally flattened structure on stem", "A typical leaf consists of three main parts (leafbase, petiole and lamina)", "Stipule is the lateral appendage of leafbase", "All"], ans: 3, exp: "All." },
+  { q: "Presence of sheathing leafbase covering the stem partially or wholly is the characteristic of certain —", opts: ["Monocots", "Fern", "Cycas", "Coconut"], ans: 0, exp: "Monocots." },
+  { q: "Leafbase is swollen to form pulvinus in —", opts: ["Some leguminous plants", "Some crucifers", "Some monocots", "Some cycads"], ans: 0, exp: "Some leguminous plants." },
+  { q: "What is the function of thin flexible petiole?", opts: ["It helps the plant to climb", "It increases the rate of respiration", "It allows leaf blade / lamina to flutter in wind thereby cooling the leaf and bringing fresh air to leaf surface", "It decreases the rate of transpiration"], ans: 2, exp: "Allows leaf blade to flutter in wind." },
+  { q: "Which of the following statements is false about leaf?", opts: ["A leaf is said to be simple, when its lamina is entire or when incised, the incisions do not touch the midrib", "A leaf is said to be compound when the incisions of lamina reach upto the midrib breaking into a number of leaflets", "Leaf is the most important vegetative organ for photosynthesis", "Leaf is not a transpiratory organ"], ans: 3, exp: "Leaf is a transpiratory organ." },
+  { q: "Multifoliate compound leaf (Palmate compound leaf) is found in —", opts: ["Tamarind", "Silkcotton (Bombax)", "Moringa", "Rose"], ans: 1, exp: "Silkcotton (Bombax)." },
+  { q: "In a Pinnate compound leaf (as seen in Neem) a number of leaflets are present on a common axis, the rachis. The rachis represents the —", opts: ["Petiole", "Midrib", "Lamina", "Stipule"], ans: 1, exp: "Midrib." },
+  { q: "Match Column I with Column II: A. Bud in the axil of leaf - I. Pitcher plant and Venus Fly trap; B. Bud is absent in the axil of leaflets - II. Cacti; C. Spines (modified leaves) - III. Compound leaf; D. Leaves modified to catch insects - IV. Simple leaf; E. Fleshy leaves with stored food - V. Garlic and onion", opts: ["A-IV, B-III, C-II, D-I, E-V", "A-III, B-IV, C-II, D-I, E-V", "A-IV, B-III, C-I, D-II, E-V", "A-IV, B-III, C-II, D-V, E-I"], ans: 0, exp: "A-IV, B-III, C-II, D-I, E-V." },
+  { q: "Arrangement of leaves on stem or its branches is called —", opts: ["Phyllotaxy", "Venation", "Vernation", "Heterophylly"], ans: 0, exp: "Phyllotaxy." },
+  { q: "Palmate compound leaf is the one in which the leaflets develop from a common point i.e. at the tip of —", opts: ["Rachis", "Branch of rachis", "Petiole", "peduncle"], ans: 2, exp: "Petiole." },
+  { q: "In which of the following plants, the leaves are small and short-lived, the petioles expand and become photosynthetic to form phyllode —", opts: ["Pitcher plant", "Bombax", "Australian Acacia", "Centella"], ans: 2, exp: "Australian Acacia." },
+  { q: "Leaves are modified into tendrils in —", opts: ["Parkinsonia", "Pea", "Ranunculus", "Oxalis"], ans: 1, exp: "Pea." },
+  { q: "Identify the order where plants show alternate, opposite and whorled phyllotaxy —", opts: ["China rose, Calotropis and Nerium", "China rose, Nerium and Calotropis", "Nerium, Calotropis and China rose", "Calotropis, China rose and Nerium"], ans: 0, exp: "China rose, Calotropis and Nerium." },
+  { q: "Arrangement of flowers on floral axis is called —", opts: ["Placentation", "Phyllotaxy", "Inflorescence", "Angiology"], ans: 2, exp: "Inflorescence." },
+  { q: "Inflorescence is meant for —", opts: ["Bearing flower", "Ensuring cross pollination", "Protection of flower", "Fruits formation"], ans: 1, exp: "Ensuring cross pollination." },
+  { q: "Racemose inflorescence is identified by —", opts: ["Acropetal arrangement of flowers on peduncle", "Presence of sessile flowers", "Continuous growth of main axis", "a and c"], ans: 3, exp: "a and c." },
+  { q: "Cymose inflorescence is identified by —", opts: ["Basipetal arrangement of flowers on the main axis (peduncle)", "The limited growth of the main axis as main axis terminates in a flower", "Both a and b", "Presence of sessile flower"], ans: 2, exp: "Both a and b." },
+  { q: "A flower is —", opts: ["A modified shoot", "The reproductive unit in angiosperms", "The reproductive unit of gymnosperms", "a and b"], ans: 3, exp: "a and b." },
+  { q: "Which of the following perianths are found?", opts: ["Lily", "China rose", "Rose", "Pea"], ans: 0, exp: "Lily." },
+  { q: "Which of the following flowers is not actinomorphic (radially symmetry)?", opts: ["Mustard", "Datura", "Chili", "Pea"], ans: 3, exp: "Pea is zygomorphic." },
+  { q: "Choose the incorrect match —", opts: ["Zygomorphic flowers (Bilateral symmetry) - pea, gulmohur, bean, Cassia", "Asymmetric (irregular flower) - Canna", "Inferior ovary - pea", "Superior ovary / Hypogynous flower - mustard, china rose and brinjal"], ans: 2, exp: "Pea has superior ovary." },
+  { q: "Which of the following is an incorrect match?", opts: ["Perigynous flower - Plum, rose and peach", "Monadelphous - Pea", "Epigynous flower - Guava, cucumber, and ray florets of sunflower", "Polyadelphous - Citrus"], ans: 1, exp: "Pea is diadelphous." },
+  { q: "Didynamous (2 long and 2 short stamens) condition is seen in —", opts: ["Salvia, Tulsi", "Litchi, pea", "Mustard, onion", "Datura, mango"], ans: 0, exp: "Salvia, Tulsi." },
+  { q: "Tetradynamous (2 short and 4 long stamens) condition is seen in —", opts: ["Salvia", "Mustard", "Datura", "China rose"], ans: 1, exp: "Mustard." },
+  { q: "Match the Column I with Column II: A. Gamosepalous - I. Flower of lily; B. Polysepalous - II. Sterile anther; C. Gamopetalous - III. Free petals; D. Polypetalous - IV. Free sepals; E. Epiphyllous - V. Fused petals; F. Staminode - VI. Fused sepals", opts: ["A-VI, B-IV, C-V, D-III, E-I, F-II", "A-IV, B-VI, C-V, D-III, E-I, F-II", "A-VI, B-IV, C-III, D-V, E-I, F-II", "A-VI, B-IV, C-V, D-III, E-II, F-I"], ans: 0, exp: "A-VI, B-IV, C-V, D-III, E-I, F-II." },
+  { q: "Match the Column I with Column II: (Aestivation in Corolla) A. Valvate - I. China rose, Lady's finger, cotton; B. Twisted - II. Calotropis; C. Imbricate - III. Cassia, Gulmohur; D. Vexillary (papillionaceous) - IV. Pea, Beans", opts: ["A-II, B-I, C-III, D-IV", "A-II, B-I, C-IV, D-III", "A-I, B-II, C-III, D-IV", "A-II, B-IV, C-I, D-III"], ans: 0, exp: "A-II, B-I, C-III, D-IV." },
+  { q: "Match the Column I with Column II: A. Calyx - I. Carpel or carpels; B. Corolla - II. Group of stamen; C. Androecium - III. Group of petals; D. Gynoecium - IV. Group of sepals", opts: ["A-IV, B-III, C-II, D-I", "A-I, B-II, C-III, D-IV", "A-IV, B-II, C-III, D-I", "A-I, B-III, C-II, D-IV"], ans: 0, exp: "A-IV, B-III, C-II, D-I." },
+  { q: "Match the Column I with Column II: A. Hypogynous flower - I. Margin of thalamus grows enclosing ovary completely and getting fused with it; B. Perigynous flower - II. Gynoecium is situated in the centre and other parts of flower are located on the rim of thalamus; C. Epigynous flower - III. Gynoecium occupies the highest position while other parts are below it", opts: ["A-III, B-II, C-I", "A-I, B-II, C-III", "A-II, B-I, C-III", "A-III, B-I, C-II"], ans: 0, exp: "A-III, B-II, C-I." },
+  { q: "Pollen receptor in gynoecium is its —", opts: ["Ovary", "Style", "Stigma", "Thalamus"], ans: 2, exp: "Stigma." },
+  { q: "Which of the following statements is incorrect?", opts: ["Gynoecium (female reproductive part of the flower) is made up of one or more carpels", "A carpel consists of stigma, style and ovary", "Stigma connects with ovule", "Style connects the ovary to the stigma"], ans: 2, exp: "Stigma connects with ovule." },
+  { q: "Which of the following combinations is false?", opts: ["Apocarpous - Carpels free - Lotus, Rose", "Syncarpous - Carpels fused - Mustard, tomato", "Placenta - arrangement of ovules within ovary", "Arrangement of ovules within ovary - ovulation"], ans: 3, exp: "Arrangement of ovules within ovary - placentation." },
+  { q: "In marginal placentation, the ovules are arranged —", opts: ["Along the inner wall of the carpel in a syncarpous ovary", "Along the margin of single carpel", "In the middle of the ovary", "To the base of the ovary"], ans: 1, exp: "Along the margin of single carpel." },
+  { q: "Axile placentation is found in syncarpous ovaries. In this placentation the ovules are arranged along the —", opts: ["Base of the ovary", "Margin of the ovary", "Axis in the centre of the ovary", "None of the above"], ans: 2, exp: "Axis in the centre of the ovary." },
+  { q: "In a multicarpellary syncarpous unilocular ovary, if the ovules are arranged in a column (in the centre) this is defined as —", opts: ["Marginal placentation", "Parietal placentation", "Axile placentation", "Free central placentation"], ans: 3, exp: "Free central placentation." },
+  { q: "Basal placentation develops when the ovary has —", opts: ["Single ovule", "Many ovules", "Many locules", "Single ovule in each locale"], ans: 0, exp: "Single ovule." },
+  { q: "Ovary is one chambered but it may be two or more chambered due to formation of the false septa and ovules develop on the inner wall of the ovary or on peripheral part. In this case placentation is —", opts: ["Parietal", "Marginal", "Axile", "Basal"], ans: 0, exp: "Parietal." },
+  { q: "The fruit is a characteristic of —", opts: ["Gymnosperms only", "Dicots only", "Monocots only", "Flowering plants only"], ans: 3, exp: "Flowering plants only." },
+  { q: "The formation of fruit from ovary without fertilization is called —", opts: ["Parthenogenesis", "Apomixis", "Parthenocarpy", "Amphimixis"], ans: 2, exp: "Parthenocarpy." },
+  { q: "Parthenocarpic fruit is a —", opts: ["Seeded fruit", "Seedless fruit", "Single seeded fruit", "Fruit of no use"], ans: 1, exp: "Seedless fruit." },
+  { q: "The wall of fruit is called —", opts: ["Epicarp", "Sporocarp", "Pericarp", "Cytocarp"], ans: 2, exp: "Pericarp." },
+  { q: "Pericarp is —", opts: ["Always dry", "Always fleshy", "May be dry or fleshy", "Neither fleshy nor dry"], ans: 2, exp: "May be dry or fleshy." },
+  { q: "Thick and fleshy pericarp is differentiated into —", opts: ["Epicarp and endocarp", "Epicarp, mesocarp and endocarp", "Epicarp and sporocarp", "Sporocarp and cystocarp"], ans: 1, exp: "Epicarp, mesocarp and endocarp." },
+  { q: "In mango and coconut, fruit is known as a —", opts: ["Legume", "Drupe", "Nut", "Cystocarp"], ans: 1, exp: "Drupe." },
+  { q: "In mango and coconut, the fruit (drupe) develops from —", opts: ["Monocarpellary superior ovaries and are one seeded", "Monocarpellary superior ovaries and are many seeded", "Polycarpellary superior ovaries and is one seeded", "Polycarpellary superior ovaries and are many seeded"], ans: 0, exp: "Monocarpellary superior ovaries and are one seeded." },
+  { q: "In coconut —", opts: ["Mesocarp is fibrous", "endosperm is edible", "Both", "Mesocarp is edible"], ans: 2, exp: "Both." },
+  { q: "In mango —", opts: ["Mesocarp is edible", "Endocarp is stony and hard", "Both a and b", "Endocarp is edible"], ans: 2, exp: "Both a and b." },
+  { q: "Which of the following statements is correct?", opts: ["The ovules after fertilization, develop into seeds", "A seed consists of a seed coat and an embryo", "The embryo consists of a radicle, an embryonal axis and one or 2 cotyledons", "All"], ans: 3, exp: "All." },
+  { q: "One cotyledon is found in —", opts: ["Wheat and maize", "Gram and pea", "Bean and gram", "Ground nut and pea"], ans: 0, exp: "Wheat and maize." },
+  { q: "The seedcoat has 2 layers, the outer and inner The is a scar on the seedcoat through which the developing seeds are attached to the fruit. Above the is a small pore called the —", opts: ["Testa, tegmen, hilum, hilum, micropyle", "Tegmen, testa, hilum, hilum, micropyle", "Testa, tegmen, micropyle, micropyle, hilum", "Tegmen, testa, micropyle, micropyle, hilum"], ans: 0, exp: "Testa, tegmen, hilum, hilum, micropyle." },
+  { q: "At the two ends of the embryonal axis, are present in dicot seeds —", opts: ["The endosperm", "Coleorrhiza and coleoptile", "Radicle and plumule", "Epicarp"], ans: 2, exp: "Radicle and plumule." },
+  { q: "In castor, the food storing tissue is —", opts: ["Cotyledon", "Endosperm", "Testa", "Tegmen"], ans: 1, exp: "Endosperm." },
+  { q: "Which of the following is not non-endospermous seed (in matured condition)?", opts: ["Pea", "Gram", "Castor", "Bean"], ans: 2, exp: "Castor is endospermous." },
+  { q: "Find out the false statement —", opts: ["In dicotyledonous seeds, cotyledons are often fleshy and full of reserve food", "Generally, monocotyledonous seeds are endospermic", "Generally, dicotyledonous seeds are non-endospermic", "Most of the monocotyledonous seeds have fleshy cotyledons"], ans: 3, exp: "Most of the monocotyledonous seeds have fleshy cotyledons." },
+  { q: "Which of the following monocotyledonous seeds is non-endospermic?", opts: ["Maize", "Coconut", "Orchid", "Wheat"], ans: 2, exp: "Orchid." },
+  { q: "Maize grain is a —", opts: ["Seed", "Fruit", "Flower", "Inflorescence"], ans: 1, exp: "Fruit." },
+  { q: "The aleurone layer in maize grain is specially rich in —", opts: ["Proteins", "Starch", "Lipids", "Auxins"], ans: 0, exp: "Proteins." },
+  { q: "The structure coleorrhiza in a maize grain is the covering of —", opts: ["Radicle", "Plumule", "Scutellum", "Aleurone layer"], ans: 0, exp: "Radicle." },
+  { q: "In a cereal grain, the single cotyledon (shield shaped) of embryo is represented by —", opts: ["Coleoptile", "Coleorhiza", "Scutellum", "Prophyl"], ans: 2, exp: "Scutellum." },
+  { q: "Plumule is covered by —", opts: ["Root cap", "Coleorrhiza", "Coleoptile", "Hypocotyl"], ans: 2, exp: "Coleoptile." },
+  { q: "Match the Column I with Column II and choose the correct answers: A. Coleorrhiza - 1. Grapes; B. Food storing tissue - 2. Mango; C. Parthenocarpic fruit - 3. Maize; D. Single seeded fruit developing from monocarpellary superior ovary - 4. Radicle; E. Membranous seed coat - 5. Endosperm", opts: ["A-3, B-1, C-4, D-2, E-5", "A-4, B-2, C-5, D-1, E-3", "A-5, B-1, C-3, D-4, E-2", "A-4, B-5, C-1, D-2, E-3"], ans: 3, exp: "A-4, B-5, C-1, D-2, E-3." },
+  { q: "Scutellum is the first leaf of —", opts: ["Monocot", "Dicot", "Gymnosperm", "Pteridophytes"], ans: 0, exp: "Monocot." },
+  { q: "Match the Column I with Column II: A. Pneumatophores - (i) Encloses radicle; B. Stilt roots - (ii) Ovary is inferior; C. Outer layer of seed coat of a dicotyledonous seed - (iii) Ovary is superior; D. Coleoptile - (iv) Brinjal; E. Hypogynous condition - (v) Rhizophora; F. Epipelatous condition - (vi) Maize; G. Coleorrhiza - (vii) Encloses plumule; H. Epigynous condition - (viii) Testa; I. Inner layer of seed coat of a dicotyledonous seed - (ix) Tegmen", opts: ["A-(iv), B-(v), C-(viii), D-(vii), E-(vi), F-(iii), G-(i), H-(ii), I-(ix)", "A-(v), B-(vi), C-(viii), D-(vii), E-(iii), F-(iv), G-(i), H-(ii), I-(ix)", "A-(i), B-(ii), C-(iii), D-(vii), E-(vi), F-(v), G-(iv), H-(viii), I-(ix)", "A-(ix), B-(viii), C-(vii), D-(vi), E-(i), F-(ii), G-(iii), H-(iv), I-(v)"], ans: 1, exp: "A-(v), B-(vi), C-(viii), D-(vii), E-(iii), F-(iv), G-(i), H-(ii), I-(ix)." },
+  { q: "Match the Column I with Column II: (i) Coconut - A. Edible mesocarp; (ii) Mango - B. Endospermous seed; (iii) Bean - C. Fibrous mesocarp; (iv) Castor - D. Non endospermous seed; (v) Future fruit - E. Ovules; (vi) Future seed - F. Ovary", opts: ["A-(ii), B-(iv), C-(i), D-(iii), E-(vi), F-(v)", "A-(i), B-(ii), C-(v), D-(ii), E-(iii), F-(v)", "A-(vi), B-(v), C-(iv), D-(iii), E-(ii), F-(i)", "A-(ii), B-(iv), C-(i), D-(iii), E-(vi), F-(v)"], ans: 0, exp: "A-(ii), B-(iv), C-(i), D-(iii), E-(vi), F-(v)." },
+  { q: "Find out the False statement from below ones — I. Calyx and corolla are reproductive organs of a flower. II. Zygomorphic flower can be divided into two equal radial halves in any radial plane. III. Flowers without bracts are termed as bracteate. IV. Parthenocarpic fruit is formed after fertilization of the ovary. V. In legumes seed is non-endospermic. VI. Ovary is inferior in Fabaceae. VII. A fertile stamen is called staminode. VIII. Radical buds develop on roots.", opts: ["I, II, III, IV, VI, VII", "I, II, V, VIII", "III, IV, VIII", "IV, V, VIII"], ans: 0, exp: "I, II, III, IV, VI, VII." },
+  { q: "Zygomorphic condition can be represented as —", opts: ["⊕", "%", "P", "G"], ans: 1, exp: "%." },
+  { q: "Syncarpous, hypogynous, trilocular ovary with axile placentation is found in —", opts: ["Liliaceae", "Cucurbitaceae", "Ranunculaceae", "None of these"], ans: 0, exp: "Liliaceae." },
+  { q: "One of the following statement is not applicable to Solanaceae —", opts: ["Adnation (epipetalous)", "Swollen axile placenta", "Bicarpellary superior ovary", "Monocarpellary superior ovary"], ans: 3, exp: "Monocarpellary superior ovary." },
+  { q: "Pentamerous, actinomorphic flowers, bicarpellary ovary with oblique septa and fruit as a capsule or berry a characteristic feature of —", opts: ["Liliaceae", "Asteraceae", "Brassicaceae", "Solanaceae"], ans: 3, exp: "Solanaceae." },
+  { q: "Which of the following is characteristic feature of Fabaceae?", opts: ["Descending imbricate, ten stamens, diadelphous, ovary inferior", "Sepals five, gamosepalous, imbricate aestivation, axile placentation", "Vexillary aestivation of corolla, diadelphous stamens and monocarpellary, unilocular ovary", "Persistent calyx, epipetalous stamens and leguminous fruit"], ans: 2, exp: "Vexillary aestivation of corolla, diadelphous stamens and monocarpellary, unilocular ovary." },
+  { q: "In floral formula, (K) denotes —", opts: ["Polysepalous", "Gamosepalous", "Polypetalous", "Gamopetalous"], ans: 1, exp: "Gamosepalous." },
+  { q: "Androecium in Hibiscus is —", opts: ["Didynamous, monothecous", "Monoadelphous and monothecous", "Dialelphous and bithecous", "Polyadephous and monothecous"], ans: 1, exp: "Monoadelphous and monothecous." },
+  { q: "Trimerous flowers, superior ovary axile placentation is characteristic of —", opts: ["Liliaceae", "Papilionaceae", "Cucurbitaceae", "Solanaceae"], ans: 0, exp: "Liliaceae." },
+  { q: "Which of the following represents the floral characters of Liliaceae?", opts: ["Six tepals, zygomorphic, six stamens, bilocular ovary, axile placentation", "Tetramerous, actinomorphic, polyphyllous, unilocular ovary, axile placentation", "Trimerous, actinomorphic, polyandrous, superior ovary, axile placentation", "Bisexual, zygomorphic, gamophyllous, inferior ovary, marginal placentation"], ans: 2, exp: "Trimerous, actinomorphic, polyandrous, superior ovary, axile placentation." },
+  { q: "The number and arrangement of stamens in a Papilionaceous taxon is —", opts: ["A10", "Aα", "A(g)+1", "A5"], ans: 2, exp: "A(g)+1." },
+  { q: "To which family does pulse belong?", opts: ["Gramineae", "Solanaceae", "Liliaceae", "Leguminosae"], ans: 3, exp: "Leguminosae." },
+  { q: "Belladona is the drug alkaloid extracted from the leaves of —", opts: ["Datura stramonium", "Solanum tuberosum", "Atropa belladona, Solanaceae", "Rauwolfia serpentina"], ans: 2, exp: "Atropa belladona, Solanaceae." },
+  { q: "Neel is obtained from —", opts: ["Crocus sativus", "Haematoxylon compechianum", "Indigofera tinctoria", "Aconitum heterophyllum"], ans: 2, exp: "Indigofera tinctoria." },
+  { q: "Pisum sativum (pea), Solanum nigrum (mokoi), Allium cepa (onion). The above species belong to which of the following families respectively —", opts: ["Liliaceae, Compositae, Malvaceae", "Fabaceae, Solanaceae, Liliaceae", "Solanaceae, Fabaceae, Liliaceae", "Malvaceae, Solanaceae, Liliaceae"], ans: 1, exp: "Fabaceae, Solanaceae, Liliaceae." },
+  { q: "Which of the following members of family Solanaceae is fumigatory?", opts: ["Chilli, Petunia", "Tobacco", "Belladona", "Tomato, brinjal, potato"], ans: 1, exp: "Tobacco." },
+  { q: "Which of the following is a subfamily of family Leguminosae?", opts: ["Papilionoideae / Fabaceae", "Solanaceae", "Liliaceae", "None"], ans: 0, exp: "Papilionoideae / Fabaceae." },
+  { q: "Which of the following is a monocot family?", opts: ["Solanaceae", "Fabaceae", "Liliaceae", "None"], ans: 2, exp: "Liliaceae." },
+  { q: "Match the Column I with Column II: (Members of Fabaceae) A. Gram, sem, moong, soyabean - I. Medicine; B. Soyabean, groundnut - II. Ornamentals; C. Indigofera - III. Fodder; D. Sunhemp - IV. Fibres; E. Sesbania, Trifolium - V. Dye; F. Lupin, Sweet pea - VI. Edible oil; G. Muliathi - VII. Pulses", opts: ["A-I, B-II, C-III, D-IV, E-V, F-VI, G-VII", "A-VII, B-VI, C-V, D-IV, E-III, F-II, G-I", "A-II, B-IV, C-VI, D-I, E-III, F-V, G-VII", "A-I, B-III, C-V, D-VII, E-II, F-IV, G-VI"], ans: 1, exp: "A-VII, B-VI, C-V, D-IV, E-III, F-II, G-I." },
+  { q: "Which of the following is not the member of Liliaceae —", opts: ["Tulip, Gloriosa, Aloe", "Colchicum", "Pisum", "Asparagus"], ans: 2, exp: "Pisum." },
+  { q: "Which of the following is a medicinal plant —", opts: ["Aloe", "Asparagus", "Colchicum", "Tulip"], ans: 0, exp: "Aloe." },
+  { q: "Colchicine is obtained from a member of —", opts: ["Solanaceae", "Liliaceae", "Fabaceae", "Brassicaceae"], ans: 1, exp: "Liliaceae." },
+  { q: "A dot on the top of the floral diagram indicates —", opts: ["Stem", "Mother axis", "Father axis", "Floral plants"], ans: 1, exp: "Mother axis." },
+  { q: "⊕ and % indicate —", opts: ["Zygomorphic and actinomorphic flowers", "Actinomorphic and zygomorphic flowers", "Hypogynous and epigynous flowers", "None"], ans: 1, exp: "Actinomorphic and zygomorphic flowers." },
+  { q: "The character of flower which is represented by floral formula but not by floral diagram is —", opts: ["Aestivation", "Placentation", "Position of gynoecium", "Adhesion of stamen"], ans: 2, exp: "Position of gynoecium." },
+  { q: "A longitudinal or vertical section of the flower indicates —", opts: ["Type of pollination", "Arrangement of members in a whorl", "Number of floral parts in whorls", "Manner of insertion of parts in different whorls"], ans: 3, exp: "Manner of insertion of parts in different whorls." },
+  { q: "Thalamus is —", opts: ["Base of flower", "Base of ovary", "Modification of pollen", "modification of petal"], ans: 0, exp: "Base of flower." },
+  { q: "The character of flower which is represented by floral diagram but not by floral formula is —", opts: ["Aestivation and placentation", "Position of gynoecium and adhesion of stamen", "Fused sepals", "Fused petals"], ans: 0, exp: "Aestivation and placentation." },
+  { q: "Persistent calyx is the character of plants belonging to —", opts: ["Solanaceae", "Malvaceae", "Cruciferae", "Asteraceae"], ans: 0, exp: "Solanaceae." },
+  { q: "The \"Eyes\" of the potato tuber are —", opts: ["Axillary buds", "Root buds", "Flower buds", "Shoot buds"], ans: 0, exp: "Axillary buds." },
+  { q: "Which one of the following statements is correct?", opts: ["Flower of tulip is a modified shoot", "In tomato, fruit is a capsule", "Seeds of orchids have oil-rich endosperms", "Placentation in primose is basal"], ans: 0, exp: "Flower of tulip is a modified shoot." },
+  { q: "The ovary is half inferior in flowers of —", opts: ["Guava", "Peach", "Cucumber", "Cotton"], ans: 1, exp: "Peach." },
+  { q: "Flowers are Zygomorphic in —", opts: ["Datura", "Mustard", "Gulmohur", "Tomato"], ans: 2, exp: "Gulmohur." },
+  { q: "Whorled, simple leaves with reticulate venation are present in —", opts: ["Calotropis", "Neem", "China Rose", "Alstonia"], ans: 3, exp: "Alstonia." },
+  { q: "Sweet potato is homologous to —", opts: ["Potato", "Colocasia", "Ginger", "Turnip"], ans: 3, exp: "Turnip." },
+  { q: "Which one of the following organisms is correctly matched with its three characteristics?", opts: ["Pea : C pathway, Endospermic seed, Vexillary aestivation", "Tomato : Twisted aestivation, Axile placentation, Berry", "Onion : Bulb, Imbricate aestivation, Axile placentation", "Maize : C pathway, Closed vascular bundles, Scutellum"], ans: 3, exp: "Maize : C pathway, Closed vascular bundles, Scutellum." },
+  { q: "How many plants in the list given below have marginal placentation? Mustard, Gram, Tulip, Asparagus, Arhar, Sun hemp, Chilli, Colchicine, Onion, Moong, Pea, Tobacco, Lupin", opts: ["Four", "Five", "Six", "Three"], ans: 2, exp: "Six." },
+  { q: "Read the following four statements (A-D): (A) Both, photophosphorylation and oxidative phosphorylation involve uphill transport of protons across the membrane. (B) In dicot stems, a new cambium originates from cells of pericycle at the time of secondary growth.", opts: ["Statement A is correct, B is wrong", "Statement B is correct, A is wrong", "Both A and B are correct", "Both A and B are wrong"], ans: 3, exp: "Both A and B are wrong." },
+  { q: "Identify the set of characteristics related to plants belonging to family Fabaceae from the following.", opts: ["Papilionaceous corolla, axile placentation and leguminous fruit", "Actionomorphic flower, syncarpous ovary and marginal placentation", "Vexillary aestivation of corolla, diadelphous stamens and monocarpellary, unilocular ovary", "Persistent calyx, epipelatous stamens and leguminous fruit"], ans: 2, exp: "Vexillary aestivation of corolla, diadelphous stamens and monocarpellary, unilocular ovary." },
+  { q: "Match the vegetative propagules listed under Column - I with the plants given under Column - II: A. Rhizome - p. Agave; B. Offset - q. Bryophyllum; C. Sucker - r. Ginger; D. Leaf buds - s. Chrysanthemum; t. Eichhornia", opts: ["A - r, B - t, C - s, D - q", "A - r, B - s, C - p, D - q", "A - q, B - p, C - t, D - s", "A - s, B - t, C - q, D - r"], ans: 0, exp: "A - r, B - t, C - s, D - q." },
+  { q: "The common characteristics between tomato and potato will be maximum at the level of their —", opts: ["Genus", "Family", "Order", "Division"], ans: 1, exp: "Family." },
+  { q: "Among flowers of Calotropis, tulip, Sesbania, Asparagus, Colchicine, Sweet pea, Petunia, Indigofera, Mustard, Soybean, Tobacco and groundnut how many plants have corolla with valvate aestivation?", opts: ["Five", "Six", "Seven", "Eight"], ans: 1, exp: "Six." },
+  { q: "How many plants among China rose, Ocimum, sunflower, mustard, Alstonia, guava, Calotropis and Nerium (Oleander) have opposite phyllotaxy?", opts: ["Two", "Three", "Four", "Five"], ans: 1, exp: "Three." },
+  { q: "In a cymose inflorescence the main axis —", opts: ["Terminates in a flower", "Has unlimited growth", "Bears a solitary flower", "Has unlimited growth but lateral branches end in flowers"], ans: 0, exp: "Terminates in a flower." },
+  { q: "Inflorescence is racemose in —", opts: ["Soyabean", "Brinjal", "Tulip", "Aloe"], ans: 1, exp: "Brinjal." },
+  { q: "Albuminous seeds store their reserve food mainly in —", opts: ["Perisperm", "Endosperm", "Cotyledons", "Hypocotyl"], ans: 1, exp: "Endosperm." },
+  { q: "Out of following structures how many come under vegetative propagules? Zoospores, Conidia, Gemmules, Runners, Tubers, Offset, Rhizomes", opts: ["4", "6", "3", "7"], ans: 0, exp: "4." },
+  { q: "Which among the following are wrong statements? I. In cymose inflorescence flowers are borne in a basipetal manner. II. In rose, flowers are epigynous. III. In Alstonia, the phyllotaxy is whorled. IV. Potato is an underground root for food storage.", opts: ["I and II", "II and IV", "I, II and III", "II, III and IV"], ans: 1, exp: "II and IV." },
+  { q: "In one plant, underground stems are modified to store food and in another plant, the stem tendrils develop axillary buds to help plants climb. They are —", opts: ["ginger, cucumber", "carrot, jasmine", "sweet potato, Bougainvillea", "Opuntia, Eichhornia"], ans: 0, exp: "ginger, cucumber." },
+  { q: "Consider the following statements. A. In leguminous plants, leaf base becomes swollen, called pulvinus. B. The fleshy leaves of onion and garlic store food. C. The buds in Australian Acacia tree become green and synthesise food. D. In Alstonia, leaves show alternate phyllotaxy. Of the above statements.", opts: ["B and D are correct", "A and C are correct", "A and B are correct", "A and D are correct"], ans: 2, exp: "A and B are correct." },
+  { q: "Which of these is an example for a zygomorphic flower with diadelphous stamens and marginal placentation —", opts: ["Pea", "Lemon", "Brinjal", "Cucumber"], ans: 0, exp: "Pea." },
+  { q: "Select the wrongly matched pair.", opts: ["Fibre - Sunhemp", "Spice - Belladonna", "Edible oil - Groundnut", "Fodder - Trifolium"], ans: 1, exp: "Spice - Belladonna." },
+  { q: "Match the modification in Column I with the part modified in Column II: A. Pneumatophores in Rhizophora - (i) Axillary buds; B. Tendrils in pea - (ii) Roots; C. Thorns in Citrus - (iii) Leaves", opts: ["A - (ii), B - (i), C - (iii)", "A - (iii), B - (i), C - (ii)", "A - (iii), B - (ii), C - (i)", "A - (ii), B - (iii), C - (i)"], ans: 3, exp: "A - (ii), B - (iii), C - (i)." },
+  { q: "In ginger, vegetative propagation occurs through —", opts: ["bulbils", "runners", "rhizome", "offsets"], ans: 2, exp: "rhizome." },
+  { q: "Keel is the characteristic feature of flower of —", opts: ["Aloe", "Tomato", "Tulip", "Indigofera"], ans: 3, exp: "Indigofera." },
+  { q: "Transmission tissue is characteristic feature of —", opts: ["Dry stigma", "Wet stigma", "Hollow style", "Solid style"], ans: 3, exp: "Solid style." },
+  { q: "Axile placentation is present in —", opts: ["Pea, China rose", "Argemone, Brassica", "Dianthus, Mangifera", "Lemon, China rose"], ans: 3, exp: "Lemon, China rose." },
+  { q: "Which one of the following fruits is parthenocarpic?", opts: ["Jackfruit", "Banana", "Brinjal", "Apple"], ans: 1, exp: "Banana." },
+  { q: "Roots play insignificant role in absorption of water in —", opts: ["Pea", "Wheat", "Sunflower", "Pistia"], ans: 3, exp: "Pistia." },
+  { q: "Flowers are unisexual in —", opts: ["China rose", "Onion", "Pea", "Cucumber"], ans: 3, exp: "Cucumber." },
+  { q: "Gynoecium occupies the highest position while other parts are situated below in —", opts: ["Mustard", "China rose", "Brinjal", "All of the above"], ans: 3, exp: "All of the above." },
+  { q: "The standard petal of a papilionaceous corolla is also called :", opts: ["Carina", "Pappus", "Vexillum", "Corona"], ans: 2, exp: "Vexillum." },
+  { q: "Tricarpellary syncarpous gynoecium is found in flowers of :", opts: ["Liliaceae", "Solanaceae", "Fabaceae", "Poaceae"], ans: 0, exp: "Liliaceae." },
+  { q: "Which of the following is not a stem modification?", opts: ["Pitcher of Nepenthes", "Thorns of citrus", "Tendrils of cucumber", "Flattened structures of Opuntia"], ans: 0, exp: "Pitcher of Nepenthes." },
+  { q: "Stem's modified into flat green organs performing the functions of leaves are known as :", opts: ["Cladodes", "Phyllodes", "Phylloclades", "Scales"], ans: 2, exp: "Phylloclades." },
+  { q: "Match column- I with column- II and select the correct option using the codes given below: (a) Pistils fused together - (i) Gametogenesis; (b) Formation of gametes - (ii) Pistillate; (c) Hyphae of higher Ascomycetes - (iii) Syncarpous; (d) Unisexual female flower - (iv) Dikaryotic", opts: ["i ii iv iii", "iii i iv ii", "iv iii i ii", "ii i iv iii"], ans: 1, exp: "iii i iv ii." },
+  { q: "The term 'polyadelphous' is related to :", opts: ["Corolla", "Calyx", "Gynoecium", "Androecium"], ans: 3, exp: "Androecium." },
+  { q: "How many plants among Indigofera, Sesbania, Salvia, Allium, Aloe, mustard, groundnut, radish, gram and turnip have stamens with different lengths in their flowers?", opts: ["Five", "Six", "Three", "Four"], ans: 1, exp: "Six." },
+  { q: "Radial symmetry is found in the flowers of :", opts: ["Pisum", "Cassia", "Brassica", "Trifolium"], ans: 2, exp: "Brassica." },
+  { q: "Free- central placentation is found in :", opts: ["Brassica", "Citrus", "Dianthus", "Argemone"], ans: 2, exp: "Dianthus." },
+  { q: "Which one of the following statements is not correct?", opts: ["In potato, banana and ginger, the plantlets arise from the internodes present in the modified stem", "Water hyacinth, growing in the standing water, drains oxygen from water that leads to the death of fishes", "Offspring produced by the asexual reproduction are called clone", "Microscopic, motile asexual reproductive structures are called zoospores"], ans: 0, exp: "In potato, banana and ginger, the plantlets arise from the internodes present in the modified stem." },
+  { q: "Coconut fruit is a :", opts: ["Berry", "Nut", "Capsule", "Drupe"], ans: 3, exp: "Drupe." },
+  { q: "In Bougainvillea thorns are the modifications of :", opts: ["Adventitious root", "Stem", "Leaf", "Stipules"], ans: 1, exp: "Stem." },
+  { q: "Root hairs develop from the region of :", opts: ["Elongation", "root cap", "Meristematic activity", "Maturation"], ans: 3, exp: "Maturation." },
+  { q: "Plants which produce characteristic pneumatophores and show vivipary belong to :", opts: ["Halophytes", "Psammophytes", "Hydrophytes", "Mesophytes"], ans: 0, exp: "Halophytes." },
+  { q: "The morphological nature of the edible part of coconut is :", opts: ["Cotyledon", "Endosperm", "Pericarp", "Perisperm"], ans: 1, exp: "Endosperm." },
+  { q: "Plants with inferior ovary always bear :", opts: ["pseudocaps", "berries", "aggregate fruits", "seedless fruits"], ans: 0, exp: "pseudocaps." },
+  { q: "Which of the following is the correct combination of merits of an inflorescence?", opts: ["Flowers can be unisexual", "Increased efficiency of pollination", "During flower and fruit development they provide nutrients to the developing flowers and fruits", "None"], ans: 1, exp: "Increased efficiency of pollination." },
+  { q: "Identify the correct statement:", opts: ["Hypogynous flowers have inferior ovary", "Perigynous flowers have inferior ovary", "Hypogynous flowers have superior ovary", "Epigynous flowers have superior ovary"], ans: 2, exp: "Hypogynous flowers have superior ovary." },
+  { q: "Distinguishing feature of angiospermic family Solanaceae are all, except —", opts: ["Syncarpous ovary with swollen placenta", "Synandrous epipelatous stamens", "Persistent calyx with valvate aestivation", "Berry or capsule fruits with many endospermous seeds"], ans: 1, exp: "Synandrous epipelatous stamens." },
+  { q: "Androecium of Papilionaceae and Malvaceae family is :", opts: ["Monadelphous and Diadelphous", "Diadelphous and Monadelphous", "Diadelphous and Polyadelphous", "Monadelphous and Polyadelphous"], ans: 1, exp: "Diadelphous and Monadelphous." },
+  { q: "Which of the following statement is correct?", opts: ["In tomato fruit is a capsule", "Seeds of orchids have oily endosperm", "Placentation in Dianthus is free central", "Tetradynamous condition is found in pea"], ans: 2, exp: "Placentation in Dianthus is free central." },
+  { q: "Root shows negative geotropism in :", opts: ["Pothos", "Ficus", "Rhizophora", "Grasses"], ans: 2, exp: "Rhizophora." },
+  { q: "Which of the following statements are correct for Euphorbia? I. Leaves modified into spines. II. Stem modified into leaf like organ. III. Cyathium inflorescence. IV. Ratio of male and female flowers is one : many respectively.", opts: ["I, II, III and IV", "I, II and III", "Only I", "Only III and IV"], ans: 1, exp: "I, II and III." },
+  { q: "Pneumatophores occur in —", opts: ["Carnivorous plants", "Free- floating hydrophytes", "Halophytes", "Submerged hydrophytes"], ans: 2, exp: "Halophytes." },
+  { q: "Sweet potato is a modified —", opts: ["Tap root", "Adventitious root", "Stem", "Rhizome"], ans: 1, exp: "Adventitious root." },
+  { q: "Floral features are commonly used for identification of angiosperms because —", opts: ["Reproductive parts are more conservative", "Flowers can be safely pressured", "Flowers are nice to work with", "Flowers have various colours and scents"], ans: 0, exp: "Reproductive parts are more conservative." },
+  { q: "Which of the following group of plants have non endospermic seed?", opts: ["Pea, Bean, Castor, Wheat", "Gram, Bean, Orchid, Pea", "Gram, Bean, Castor, Wheat", "Orchid, Pea, Castor, Wheat"], ans: 1, exp: "Gram, Bean, Orchid, Pea." },
+  { q: "How many plant in the list given below have axile placentation? Mustard, Gram, Tulip, Sunhemp, Chilli, Colchicine, Tomato, Lemon, Argemone, China rose, Dianthus, Sunflower.", opts: ["Six", "Three", "Four", "Five"], ans: 0, exp: "Six." },
+  { q: "Aggregate fruit develops from :", opts: ["Multicarpellary, apocarpous gynoecium", "Syncarpous ovary", "Multicarpellary, syncarpous gynoecium", "Monocarpellary ovary"], ans: 0, exp: "Multicarpellary, apocarpous gynoecium." },
+  { q: "Match the following and choose correct option: Group A: (A) Monadelphous androecium, (B) Diadelphous androecium, (C) Epipelatous stamens, (D) Epiphyllous stamens; Group B: (i) Liliaceae, (ii) Solanaceae, (iii) Fabaceae, (iv) Malvaceae", opts: ["A-(iv), B-(iii), C-(ii), D-(i)", "A-(iv), B-(iii), C-(i), D-(ii)", "A-(iii), B-(iv), C-(ii), D-(i)", "A-(iii), B-(ii), C-(iv), D-(i)"], ans: 0, exp: "A-(iv), B-(iii), C-(ii), D-(i)." },
+  { q: "Natural system of classification of following plant is based on similarities and differences in — I. Flower morphology. II. Sequence of nucleotides in mitochondrial DNA. III. Nature and arrangement of vascular strands. IV. Fruit and seed morphology.", opts: ["I, II and IV", "I and IV only", "Only II", "Only I"], ans: 0, exp: "I, II and IV." },
+  { q: "A dicotyledenous plant bears flowers but never produces fruits and seeds. The most probable cause for the above situation is —", opts: ["Plant is dioecious and bears only pistillate flowers", "Plant is dioecious and bears both pistillate and staminate flowers", "Plant is monoecious", "Plant is dioecious and bears only staminate flowers"], ans: 3, exp: "Plant is dioecious and bears only staminate flowers." },
+  { q: "In the left vascular bundles are found in the —", opts: ["Veins", "Palisade parenchyma", "Spongy parenchyma", "All"], ans: 0, exp: "Veins." },
+  { q: "Find incorrect match:", opts: ["Fleshy leaves - onion", "Underground stem - Turmeric", "Racemose - Solanum", "Phylloclade - Euphorbia"], ans: 2, exp: "Racemose - Solanum." },
+  { q: "Match the following: (a) Siliqua - (i) Lycopersicum esculentum; (b) Caryopsis - (ii) Triticum aestivum; (c) Berry - (iii) Helianthus annuus; (d) Cypsela - (iv) Brassica campestris", opts: ["a-ii, b-1, c-iii, d-iv", "a-1, b-ii, c-iii, d-iv", "a-iv, b-ii, c-1, d-iii", "a-iii, b-ii, c-1, d-iv"], ans: 2, exp: "a-iv, b-ii, c-1, d-iii." },
+  { q: "Match the placental types (column-1) with their examples (column-11): A. Basal - (i) Mustard; B. Axile - (ii) China rose; C. Parietal - (iii) Dianthus; D. Free central - (iv) Sunflower", opts: ["A- (iii), B- (iv), C- (i), D- (ii)", "A- (ii), B- (iii), C- (iv), D- (i)", "A- (i), B- (ii), C- (iii), D- (iv)", "A- (iv), B- (ii), C- (i), D- (iii)"], ans: 3, exp: "A- (iv), B- (ii), C- (i), D- (iii)." },
+  { q: "Which of the following shows whorled phyllotaxy?", opts: ["Calotropis", "Mustard", "China rose", "Alstonia"], ans: 3, exp: "Alstonia." },
+  { q: "Bicarpellary ovary with obliquely placed septum is seen in:", opts: ["Sesbania", "Brassica", "Aloe", "Solanum"], ans: 3, exp: "Solanum." },
+  { q: "Placentation in which ovules develop on the inner wall of the ovary or in peripheral part, is —", opts: ["Basal", "Axile", "Parietal", "Free central"], ans: 2, exp: "Parietal." },
+  { q: "What is the site of perception of photoperiod necessary for induction of flowering in plants?", opts: ["Lateral buds", "Pulvinus", "Shoot apex", "Leaves"], ans: 3, exp: "Leaves." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+  palette.innerHTML = '';
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn';
+    btn.textContent = i + 1;
+    btn.id = 'pal-' + i;
+    btn.onclick = () => goToQuestion(i);
+    palette.appendChild(btn);
+  }
+}
+
+function updatePalette() {
+  for (let i = 0; i < totalQ; i++) {
+    const btn = document.getElementById('pal-' + i);
+    if (!btn) continue;
+    btn.className = 'palette-btn';
+    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+    else if (marked[i]) btn.classList.add('marked');
+    else if (userAnswers[i] !== null) btn.classList.add('attempted');
+    else if (visited[i]) btn.classList.add('not-answered');
+    else btn.classList.add('not-visited');
+    if (i === currentQ) btn.classList.add('current');
+  }
+}
+
+function updateStats() {
+  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+  for (let i = 0; i < totalQ; i++) {
+    if (userAnswers[i] !== null) attempted++;
+    else if (visited[i]) notAnswered++;
+    else notVisited++;
+    if (marked[i]) markedCount++;
+  }
+  document.getElementById('sbTotal').textContent = totalQ;
+  document.getElementById('sbAttempted').textContent = attempted;
+  document.getElementById('sbNotAnswered').textContent = notAnswered;
+  document.getElementById('sbNotVisited').textContent = notVisited;
+  document.getElementById('sbMarked').textContent = markedCount;
+  document.getElementById('sbCorrect').textContent = correctCount;
+  document.getElementById('sbWrong').textContent = wrongCount;
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+  visited[currentQ] = true;
+  const q = questions[currentQ];
+  let optsHTML = '';
+  q.opts.forEach((opt, oi) => {
+    let cls = 'option';
+    if (userAnswers[currentQ] !== null) {
+      cls += ' disabled';
+      if (oi === q.ans) cls += ' correct-ans';
+      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+    }
+    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+  });
+
+  let fbHTML = '';
+  if (userAnswers[currentQ] !== null) {
+    const isCorrect = userAnswers[currentQ] === q.ans;
+    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+    </div>`;
+  }
+
+  questionBox.innerHTML = `
+    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+    <div>${optsHTML}</div>
+    ${fbHTML}
+  `;
+
+  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+  updatePalette();
+  updateStats();
+}
+
+function selectAnswer(optIdx) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = optIdx;
+  if (optIdx === questions[currentQ].ans) correctCount++;
+  else wrongCount++;
+  renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+  const marks = correctCount * 1 - wrongCount * 0.25;
+  const percent = ((marks / totalQ) * 100).toFixed(2);
+  document.getElementById('rTotal').textContent = totalQ;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rMarks').textContent = marks.toFixed(2);
+  document.getElementById('rPercent').textContent = percent + '%';
+  document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+  if (!confirm('Are you sure you want to reset the quiz?')) return;
+  for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+  correctCount = 0; wrongCount = 0; currentQ = 0;
+  document.getElementById('resultModal').classList.remove('show');
+  renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 5; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 22: Chemical Coordination and Integration - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chemical Coordination and Integration</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "1. Endocrine glands are -", opts: ["Ductless glands whose secretions pour directly into blood", "Have ducts and pour their secretions into blood directly", "Have ducts which straightaway pour secretions into target organs", "All of the above"], ans: 0, exp: "Endocrine glands are ductless glands that secrete hormones directly into the bloodstream." },
+    { q: "2. Which of the following statements about hormones is/are correct?\nI. Hormones are non-nutrient chemicals\nII. Hormones act as intercellular messengers\nIII. Hormones are produced in trace amount\nIV. Hormones may be proteins, steroids, glycoproteins and biogenic amines", opts: ["All", "I, II, III", "IV", "I, III"], ans: 0, exp: "All the given statements about hormones are correct." },
+    { q: "3. Which of the following statements is false?", opts: ["Hormones provide chemical coordination, integration and regulation in the human body", "Hormones regulate metabolism, growth and development of our organs", "Besides hypothalamus, pituitary, pineal, thyroid, adrenal, parathyroid, thymus, etc., GIT, heart, kidney, etc also produce hormones.", "Hormone can be used again and again like biocatalyst"], ans: 3, exp: "Hormones are not reused; they are degraded after their action." },
+    { q: "5. Which of the following options is false?", opts: ["Invertebrates possess very simple endocrine systems with few hormones", "The hypothalamus is the upper part of diencephalon (part of fore-brain)", "The hypothalamus contains several groups of neurosecretory cells (nuclei) which produce hormones", "The hypothalamus produces releasing hormones, inhibiting hormones, oxytocin and vasopressin"], ans: 1, exp: "The hypothalamus is the lower part of diencephalon, not the upper part." },
+    { q: "6. Hormones have various regulating functions. Which of the following statements does not describe how hormones function?", opts: ["Hormones act in very low concentration", "Hormones act at sites distant from where they are produced", "Hormones are transported in blood", "None of the above"], ans: 3, exp: "All the given statements correctly describe hormone function." },
+    { q: "7. Portal blood vessels connect the ______ to the ____ _", opts: ["Hypothalamus, brain", "Hypothalamus, posterior pituitary", "hypothalamus, anterior pituitary", "Anterior pituitary, posterior pituitary"], ans: 2, exp: "Portal blood vessels connect the hypothalamus to the anterior pituitary." },
+    { q: "8. Hormones released by the posterior pituitary (oxytocin and vasopressin) are produced in the-", opts: ["Anterior pituitary", "Hypothalamus", "Pineal", "Thymus"], ans: 1, exp: "Oxytocin and vasopressin are produced in the hypothalamus and stored/released by the posterior pituitary." },
+    { q: "9. Pituitary gland is regulated by -", opts: ["Adrenals", "Pineal", "Thyroid gland", "Hypothalamus"], ans: 3, exp: "The pituitary gland is regulated by the hypothalamus." },
+    { q: "10. Which of the following options is false?", opts: ["The posterior pituitary is under the direct neural regulation of the hypothalamus", "Somatostatin from the hypothalamus inhibits the release of growth hormone (GH) from the anterior pituitary", "GnRH from the hypothalamus stimulates anterior pituitary to release gonadotrophins", "None of the above"], ans: 3, exp: "All the given statements are correct." },
+    { q: "11. Which of the following options is correct?", opts: ["Posterior pituitary is connected to hypothalamus by nerve fibres", "Anterior pituitary is connected to hypothalamus by portal vessel", "Posterior pituitary is connected to hypothalamus by portal vessel", "Both a and b"], ans: 3, exp: "Posterior pituitary is connected by nerve fibres, and anterior pituitary is connected by portal vessels." },
+    { q: "12. The pituitary gland is located in a bony cavity called _____ and is attached to _____ by a stalk -", opts: ["Sella tursica, hypothalamus", "Sella tursica, cerebrum", "Sella tursica, thyroid", "Sella tursica, pineal"], ans: 0, exp: "The pituitary gland is located in the sella tursica and attached to the hypothalamus by a stalk." },
+    { q: "14. Anterior lobe of Pituitary gland secretes -\nI. FSH, GH and LH\nII. GH, TSH and prolactin\nIII. TSH, ADH & prolactin\nIV. ACTH, TSH and oxytocin", opts: ["I and II are correct", "II and IV are correct", "I and III are correct", "I, II and III are correct"], ans: 0, exp: "Anterior pituitary secretes FSH, GH, LH, TSH, Prolactin, ACTH. ADH and Oxytocin are from posterior pituitary." },
+    { q: "15. Which of the following hormones is mismatched with the stated functions?", opts: ["ACTH - Stimulates the adrenal cortex", "Oxytocin - Stimulates water reabsorption by the kidneys", "Prolactin (PRL) - regulates the growth of mammary glands and milk production in them", "TSH - Promotes the synthesis and secretion of thyroid hormones from thyroid gland"], ans: 1, exp: "Oxytocin stimulates uterine contractions and milk ejection, not water reabsorption. ADH does that." },
+    { q: "16. Which of the following statements is correct about oxytocin (pitocin)?", opts: ["It stimulates smooth muscles contraction", "In female, it stimulates a vigorous contraction of uterus at the time of child birth", "In female, it stimulates milk ejection from mammary gland", "All"], ans: 3, exp: "All the given statements about oxytocin are correct." },
+    { q: "17. Which of the following are gonadotrophins?", opts: ["FSH + GH", "LH + FSH", "LH + GH", "GH"], ans: 1, exp: "LH and FSH are gonadotrophins." },
+    { q: "18. Which of the following options is not true?", opts: ["In males, LH stimulates synthesis and secretion of androgens (Testosterone) from testis.", "In males, FSH and androgens regulate spermatogenesis", "In female, LH induces ovulation of fully mature follicles (graafian follicles), and maintains corpus luteum.", "FSH is produced in only male"], ans: 3, exp: "FSH is produced in both males and females." },
+    { q: "19. The corpus luteum -", opts: ["Is found in forebrain of human", "Is formed from the remnants of graafian follicles after ovulation", "Secretes mainly LH", "Is found in testis"], ans: 1, exp: "Corpus luteum is formed from the remnants of the Graafian follicle after ovulation." },
+    { q: "20. Match the Column I with Column II -\nColumn I: (a) FSH, (b) MSH, (c) Vasopressin (ADH), (d) Pars intermedia\nColumn II: I. Transported axonally to neurohypophysis from hypothalamus, II. Acts on melanocytes and regulates pigmentation of skin, III. Stimulates the growth and development of ovarian follicles in female, IV. In human, it is almost merged with pars distalis", opts: ["A-111, B-11, C-1, D - IV", "A-1, B-11, C-111, D - IV", "A - IV, B - 111, C - II, D - I", "A- Ill, B - II, C - IV, D - I"], ans: 0, exp: "A-111, B-11, C-1, D-IV." },
+    { q: "22. Pineal gland is located on -", opts: ["Dorsal midbrain", "Ventral midbrain", "Dorsal side of forebrain", "Ventral side of hindbrain"], ans: 2, exp: "Pineal gland is located on the dorsal side of the forebrain." },
+    { q: "23. Melatonin is a hormone secreted by -", opts: ["Pineal", "Pituitary", "thymus", "Adrenal cortex"], ans: 0, exp: "Melatonin is secreted by the pineal gland." },
+    { q: "24. Which of the following functions is related with melatonin -", opts: ["Influence on metabolism, pigmentation, menstrual cycle, our defense capacity", "Regulation of the 24-hour (diurnal) rhythm of our body (e.g. - sleep-wake cycle, body temperature)", "Both a and b", "Does not oppose FSH and LH"], ans: 2, exp: "Melatonin influences metabolism, pigmentation, menstrual cycle, defense capacity, and regulates the 24-hour rhythm." },
+    { q: "26. Which of the following option is wrong?", opts: ["Thyroid gland is the largest endocrine gland", "Each thyroid gland is composed of follicles and stromal tissues", "Thyroid gland consists of 4 lobes", "thyroid gland secretes T3, T4 and TCT"], ans: 2, exp: "The thyroid gland consists of two lobes, not four." },
+    { q: "27. Thyroxine (T4) or tetraiodothyronine and Triiodothyronine (T3), produced by the thyroid gland, are synthesised from iodine and-", opts: ["Phenylalanine", "Cholesterol", "Tyrosine", "Glycoprotein"], ans: 2, exp: "Thyroid hormones are synthesised from iodine and tyrosine." },
+    { q: "28. Iodine deficiency in our diet results in _____ and enlargement of ____ gland, commonly called", opts: ["Hyperthyroidism, thyroid, goitre", "Hypothyroidism, thyroid, goitre", "Hypoparathyroidism, parathyroid, goitre", "Hyperthyroidism, thyroid, acromegaly"], ans: 1, exp: "Iodine deficiency causes hypothyroidism and enlargement of the thyroid gland, called goitre." },
+    { q: "29. Which of the following function is related with thyroid hormones?", opts: ["They play an important role in the regulation of BMR", "They also support RBC formation", "They control the metabolism of carbohydrates, proteins and fat", "All"], ans: 3, exp: "All the given functions are related to thyroid hormones." },
+    { q: "30. Match the Column I with Column II\nColumn I: A. Hypothalamic hormone, B. Thyrotropin (TSH), C. Corticotrophin, D. Gonadotrophins (LH, FSH), E. Melanotrophin (MSH)\nColumn II: I. Skin, II. Adrenal cortex, III. Thyroid, IV. Gonad, V. Pituitary", opts: ["A- I, B - II, C - III, D - IV, E - V", "A- V, B - III, C - II, D - IV, E - I", "A- V, B - IV, C - III, D - II, E - I", "A- V, B - II, C - III, D - IV, E - I"], ans: 1, exp: "A-V, B-III, C-II, D-IV, E-I." },
+    { q: "31. Cretinism in children is caused by-", opts: ["Hypothyroidism", "Hyperthyroidism", "Hypoparathyroidism", "Hyperparathyroidism"], ans: 0, exp: "Cretinism is caused by hypothyroidism in children." },
+    { q: "32. The features of cretinism includes -", opts: ["mental retardation, low I.Q.", "Abnormal skin, stunted growth", "Deaf-mutism", "All"], ans: 3, exp: "All the given features are associated with cretinism." },
+    { q: "33. Which of the following statements is correct?", opts: ["In an adult woman, hypothyroidism may cause irregular menstrual cycle.", "Hyperthyroidism may be resulted due to thyroid cancer or nodules development in the thyroid glands", "Deficiency of iodine in our diet results in hypothyroidism", "All"], ans: 3, exp: "All the given statements are correct." },
+    { q: "34. I. Maximum iodine is stored in thyroid gland\nII. Calcitonin is non-iodinised hormone secreted by parafollicular cells of thyroid gland.\nIII. Calcitonin (TCT) regulates the blood Ca+2 level.\nIV. TCT is hypocalcemic factor", opts: ["All are correct", "All are wrong", "Only I, II and III are correct", "Only IV is correct"], ans: 0, exp: "All the given statements are correct." },
+    { q: "35. Which one of the following pairs of organs includes only the endocrine glands?", opts: ["Thymus and testes", "Adrenal and ovary", "Parathyroid and adrenal", "Pancreas and parathyroid"], ans: 2, exp: "Parathyroid and adrenal are purely endocrine glands." },
+    { q: "36. In humans, _____ parathyroid glands are present on _____ side of ____ gland -", opts: ["2, back, thyroid glands", "4, back, thyroid glands", "4, front, thyroid glands", "2, lateral, thyroid glands"], ans: 1, exp: "Four parathyroid glands are present on the back side of the thyroid gland." },
+    { q: "37. Which of the following is/are influenced by parathyroid hormone (PTH) or Collip's hormone?", opts: ["Only kidney", "Kidney & bones only", "Muscles and bones only", "Kidney, bone, muscles and small intestine"], ans: 3, exp: "PTH influences kidney, bone, muscles and small intestine." },
+    { q: "38. All are the functions of PTH except -", opts: ["PTH stimulates bone reabsorption/demineralization", "PTH retards osteoclastic action", "PTH increases Ca+2 absorption from the digestive tube", "PTH stimulates reabsorption of Ca+2 by the renal tubules"], ans: 1, exp: "PTH stimulates osteoclastic action, not retards it." },
+    { q: "39. PTH is a-", opts: ["Hypocalcemic hormone", "Hypercalcemic hormone", "Antiosteoclastic hormone", "A hormone which stimulates excretion of Ca+2 in urine"], ans: 1, exp: "PTH is a hypercalcemic hormone; it increases blood calcium levels." },
+    { q: "40. The thymus gland is a lobular structure located on ____ side of the _____ and ____ _", opts: ["Ventral, heart, aorta", "Lateral, heart, aorta", "Dorsal, heart, aorta", "Dorsal, thyroid, trachea"], ans: 0, exp: "Thymus is located on the ventral side of the heart and aorta." },
+    { q: "41. Which of the following endocrine glands degenerates/atrophies in old age?", opts: ["Thyroid", "Thymus", "Parathyroid", "Adrenal"], ans: 1, exp: "Thymus degenerates in old age." },
+    { q: "42. Thymus is mainly concerned with -", opts: ["Regulation of body temperature", "Regulation of body growth", "Immunological functions", "Secretion of thyrotropin"], ans: 2, exp: "Thymus is mainly concerned with immunological functions." },
+    { q: "43. Damage to thymus in a child may lead to -", opts: ["A reduction in haemoglobin content of blood", "Loss of cell mediated immunity", "Promotion of antibody mediated immunity/humoral immunity", "A reduction in stem cell production"], ans: 1, exp: "Damage to thymus leads to loss of cell-mediated immunity." },
+    { q: "44. The thymus gland secretes the _____ hormone called ______ which play a major role in the differentiation of _____ lymphocytes.", opts: ["Glycoproteinaceous, thymosin, T", "Steroid, thymosin, T", "Peptide, thymosin, T", "Peptide, thymosin, B"], ans: 0, exp: "Thymus secretes glycoproteinaceous hormone thymosin, which helps in differentiation of T-lymphocytes." },
+    { q: "45. Which of the following is not related with thymosins?", opts: ["In addition to cell mediated immunity, thymosins also promote production of antibodies to provide humoral immunity", "In old age, thymosins production is more, so immunity is strong", "Thymosins are produced by thyroid gland", "Both b and c"], ans: 3, exp: "Thymosin production decreases in old age, and it is produced by the thymus, not the thyroid." },
+    { q: "47. Adrenal medulla secretes-", opts: ["Adrenaline/epinephrine only", "Nor-adrenaline/nor-epinephrine", "a and b", "Corticoids"], ans: 2, exp: "Adrenal medulla secretes both adrenaline and nor-adrenaline." },
+    { q: "48. Adrenaline and nor-adrenaline are commonly called -", opts: ["Corticoids", "Glucocorticoids", "Catecholamines", "Sex corticoids"], ans: 2, exp: "Adrenaline and nor-adrenaline are called catecholamines." },
+    { q: "49. Which of the following glands is called emergency gland of the body?", opts: ["Testis", "Adrenal medulla", "Thyroid", "Pituitary"], ans: 1, exp: "Adrenal medulla is called the emergency gland." },
+    { q: "50. Which of the following hormone(s) is/are called emergency hormone(s) of 'fight or flight'?", opts: ["ADH", "Oxytocin", "Adrenaline and nor-adrenaline", "Thymosin and PTH"], ans: 2, exp: "Adrenaline and nor-adrenaline are emergency hormones." },
+    { q: "51. Which of the following hormones increase alertness, pupillary dilation, piloerection, sweating, heart beat, strength of heart contraction, rate of respiration, glycogenolysis, lipolysis, proteolysis and glucose cone. in blood?", opts: ["Thymosin and calcitonin", "Norepinephrine and epinephrine", "Vasopressin and oxytocin", "Insulin and glucagon"], ans: 1, exp: "Norepinephrine and epinephrine cause these effects." },
+    { q: "52. The fight-or-flight response is developed by the hormones of-", opts: ["Hypothalamus", "Adrenal medulla", "Adrenal cortex", "Adrenal-pancreatic complex"], ans: 1, exp: "Adrenal medulla hormones develop the fight-or-flight response." },
+    { q: "53. B.P. is controlled by -", opts: ["Adrenal gland", "Thymus", "Corpus luteum", "None"], ans: 0, exp: "Blood pressure is controlled by adrenal gland hormones." },
+    { q: "54. Adrenal cortex is composed of 3 layers. The sequence of layers from the outside to the inside is -", opts: ["Zona glomerulosa, zona fasciculata, zona reticularis", "Zona reticularis, zona glomerulosa, zona fasciculata", "Zona fasciculata, zona reticularis, zona glomerulosa", "Zona fasciculata, zona glomerulosa, zona reticularis"], ans: 0, exp: "The correct sequence is Zona glomerulosa, zona fasciculata, zona reticularis." },
+    { q: "55. The adrenal cortex secretes many hormones, commonly called as -", opts: ["Epinephrine", "Corticoids", "Non-epinephrine", "Secondary messengers"], ans: 1, exp: "Adrenal cortex hormones are called corticoids." },
+    { q: "56. Match the Column I with Column II -\nColumn I: A. Glucocorticoids, B. Mineralocorticoids, C. Gonadocorticoids\nColumn II: I. Balance of water and electrolytes in our body, II. Carbohydrate metabolism, III. Secretion of estrogens and androgens", opts: ["A-11, B-1, C-111", "A-1, B-11, C-111", "A-111, B-11, C-I", "A-111, B-I, C-II"], ans: 0, exp: "A-11, B-1, C-111." },
+    { q: "57. Which of the following is the main glucocorticoid?", opts: ["Aldosterone", "Gonadocorticoid", "Cortisol", "Mineralocorticoids"], ans: 2, exp: "Cortisol is the main glucocorticoid." },
+    { q: "58. Which of the following hormones is the main mineralocorticoid?", opts: ["Aldosterone", "Cortisol", "Gonadocorticoid", "Mineralocorticoids"], ans: 0, exp: "Aldosterone is the main mineralocorticoid." },
+    { q: "59. Match the source gland with its respective hormone and function and select the correct option.\n(a) Anterior pituitary - Oxytocin - Contraction of uterus muscles during child birth\n(b) Posterior pituitary - Vasopressin - stimulates reabsorption of water in the distal tubules in the nephron\n(c) Corpus luteum - Oestrogen - Supports Pregnancy\n(d) Thyroid - Thyroxine - Regulates blood calcium level", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 1, exp: "Vasopressin from posterior pituitary stimulates water reabsorption." },
+    { q: "60. Which one of the following does not act as a neurotransmitter?", opts: ["Cortisone", "Epinephrine", "Norepinephrine", "Acetylcholine"], ans: 0, exp: "Cortisone is a hormone, not a neurotransmitter." },
+    { q: "61. Gluconeogenesis, lipolysis, proteolysis and inhibition of cellular uptake and utilization of amino acid are performed by -", opts: ["Aldosterone", "Glucocorticoid", "Insulin", "Mineralocorticoid"], ans: 1, exp: "Glucocorticoids like cortisol perform these functions." },
+    { q: "62. Which of the following hormones produces anti-inflammatory reactions, suppresses immune response, stimulates RBC production, and is also involved in maintaining cardiovascular system and kidney functions?", opts: ["Aldosterone", "Epinephrine", "Cortisol", "Norepinephrine"], ans: 2, exp: "Cortisol produces these effects." },
+    { q: "63. Which of the following adrenal cortical hormones play a role in the growth of axial hair, pubic hair and facial hair during puberty?", opts: ["Cortisol", "Androgens", "Norepinephrine", "Epinephrine"], ans: 1, exp: "Adrenal androgens play this role." },
+    { q: "64. Which of following statements is false about pancreas?", opts: ["Pancreas acts as both exocrine and endocrine glands", "Endocrine pancreas consists of \"Islets of Langerhans\"", "There are about 1-2 million Islets of Langerhans representing only 1-2% of pancreatic tissue", "Pancreas secretes only insulin"], ans: 3, exp: "Pancreas secretes insulin, glucagon, and other hormones, not only insulin." },
+    { q: "66. Which of the following best describe the functions of corticosteroid hormones?\nI. Depresses the immune response\nII. Stimulates sexual and reproductive activity\nIII. Influences blood glucose concentration\nIV. Influences ionic and osmotic concentration of blood", opts: ["All", "I, II, III", "IV", "None"], ans: 0, exp: "All the given statements are correct." },
+    { q: "67. Cortisol, the stress hormone, has all the following effects except-", opts: ["metabolizing fat for energy", "Increasing B.P.", "Stimulating the immune response", "Slowing down the protein synthesis"], ans: 2, exp: "Cortisol suppresses the immune response, not stimulates it." },
+    { q: "68. Which of the following statements is correct about glucagon?", opts: ["Glucagon acts mainly on the liver cells (hepatocytes)", "Glucagon stimulates glycogenolysis, gluconeogenesis", "Glucagon reduces the cellular glucose uptake and utilization", "All"], ans: 3, exp: "All the given statements are correct." },
+    { q: "69. Insulin, a peptide hormone like glucagon, has all the following effects except-", opts: ["Insulin acts mainly on hepatocytes and adipocytes and enhances cellular glucose uptake and utilization", "Insulin causes a rapid movement of glucose from blood to hepatocytes and adipocytes", "Insulin is hypoglycemic factor", "Insulin reduces glycogenesis"], ans: 3, exp: "Insulin promotes glycogenesis, not reduces it." },
+    { q: "70. The glucose homeostasis in blood is maintained jointly by -", opts: ["Insulin and epinephrine", "Insulin and nor-epinephrine", "Insulin and glucagon", "Glucagon and cortisol"], ans: 2, exp: "Insulin and glucagon maintain blood glucose homeostasis." },
+    { q: "71. Prolonged hyperglycemia leads to a complex disorder called -", opts: ["Diabetes mellitus", "Diabetes insipidus", "Cretinism", "Myxoedema"], ans: 0, exp: "Prolonged hyperglycemia leads to diabetes mellitus." },
+    { q: "72. A pair of testis is present in the _____ sac (outside abdomen) of male individual. Testis consists of ___ _ tubules and _____ or interstitial tissue", opts: ["Testicular, seminiferous, stromal", "Scrotal, seminiferous, stromal", "Scrotal, uriniferous, stromal", "Scrotal, seminiferous, seminal"], ans: 1, exp: "Scrotal, seminiferous, stromal." },
+    { q: "73. Go through the following points -\nI. Regulate the development, maturation and functions of epididymis, vas deferens, seminal vesicle, prostate gland, urethra, etc.\nII. Stimulate muscular growth of facial and axillary hairs, aggressiveness, low pitch of voice, etc.\nIII. Stimulates spermatogenesis\nIV. Act on CNS and sexual behaviour (libido)\nV. Produce anabolic (synthetic) effect on protein and carbohydrate metabolism\nVI. The Leydig's cell/interstitial cells (present in intertubular space) secrete this hormone under the influence of LH\nAbove points are associated with ____ hormones -", opts: ["FSH", "Progesterone", "Androgens (e.g. Testosterone)", "Melatonin"], ans: 2, exp: "These are functions of androgens like testosterone." },
+    { q: "74. Which of the following statements is incorrect?", opts: ["Testis and ovary function as a primary sex organ as well as endocrine gland", "Ovaries are located in thoracic cavity of females", "Ovary produces ovum, 2 groups of steroid hormones (estrogen and progesterone)", "Ovary is composed of ovarian follicles and stromal tissue"], ans: 1, exp: "Ovaries are located in the abdominal cavity, not thoracic." },
+    { q: "75. Find the odd one out with respect to site of hormones production -", opts: ["Epinephrine, Nor-epinephrine, Cortisol", "FSH, TSH, GH", "Progesterone, Testosterone, Relaxin", "Insulin, Glucagon, Thymosin"], ans: 3, exp: "Insulin and glucagon are from pancreas, thymosin is from thymus." },
+    { q: "76. Find the odd one out -", opts: ["Insulin, Glucagon, Thymosin", "Glucocorticoids, Mineralocorticoids, sex corticoids", "Relaxin, Oestrogen, progesterone", "Nor-epinephrine, Adrenaline"], ans: 0, exp: "Thymosin is from thymus, others are from pancreas." },
+    { q: "77. The corpus luteum is the structure which -", opts: ["Releases ovum from ovary", "Secretes progesterone", "Develops in Graafian follicle", "Produces LH"], ans: 1, exp: "Corpus luteum secretes progesterone." },
+    { q: "78. After ovulation, the ruptured follicle is converted into-", opts: ["Graafian follicle", "Corpus callosum", "Corpus luteum", "Corpus spongiosum"], ans: 2, exp: "Ruptured follicle converts into corpus luteum." },
+    { q: "79. The estrogen is mainly synthesised and secreted by -", opts: ["Rupture follicles in ovary", "Corpus luteum", "Growing ovarian follicles", "Leydig cells"], ans: 2, exp: "Estrogen is secreted by growing ovarian follicles." },
+    { q: "80. Progesterone-", opts: ["Supports pregnancy", "Stimulates the formation of mammary alveoli", "Stimulates milk secretion (Lactation)", "All"], ans: 3, exp: "All the given functions are related to progesterone." },
+    { q: "81. Which of the following hormones stimulates growth and development of female accessory sex organs and secondary sex character and also female sexual behaviour?", opts: ["Estrogen", "Progesteron", "Androgen (Testosterone)", "Gonadotrophic releasing hormone"], ans: 0, exp: "Estrogen stimulates these functions." },
+    { q: "82. Which of the following secretes hormones but is not considered as traditional glandular tissue?", opts: ["Pancreas", "Testes", "Heart", "Adrenal gland"], ans: 2, exp: "Heart secretes ANF but is not a traditional gland." },
+    { q: "83. Production, secretion and ejection of milk requires the synergistic effects of prolactin and -", opts: ["Estrogen", "Progesteron", "Oxytocin", "All"], ans: 3, exp: "All these hormones are involved in milk production and ejection." },
+    { q: "84. A hormone not involved in sugar metabolism is -", opts: ["Glucagon", "Cortisone", "Aldosterone", "Insulin"], ans: 2, exp: "Aldosterone is involved in mineral balance, not sugar metabolism." },
+    { q: "85. Atrial natriuretic hormone/factor (ANF) secreted by atrial wall of our heart has exactly the opposite function of this hormone secreted by zona glomerulosa -", opts: ["ADH", "Aldosterone", "Androgen", "Calcitonin"], ans: 1, exp: "ANF opposes aldosterone." },
+    { q: "86. ANF-", opts: ["Decrease B.P.", "Is secreted when B.P. increases", "Causes vasodilation", "All"], ans: 3, exp: "All the given statements are correct." },
+    { q: "87. Juxtaglomerular cells of _____ produces a peptide hormone called _____ which stimulates ____ _", opts: ["Thyroid, erythopoietin, erythropoiesis", "Kidney, erythropoietin, erythropoiesis", "Kidney, renin, erythropoiesis", "Spleen, erythropoietin, erythropoiesis"], ans: 1, exp: "Kidney, erythropoietin, erythropoiesis." },
+    { q: "88. Which one of the following part acts as an endocrine gland or tissue?", opts: ["Pars radiata", "JG cells", "Brunner's gland", "Pancreatic acini"], ans: 1, exp: "JG cells act as endocrine tissue." },
+    { q: "89. Gastrin, secretin, cholecystokinin (CCK) and gastric inhibitory peptide (GIP) are 4 major peptide hormone secreted by-", opts: ["Only stomach", "Only small intestine", "Gastro-intestinal tract", "Only pancreas"], ans: 2, exp: "These are secreted by the gastro-intestinal tract." },
+    { q: "90. Match Column I with Column II -\nColumn I: A. Gastrin, B. Secretin, C.CCK, D. GIP\nColumn II: I. Acts on gastric gland and stimulates secretion of HCI and pepsinogen, II. Acts on the exocrine part of pancreas and stimulates secretion of water and HCO3- ions, III. Acts on both pancreas and gall bladder and stimulates the secretion of both pancreatic enzymes and bile juice respectively, IV. Inhibits gastric secretion and motility", opts: ["A- IV, B - III, C - 11, D - I", "A- II, B IV, C - III, D - I", "A-1, B - II, C - III, D - IV", "A-1, B - III, C - II, D - IV"], ans: 2, exp: "A-1, B-II, C-III, D-IV." },
+    { q: "91. Which of the following statements is false?", opts: ["Growth factors/Hormones are also secreted by specific non-endocrine tissues", "These growth factors are essential for normal growth of tissues and their repairing/regeneration", "Hormone secreted during allergy is glucocorticoid", "None of the above"], ans: 3, exp: "All the given statements are correct." },
+    { q: "92. Match the Column I with Column II -\nColumn I: A. Peptide, polypeptide protein hormones, B. Steroid, C. Iodothyronines, D. Amino acid derivatives\nColumn II: I. Epinephrine, nor-epinephrine, II. T3 and T4 (thyroid hormones), III. Cortisol, testosterone, estradiol, progesterone, IV. Pituitary hormones, pancreatic hormones, hypothalamic hormones", opts: ["A-1, B - II, C - III, D - IV", "A- IV, B - III, C - I, D - II", "A- IV, B - III, C - II, D - I", "A- I, B - II, C - IV, D - III"], ans: 2, exp: "A-IV, B-III, C-II, D-I." },
+    { q: "93. A steroid hormone typically alters the activity of its target cells by -", opts: ["Making holes in the membrane of the target cells", "Entering the cell and altering gene expression", "Making holes in the lysosome of target cells", "Activation of cAMP"], ans: 1, exp: "Steroid hormones enter the cell and alter gene expression." },
+    { q: "94. The target tissues of hormones are those tissues that -", opts: ["Particular hormone can actually penetrate", "Have specific enzymes with which hormones directly interact", "Have high concentrations of the \"second messenger\"", "Have receptors for particular hormone"], ans: 3, exp: "Target tissues have receptors for the hormone." },
+    { q: "95. In order for a cell to be responsive to a lipid-soluble hormone, it must have -", opts: ["G - protein", "cAMP", "A specific receptor in the cytoplasm or nucleus", "A specific cell surface receptor"], ans: 2, exp: "Lipid-soluble hormones bind to intracellular receptors." },
+    { q: "96. Steroid hormones initiate the production of target cell substances in which manner?", opts: ["They initiate second messenger activity", "They bind with membrane protein", "They initiate DNA transcription", "They activate enzyme pathways"], ans: 2, exp: "Steroid hormones initiate DNA transcription." },
+    { q: "97. Which of the following is not true of cyclic AMP (cAMP)?", opts: ["It is a second messenger", "The enzyme adenylate cyclase converts ATP into cAMP", "In the mechanism of a protein hormone, cAMP is involved", "None"], ans: 3, exp: "All the given statements are true." },
+    { q: "98. Why do some hormones (first messenger) need to trigger a \"second messenger\" to activate a target cell?", opts: ["The first messenger needs activation of ATP", "The first messenger cannot cross a plasma membrane", "There are no specific cell surface receptors for first messenger", "The first messenger is not a water-soluble molecule"], ans: 1, exp: "The first messenger cannot cross the plasma membrane." },
+    { q: "99. Which of the following is/are second messenger(s)?", opts: ["cAMP", "IP3", "Ca+2", "All"], ans: 3, exp: "cAMP, IP3, and Ca+2 are all second messengers." },
+    { q: "100. Which of the following hormones does not act by a second messenger system?", opts: ["Glucagon", "Epinephrine", "FSH", "Testosterone"], ans: 3, exp: "Testosterone is a steroid hormone that acts directly on the nucleus." },
+    { q: "101. Which hormone binds to intracellular receptors -", opts: ["Insulin", "GH", "T3", "TSH"], ans: 2, exp: "T3 (thyroid hormone) binds to intracellular receptors." },
+    { q: "102. Which of the following hormones does not act by a second messenger system?", opts: ["Glucagon", "Epinephrine", "LH", "Aldosterone"], ans: 3, exp: "Aldosterone is a steroid hormone." },
+    { q: "103. Place in the correct order the action of water soluble hormones e.g. FSH\nI. Physiological response e.g. ovarian growth\nII. Biochemical response\nIII. Generation of second messenger\nIV. Response\nV. Hormone binds to plasma membrane bind", opts: ["I -> II -> III -> IV -> V", "V -> IV -> III -> II -> I", "V -> IV -> II -> III -> I", "I -> II -> V -> III -> IV"], ans: 1, exp: "V -> IV -> III -> II -> I." },
+    { q: "104. Hormones produce their effect on target tissue by binding to specific _____ called hormone receptors located in the target tissues only. _____ soluble hormones usually need _____ receptor that generate _____ messengers for regulating cellular metabolism. _____ soluble hormones can pass through cell membrane and bind to _____ receptors, mostly _____ receptors. The hormone receptor complex enter the _____ and mostly regulate gene expression or chromosome function by interaction of hormone-receptor complex with the _____", opts: ["A- Protein, B - Water, C - Membrane-bound, D - Second, E - Lipid, F - intracellular, G - Nuclear, H - Nucleus, I - Genome", "A- Lipid, B - Water, C - Membrane-bound, D - Second, E - Water, F - intracellular, G - Nuclear, H - Nucleus, I - Genome", "A- Protein, B - Water, C- Intracellular, D-Second, E- Lipid, F - Extracellular, G - Nuclear, H - Nucleus, I - Genome", "A- Protein, B - Water, C - Membrane-bound, D - Primary, E - Lipid, F - intracellular, G - Nuclear, H - Nucleus, I - Genome"], ans: 0, exp: "A-Protein, B-Water, C-Membrane-bound, D-Second, E-Lipid, F-intracellular, G-Nuclear, H-Nucleus, I-Genome." },
+    { q: "106. Match each hormone (Column - I) with its effect on target cells (Column - II) and the gland where it is produced (Column - III) -\nColumn - I: 1. Thyroxine, 2. Insulin, 3. PTH, 4. Epinephrine, 5. Melatonin, 6. ADH, 7. Androgen, 8. FSH\nColumn - II: A Lowers, B. Blood glucose stimulates ovary, C. Triggers \"fight or flight\", D. Promotes male traits, E. Regulate metabolism, F. Related to daily rhythm, G. Rises blood Ca+2 level, H. Boost water retention\nColumn - III: P. Pineal gland, Q . Testes, R. Parathyroid Gland, S. Adrenal medulla, T. Hypothalamus, U. Pancreas, V. Anterior pituitary, W. Thyroid gland", opts: ["1 - E, W; 2 -A, U; 3 - G, R; 4 - C, S; 5 - F, P; 6 - H, T; 7 - D, Q; 8 - B, V", "1 - E, W ; 2 -A, R; 3 - V, R; 4 - C, U; 5 - F, T; 6 - H, S; 7 - D, Q; 8 - B, P", "1 - B, V; 2 - E, U; 3 - G, W ; 4 - C, S; 5 -A, P; 6 - H, T; 7 - D, Q; 8 - F, R", "1 -A, W; 2 - C, U; 3 - G, R; 4 - E, S; 5 - F, P; 6 - H, T; 7 - D, Q; 8 - B, V"], ans: 0, exp: "1-E,W; 2-A,U; 3-G,R; 4-C,S; 5-F,P; 6-H,T; 7-D,Q; 8-B,V." },
+    { q: "108. Hormones are regulatory molecules secreted by the endocrine systems in vertebrates. Which of the following statements is NOT TRUE for hormones?", opts: ["Hormones are secreted into the blood circulation system and they act on target organs.", "Amino acids are precursors for some hormones.", "Hormones can act on the organ that secretes them.", "Hormones are always short-lived molecules."], ans: 3, exp: "Some hormones are long-lived, e.g., thyroxine." },
+    { q: "109. Choose the false one.", opts: ["Thymus is degenerated in old aged persons resulting in a decreased thymosins production leading to weak immune response.", "Cortisol, a type of glucocorticoids stimulates the RBC production", "Small amount of androgenic steroids is secreted by adrenal cortex.", "Diabetes is not successfully treated with insulin"], ans: 3, exp: "Diabetes is successfully treated with insulin." },
+    { q: "110. Along with which hormone parathyroid hormone plays a significant role in Ca-balance in the body?", opts: ["T3", "T4", "TCT", "IAA"], ans: 2, exp: "PTH works with TCT (calcitonin) for calcium balance." },
+    { q: "111. \"Y\" is hormone which acts mainly at the renal tubules and stimulates the absorption of Na+ and water and excretion of K+ and phosphate ions. Thus it helps in the maintenance of electrolytes, body fluid volume, 0-P and B.P. Y is", opts: ["Aldosterone/mineralocorticoids", "GH", "GIP", "ANF"], ans: 0, exp: "Aldosterone is the hormone." },
+    { q: "112. Given below is an incomplete table about certain hormones, their source glands and one major effect of each on the body in humans. Identify the correct option for the three blanks A, B and C.\nGLANDS | SECRETION | EFFECT ON BODY\nA | Oestrogen | Maintenance of secondary sexual characters\nAlpha cells of Islets of Langerhans | B | Raises blood sugar level\nAnterior pituitary | C | Over secretion leads to gigantism", opts: ["A- Placenta, B - Glucagon, C - Calcitonin", "A- Ovary, B - Glucagon, C - Growth hormone", "A- Placenta, B - Insulin, C - Vasopressin", "A- Ovary, B - Insulin, C - Calcitonin"], ans: 1, exp: "A-Ovary, B-Glucagon, C-Growth hormone." },
+    { q: "113. Which of the following is the more scientific definition of hormone?", opts: ["They are extracellular messengers", "They always act at distantly located target organ", "They are the products of well organized endocrine glands", "They are non-nutrient chemicals that act as intercellular messengers"], ans: 3, exp: "Hormones are non-nutrient chemicals that act as intercellular messengers." },
+    { q: "114. Mark the correct statement regarding somatostatin", opts: ["It is secreted from anterior pituitary", "It inhibits the release of growth hormone", "It is secreted from posterior pituitary", "It stimulates STH secretion"], ans: 1, exp: "Somatostatin inhibits the release of growth hormone." },
+    { q: "115. Gonadotrophins are secreted from", opts: ["Hypothalamus", "Neurohypophysis", "Pars distalis of Pituitary", "None of these"], ans: 2, exp: "Gonadotrophins are secreted from the pars distalis of the pituitary." },
+    { q: "116. Sleep-wake cycle and menstrual cycle are maintained by", opts: ["Progesterone", "Melatonin", "Oxytocin", "MSH"], ans: 1, exp: "Melatonin maintains these cycles." },
+    { q: "117. What is true about calcitonin", opts: ["It is released from thyroid gland", "It contains iodine", "It is released from parathyroid", "It is an amino acid"], ans: 0, exp: "Calcitonin is released from the thyroid gland." },
+    { q: "118. Alertness, pupillary dilation and piloerection are due to the effect of", opts: ["Melatonin", "Corticoids", "Catecholamines", "Thyroxine"], ans: 2, exp: "Catecholamines cause these effects." },
+    { q: "119. Vasopressin, also called ADH, is synthesized by", opts: ["Adenohypophysis", "Hypothalamus", "Neurohypophysis", "Kidney"], ans: 1, exp: "ADH is synthesized by the hypothalamus." },
+    { q: "120. Which statement, regarding PTH, is correct?", opts: ["it is a peptide hormone", "It stimulates bone resorption", "it is hypercalcemic hormone", "All of these"], ans: 3, exp: "All the given statements are correct." },
+    { q: "121. Which of the following is not the hormone of anterior pituitary?", opts: ["Prolactin", "Oxytocin", "ACTH", "Growth hormone"], ans: 1, exp: "Oxytocin is from the posterior pituitary." },
+    { q: "122. Cell mediated as well as humoral immunity is provided by", opts: ["PTH", "Glucocorticoid", "Thymosin", "Thiamine"], ans: 2, exp: "Thymosin provides both types of immunity." },
+    { q: "123. Which hormone interacts with membrane bound receptor and does not normally enter the target cell", opts: ["FSH", "Estrogen", "Thyroxin", "Cortisol"], ans: 0, exp: "FSH interacts with membrane-bound receptors." },
+    { q: "124. Which of the following is the function of testosterone", opts: ["It stimulates muscular growth and aggressiveness", "It influences male sexual behaviour (libido)", "It causes anabolic (synthetic) effect on protein/carbohydrate metabolism", "All of these"], ans: 3, exp: "All the given functions are of testosterone." },
+    { q: "125. Which hormone acts on exocrine part of pancreas?", opts: ["GIP", "Insulin", "Secretin", "Steapsin"], ans: 2, exp: "Secretin acts on the exocrine part of the pancreas." },
+    { q: "126. The hormone that supports pregnancy and stimulates mammary glands for the formation of alveoli for storing milk, is secreted from", opts: ["Ant. Pituitary", "Post. Pituitary", "Graafian follicle", "Corpus luteum"], ans: 3, exp: "Progesterone from corpus luteum performs these functions." },
+    { q: "127. The hormone that suppresses the immune system is", opts: ["Glucagon", "Thymosin", "Adrenaline", "Cortisol"], ans: 3, exp: "Cortisol suppresses the immune system." },
+    { q: "128. Juvenile diabetes mellitus is due to ___ _", opts: ["loss of pancreatic beta cells", "resistance to insulin", "obesity", "malnutrition"], ans: 0, exp: "Juvenile diabetes is due to loss of pancreatic beta cells." },
+    { q: "129. Which one among the following hormones has no sexual importance?", opts: ["Interstitial cell stimulating hormone", "Prolactin", "Human chorionic gonadotropin", "Antidiuretic hormone"], ans: 3, exp: "ADH has no sexual importance." },
+    { q: "130. Which of the following hormones stimulate production of estrogen at puberty?", opts: ["FSH and LH", "ACTH", "TSH", "GH"], ans: 0, exp: "FSH and LH stimulate estrogen production." },
+    { q: "131. Which one among the following hormones is not secreted by adenohypophysis?", opts: ["FSH", "ICSH", "LH", "hCG"], ans: 3, exp: "hCG is secreted by the placenta, not adenohypophysis." },
+    { q: "132. The 24 hour (diurnal) rhythm of our body such as the sleep-wake cycle is regulated by the hormone :", opts: ["calcitonin", "prolactin", "adrenaline", "melatonin"], ans: 3, exp: "Melatonin regulates the diurnal rhythm." },
+    { q: "133. The given table enlists various hormones and their chemical nature.\nNo. | Hormone | Chemical composition\n1. | i | Peptide\n2. | Testosterone | ii\n3. | iii | Amino-acid derivative\n4. | Thyroxine | iv", opts: ["i-Cortisol; ii-Steroids; iii-Polypeptide; iv-Estradiol", "i-Insulin; ii-Proteins; iii-Polypeptide; iv-Epinephrine", "i-Cortisol; ii-Proteins; iii-Iodothyronines; iv-Estradiol", "i-Insulin; ii-Steroids; iii-Iodothyronines; iv-Epinephrine"], ans: 3, exp: "i-Insulin; ii-Steroids; iii-Iodothyronines; iv-Epinephrine." },
+    { q: "134. The given table enlists various hormones produced in human body along with source gland.\nNo. | Hormone | Source gland\n1. | Melatonin | i\n2. | ii | Thymus\n3. | iii | Kidneys", opts: ["i-Pineal gland; ii-Thymosin; iii-Erythropoietin", "i-Parathyroid gland; ii-Thymosin; iii-Erythropoietin", "i-Parathyroid gland; ii-Epinephrine; iii-Secretin", "i-Pineal gland; ii-Epinephrine; iii-Secretin"], ans: 0, exp: "i-Pineal gland; ii-Thymosin; iii-Erythropoietin." },
+    { q: "135. The _____ region of _____ , which is also known as anterior pituitary produces _____ and luteinizing hormones", opts: ["i-pars distalis; ii-adenohypophysis; iii-oxytocin", "i-pars distalis; ii-adenohypophysis; iii-prolactin", "i-pars intermedia; ii-neurohypophysis; iii-oxytocin", "i-pars intermedia; ii-neurohypophysis; iii-prolactin"], ans: 1, exp: "i-pars distalis; ii-adenohypophysis; iii-prolactin." },
+    { q: "136. The melanocyte stimulating hormone is produced by _____ which is a part of _____ region of the pituitary gland", opts: ["i-pars intermedia; ii-adenohypophysis", "i-pars intermedia; ii-neurohypophysis", "i-pars nervosa; ii-adenohypophysis", "i-pars nervosa; ii-neurohypophysis"], ans: 0, exp: "i-pars intermedia; ii-adenohypophysis." },
+    { q: "137. The hormones labelled, I, II, III, and IV, are secreted by the respective organs listed in the table\nHormone | Organ\nI. | Ovarian follicle\nII. | Corpus luteum\nIII. | Adrenal medulla\nIV. | Adrenal cortex", opts: ["I-Progesterone; II-Epinephrine; III-Corticoids; IV-Estrogen", "I-Progesterone; II-Estrogen; III-Corticoids; IV-Epinephrine", "I-Estrogen; II-Progesterone; III-Epinephrine; IV-Corticoids", "I-Estrogen; II-Corticoids; III-Epinephrine; IV-Progesterone"], ans: 2, exp: "I-Estrogen; II-Progesterone; III-Epinephrine; IV-Corticoids." },
+    { q: "138. Which of the following tables represents the pancreatic cells and their secretions correctly?", opts: ["Cell a-Glucagon; Cell b - Insulin", "Cell a - Insulin; Cell b -Glucagon", "Cell a- Glucagon; Cell b -Glucagon", "Cell a - Insulin; Cell b - Insulin"], ans: 0, exp: "Cell a secretes glucagon, Cell b secretes insulin." },
+    { q: "139. Match diseases with hormone deficiency.\nDiseases: I. Dwarfism, II. Acromegaly, III. Simple goitre, IV. Exophthalmic goitre, V. Addison's disease, VI. Conn's disease, VII. Cushing disease\nHormone deficiency: A. Thyroxine, B. GH, C. Aldosterone and cortisol, D. Corticosteroid, E. Mineralocorticoids (Aldosterone)", opts: ["I-B; II-B; III-A; IV-A; V-C; VI-E; VII-D", "I-B; II-A; III-A; IV-B; V-E; VI-D; VII-C", "I-A; II-B; III-B; IV-A; V-C; VI-E; VII-D", "I-A; II-A; III-B; IV-B; V-C; VI-D; VII-E"], ans: 0, exp: "I-B; II-B; III-A; IV-A; V-C; VI-E; VII-D." },
+    { q: "140. A person entering an empty room suddenly finds a snake right in front on opening the door. Which one of the following is likely to happen in his neuro-hormonal control system?", opts: ["Sympathetic nervous system is activated releasing epinephrine and norepinephrine from adrenal medulla.", "Neurotransmitters diffuse rapidly across the cleft and transmit a nerve impulse.", "Hypothalamus activates the parasympathetic division of brain.", "Sympathetic nervous system is activated releasing epinephrine and norepinephrine from adrenal cortex."], ans: 0, exp: "Sympathetic nervous system activates adrenal medulla to release epinephrine and norepinephrine." },
+    { q: "141. The Leydig cells found in the human body are the secretory source of", opts: ["Progesterone", "intestinal mucus", "glucagon", "androgens"], ans: 3, exp: "Leydig cells secrete androgens." },
+    { q: "142. Which one of the following pairs of hormones are the examples of those that can easily pass through the cell membrane of the target cell and bind to a receptor inside it (Mostly in the nucleus)", opts: ["Insulin, glucagon", "Thyroxin, insulin", "Somatostain, oxytocin", "Cortisol, testosterone"], ans: 3, exp: "Cortisol and testosterone are lipid-soluble and can pass through the membrane." },
+    { q: "143. What is correct to say about the hormone action in humans", opts: ["Glucagon is secreted by b-cells of Islets of Langerhans and stimulates glycogenolysis", "Secretion of thymosins is stimulated with aging", "In females FSH first binds with specific receptors on ovarian cell membrane", "FSH stimulates the secretion of estrogen and progesterone"], ans: 2, exp: "FSH binds to specific receptors on ovarian cell membranes." },
+    { q: "144. A pregnant female delivers a baby who suffers from stunted growth, mental retardation/low intelligence quotient and abnormal skin. This is the result of:", opts: ["Low secretion of growth hormone", "Cancer of the thyroid gland", "Over secretion of pars distalis", "Deficiency of iodine in diet"], ans: 3, exp: "Iodine deficiency causes cretinism." },
+    { q: "145. Which of the following statement is correct in relation to the endocrine system?", opts: ["Organs in the body like gastrointestinal tract, heart, kidney and liver do not produce any hormones.", "Non - nutrient chemicals produced by the body in trace amount that act as intercellular messenger are known as hormones.", "Releasing and inhibitory hormones are produced by the pituitary gland.", "Adenohypophysis is under direct neural regulation of the hypothalamus."], ans: 1, exp: "Hormones are non-nutrient chemicals acting as intercellular messengers." },
+    { q: "146. Select the answer which correctly matches the endocrine gland with the hormone it secretes and its function/deficiency symptom\n(1) Posterior pituitary - Growth Hormone (GH) - Over secretion stimulates abnormal growth\n(2) Thyroid gland - Thyroxine - Lack of iodine in diet results in goitre\n(3) Corpus luteum - Testosterone - Stimulates spermatogenesis\n(4) Anterior pituitary - Oxytocin - Stimulates uterus contraction during child birth", opts: ["Option (1)", "Option (2)", "Option (3)", "Option (4)"], ans: 1, exp: "Thyroid gland secretes thyroxine; iodine deficiency causes goitre." },
+    { q: "148. Thyroxin act on every organ except -", opts: ["Brain", "Testes", "Thyroid", "All of the these"], ans: 2, exp: "Thyroxine does not act on the thyroid gland itself." },
+    { q: "149. When the normal heart of a frog is injected with physiological concentration of adrenaline, it shows -", opts: ["Systolic arrest", "Sustained increase rate", "Decreased rate", "First increase then normal rate"], ans: 1, exp: "Adrenaline increases heart rate." },
+    { q: "150. Injury localized to the hypothalamus would most likely disrupt:", opts: ["short - term memory.", "co-ordination during locomotion.", "executive functions, such as decision making.", "regulation of body temperature."], ans: 3, exp: "Hypothalamus regulates body temperature." },
+    { q: "151. Identify the hormone with its correct matching of source and function :", opts: ["Oxytocin - posterior pituitary, growth and maintenance of mammary glands.", "Melatonin - pineal gland, regulates the normal rhythm of sleep-wake cycle.", "Progesterone - corpus-luteum, stimulation of growth and activities of female secondary sex organs.", "Atrial natriuretic factor - ventricular wall increases the blood pressure."], ans: 1, exp: "Melatonin from pineal gland regulates sleep-wake cycle." },
+    { q: "152. Fight-or-flight reactions cause activation of :", opts: ["the parathyroid glands, leading to increased metabolic rate.", "the kidney, leading to suppression of renin-angiotensin-aldosterone pathway.", "the adrenal medulla, leading to increased secretion of epinephrine and norepinephrine.", "the pancreas leading to a reduction in the blood sugar levels."], ans: 2, exp: "Adrenal medulla secretes epinephrine and norepinephrine." },
+    { q: "153. Which one of the following hormones also produces anti-inflammatory reactions in man and suppresses the immune response in addition to its primary functions?", opts: ["Thyrocalcitonin", "Cortisol", "Erythropoietin", "Thymosin"], ans: 1, exp: "Cortisol produces anti-inflammatory reactions." },
+    { q: "154. Which of the following represents the action of insulin?", opts: ["Increases blood glucose levels by hydrolysis of glycogen", "Increases blood glucose levels by stimulating glucagon production", "Decreases blood glucose levels by forming glycogen", "Increases blood glucose level by promoting cellular uptake of glucose"], ans: 2, exp: "Insulin decreases blood glucose by forming glycogen." },
+    { q: "155. Norepinephrine:\nI. Is released by sympathetic fibres\nII. Is released by parasympathetic fibres\nIII. Increases the heart rate\nIV. Decreases blood pressure", opts: ["I and IV", "I and III", "II and III", "II and IV"], ans: 1, exp: "I and III are correct." },
+    { q: "156. Select the option which correctly matches the endocrine gland with its hormone and its function\n(a) Ovary - FSH - stimulates follicular development and the secretion of estrogens.\n(b) Placenta - estrogen - initiates secretion of the milk.\n(c) Corpus luteum - estrogen - essential for maintenance of endometrium.\n(d) Leydig cells - androgen - initiates the production of sperms.", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 3, exp: "Leydig cells secrete androgens, which initiate sperm production." },
+    { q: "157. Which of the following pituitary hormones is secreted without the involvement of a releasing hormone (RH)?", opts: ["Thyroid Stimulating Hormone (TSH)", "Follicle Stimulating Hormone (FSH)", "Oxytocin", "Prolactin"], ans: 2, exp: "Oxytocin is secreted without a releasing hormone." },
+    { q: "158. Which of the following hormones is a derivative of fatty acid?", opts: ["Gastrin", "Thyroxin", "Estrogen", "Prostaglandins"], ans: 3, exp: "Prostaglandins are derived from fatty acids." },
+    { q: "159. Find the incorrect match w.r.t. structure/cell and its hormone concerned.", opts: ["b-cells of pancreas - Insulin", "Zona fasciculata of adrenal cortex - Cortisol", "Follicular cells of thyroid gland - Thyrocalcitonin", "Juxta-glomerular cells of kidney - Erythropoietin"], ans: 2, exp: "Follicular cells secrete thyroxine, not thyrocalcitonin." },
+    { q: "160. Which of the following hormone is not produced by hypothalamus?", opts: ["Oxytocin", "GnRH", "Somatostatin", "Calcitonin"], ans: 3, exp: "Calcitonin is produced by the thyroid gland." },
+    { q: "161. A chemical signal that has both endocrine and neural roles is", opts: ["Epinephrine", "Cortisol", "Melatonin", "Calcitonin"], ans: 0, exp: "Epinephrine has both endocrine and neural roles." },
+    { q: "162. Which one of the following hormones is not involved in sugar metabolism?", opts: ["Insulin", "Glucagon", "Cortisone", "Somatotrophic hormone"], ans: 3, exp: "Somatotrophic hormone (GH) is not directly involved in sugar metabolism." },
+    { q: "163. Which one of the following hormones though synthesised elsewhere, is stored and released by the master gland?", opts: ["Prolactin", "Melanocyte stimulating hormone", "Antidiuretic hormone", "Luteinising hormone"], ans: 2, exp: "ADH is synthesized in the hypothalamus and released by the posterior pituitary." },
+    { q: "164. The amino acid Tryptophan is the precursor for the synthesis of :-", opts: ["Melatonin and Serotonin", "Thyroxine and Triiodothyronine", "Estrogen and Progesterone", "Cortisol and Cortisone"], ans: 0, exp: "Tryptophan is a precursor for melatonin and serotonin." },
+    { q: "165. The posterior pituitary gland is not a 'true' endocrine gland because:-", opts: ["It is under the regulation of hypothalamus", "It secretes enzymes", "It is provided with a duct", "It only stores and releases hormones"], ans: 3, exp: "Posterior pituitary only stores and releases hormones." },
+    { q: "166. 'Grave's disease is caused due to :-", opts: ["Hyposecretion of adrenal gland", "Hypersecretion of adrenal gland", "Hyposecretion of thyroid gland", "Hypersecretion of thyroid gland"], ans: 3, exp: "Grave's disease is due to hypersecretion of thyroid gland." },
+    { q: "167. Name a peptide hormone which acts mainly on hepatocytes, adipocytes and enhances cellular glucose uptake and utilization.", opts: ["Secretin", "Gastrin", "Insulin", "Glucagon"], ans: 2, exp: "Insulin acts on hepatocytes and adipocytes." },
+    { q: "168. The adrenal cortex synthesizes only :", opts: ["Steroid hormones", "Peptide hormones", "Glycopeptide hormones", "Catecholamines"], ans: 0, exp: "Adrenal cortex synthesizes steroid hormones." },
+    { q: "169. Oxytocin is synthesized in", opts: ["Adenohypophysis", "Neurohypophysis", "Hypothalamus", "Epiphysis"], ans: 2, exp: "Oxytocin is synthesized in the hypothalamus." },
+    { q: "170. Which of the following hormone is not chemically glycoprotein?", opts: ["Growth hormone", "Prolactin", "Luteinizing hormone", "Estrogen"], ans: 3, exp: "Estrogen is a steroid hormone." },
+    { q: "171. Release of pancreatic juice is stimulated by :\nI. Enterokinase\nII. Secretin\nIII. Trypsinogen\nIV. Cholecystokinin", opts: ["All are correct", "All are incorrect", "Both I and III are correct", "Both II and IV are correct"], ans: 3, exp: "Secretin and cholecystokinin stimulate pancreatic juice release." },
+    { q: "172. Go through the following statements.\nI. Silicosis is the result of exposure to silica that causes permanent lung damage and death.\nII. Transportation of gases and digested food materials in the body of higher animals causes muscle weakness and fatigue\nIII. ADH is a neurohypophysial hormone that regulates body water\nIV. Myasthenia gravis is a neuromuscular disease that is mediated by circulatory system\nWhich of the following statement(s) is/are correct?", opts: ["I and II are correct", "II and III are correct", "II and IV", "I, III and IV are correct"], ans: 3, exp: "I, III and IV are correct." },
+    { q: "173. Which of the following hormones contains iodine?", opts: ["Inhibin", "FSH", "Prolactin", "Thyroxine"], ans: 3, exp: "Thyroxine contains iodine." },
+    { q: "174. Secretin is a gastrointestinal tract hormone that", opts: ["Acts on exocrine portion of pancreas and stimulates the secretion of water and bicarbonate ions.", "Acts on endocrine portion of pancreas and stimulates a-cells to secrete glucagon.", "Acts on gastric glands and stimulates secretion of hydrochloric acid and pepsinogen.", "Stimulates secretion of gastric lipase from stomach"], ans: 0, exp: "Secretin acts on the exocrine portion of the pancreas." },
+    { q: "175. Which of the following is considered as a hyperglycemic factor?", opts: ["Insulin", "Glucagon", "Aldosterone", "Parathormone"], ans: 1, exp: "Glucagon is a hyperglycemic factor." },
+    { q: "176. _____ hormone contracts gallbladder to release bile.", opts: ["Gastrin", "Secretin", "Enterogastrin", "Cholecystokinin"], ans: 3, exp: "Cholecystokinin contracts the gallbladder." },
+    { q: "177. The hormone which regulates the gene-expression of the target cell is", opts: ["Prolactin", "Oxytocin", "Thyroxin", "Growth-hormone"], ans: 2, exp: "Thyroxin regulates gene expression." },
+    { q: "178. A cell that contains proteins enabling a hormone to selectively bind to its plasma membrane is called a(n)", opts: ["secretory cell.", "plasma cell.", "endocrine cell.", "target cell."], ans: 3, exp: "It is called a target cell." },
+    { q: "179. Which of the following statements about hormones is incorrect?", opts: ["They are secreted into the extracellular fluid.", "They circulate in blood or hemolymph.", "They communicate messages throughout the body.", "They travel through a dedicated pathway."], ans: 3, exp: "Hormones do not travel through a dedicated pathway; they travel through blood." },
+    { q: "180. Which of the following statements about hormones is incorrect?", opts: ["Glands that produce them are ductless glands.", "They are produced only by organs called endocrine organs.", "Some are water soluble and some are not.", "They often maintain steady-state conditions."], ans: 1, exp: "Hormones can also be produced by non-endocrine tissues." },
+    { q: "181. Which of the following is the most likely explanation for hypothyroidism in a patient whose iodine level is normal?", opts: ["a disproportionate production of T3 to T4", "hyposecretion of TSH", "hypersecretion of TSH", "hypersecretion of MSH"], ans: 1, exp: "Hyposecretion of TSH can cause hypothyroidism." },
+    { q: "182. Excess secretion from this gland can cause a person to be thin, hyperactive, always hungry and irritable, with a high metabolic rate.", opts: ["adrenal cortex", "thyroid", "pancreas", "thymus"], ans: 1, exp: "Excess thyroid hormone causes these symptoms." },
+    { q: "183. A decrease in blood pressure/volume will not cause the release of :", opts: ["Atrial natriuretic factor", "Aldosterone", "ADH", "Renin"], ans: 0, exp: "ANF is released when blood pressure increases." },
+    { q: "184. A temporary endocrine gland in the human body is :", opts: ["Corpus cardiacum", "corpus luteum", "Corpus allatum", "Pineal gland"], ans: 1, exp: "Corpus luteum is a temporary endocrine gland." },
+    { q: "185. GnRH, a hypothalamic hormone, needed in reproduction, acts on:", opts: ["anterior pituitary gland and stimulates secretion of LH and FSH.", "posterior pituitary gland and stimulates secretion of oxytocin and FSH.", "posterior pituitary gland and stimulates secretion of LH and relaxin.", "anterior pituitary gland and stimulates secretion of LH and oxytocin."], ans: 0, exp: "GnRH acts on the anterior pituitary to secrete LH and FSH." },
+    { q: "186. Hypersecretion of Growth Hormone in adults does not cause further increase in height, because:", opts: ["Epiphyseal plates close after adolescence.", "Bones loose their sensitivity to Growth Hormone in adults.", "Muscle fibres do not grow in size after birth.", "Growth Hormone becomes inactive in adults."], ans: 0, exp: "Epiphyseal plates close after adolescence." },
+    { q: "187. Among various encountered in living cells the ions most commonly used as signals are -", opts: ["Fe++", "K+", "Na+", "Ca++"], ans: 3, exp: "Ca++ is commonly used as a signal." },
+    { q: "188. Disorders caused by hypersecretion of concerned hormones are -", opts: ["gigantism and exophthalmic goiter", "monogolism and cretinism", "cretinism, diabetes and goiter", "rickets, diabetes mellitus"], ans: 0, exp: "Gigantism and exophthalmic goiter are due to hypersecretion." },
+    { q: "190. Read the following carefully.\nI. Protein hormone interact with the intra cellular receptor\nII. Iodothyronine hormone generate secondary messenger after interaction with receptor\nIII. Hormone is a cell specific\nIV. Somatostatin hormone secrete only by hypothalamus\nHow many statements are not correct?", opts: ["1", "2", "3", "4"], ans: 3, exp: "All four statements are incorrect." },
+    { q: "191. Which of the following is an amino acid derived hormone?", opts: ["Estradiol", "Ecdysone", "Epinephrine", "Estriol"], ans: 2, exp: "Epinephrine is an amino acid derivative." },
+    { q: "192. Which of the following hormones can play a significant role in osteoporosis?", opts: ["Estrogen and Parathyroid hormone", "Progesterone and Aldosterone", "Aldosterone and Prolactin", "Parathyroid hormone and Prolactin"], ans: 0, exp: "Estrogen and PTH play a role in osteoporosis." },
+    { q: "193. Type-1 diabetes is -", opts: ["Insulin independent", "Insulin dependent", "Caused by UV-radiation", "Infectious"], ans: 1, exp: "Type-1 diabetes is insulin dependent." },
+    { q: "194. If the pH of duodenum decreases below 5, then secretion of ____ stop.", opts: ["Secretin", "Enterokinase", "CCK", "Gastrin"], ans: 3, exp: "Gastrin secretion stops." },
+    { q: "195. Which of the following endocrine structure is not controlled by a tropic hormone from the anterior pituitary?", opts: ["Pancreatic islet cells", "Thyroid gland", "Adrenal cortex", "Ovaries"], ans: 0, exp: "Pancreatic islet cells are not controlled by tropic hormones." },
+    { q: "196. A patient of diabetes mellitus excretes glucose in urine even when he is kept in a carbohydrate free diet. It is because", opts: ["fats are catabolised in adipose tissues to form glucose", "amino acids are catabolised in kidney to form glucose", "amino acids are discharged in blood stream from liver", "glycogen from muscles is released in blood stream"], ans: 0, exp: "Fats are catabolised to form glucose." },
+    { q: "197. Which of the following statements is not correct?", opts: ["In the knee-jerk reflex, stimulus is the stretching of muscle and response is its contraction", "An action potential in an axon does not move backward because the segment behind is in a refractory phase", "Depolarisation of hair cells of cochlea results in the opening of the mechanically gated potassium-ion channels", "Rods are very sensitive and contribute to daylight vision"], ans: 3, exp: "Rods contribute to night vision, not daylight." },
+    { q: "198. Artificial light, extended work-time and reduced sleep-time disrupt the activity of-", opts: ["Posterior pituitary gland", "Thymus gland", "Pineal gland", "Adrenal gland"], ans: 2, exp: "Pineal gland activity is disrupted." },
+    { q: "199. Which of the following conditions will stimulate parathyroid gland to release parathyroid hormone?", opts: ["Rise in blood Ca+2 levels", "Fall in active Vitamin D levels", "Fall in blood Ca+2 levels", "Fall in bone Ca+2 levels"], ans: 2, exp: "Fall in blood Ca+2 levels stimulates PTH release." },
+    { q: "200. Which of the following hormones is responsible for both the milk ejection reflex and the foetal ejection reflex?", opts: ["Relaxin", "Estrogen", "Prolactin", "Oxytocin"], ans: 3, exp: "Oxytocin is responsible for both reflexes." },
+    { q: "201. Match the following hormones with the respective disease\n(A) Insulin - (i) Addison's disease\n(B) Thyroxin - (ii) Diabetes insipidus\n(C) Corticoids - (iii) Acromegaly\n(D) Growth Hormone - (iv) Goitre - (v) Diabetes mellitus", opts: ["(v) (i) (ii) (iii)", "(ii) (iv) (iii) (i)", "(v) (iv) (i) (iii)", "(ii) (iv) (i) (iii)"], ans: 2, exp: "(v) (iv) (i) (iii)." },
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 19; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

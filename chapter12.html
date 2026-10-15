@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 14: Respiration in Plants - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Respiration in Plants</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "1. Which of the following represents a correct ordering of the events that occur in the catabolism of glucose in absence of O2?", opts: ["Glycolysis; TCA cycle; oxidative phosphorylation", "Glycolysis; oxidative phosphorylation; TCA cycle", "Oxidative phosphorylation; TCA cycle; glycolysis", "Glycolysis; fermentation"], ans: 3, exp: "In the absence of O2, glucose is catabolised via glycolysis followed by fermentation." },
+    { q: "2. Glycolytic pathway from glucose to pyruvic acid involves 10 reactions. Each individual reaction needs -", opts: ["One molecule of ATP", "One molecule of ADP", "One molecule of NAD", "One molecule of specific enzyme"], ans: 3, exp: "Each reaction of glycolysis requires a specific enzyme." },
+    { q: "3. Glycolysis occurs in the _____ and produces _____ , which in the presence of O2 enters the ___ _", opts: ["Cytosol; pyruvate; mitochondrion", "Cytosol; glucose; mitochondrion", "Mitochondrion; pyruvate; chloroplast", "Chloroplast; glucose; cytosol"], ans: 0, exp: "Glycolysis occurs in cytosol, produces pyruvate which enters mitochondria." },
+    { q: "4. Which metabolic pathway is a common pathway to both anaerobic and aerobic metabolism?", opts: ["TCA cycle", "ETS", "EMP pathway", "Kreb's cycle"], ans: 2, exp: "EMP pathway (glycolysis) is common to both." },
+    { q: "5. ATP is-", opts: ["An energy currency", "a nucleotide", "formed in both respiration and photosynthesis", "All"], ans: 3, exp: "All are correct." },
+    { q: "6. The end product of glycolysis is -", opts: ["pyruvate", "The starting point for TCA cycle", "The starting point for fermentation", "All"], ans: 3, exp: "All are correct." },
+    { q: "7. 1st step (reaction) of glycolysis is -", opts: ["Oxidative step", "Reductive step", "Endergonic", "Exergonic"], ans: 2, exp: "The first step of glycolysis is endergonic (requires ATP)." },
+    { q: "8. Glycolysis was discovered by -", opts: ["Embden", "Meyerhof", "Parnas", "All"], ans: 3, exp: "Glycolysis was discovered by Embden, Meyerhof and Parnas." },
+    { q: "9. Glycolysis -", opts: ["Takes place in all living cells", "Causes partial oxidation of glucose (one molecule) to form 2 molecules of pyruvic acid and 2 ATP as net gain", "Uses 2 ATP at two steps", "All"], ans: 3, exp: "All are correct." },
+    { q: "10. Respiration is -", opts: ["Anabolic + Exergonic", "Catabolic + Exergonic", "Catabolic + Endergonic", "Anabolic + Endergonic"], ans: 1, exp: "Respiration is catabolic and exergonic." },
+    { q: "11. Usable energy of respiration is -", opts: ["used in charging biomolecules into activity", "Stored as heat", "Immediately consumed in cellular activities", "Trapped in ATP molecules"], ans: 3, exp: "Usable energy is trapped in ATP molecules." },
+    { q: "12. Function of respiration is to -", opts: ["make ATP", "Make NADH", "Get rid of glucose", "Get rid of CO2"], ans: 0, exp: "The main function of respiration is to make ATP." },
+    { q: "13. In Respiration-", opts: ["Dry wt decreases", "C-C bonds of complex compounds break through oxidation in cells", "Energy contained in the respiratory materials is released in a series of slow stepwise reactions controlled by enzymes", "All"], ans: 3, exp: "All are correct." },
+    { q: "14. Which one performs both respiration and photosynthesis?", opts: ["Root cells", "Mesophyll", "Ovum of angiosperm", "Xylem parenchyma"], ans: 1, exp: "Mesophyll cells perform both respiration and photosynthesis." },
+    { q: "15. For gaseous exchange plants have -", opts: ["Stomata", "Lenticels", "Perin", "All"], ans: 3, exp: "All are correct." },
+    { q: "16. The reasons why plants can get along without respiratory organs are -", opts: ["Almost all living cells in a plant have their surfaces exposed to air", "Plants have little demand for gas exchange", "Taking care of its own gas exchange need by every part, very little transport of gases from one part to another", "All"], ans: 3, exp: "All are correct." },
+    { q: "17. Why is a different enzyme involved in each step of glycolysis?", opts: ["Each step occurs in a different subcellular location", "Each step occurs in a different cell", "Each step involves a different change in potential energy", "Each step involves a different chemical reaction."], ans: 3, exp: "Each step involves a different chemical reaction." },
+    { q: "18. Nearly every living organism uses glucose as a nutrient source of energy. Why?", opts: ["Glucose is the only molecule capable of providing the energy to produce ATP", "The structure of glucose is very similar to ATP", "Glucose has more potential energy than any other respiratory substrate", "The ability to harvest energy from glucose appeared very early in biological evolution"], ans: 3, exp: "The ability to harvest energy from glucose appeared very early in biological evolution." },
+    { q: "19. Glycolysis is found in -", opts: ["Eukaryotic cells", "Anaerobic cells", "Virtually all cells", "Most muscle cells"], ans: 2, exp: "Glycolysis is found in virtually all cells." },
+    { q: "20. How many molecules of O2 are used and how many CO2 comes out during the glycolytic breakdown of one glucose molecule?", opts: ["1; 2", "2; 1", "0; 0", "36; 6"], ans: 2, exp: "No O2 is used and no CO2 is released during glycolysis." },
+    { q: "21. 3PGAld is oxidised during glycolysis. What happens to the hydrogen atoms and the e- that are removed during oxidation?", opts: ["They reduce NAD+", "They oxidise NAD+", "They are transferred to C3H4O3 (Pyruvic acid)", "They come out immediately in the form of H2O"], ans: 0, exp: "They reduce NAD+." },
+    { q: "22. Which one is false for glycolysis?", opts: ["Substrate level phosphorylation occurs", "The end products are CO2 and H2O", "ATP is formed", "ATP is used"], ans: 1, exp: "The end products of glycolysis are pyruvate, not CO2 and H2O." },
+    { q: "23. If glucose is labelled with 14C, what molecule will become radioactive as glycolysis and TCA cycle are completed.", opts: ["Water", "NADH", "ATP", "CO2"], ans: 3, exp: "CO2 will become radioactive." },
+    { q: "24. Glycolysis occurs in ____ ; the TCA cycle occurs in _____ ; and ETC occurs in ____ _", opts: ["Mitochondrial matrix, cytosol; mitochondrial inner membrane", "Cytosol; mitochondrial matrix; mitochondrial inner membrane", "Mitochondrial outer membrane; cytosol; mitochondrial inner membrane", "Cytosol; outer chamber of mitochondria; inner chamber of mitochondria"], ans: 1, exp: "Glycolysis in cytosol, TCA in mitochondrial matrix, ETC in inner mitochondrial membrane." },
+    { q: "25. What will happen to glycolytic pathway if a cell runs completely out of ATP -", opts: ["Glycolysis will speed up", "Glycolysis will be slow down", "Glycolysis will stop as first and third steps need ATP input", "Glycolysis will increase as energy will be supplied by NADH2"], ans: 2, exp: "Glycolysis will stop as first and third steps need ATP input." },
+    { q: "26. During glycolysis, for each mole of glucose oxidised to pyruvate -", opts: ["6 moles of ATP are produced", "2 moles of NAD+ are produced", "2 moles of ATP are used, and 4 moles of ATP are produced", "No ATP is produced"], ans: 2, exp: "2 moles of ATP are used, and 4 moles of ATP are produced." },
+    { q: "27. During glycolysis, the conversion of one mole of 3PGAld to C3H4O3 yield 2 moles of ATP. But the oxidation of glucose to C3H4O3 produces a total of 4 moles of ATP. Where do the remaining 2 moles of ATP come from?", opts: ["One mole of glucose gives 2 moles of 3PGAld", "Glycolysis produces 2NADH", "Fermentation of C3H4O3 produces 2ATP more", "2ATP are used in the conversion of glucose to 3PGAld"], ans: 0, exp: "One mole of glucose gives 2 moles of 3PGAld." },
+    { q: "28. For glycolysis to continue, all cells require -", opts: ["O2", "Mitochondria", "ETS", "NAD+"], ans: 3, exp: "Cells require NAD+ for glycolysis to continue." },
+    { q: "29. The oxidation of pyruvic acid to CO2 is called -", opts: ["Fermentation", "TCA/Citric acid cycle", "Glycolysis", "Oxidative phosphorylation"], ans: 1, exp: "TCA/Citric acid cycle." },
+    { q: "30. During the energy-priming portion of glycolysis, the phosphates from ATP molecules are-", opts: ["Added to first and 6th carbon", "Added to 1st and 4th carbon", "Wasted, as an energy investment", "Used to make lactate"], ans: 0, exp: "Added to first and 6th carbon." },
+    { q: "31. In the absence of O2 cells capable of fermentation -", opts: ["Accumulate glucose", "No longer produce ATP", "Accumulate pyruvate", "Oxidise NADH to produce NAD+"], ans: 3, exp: "Oxidise NADH to produce NAD+." },
+    { q: "32. For bacteria to continue growing rapidly when they are shifted from an environment containing O2 to an anaerobic environment, they must-", opts: ["Produce more ATP per mole of glucose during glycolysis", "Produce ATP during oxidation of NADH", "Increase the rate of glycolysis", "Increase the rate of TCA cycle"], ans: 2, exp: "Increase the rate of glycolysis." },
+    { q: "33. In alcoholic fermentation, NAD+ is produced during the-", opts: ["Reduction of acetyldehyde to ethanol", "Oxidation of glucose", "Oxidation of pyruvate to acetyl CoA", "Hydrolysis of ATP to ADP"], ans: 0, exp: "Reduction of acetyldehyde to ethanol." },
+    { q: "34. The free energy released during oxidation of 3 PGAld to 1, 3 di PGA, is -", opts: ["Used to oxidise NADH", "Lost as heat", "Used to form ATP", "Used to reduce NAD+"], ans: 3, exp: "Used to reduce NAD+." },
+    { q: "35. The results of first five reactions of the glycolytic pathway are -", opts: ["Adding phosphates, modifying sugars, and forming 3PGAld", "Removal of e- and H+ from glucose", "Oxidation of pyruvate and formation of acetyl CoA", "Oxidative step"], ans: 0, exp: "Adding phosphates, modifying sugars, and forming 3PGAld." },
+    { q: "36. Fermentation always produces -", opts: ["AMP", "NAD+", "Pi", "DNA"], ans: 1, exp: "Fermentation produces NAD+." },
+    { q: "37. Choose the correct combination between respiratory substrates and their respective RQs.\nCarbohydrate | Fat | Protein", opts: ["2 | 1 | 1", "0 | 1 | 1", "1 | 0.7 | 0.9", "0.5 | 0.5 | 0.5"], ans: 2, exp: "Carbohydrate RQ=1, Fat RQ=0.7, Protein RQ=0.9." },
+    { q: "38. Fermentation takes place :", opts: ["Under anaerobic conditions in many prokaryotes and unicellular eukaryotes", "Under aerobic conditions in many prokaryotes and unicellular eukaryotes", "Under anaerobic conditions in all prokaryotes and unicellular eukaryotes", "Under aerobic conditions in all prokaryotes and unicellular eukaryotes"], ans: 0, exp: "Under anaerobic conditions in many prokaryotes and unicellular eukaryotes." },
+    { q: "39. In order for glucose to be used as an energy source, it is necessary that -", opts: ["Glucose be formed from fructose", "Glucose be degraded to CO2", "2 molecules of ATP be Invested in the system", "None"], ans: 2, exp: "2 molecules of ATP be invested in the system." },
+    { q: "40. Many species derives their energy from fermentation. The function of fermentation is to -", opts: ["Reduce NAD+", "Oxidise CO2", "Oxidise NADH + H+, ensuring a continued supply of ATP.", "Production of acetyl CoA"], ans: 2, exp: "Oxidise NADH + H+, ensuring a continued supply of ATP." },
+    { q: "41. Which of the following cellular metabolic processes can occur in the presence or absence of O2?", opts: ["Glycolysis", "Fermentation", "TCA cycle", "Electron transport coupled with chemiosmosis"], ans: 0, exp: "Glycolysis can occur in both presence and absence of O2." },
+    { q: "42. The main purpose of cellular respiration is to -", opts: ["Convert potential to kinetic energy", "Convert kinetic to potential energy", "Create energy in the cell", "Convert energy stored in the chemical bonds of glucose to an energy that the cell can use."], ans: 3, exp: "Convert energy stored in the chemical bonds of glucose to an energy that the cell can use." },
+    { q: "43. If O2 is not present, yeast cells break down glucose to -", opts: ["CO2 + H2O", "CO2 + Lactic acid", "CO2 + Pyruvic acid", "C2H5OH and CO2"], ans: 3, exp: "C2H5OH and CO2." },
+    { q: "44. NAD+ is-", opts: ["a protein", "an oxidising agent", "a reducing agent", "formed under only aerobic conditions"], ans: 1, exp: "NAD+ is an oxidising agent." },
+    { q: "45. In terms of efficiency at converting the energy of glucose in ATP -", opts: ["aerobic glycolysis is better than TCA cycle", "eukaryotic cells are more efficient than prokaryotic cells", "Electron transport chain is not necessary for high efficiency", "Anaerobic conditions are much less efficient than aerobic"], ans: 3, exp: "Anaerobic conditions are much less efficient than aerobic." },
+    { q: "46. Which of the following statements about cellular energy-harvesting pathway is false?", opts: ["Autotrophs can produce their own food but must obtain energy from it by glycolysis and cellular respiration", "Fermentation usually occurs under anaerobic conditions", "Pyruvate oxidation can only occur under aerobic conditions", "None"], ans: 3, exp: "All the given statements are true." },
+    { q: "47. Which of the following statements regarding metabolic pathways is false?", opts: ["Many of the steps of glycolysis can run in reverse", "Starch, sucrose or glycogen must be hydrolysed before it can enter the glycolysis", "After fats are digested glycerol enters glycolysis by forming DHAP", "After fats digestion, fatty acids can no longer participate in cellular respiration"], ans: 3, exp: "After fats digestion, fatty acids can participate in cellular respiration." },
+    { q: "49. In animal cells, like muscle, during exercise, when O2 is inadequate for cellular respiration, pyruvic acids is reduced into lactic acid by -", opts: ["O2", "Carboxylation", "lactate dehydrogenase", "All"], ans: 2, exp: "lactate dehydrogenase." },
+    { q: "50. Pyruvate -> C2H5OH + CO2. The above reaction needs 2 enzymes named as -", opts: ["Pyruvate decarboxylase and alcohol dehydrogenase", "Pyruvate decarboxylase and enolase", "Pyruvate decarboxylase and pyruvate kinase", "Pyruvate carboxylase + Aldolase"], ans: 0, exp: "Pyruvate decarboxylase and alcohol dehydrogenase." },
+    { q: "51. Which one is true?", opts: ["In absence of O2, fermentation regenerates the NAD+ needed for glycolysis", "Fermentation does not liberate all the energy available in each sugar molecule", "When alcohol cone. reaches 13%, the yeast cells become poisoned and die", "All"], ans: 3, exp: "All are correct." },
+    { q: "52. Which one is false?", opts: ["Less than 7% of energy in glucose is released during lactic or alcoholic fermentation", "Fermentation is observed in all cells", "O2 is an essential requirement for aerobic respiration but it enters the respiratory process at the end", "In aerobic respiration glucose is broken down into CO2 + H2O"], ans: 1, exp: "Fermentation is not observed in all cells." },
+    { q: "53. Where is ATP synthesized in glycolysis?", opts: ["When 1, 3 di PGA is changed into 3 PGA", "When PEPA is changed into pyruvic acid", "When Fr. 1, 6 di P is broken in Triose phosphate (2 molecules)", "Both a and b"], ans: 3, exp: "Both a and b." },
+    { q: "55. At the end of glycolysis X is the net energy gain from one molecule of glucose via Y, but there is also energy stored in the form of Z.", opts: ["1ATP, Oxidative phosphorylation, NADH + H+", "2ATPs, Oxidative phosphorylation, NADH + H+", "2ATPs, Substrate level phosphorylation, NADPH + H+", "2ATPs, Substrate level phosphorylation, NADH + H+"], ans: 3, exp: "2ATPs, Substrate level phosphorylation, NADH + H+." },
+    { q: "56. In Kreb's cycle, the first product is citric acid which is a 6-carbon compound. It is formed by a condensing irreversible reaction between -", opts: ["OAA and Pyruvic acid", "OAA and Acetyl Coenzyme A", "Pyruvic acid and Acetyl Coenzyme A", "OAA and Citrate synthetase"], ans: 1, exp: "OAA and Acetyl Coenzyme A." },
+    { q: "57. Conversion of a-ketoglutaric acid into succinic acid is a step of-", opts: ["EMP pathway", "TCA cycle", "HMP pathway", "ED pathway"], ans: 1, exp: "TCA cycle." },
+    { q: "58. In Kreb's cycle, how many oxidation (dehydrogenation) occur?", opts: ["4", "6", "2", "1"], ans: 0, exp: "4 oxidations occur in Kreb's cycle." },
+    { q: "59. Kreb's cycle was discovered by Krebs in pigeon muscles in 1940. Which step is called Gateway step/Link reaction in aerobic respiration?", opts: ["Glycolysis", "Formation of acetyl Coenzyme A", "Citric acid formation", "ETS terminal oxidation"], ans: 1, exp: "Formation of acetyl Coenzyme A." },
+    { q: "60. In Kreb's cycle -", opts: ["Acetyl coenzyme A undergoes 4 oxidations and 2 decarboxylations", "Pyruvic acid undergoes 4 oxidations and 2 decarboxylations", "TCA undergoes 4 oxidations and 4 decarboxylations", "OAA undergoes 4 oxidations and 2 decarboxylations."], ans: 0, exp: "Acetyl coenzyme A undergoes 4 oxidations and 2 decarboxylations." },
+    { q: "61. Fermentation is incomplete breakdown of carbohydrates. It is performed by-", opts: ["All microbes", "Some fungi and some bacteria", "All fungi and bacteria", "Only yeast"], ans: 1, exp: "Some fungi and some bacteria." },
+    { q: "62. At the end of the Kreb's cycle, most of energy removed from glucose molecule is transferred to -", opts: ["NADH + H+/FADH + H+", "ATP", "OAA", "Citric acid"], ans: 0, exp: "NADH + H+/FADH + H+." },
+    { q: "63. Correct sequence of events in Kreb's cycle is -", opts: ["Acetyl CoA -> Citrate -> Pyruvate -> a-ketoglutarate -> Succinate -> Malate -> Fumarate -> OAA", "Acetyl CoA -> Citric acid -> a-ketoglutaric acid -> Succinic acid -> Fumaric acid -> Malic acid -> OAA", "Acetyl CoA -> Citric acid -> Malic acid -> a-ketoglutaric acid -> Succinic acid -> OAA", "All are wrong"], ans: 1, exp: "Acetyl CoA -> Citric acid -> a-ketoglutaric acid -> Succinic acid -> Fumaric acid -> Malic acid -> OAA." },
+    { q: "64. Kreb's cycle is also called TCA (Tri Carboxylic acid Cycle) or citric acid cycle (Organic acid cycle). It is also called metabolic sink as it is -", opts: ["Common pathway for carbohydrates, fats and proteins (amino acids)", "Common pathway for carbohydrates and fats only", "Common pathway for carbohydrates and organic acids only", "None of the above"], ans: 0, exp: "Common pathway for carbohydrates, fats and proteins (amino acids)." },
+    { q: "65. Which is not found inside the mitochondrion?", opts: ["Citric acid", "PEP or PEPA", "Malic acid", "Ketoglutaric acid"], ans: 1, exp: "PEP or PEPA is not found inside the mitochondrion." },
+    { q: "66. The first 5-C dicarboxylic acid in Kreb's cycle which is used in nitrogen metabolism is -", opts: ["OAA", "Citric acid", "a-ketoglutaric acid", "Acetyl Coenzyme A"], ans: 2, exp: "a-ketoglutaric acid." },
+    { q: "67. In Kreb's cycle, the H+ removed at succinate level is accepted by-", opts: ["FAD+", "NAD+", "ADP", "FMN+"], ans: 0, exp: "FAD+." },
+    { q: "68. Krebs' cycle is completed with the formation of -", opts: ["Citric acid", "OAA", "Succinic acid", "Malic acid"], ans: 1, exp: "OAA." },
+    { q: "69. Inside an active mitochondrion, most electrons follow which pathway?", opts: ["Glycolysis -> NADH -> Oxidative Phosphorylation -> ATP -> O2", "Krebs' cycle -> FADH2 -> ETS -> ATP", "ETS -> Krebs' cycle -> ATP -> O2", "Krebs' cycle -> NADH + H+ -> Electron transport chain -> O2"], ans: 3, exp: "Krebs' cycle -> NADH + H+ -> Electron transport chain -> O2." },
+    { q: "70. Most of the CO2 is released during -", opts: ["Glycolysis", "The Kreb's Cycle", "Lactate fermentation", "Oxidative phosphorylation"], ans: 1, exp: "The Kreb's Cycle." },
+    { q: "71. In aerobic cellular respiration, which generates more ATP -", opts: ["Substrate level phosphorylation", "Chemiosmosis", "Both generate the same amount of ATP", "Neither generates ATP"], ans: 1, exp: "Chemiosmosis generates more ATP." },
+    { q: "72. Which one of the following statements correctly describes relationship between the Kreb's cycle and electron transport pathway?", opts: ["The Kreb's cycle releases H+ used by electron transport", "The electron transport pathway obtains electron from the CO2 produced by the Kreb's cycle", "The Kreb's cycle and electron transport pathway, both produce ATP", "NADH + H+ produced by Krebs' cycle is used to make ATP by electron transport"], ans: 3, exp: "NADH + H+ produced by Krebs' cycle is used to make ATP by electron transport." },
+    { q: "75. At the end of the Kreb's cycle, but before the electron transport chain, the oxidation of glucose has produced a net gain of-", opts: ["3CO2, 5 NADH2, 1 FADH2, 2ATP", "6CO2, 10 NADH2, 2 FADH2, 4ATP", "6CO2, 10 NADH2, 2 FADH2, 38 ATP", "None of the above is correct"], ans: 1, exp: "6CO2, 10 NADH2, 2 FADH2, 4ATP." },
+    { q: "76. If oxygen is labelled with 18O, which molecule will become radioactive as glycolysis, Kreb's cycle and oxidative phosphorylation are completed-", opts: ["Water", "CO2", "ATP", "NADH2"], ans: 0, exp: "Water." },
+    { q: "77. All of these events occur in the conversion of pyruvic acid into Acetyl CoA except -", opts: ["Production of CO2", "Conversion of 3-carbon molecule into a 2C molecule", "Pyruvate dehydrogenase enzyme complex, several factors like Mg+2, NAD+ and CoA are needed", "Site of the reaction is cytosol"], ans: 3, exp: "The site of the reaction is mitochondrial matrix, not cytosol." },
+    { q: "79. If 2 acetyl CoA molecules are fed into the Kreb's cycle, how many ATP molecules are synthesised directly in the cycle?", opts: ["2", "4", "36", "38"], ans: 0, exp: "2 ATP molecules are synthesised directly." },
+    { q: "80. Which one is correct?", opts: ["Kreb's cycle and chemiosmosis are inhibited in anaerobic conditions", "Both glucose and fructose readily enter the glycolytic pathway", "Glucose and fructose are phosphorylated by Hexokinase", "All"], ans: 3, exp: "All are correct." },
+    { q: "81. All of the following processes can release CO2 except-", opts: ["Alcohol fermentation", "Oxidative decarboxylation and Kreb's cycle", "Oxidative phosphorylation", "a-Ketoglutaric acid -> succinic acid"], ans: 2, exp: "Oxidative phosphorylation does not release CO2." },
+    { q: "82. Which of the following sequences correctly indicates the potential ATP yield of the indicated molecules from greatest ATP yield to least ATP yield?", opts: ["Pyruvate, ethanol, glucose, acetyl CoA", "Glucose, Pyruvate, acetyl CoA, NADH + H+", "Glucose, FADH2, Acetyl CoA, pyruvate", "Glucose, FADH2, NADH2, pyruvate"], ans: 1, exp: "Glucose, Pyruvate, acetyl CoA, NADH + H+." },
+    { q: "83. The first reaction of Kreb's cycle i.e. condensation of acetyl group with OAA and water is catalysed by -", opts: ["Citrate synthetase", "Succinate dehydrogenase", "RuBisCo", "PEPCase"], ans: 0, exp: "Citrate synthetase." },
+    { q: "84. Which of the following steps is associated with ATP formation (substrate level phosphorylation)?", opts: ["Succinyl CoA -> Succinic acid", "1, 3 diPGA -> 3 PGA", "PEP -> Pyruvate", "All"], ans: 3, exp: "All are correct." },
+    { q: "86. Which one is correct?", opts: ["During the fermentation, 2 molecules of ATP per molecule of glucose is the net gain", "Oxidative phosphorylation produces the most ATP in the cell", "During TCA cycle oxidative steps are coupled to the reductions of e- carriers", "All"], ans: 3, exp: "All are correct." },
+    { q: "87. In yeast cell, if TCA cycle is shut down due to lack of O2, glycolysis will probably-", opts: ["Shut down", "Increase", "Produce more ATP/glucose molecule", "Produce more NADH2/glucose molecule"], ans: 1, exp: "Glycolysis will increase." },
+    { q: "88. O2 is used by -", opts: ["Citric acid cycle", "Electron transport chain", "Substrate level phosphorylation", "ATP synthase"], ans: 1, exp: "Electron transport chain." },
+    { q: "89. Water is the by-product of cellular respiration. The water is produced as a result of-", opts: ["Conversion of pyruvate to acetyl CoA", "Conversion of glucose to pyruvate", "Combining carbon dioxide with protons", "The reduction of oxygen at the end of electron transport chain"], ans: 3, exp: "The reduction of oxygen at the end of electron transport chain." },
+    { q: "90. The chemiosmotic generation of ATP is driven by-", opts: ["Osmotic movement from low OP to high OP", "Oxidative phosphorylation", "A difference in H+ concentration on both side of membrane", "None"], ans: 2, exp: "A difference in H+ concentration on both side of membrane." },
+    { q: "91. Most ATP in our bodies is made by -", opts: ["Glycolysis", "TCA cycle", "Burning fat", "ATP synthase"], ans: 3, exp: "ATP synthase." },
+    { q: "92. The main purpose of electron transport chain is to -", opts: ["Cycle NADH + H+ back to NAD+", "Use the intermediates from TCA cycle", "breakdown pyruvate", "All"], ans: 0, exp: "Cycle NADH + H+ back to NAD+." },
+    { q: "93. Terminal e- acceptor of e- transport is -", opts: ["CO2", "C6H12O6", "O2", "None"], ans: 2, exp: "O2." },
+    { q: "94. Which statement concerning ATP synthesis is true?", opts: ["ATP can be synthesised through substrate level phosphorylation, photophosphorylation and oxidative phosphorylation", "The proton-motive force is the establishment of proton gradients and electrochemical potentials across the inner membrane", "Proton-motive force is essential for back flow of H+ from outer chamber of matrix of mitochondria through proton channel (F0) of F0-F1 particle to produce ATP", "All"], ans: 3, exp: "All are correct." },
+    { q: "95. Choose the false statement -", opts: ["Respiratory chain uses O2 as final hydrogen acceptor", "All living cells perform glycolysis", "Glycolysis can operate in presence or absence of O2", "CN- cannot stop chemiosmosis"], ans: 3, exp: "CN- can stop chemiosmosis." },
+    { q: "96. Go through the following statements about the chemiosmotic mechanism -\nI. Protons are pumped across the membrane\nII. Protons return through the membrane by way of a channel protein.\nIII. ATP is required for protons to return.\nIV. The membrane in question is the inner mitochondrial membrane.\nV. Proton pumping is associated with the respiratory chain", opts: ["V is incorrect", "III is incorrect", "All are incorrect except III", "Only III is correct"], ans: 1, exp: "III is incorrect." },
+    { q: "97. Which of the following is not true of oxidative phosphorylation?", opts: ["It uses oxygen as the initial e- donor", "It involves the redox reactions of electron transport chain", "It involves an ATP synthase located in the inner mitochondrial membrane", "It depends on chemiosmosis"], ans: 0, exp: "It uses oxygen as the final e- acceptor, not initial donor." },
+    { q: "98. The e- carrier molecules and cytochrome -", opts: ["Are reduced as they pass electrons on to the next molecule", "Transfer electrons between the electron carrier complexes", "Shuttle protons to ATP synthase", "Are found in outer mitochondrial membrane"], ans: 1, exp: "Transfer electrons between the electron carrier complexes." },
+    { q: "99. Choose the false option -", opts: ["Flow of electrons in ETS is Fe+3 -> Fe+2 -> Fe+3", "In ETS electrons move from high negative to high positive redox potential", "Cyt a3 has Fe and Cu", "Cytochrome are non-proteinaceous but ubiquinone is proteinaceous"], ans: 3, exp: "Cytochromes are proteinaceous, ubiquinone is non-proteinaceous." },
+    { q: "100. The oxidation of a molecule of FADH2 yield less ATP (2ATP) and a molecule of NADH2 yields 3ATP but FADH2 yields only 2 ATP because", opts: ["Carries few electrons", "Passes its electrons to a transport molecule later in the chain and at a lower level", "Has a lower energy conformation than NADH2", "Is formed in the cytosol and energy is lost when it shuttles its electron across the mitochondrial membrane"], ans: 1, exp: "Passes its electrons to a transport molecule later in the chain and at a lower level." },
+    { q: "101. Which of the following conversions represents a reduction reaction?", opts: ["Pyruvate -> Acetyl CoA", "NADH + H+ -> NAD+ + 2H", "3 PGAld -> Pyruvate", "Acetaldehyde -> Ethanol"], ans: 3, exp: "Acetaldehyde -> Ethanol." },
+    { q: "102. I. Proton channel of oxysome/complex V/ATP synthase is located in F0\nII. Metabolic water is water produced in terminal oxidation/produced in respiration\nIII. CoQ accepts electron from NADH dehydrogenase (complex I) and also can accept electron from FADH2/succinate Q-reductase/complex II\nIV. Cytochrome c is a small protein attached to outer surface of the inner mitochondrial membrane and acts as a mobile carrier for transfer of electrons between complex III (Cyt bc1 complex) and IV\nV. Complex IV refers to cytochrome c oxidase (cyt a, a3 and 2 Cu per centre)\nVI. If a cell is treated with a drug that inhibits ATP synthase, the pH of mitochondrial matrix will increase", opts: ["All are correct", "All are incorrect", "I and V are correct", "Only III is correct"], ans: 0, exp: "All are correct." },
+    { q: "103. Which statement about oxidative phosphorylation is not true?", opts: ["The inner mitochondrial membrane has 5 distinct respiratory or enzyme complexes", "CoQ links complex I and II, and cyt c links complex III with complex IV", "FAD, FMN, FeS clusters and copper are other cofactors that participate in electron transfer", "38 ATPs are formed when one pair of protons return to matrix via F0 of ATP synthase"], ans: 3, exp: "38 ATPs are not formed when one pair of protons return." },
+    { q: "104. The initial step in the biosynthesis of ATP by chemiosmosis in the mitochondrion is the -", opts: ["Pumping of protons in the outer chamber", "Pumping of electrons in the matrix", "Action of ATP synthase", "Formation of metabolic water"], ans: 0, exp: "Pumping of protons in the outer chamber." },
+    { q: "105. Which of the following shows correct order of electrons in mitochondria?", opts: ["FeS -> NADH -> CoQ -> Cyt b -> FeS -> Cyt c1 -> Cyt c -> Cyt a3 -> O2 -> Cyt b", "NADH -> FMN -> FeS -> CoQ -> Cyt b -> FeS -> Cyt c1 -> Cyt c -> Cyt a -> Cyt a3 -> O2", "NADH -> Cyt c1 -> Cyt c -> Cyt a -> Cyt a3 -> O2 -> FMN -> FeS -> CoQ -> Cyt b -> FeS", "Cyt c1 -> Cyt c -> Cyt a -> Cyt a3 -> NADH -> FMN -> FeS -> CoQ -> Cyt b -> FeS -> O2"], ans: 1, exp: "NADH -> FMN -> FeS -> CoQ -> Cyt b -> FeS -> Cyt c1 -> Cyt c -> Cyt a -> Cyt a3 -> O2." },
+    { q: "107. Net gain of ATP molecules during aerobic respiration of one molecule of glucose is -", opts: ["36", "40", "39", "8"], ans: 0, exp: "36 ATP molecules." },
+    { q: "108. Select the wrong option.\nI. Fermentation is partial breakdown of glucose but aerobic respiration is the complete break down of glucose in CO2 + H2O\nII. NADH + H+ -> NAD+ is Very slow in Fermentation\nIII. NADH + H+ -> NAD+ is Very fast in Aerobic respiration\nIV. In respiratory pathway glycerol changes into DHAP", opts: ["None", "All", "I", "III and IV"], ans: 0, exp: "All the given statements are correct." },
+    { q: "109. Out of 3 respiratory substrate (carbohydrates, fat and protein), which one is the most favoured substrate -", opts: ["Glucose", "Protein/amino acid", "Fat/fatty acid", "All"], ans: 0, exp: "Glucose is the most favoured substrate." },
+    { q: "110. Respiratory pathway is -", opts: ["Catabolic", "Amphibolic", "Anabolic", "Non enzymatically controlled process"], ans: 1, exp: "Respiratory pathway is amphibolic." },
+    { q: "111. Which of the following is amphibolic -", opts: ["Glycolysis", "Oxidative decarboxylation of pyruvate", "TCA cycle", "Oxidative phosphorylation"], ans: 2, exp: "TCA cycle." },
+    { q: "112. Kreb's Cycle is considered as amphibolic because of facts as follows-", opts: ["The intermediates of the cycle are used as precursors in the biosynthesis of many compounds", "It is sole process to produce ATP", "It is the oxidation of acetyl CoA in CO2 and H2O", "a and c"], ans: 0, exp: "The intermediates of the cycle are used as precursors in the biosynthesis of many compounds." },
+    { q: "113. Choose the correct option -", opts: ["RQ = Volume of CO2 evolved / Volume of O2 consumed", "RQ depends on the types of respiratory material", "Living organisms use respiratory substances (often more than one); pure lipid or fats are never used", "All"], ans: 3, exp: "All are correct." },
+    { q: "115. 2(C51H98O6) + 145O2 -> 102CO2 + 98H2O + Energy. The RQ of above reaction is -", opts: ["1", "0.7", "1.45", "1.62"], ans: 1, exp: "RQ = 0.7." },
+     { q: "118. Six tubes containing preparations from animal tissue were set up as shown in the table. After incubation, in which three tubes would carbon dioxide be produced?", opts: ["1, 2 and 3", "1, 4 and 5", "3, 4 and 6", "3, 5 and 6"], ans: 1, exp: "1, 4 and 5." },
+    { q: "119. In mitochondria, protons accumulate in the :", opts: ["Outer membrane", "Inner membrane", "Intermembrane space", "Matrix"], ans: 2, exp: "Intermembrane space." },
+    { q: "120. Anaerobic respiration produces _____ amount of energy as compared to aerobic respiration because _____ produced during anaerobic respiration is not broken down completely into CO2 and H2O.", opts: ["i-lesser; ii-lactic acid", "i-lesser; ii-citric acid", "i-larger; ii-lactic acid", "i-larger; ii-citric acid"], ans: 0, exp: "i-lesser; ii-lactic acid." },
+    { q: "121. Glycolysis term has originated from Greek words.", opts: ["glycose and lysis", "glycos and lysis", "glyco and lysis", "glucose and lysis"], ans: 1, exp: "glycos and lysis." },
+    { q: "122. The ultimate electron acceptor of respiration in an aerobic organism is:", opts: ["Cytochrome", "Oxygen", "Hydrogen", "Glucose"], ans: 1, exp: "Oxygen." },
+    { q: "123. Phosphorylation of glucose during glycolysis is catalysed by", opts: ["Phosphoglucomutase", "Phosphoglucoisomerase", "Hexokinase", "Phosphorylase"], ans: 2, exp: "Hexokinase." },
+    { q: "124. Pyruvic acid, the key product of glycolysis can have many metabolic fates. Under aerobic condition it forms", opts: ["Lactic acid", "CO2 + H2O", "Acetyl CoA + CO2", "Ethanol + CO2"], ans: 2, exp: "Acetyl CoA + CO2." },
+    { q: "125. The chemical substances involved in respiration enters the mitochondrion from cytoplasm are", opts: ["C3H4O3, O2, reduced NAD, ADP & Phosphate", "C6H12O6, O2, reduced NAD, ADP & Phosphate", "CO2, NAD, ATP & water", "Acetyl CoA, NADH2, ADP & Phosphate"], ans: 0, exp: "C3H4O3, O2, reduced NAD, ADP & Phosphate." },
+    { q: "126. Which of the following exhibits the highest rate of respiration?", opts: ["Growing shoot apex", "Germinating seed", "Root tip", "Leaf bud"], ans: 1, exp: "Germinating seed." },
+    { q: "127. Choose the correct statement:", opts: ["Pyruvate is formed in the mitochondrial matrix.", "During the conversion of succinyl Co-A to succinic acid a molecule of ATP is synthesized.", "Oxygen is vital in respiration for removal of hydrogen.", "There is complete breakdown of glucose in fermentation."], ans: 2, exp: "Oxygen is vital in respiration for removal of hydrogen." },
+    { q: "128. Mitochondria are called powerhouses of the cell. Which of the following observations support this statement?", opts: ["Mitochondria synthesise ATP", "Mitochondria have a double membrane", "The enzymes of the Krebs cycle and the cytochromes are found in mitochondria.", "Mitochondria are found in almost all plants and animal cells."], ans: 0, exp: "Mitochondria synthesise ATP." },
+    { q: "129. The end product of oxidative phosphorylation is", opts: ["NADH", "Oxygen", "ADP", "ATP"], ans: 3, exp: "ATP." },
+    { q: "130. Match the following and choose the correct option from those given below.\nColumn A: A. Molecular oxygen, B. Electron acceptor, C. Pyruvate dehydrogenase, D. Decarboxylation\nColumn B: (i) a - Ketoglutaric acid, (ii) hydrogen acceptor, (iii) cytochrome C, (iv) acetyl CoA", opts: ["A-ii B-iii C-iv D-i", "A-iii B-iv C-ii D-i", "A-ii B-i C-iii D-iv", "A-iv B-iii C-i D-ii"], ans: 0, exp: "A-ii B-iii C-iv D-i." },
+    { q: "132. Which of the metabolites is common to respiration mediated breakdown of fats, carbohydrates and proteins?", opts: ["Glucose - 6 - phosphate", "Fructose 1, 6 - bisphosphate", "Pyruvic acid", "Acetyl CoA"], ans: 3, exp: "Acetyl CoA." },
+    { q: "133. Substrate-level phosphorylation accounts for approximately what percentage of the ATP formed by the reactions of glycolysis?", opts: ["0%", "2%", "10%", "100%"], ans: 3, exp: "100%." },
+    { q: "134. What is the purpose in having several steps in glycolysis or the Kreb's cycle rather than a single step from glucose and oxygen to carbon dioxide and water?", opts: ["The multistep approach increases the amount of heat produced in the reaction.", "The multistep approach increases the amount of potential energy in the reaction.", "The multistep approach is the only way to convert glucose to carbon dioxide.", "The multistep approach makes better use of the potential energy in the reaction."], ans: 3, exp: "The multistep approach makes better use of the potential energy in the reaction." },
+    { q: "135. Why does NADH donate electrons to the beginning of the electron transport chain, whereas FADH2 donates electrons to the middle of the chain?", opts: ["FADH2 is more rapidly oxidized than NADH.", "NADH has more electrons to donate than FADH2.", "FADH2 has more reducing potential than NADH.", "NADH has more potential energy than FADH2."], ans: 3, exp: "NADH has more potential energy than FADH2." },
+    { q: "136. When do cells switch from cellular respiration to fermentation?", opts: ["when electron acceptors are not available", "when NADH and FADH2 supplies are low", "when the proton-motive force runs down", "when pyruvate is not available"], ans: 0, exp: "when electron acceptors are not available." },
+    { q: "137. In which one of the following processes CO2 is not released?", opts: ["Aerobic respiration in plants", "Aerobic respiration in animals", "Alcoholic fermentation", "Lactate fermentation"], ans: 3, exp: "Lactate fermentation." },
+    { q: "138. Match the organic compounds listed under Column - I with the explanation given under Column - II. Choose the appropriate option from the given choices.\nColumn - I: A. phosphoenol pyruvate (PEP), B. Ribulose biphosphate (RuBP), C. Oxaloacetic acid (OAA), D. Acetyl co-enzyme-A\nColumn - II: p. 6-carbon compound, q. 2-carbon compound, r. 4-carbon compound, s. 5-carbon compound, t. 3-carbon compound", opts: ["A-t, B-s, C-r, D-q", "A-t, B-s, C-r, D-p", "A-t, B-p, C-q, D-r", "A-q, B-r, C-s, D-t"], ans: 0, exp: "A-t, B-s, C-r, D-q." },
+    { q: "139. How many ATP are produced when one molecule of FADH2 is oxidized to FAD through Electron Transport System?", opts: ["2", "3", "1", "4"], ans: 0, exp: "2 ATP." },
+    { q: "140. Out of 38 molecules of ATP produced upon aerobic respiration of glucose, the break up in ATP production in glycolysis (P), pyruvate to acetyl-CoA formation (Q) and Krebs cycle (R) is as follows:", opts: ["P = 2, Q = 6, R = 30", "P = 8, Q = 6, R = 24", "P = 8, Q = 10, R = 20", "P = 2, Q = 12, R = 24"], ans: 1, exp: "P = 8, Q = 6, R = 24." },
+    { q: "141. Inner membrane of mitochondria is permeable to", opts: ["glucose", "fructose", "sucrose", "ATP"], ans: 3, exp: "ATP." },
+    { q: "143. How many ATP are produced by the complete oxidation of two molecules of isocitrate by ETS only?", opts: ["24", "11", "30", "22"], ans: 3, exp: "22." },
+    { q: "144. In which one of the following reactions of glycolysis, oxidation takes place?", opts: ["Glucose 6-phosphate to fructose 6-phosphate", "Fructose 6-phosphate to fructose 1, 6-biphosphate", "1, 3-biphosphoglycerate to 3-phosphoglyceric acid", "3-phosphoglyceraldehyde to 1, 3-biphosphoglycerate"], ans: 3, exp: "3-phosphoglyceraldehyde to 1, 3-biphosphoglycerate." },
+    { q: "145. Why is aerobic respiration of a molecule of glucose considered more efficient than anaerobic respiration?", opts: ["More ATP is produced", "More carbon dioxide is produced", "More water is produced", "More oxygen is used"], ans: 0, exp: "More ATP is produced." },
+    { q: "146. Which is the first compound, which is common for both glucose and fructose in glycolysis?", opts: ["Fructose-6-phosphate", "Glucose-6-phosphate", "Fructose-1, 6-biphosphate", "Fructose-1-phosphate"], ans: 2, exp: "Fructose-1, 6-biphosphate." },
+    { q: "147. Which molecule links glycolysis with fermentation as well as TCA cycle?", opts: ["Ethanol", "Acetaldehyde", "PEP", "Pyruvic acid"], ans: 3, exp: "Pyruvic acid." },
+    { q: "148. How much of the energy released during aerobic respiration is approximately conserved in the form of ATP?", opts: ["20%", "40%", "60%", "100%"], ans: 1, exp: "40%." },
+    { q: "150. ATP synthesis in cell requires", opts: ["H+ gradient across the membrane", "K+ gradient across the membrane", "PO43- gradient across the membrane", "Ca2+ gradient across the membrane"], ans: 0, exp: "H+ gradient across the membrane." },
+    { q: "151. Which one of the following is the only 5-carbon compound formed during Krebs' cycle?", opts: ["Malic acid", "Succinic acid", "Cis-aconitic acid", "a-ketoglutaric acid"], ans: 3, exp: "a-ketoglutaric acid." },
+    { q: "152. When protein is aerobically oxidised the RQ (Respiration Quotient) value will be", opts: ["one", "zero", "more than one", "less than one"], ans: 3, exp: "less than one." },
+    { q: "153. Cytochromes are found in", opts: ["Cristae of mitochondria", "Lysosomes", "Matrix of mitochondria", "Outer wall of mitochondria"], ans: 0, exp: "Cristae of mitochondria." },
+    { q: "154. Green plants kept in light produce ATP from glucose. The process is", opts: ["Photophosphorylation", "Glycolysis", "TCA cycle", "Oxidative phosphorylation"], ans: 3, exp: "Oxidative phosphorylation." },
+    { q: "155. The reaction forming 3-phosphoglyceric acid in glycolysis is", opts: ["Cleavage", "Oxidative phosphorylation", "Dephosphorylation", "Oxidative decarboxylation"], ans: 1, exp: "Oxidative phosphorylation." },
+    { q: "156. During passage of electron over ETC.", opts: ["Electron undergoes resonance", "Electron undergoes fluorescence", "Electron undergoes active transport", "pH of matrix increases."], ans: 3, exp: "pH of matrix increases." },
+    { q: "157. There is no direct transfer of electron from cyt b to cyt c as", opts: ["Energy is not available", "The two are not nearby", "Electrons are transported in pairs", "Electrons have no affinity for cytochromes."], ans: 1, exp: "The two are not nearby." },
+    { q: "158. Number of oxygen atoms required for complete oxidation of pyruvic acid is", opts: ["6", "12", "3", "0"], ans: 0, exp: "6." },
+    { q: "159. Which of the following biomolecules is common to respiration-mediated breakdown of fats, carbohydrates and proteins?", opts: ["Pyruvic acid", "Acetyl CoA", "Glucose-6-phosphate", "Fructose 1,6-bisphosphate"], ans: 1, exp: "Acetyl CoA." },
+    { q: "160. Oxidative phosphorylation is:-", opts: ["Addition of phosphate group to ATP.", "Formation of ATP by energy released from electrons removed during substrate oxidation.", "Formation of ATP by transfer of phosphate group from a substrate to ADP", "Oxidation of phosphate group in ATP"], ans: 1, exp: "Formation of ATP by energy released from electrons removed during substrate oxidation." },
+    { q: "161. Which of the following metabolites enter the TCA cycle during glucose oxidation?", opts: ["Oxaloacetic acid", "Pyruvic acid", "Acetyl CoA", "Malic acid"], ans: 2, exp: "Acetyl CoA." },
+    { q: "163. Electrons from NADH produced in the mitochondrial matrix during citric acid cycle are oxidised by :-", opts: ["Complex II", "Complex III", "Complex I", "Complex IV"], ans: 2, exp: "Complex I." },
+    { q: "164. There are various types of ATPase pump found in different types of cells of these, F-type, ATPase, also are found in all of the following except.", opts: ["Inner membrane of mitochondria", "Thylakoid membrane of chloroplasts", "Plasma membrane of fungi", "All are correct"], ans: 2, exp: "Plasma membrane of fungi." },
+    { q: "165. Which statement is wrong for Krebs' cycle ?", opts: ["There is one point in the cycle where FAD+ is reduced to FADH2", "During conversion of succinyl CoA to succinic acid, a molecule of GTP is synthesised", "The cycle starts with condensation of acetyl group (acetyl CoA) with pyruvic acid to yield citric acid", "There are three points in the cycle where NAD+ is reduced to NADH + H+"], ans: 2, exp: "The cycle starts with condensation of acetyl group (acetyl CoA) with pyruvic acid to yield citric acid." },
+    { q: "166. Respiration differs from photorespiration as the latter:", opts: ["takes place only during day and within the chloroplast.", "yields less ATP.", "utilizes ATP.", "occurs in peroxisomes."], ans: 0, exp: "takes place only during day and within the chloroplast." },
+    { q: "167. A glucose fed yeast cell is moved from an aerobic environment to an anaerobic one. For the cell to continue generating ATP at the same rate, rate of glucose consumption should increase:", opts: ["2 times", "4 times", "1.9 times", "38 times"], ans: 2, exp: "1.9 times." },
+    { q: "168. Which of the following enzymes involved in Kreb's cycle is not present in the mitochondrial matrix?", opts: ["Aconitase", "Malate dehydrogenase", "Fumarase", "Succinate dehydrogenase"], ans: 3, exp: "Succinate dehydrogenase." },
+    { q: "169. The RQ for a resting human adult is approximately 0.85. If he/she undertakes violent exercise for 3 to 5 minutes:", opts: ["RQ will rise.", "RQ will fall.", "RQ will remain same.", "RQ will fall and then rise."], ans: 0, exp: "RQ will rise." },
+    { q: "171. Which of the following is the key compound in the intermediary metabolism of carbohydrates, lipid and proteins", opts: ["PEP", "PGA", "Acetyl CoA", "a -ketoglutarate"], ans: 2, exp: "Acetyl CoA." },
+    { q: "172. Absence of oxygen will arrest which of the following\ni. EMP Pathway\nii. TCA cycle\niii. Chemiosmosis coupling\niv. Lactate fermentation", opts: ["i, ii & iii", "ii, iii & iv", "Only i & iii", "only ii & iii"], ans: 3, exp: "only ii & iii." },
+    { q: "173. Organic compounds + Oxygen -> Carbon dioxide + Water + Energy. In the equation above, what is a common term used to describe \"organic compounds\"?", opts: ["Hydrocarbons", "Food", "Isomers", "Functional groups"], ans: 1, exp: "Food." },
+    { q: "174. How many oxidation, decarboxylation and substrate level phosphorylation occurs respectively during complete oxidation of two pyruvate molecule :-", opts: ["3, 5, 1", "6, 10, 2", "10, 6, 2", "5, 3, 1"], ans: 2, exp: "10, 6, 2." },
+    { q: "175. Marker enzyme of mitochondria is used in which of the following step :-", opts: ["Succinyl CoA -> Succinic acid", "Succinate -> Fumarate", "Fumarate -> Malate", "Citrate -> Isocitrate"], ans: 1, exp: "Succinate -> Fumarate." },
+    { q: "177. Direct phosphorylation in glycolytic pathway of respiration.", opts: ["Occurs when 2H atoms are removed from glyceraldehyde 3-phosphate", "Needs enzyme pyruvate kinase only", "Occurs when triose biphosphate is dephosphorylated to triose phosphate", "Produces a total of 2 molecules of ATP per glucose"], ans: 3, exp: "Produces a total of 2 molecules of ATP per glucose." },
+    { q: "178. First respiratory substrate :", opts: ["Lipid", "Protein", "Carbohydrate", "Both (a) and (c)"], ans: 2, exp: "Carbohydrate." },
+    { q: "179. Pyruvate which is formed by the glycolytic catabolism of carbohydrates in the cytosol, after it enters into mitochondrial matrix it undergoes :", opts: ["Reductive amination", "Oxidation decarboxylation", "Reductive carboxylation", "Reductive decarboxylation"], ans: 1, exp: "Oxidation decarboxylation." },
+    { q: "180. How many oxidation step take place during glycolysis, link reaction and Kreb's cycle.", opts: ["1, 1 and 1", "1, 1 and 4", "1, 1 and 3", "1, 1 and 8"], ans: 1, exp: "1, 1 and 4." },
+    { q: "181. How many protons will be pump in outer chamber of mitochondria if pyruvic acid is completely oxidised?", opts: ["28", "30", "32", "26"], ans: 0, exp: "28." },
+    { q: "182. Which of the metabolites is common to respiration mediated breakdown of glycerol, carbohydrates and proteins.", opts: ["Pyruvic acid", "Acetyl CoA", "Glyceraldehyde 3-phosphate", "Pyruvic acid and Acetyl CoA"], ans: 3, exp: "Pyruvic acid and Acetyl CoA." },
+    { q: "183. What is the role of NAD+ in cellular respiration?", opts: ["It is a nucleotide source for ATP synthesis.", "It functions as an electron carrier.", "It functions as an enzyme.", "It is the final electron acceptor for anaerobic respiration."], ans: 1, exp: "It functions as an electron carrier." },
+    { q: "184. Which of these statements is incorrect?", opts: ["Glycolysis operates as long as it is supplied with NAD that can pick up hydrogen atoms.", "Glycolysis occurs in cytosol", "Enzymes of TCA cycle are present in mitochondrial matrix", "Oxidative phosphorylation takes place in outer mitochondrial membrane"], ans: 3, exp: "Oxidative phosphorylation takes place in inner mitochondrial membrane." },
+    { q: "185. Which is required in glycolysis", opts: ["ATP, ADP, NAD+, Glucose, cytoplasmic enzymes", "FAD+, ADP, ATP, Glucose, cytoplasmic enzymes", "NADP+, ATP, GTP, Glucose, cytoplasmic enzymes", "NAD+, NADP+, ATP, Glucose, cytoplasmic enzymes"], ans: 0, exp: "ATP, ADP, NAD+, Glucose, cytoplasmic enzymes." },
+    { q: "186. How many ATP molecules are formed from three molecules of acetyl CoA in Krebs cycle excluding electron transport chain?", opts: ["5", "3", "6", "33"], ans: 1, exp: "3." },
+    { q: "187. Respiratory quotient of maturing fatty seed and germinating fatty seed respectively are", opts: ["1 and 00", "> 1 and < 1", "00 and 1", "1 and 1"], ans: 1, exp: "> 1 and < 1." },
+    { q: "188. If respiratory substrate has high proportion of oxygen as compared to carbon and hydrogen, RQ will be", opts: ["Less than one", "More than one", "Infinity", "Zero"], ans: 1, exp: "More than one." },
+    { q: "189. When a molecule of pyruvic acid is subjected to fermentation and forms lactic acid, there is", opts: ["Gain of 2 ATP", "Loss of 3 ATP", "Loss of 6 ATP", "Gain of 3 ATP"], ans: 1, exp: "Loss of 3 ATP." },
+    { q: "190. Which kind of metabolic poison would most directly interfere with glycolysis?", opts: ["An agent that reacts with oxygen and depletes its concentration in the cell.", "An agent that binds to pyruvate and inactivates it.", "An agent that closely mimics the structure of glucose but is not metabolized.", "An agent that reacts with NADH and oxidizes it to NAD+."], ans: 2, exp: "An agent that closely mimics the structure of glucose but is not metabolized." },
+    { q: "191. Respiratory Quotient (RQ) value of tripalmitin is", opts: ["0.9", "0.7", "0.07", "0.09"], ans: 1, exp: "0.7." },
+    { q: "192. Conversion of glucose to glucose-6-phosphate, the first irreversible reaction of glycolysis, is catalyzed by", opts: ["Aldolase", "Hexokinase", "Enolase", "Phosphofructokinase"], ans: 1, exp: "Hexokinase." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 12; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>

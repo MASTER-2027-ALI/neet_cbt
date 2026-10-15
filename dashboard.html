@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - NEET 2027 CBT</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="dashboard-container">
+  <div class="dash-header">
+    <h1>🧬 NEET 2027 CBT</h1>
+    <div class="user-info">
+      <span class="user-badge" id="userBadge">👤 User</span>
+      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="num">19</div>
+      <div class="label">Total Chapters</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="attemptedCount">0</div>
+      <div class="label">Attempted</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="avgScore">0%</div>
+      <div class="label">Average Score</div>
+    </div>
+  </div>
+
+  <h2 class="chapters-title">📚 Class 11 Biology - All Chapters</h2>
+  <div class="chapters-grid" id="chaptersGrid"></div>
+</div>
+
+<script src="keys.js"></script>
+<script>
+// Check login
+const userData = localStorage.getItem('cbt_user');
+if (!userData) {
+  window.location.href = 'index.html';
+}
+const user = JSON.parse(userData);
+document.getElementById('userBadge').textContent = '👤 ' + user.name;
+
+// Chapter list (19 chapters)
+const chapters = [
+  { num: 1, name: "The Living World", file: "chapter1.html" },
+  { num: 2, name: "Biological Classification", file: "chapter2.html" },
+  { num: 3, name: "Plant Kingdom", file: "chapter3.html" },
+  { num: 4, name: "Animal Kingdom", file: "chapter4.html" },
+  { num: 5, name: "Morphology of Flowering Plants", file: "chapter5.html" },
+  { num: 6, name: "Anatomy of Flowering Plants", file: "chapter6.html" },
+  { num: 7, name: "Structural Organisation in Animals", file: "chapter7.html" },
+  { num: 8, name: "Cell: The Unit of Life", file: "chapter8.html" },
+  { num: 9, name: "Biomolecules", file: "chapter9.html" },
+  { num: 10, name: "Cell Cycle and Cell Division", file: "chapter10.html" },
+  { num: 11, name: "Photosynthesis in Higher Plants", file: "chapter11.html" },
+  { num: 12, name: "Respiration in Plants", file: "chapter12.html" },
+  { num: 13, name: "Plant Growth and Development", file: "chapter13.html" },
+  { num: 14, name: "Breathing and Exchange of Gases", file: "chapter14.html" },
+  { num: 15, name: "Body Fluids and Circulation", file: "chapter15.html" },
+  { num: 16, name: "Excretory Products and their Elimination", file: "chapter16.html" },
+  { num: 17, name: "Locomotion and Movement", file: "chapter17.html" },
+  { num: 18, name: "Neural Control and Coordination", file: "chapter18.html" },
+  { num: 19, name: "Chemical Coordination and Integration", file: "chapter19.html" }
+];
+
+// Render chapters
+const grid = document.getElementById('chaptersGrid');
+const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+let attempted = 0;
+let totalPercent = 0;
+
+chapters.forEach(ch => {
+  const card = document.createElement('a');
+  card.className = 'chapter-card';
+  card.href = ch.file;
+
+  const result = results['chapter' + ch.num];
+  let statusHTML = '';
+  
+  if (result && result.attempts && result.attempts.length > 0) {
+    attempted++;
+    const attemptsCount = result.attempts.length;
+    const lastAttempt = result.attempts[attemptsCount - 1];
+    const bestAttempt = result.best || lastAttempt;
+    totalPercent += parseFloat(lastAttempt.percent);
+    
+    const bestClass = bestAttempt.percent >= 50 ? 'done' : '';
+    const lastClass = lastAttempt.percent >= 50 ? 'done' : '';
+    
+    statusHTML = `
+      <div class="chapter-status ${bestClass}">🏆 Best: <strong>${bestAttempt.percent}%</strong> (${bestAttempt.correct}/${bestAttempt.total})</div>
+      <div class="chapter-status" style="color:#94a3b8; font-size:12px; margin-top:4px;">
+        📊 Last: ${lastAttempt.percent}% &nbsp;|&nbsp; 🔁 Attempts: <strong>${attemptsCount}</strong>
+      </div>
+    `;
+  } else {
+    statusHTML = `<div class="chapter-status">📝 Not attempted yet</div>`;
+  }
+
+  card.innerHTML = `
+    <div class="chapter-num">CHAPTER ${ch.num}</div>
+    <div class="chapter-name">${ch.name}</div>
+    ${statusHTML}
+  `;
+  grid.appendChild(card);
+});
+
+document.getElementById('attemptedCount').textContent = attempted;
+document.getElementById('avgScore').textContent = attempted > 0 
+  ? (totalPercent / attempted).toFixed(1) + '%' 
+  : '0%';
+
+// Logout
+function logout() {
+  localStorage.removeItem('cbt_user');
+  localStorage.removeItem('cbt_login_time');
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>

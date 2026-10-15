@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 15: Plant Growth and Development - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Plant Growth and Development</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "1. Which of the following is not the characteristic of growth of an organism?", opts: ["It is an irreversible permanent increase in size of a cell/its part/an individual cell", "It is accompanied by metabolic processes", "It is quantitative and intrinsic", "None of the above"], ans: 3, exp: "All the given statements are characteristics of growth." },
+    { q: "2. Characteristic of plant growth includes which of the following -", opts: ["It is localised and generally determinate", "It is localized and generally indeterminate", "It is non-measurable", "It is diffused, determinate and non measurable"], ans: 1, exp: "Plant growth is localised and generally indeterminate." },
+    { q: "3. The form of growth wherein new cells are always being added to the plant body by the activity of meristem is called -", opts: ["Open form of growth", "Close form of growth", "Diffused form of growth", "Discontinuous form of growth"], ans: 0, exp: "It is called open form of growth." },
+    { q: "4. Select the incorrect option -", opts: ["Primary growth is the increase in girth of axis due to activity of Apical meristem", "Secondary growth is the increase in girth due to activity of lateral meristem (vascular cambium & cork cambium)", "Elongation of plant is the primary growth", "b and c"], ans: 0, exp: "Primary growth is the increase in length due to apical meristem, not girth." },
+    { q: "5. Growth at cellular level, is principally a consequence in the amount of-", opts: ["Protoplasm", "Apoplast", "Cell wall", "Apoplasm"], ans: 0, exp: "Growth is principally a consequence of increase in the amount of protoplasm." },
+    { q: "6. Which one(s) is more or less proportional to increase in protoplasm?", opts: ["Increase in fresh/dry weight", "Increase in length, area, volume", "Increase in cell number", "All"], ans: 3, exp: "All are correct." },
+    { q: "7. I. One maize root cell can give rise to more than 17,500 cells.\nII. A cell in water melon can increase in size upto 350000 times\nIII. The growth of pollen tube is measured in length\nIV. The growth of the leaf is measured in term of volume", opts: ["I, II are correct", "III and IV are correct", "I and III are correct", "I, II and III are correct"], ans: 3, exp: "I, II and III are correct." },
+    { q: "8. Real growth is -", opts: ["Protoplasmic growth", "Cell wall growth", "Growth in size", "Growth in volume"], ans: 0, exp: "Real growth is protoplasmic growth." },
+    { q: "9. The period of growth is generally divided into -", opts: ["3 phases", "2 phases", "4 phases", "6 phases"], ans: 0, exp: "The period of growth is divided into 3 phases." },
+    { q: "10. Which of the following points is shown by cell at the root or shoot apex -", opts: ["Rich in protoplasm, possesses large conspicuous triploid nucleus", "Cell wall is cellulosic, primary in nature and with abundant plasmodesmata", "Rich in protoplasm with large conspicuous nucleus", "b and c"], ans: 3, exp: "b and c are correct." },
+    { q: "11. Maximal size in terms of wall thickening and protoplasmic modification are achieved by-", opts: ["Cells of divisional phase", "Cells of maturation phase", "Cells of elongation phase", "Cells of meristematic tissue"], ans: 1, exp: "Cells of maturation phase." },
+    { q: "12. Increased vacuolation, cell enlargement and new cell wall deposition are the characteristics of cell in -", opts: ["divisional phase", "enlongation phase", "maturation phase", "differentiation phase"], ans: 1, exp: "Elongation phase." },
+    { q: "13. Most of the tissues and cell types represent -", opts: ["Division phase", "Elongation phase", "Enlargement phase", "maturation phase"], ans: 3, exp: "Maturation phase." },
+    { q: "14. Increase in growth per unit time is called -", opts: ["Exponential growth", "Intrinsic growth", "growth rate", "cell elongation"], ans: 2, exp: "Growth rate." },
+    { q: "15. Exponential phase in growth is characterised by -", opts: ["enlargment of cells", "Constant increase in growth rate", "Maturation of cells", "a and b"], ans: 1, exp: "Constant increase in growth rate." },
+    { q: "16. Arithmetic growth includes all except-", opts: ["constant growth rate", "It is found in root and shoot cells", "It is expressed as Lt = L0 + rt", "Its characteristic graph is sigmoid"], ans: 3, exp: "Arithmetic growth graph is linear, not sigmoid." },
+    { q: "18. Why a linear curve is obtained in arithmetic growth?", opts: ["Because it has lag, log and stationary phase", "Because one daughter cell remains meristematic while the other daughter cell differentiates and matures", "Because of the effect of environment on mitosis", "None"], ans: 1, exp: "Because one daughter cell remains meristematic while the other differentiates and matures." },
+    { q: "19. Go through the following points-\nI. Slow growth, thereafter exponential growth and then stationary phase\nII. Geometric and arithmetic phases\nIII. Characteristic of all living organisms growing in natural environment\nIV. W1 = W0 ert\nSigmoid curve | Exponential growth | Embryo development", opts: ["I, III | II | IV", "I | IV | II, III", "I, II | III, IV | -", "II, III | IV | I"], ans: 0, exp: "I, III | II | IV." },
+    { q: "20. Exponential growth cannot sustain for long. The possible cause is -", opts: ["Limited nutrient available", "Limited space", "Accumulation of toxic materials", "All"], ans: 3, exp: "All are correct." },
+    { q: "21. The rate of growth is highest in -", opts: ["Lag phase", "Log phase", "Steady phase", "None"], ans: 1, exp: "Log phase." },
+    { q: "22. Plant growth is regulated by -", opts: ["Climatic factor", "Growth hormones", "Both", "Minerals"], ans: 2, exp: "Both." },
+    { q: "23. A sigmoid growth curve is characteristic of -", opts: ["Bacteria growing in culture medium", "Organisms growing in natural habitat", "All cells, tissue and organs", "All"], ans: 3, exp: "All are correct." },
+    { q: "24. The exponential growth can be expressed as W1 = W0 ert. \"r\" is-", opts: ["Relative growth rate and depends on final size", "It is initial size", "Relative growth and also referred to as efficiency index", "None of the above"], ans: 2, exp: "Relative growth and also referred to as efficiency index." },
+    { q: "25. In exponential growth the final size depends upon -", opts: ["Initial size", "Growth rate", "Both", "None"], ans: 2, exp: "Both." },
+    { q: "27. For growth which one(s) is essential -", opts: ["Nutrients", "H2O", "Both", "All"], ans: 3, exp: "All are correct." },
+    { q: "28. Water is needed for-", opts: ["Cell-enlargement", "Providing aqueous medium for enzymatic reactions", "Both", "All"], ans: 3, exp: "All are correct." },
+    { q: "29. I. O2 helps in releasing metabolic energy essential for growth activities.\nII. Nutrients (Micro and Macromolecules) are required by plants for the synthesis of protoplasm as well as act as source of energy\nIII. Optimum temperature for plant growth is needed\nIV. Environmental signal like light and gravity affect certain phases of growth", opts: ["All are correct", "All are incorrect", "I, II and IV are correct", "I and IV are correct"], ans: 0, exp: "All are correct." },
+    { q: "30. During differentiation cell undergoes structural changes in their-", opts: ["Cell wall only", "Protoplasm only", "Apoplast only", "Cell wall and protoplast"], ans: 3, exp: "Cell wall and protoplast." },
+    { q: "31. Under certain conditions regaining the lost capacity of division by living cells is called -", opts: ["Dedifferentiation", "Redifferentiation", "Differentiation", "Efficiency index"], ans: 0, exp: "Dedifferentiation." },
+    { q: "32. Which one is the example of dedifferentiated cells?", opts: ["Procambium + Vascular cambium", "Vascular cambium + Interfascicular cambium", "Phellogen + Procambium", "Cork cambium + Interfascicular cambium"], ans: 1, exp: "Vascular cambium + Interfascicular cambium." },
+    { q: "33. Which one(s) is/are redifferentiated cell(s)?", opts: ["Cork", "Secondary cortex", "Both", "None"], ans: 2, exp: "Both." },
+    { q: "34. Growth in plants is -", opts: ["Only determinate", "Only indeterminate", "Mostly determinate", "Open (both determinate and indeterminate)"], ans: 3, exp: "Open (both determinate and indeterminate)." },
+    { q: "35. Differentiation in plant is open because cells/tissues arising out of the same meristem -", opts: ["have same structure at maturity", "Have different structures at maturity", "Have capacity to disappear their cell walls", "Have same fate"], ans: 1, exp: "Have different structures at maturity." },
+    { q: "36. Which of the following includes all three process -", opts: ["Differentiation", "Cell enlargement", "Seed germination, senescence", "Development"], ans: 3, exp: "Development." },
+    { q: "37. The ability of plant to follow different pathways and produce different structures in response to environment and phases of life is termed as -", opts: ["Elasticity", "Growth efficiency", "Plasticity", "Heterophylly"], ans: 2, exp: "Plasticity." },
+    { q: "38. The example of plasticity in plant Ranunculus is -", opts: ["Homophylly", "Isophylly", "Megaphylly", "Heterophylly"], ans: 3, exp: "Heterophylly." },
+    { q: "39. Environmental heterophylly is seen in -", opts: ["Ranunculus (Buttercup)", "Cotton", "Coriander", "Larkspur"], ans: 0, exp: "Ranunculus (Buttercup)." },
+    { q: "40. Intrinsic heterophylly is seen in all except -", opts: ["Cotton", "Coriander", "Buttercup", "Larkspur"], ans: 2, exp: "Buttercup." },
+    { q: "41. Intrinsic factors affecting development include -", opts: ["Intracellular (genetic) factors", "Intercellular factors like light", "Intercellular factors like PGRs", "a and c"], ans: 3, exp: "a and c." },
+    { q: "42. Extrinsic factors affecting the development include all except -", opts: ["O2, light, temperature", "CO2 and nutrients", "Water", "PGRs and genetic factors"], ans: 3, exp: "PGRs and genetic factors." },
+    { q: "43. Match Column I with Column II - Column I: I. IAA, II. GA, III. ASA, IV. C2H4, V. Kinetin (N6-furfuryl amino purine). Column II: A. Terpenes, B. Indole compounds, C. Adenine derivatives, D. Gases, E. Carotenoid derivatives. The correct match is -", opts: ["I - B, II - A, III - E, IV - D, V - C", "I - A, II - B, III - C, IV - D, V - E", "I - E, II - D, III - A, IV - B, V - C", "None"], ans: 0, exp: "I - B, II - A, III - E, IV - D, V - C." },
+    { q: "44. Which one includes growth promoters?", opts: ["Auxin, Cytokinin, ABA", "GA, Cytokinin, C2H4", "C2H4, ABA", "Auxin, Cytokinin, GA"], ans: 3, exp: "Auxin, Cytokinin, GA." },
+    { q: "45. Which one include growth inhibitors?", opts: ["ABA, Cytokinin", "GA, IAA", "Both", "None"], ans: 2, exp: "Both." },
+    { q: "46. PGRs include -", opts: ["Only growth promoters", "Only growth inhibitors", "Both growth promoters and growth inhibitors", "Only solid hormones, not gaseous hormones"], ans: 2, exp: "Both growth promoters and growth inhibitors." },
+    { q: "47. Which of the following growth regulators can fit either of the groups (promoter and inhibitor)-", opts: ["C2H4", "ABA", "GA", "IAA"], ans: 0, exp: "C2H4." },
+    { q: "48. I. Cell division\nII. Cell enlargement\nIII. Pattern formation\nIV. Tropic growth\nV. Flowering\nVI. Fruiting\nVII. Seed germination\nVIII. Response to wound\nIX. Response to stresses of biotic and abiotic origin\nWhich one is correct?\nFunctions of growth promoters | Functions of growth inhibitor", opts: ["I, II, VII, IX | III, IV, V, VI, VIII", "VIII, IX | I, II, III, IV, V, VI, VII", "I, II, III, IV, V, VI, VII | VIII, IX", "I, II, III, IV, V, VI, VII, IX | VIII"], ans: 2, exp: "I, II, III, IV, V, VI, VII | VIII, IX." },
+    { q: "49. Column I: I. C. Darwin and F. Darwin, II. Miller and Skoog, III. F. W. Went, IV. Kurosawa. Column II: A. Cytokinin, B. ABA, C. C2H4, D. Auxin, E. GA. Correct Match is -", opts: ["I - D, II - A, III - D, IV - E", "I - D, II - A, III - D, IV - B", "I - C, II - A, III - B, IV - D", "I - E, II - D, III - B, IV - A"], ans: 0, exp: "I - D, II - A, III - D, IV - E." },
+    { q: "50. Statement 1- Confirmation of the release of volatile substances from ripened oranges that hastened the ripening of stored unripe bananas.\nStatement II - Callus formation from the internodal segments of tobacco stem with the Auxin and extracts of vascular tissues/yeast/coconut milk/DNA. Later, Cytokinesis promoting substance was identified, crystallized and named as KINETIN.\nStatement III - Reporting of appearance of symptoms of bakane/foolish seedling disease caused by fungus Gibberella fujikuroi, in uninfected seedling when they were treated with sterile filtrates of the fungus. The active substances were later identified as GA.\nChoose the correct option -", opts: ["I - Miller + Skoog, II - Kurosawa, III - Cousins", "I - Kurosawa, II - Cousins, III - Miller + Skoog", "I - Cousins, II - Miller + Skoog, III - Kurosawa", "I - Cousins, II - Kurosawa, III - Miller + Skoog"], ans: 2, exp: "I - Cousins, II - Miller + Skoog, III - Kurosawa." },
+    { q: "51. ABA was discovered during-", opts: ["Mid 1960s", "Mid 1906", "Mid 1966", "Mid 1967"], ans: 0, exp: "Mid 1960s." },
+    { q: "52. The historical experiment on canary grasses coleoptile as a first step in the discovery of auxin was conducted by-", opts: ["Darwin", "Went", "Kogl", "Kurosawa"], ans: 0, exp: "Darwin." },
+    { q: "53. Who isolated auxin from coleoptile seedling for the first time -", opts: ["Darwin", "Miller", "Skoog", "F. W. Went"], ans: 3, exp: "F. W. Went." },
+    { q: "54. 3 terms - Inhibitor-B, Abscission II and Dormin are used for the same hormone. That hormone is -", opts: ["Auxin", "ABA", "C2H4", "GA"], ans: 1, exp: "ABA." },
+    { q: "55. Auxin was first isolated from -", opts: ["Coleoptile of oat", "Human urine", "Maize", "tea"], ans: 1, exp: "Human urine." },
+    { q: "56. The term \"auxin\" is used for-", opts: ["IAA", "NAA", "2, 4-D and 2, 4, 5-T", "All"], ans: 3, exp: "All." },
+    { q: "57. Which one is correct?", opts: ["IAA and IBA are natural but NAA, 2, 4-D and 2, 4, 5-T are synthetic auxins", "IAA and NAA are natural but IBA, 2, 4, 5-T and 2, 4-D are synthetic auxin", "NAA and 2, 4, 5-T are natural but IAA, IBA and 2, 4-D are synthetic hormones", "IAA, NAA; IBA, 2, 4-D and 2, 4, 5-T are synthetic auxins"], ans: 0, exp: "IAA and IBA are natural but NAA, 2, 4-D and 2, 4, 5-T are synthetic auxins." },
+    { q: "58. Plant growth substances generally -", opts: ["Have a single role", "Are species-specific", "Are produced in many parts of plant", "Affect mainly the cells that produce them"], ans: 2, exp: "Are produced in many parts of plant." },
+    { q: "59. The hormone responsible for phototropism is -", opts: ["Auxin", "C2H4", "ABA", "GA"], ans: 0, exp: "Auxin." },
+    { q: "60. The phenomenon of apical dominance is strengthened by-", opts: ["Removal of the tip", "Removal of leaves", "Auxin production", "Production of fruits"], ans: 2, exp: "Auxin production." },
+    { q: "61. If a shoot cutting is treated with auxin, which of the following is likely to result?", opts: ["Extensive root production", "Suppression of apical dominance", "Growth of lateral buds", "Bolting of the shoot"], ans: 0, exp: "Extensive root production." },
+    { q: "62. The discovery of auxin is traced back to the work of Charles and Francis Darwin. In their experiments, they studied", opts: ["Photonastic movement", "Photoperiodism", "Phototropism", "Photosynthesis"], ans: 2, exp: "Phototropism." },
+    { q: "63. Removal of auxin source demonstrates that leaf abscission is _____ by auxin, and apical dominance is _____ by auxin.", opts: ["Promoted, promoted", "inhibited, inhibited", "promoted, inhibited", "inhibited, promoted"], ans: 3, exp: "inhibited, promoted." },
+    { q: "64. Which process is not directly affected by auxin?", opts: ["Apical dominance and root initiation", "Parthenocarpy", "Synthesis of a-amylase by barley seeds", "Leaf abscission"], ans: 2, exp: "Synthesis of a-amylase by barley seeds." },
+    { q: "65. Branching is inhibited by ____ from the tip of a growing shoot, but this effect is encountered by ____ from the root.", opts: ["Cytokinin, auxin", "Auxin, Cytokinin", "GA, Cytokinin", "GA, ABA"], ans: 1, exp: "Auxin, Cytokinin." },
+    { q: "66. Which of the following statements correctly explains why a plant becomes bushier when the tip of its shoot is removed?", opts: ["The removal of the plant tip also removes the auxin that is keeping lower buds from developing", "Programmed cell death allows the plant to change its form", "The concentration of the morphogens sent from the root to stem is increased", "None of the above"], ans: 0, exp: "The removal of the plant tip also removes the auxin that is keeping lower buds from developing." },
+    { q: "67. Which of the following plant hormones can cause the base of a shoot to form new root, prevents fruit and leaf drop at early stage, to be used as herbicide/weedicide, also controls xylem differentiation and helps in cell division -", opts: ["GA", "Cytokinin", "Auxin", "ABA"], ans: 2, exp: "Auxin." },
+    { q: "68. Go through the following statements -\nI. Promotes flowering in pineapple\nII. Used to prepare weed free lawn\nIII. Promotes the abscission of older mature leaves and fruits\nThe above functions are carried out by-", opts: ["GA", "C2H4", "ABA", "Auxin"], ans: 3, exp: "Auxin." },
+    { q: "69. Removal of shoot tips (decapitation) means loss of apical dominance and it is widely applied in -", opts: ["Tea plantation", "Hedge-making", "Both", "Bolting"], ans: 2, exp: "Both." },
+    { q: "70. How many gibberellins have been reported from fungi and higher plants-", opts: ["Less than 100", "More than 1000", "More than 100", "100"], ans: 2, exp: "More than 100." },
+    { q: "71. Which one(s) is acidic in nature?", opts: ["Auxins", "GAs", "ABA", "All"], ans: 3, exp: "All." },
+    { q: "72. In coleoptile tissue, auxin -", opts: ["Is not transported, because auxin is used where it is made", "Is transported by diffusion, with no preferred direction", "Is transported from base to tip", "Is produced by the growing apices of the stem and roots, from where they migrate to the regions of their action"], ans: 3, exp: "Is produced by the growing apices of the stem and roots, from where they migrate to the regions of their action." },
+    { q: "73. Which GA was the first Gibberellin to be discovered?", opts: ["GA1", "GA2", "GA3", "GA4"], ans: 2, exp: "GA3." },
+    { q: "74. Gibberellins have many effects. Which one of the following is not an effect of gibberellins in plants?", opts: ["Bolting", "Delay senescence", "Increase the grapes stalk", "Induces dormancy"], ans: 3, exp: "Induces dormancy." },
+    { q: "75. The fruits can be left on the tree longer so as to extend the market period. This is due to which function of GA?", opts: ["Bolting", "Delay senescence", "Internodal elongation", "Parthenocarpy"], ans: 1, exp: "Delay senescence." },
+    { q: "76. Which of the following hormones causes fruits like apple to elongate and improve its shape -", opts: ["GA", "ABA", "NAA", "2, 4 D"], ans: 0, exp: "GA." },
+    { q: "77. Spraying sugarcane with gibberellins increases the yield by as much as 20 tonnes per acre. GA performs it-", opts: ["By improving the quality of fruit", "By making plants with rosette habit", "By internodal elongation", "By delaying senescence"], ans: 2, exp: "By internodal elongation." },
+    { q: "78. Bolting is -", opts: ["Internodal elongation just prior to flowering in beet, cabbage and many plants with rosette habit.", "A type of grafting", "Nodal elongation in certain plants", "None"], ans: 0, exp: "Internodal elongation just prior to flowering in beet, cabbage and many plants with rosette habit." },
+    { q: "79. Which one is false?", opts: ["GA3 is used to speed up the malting process in brewing industry", "Spraying juvenile conifers with GAs hastens the maturity, thus leading to early seed production", "GA3 is a commercially available gibberellin", "GA3 cannot increase the length of internode in sugarcane"], ans: 3, exp: "GA3 cannot increase the length of internode in sugarcane." },
+    { q: "80. Cytokinins and ethylene have opposite effects on -", opts: ["Leaf senescence", "Elongation of stem", "Lateral swelling of stem", "Winter dormancy"], ans: 0, exp: "Leaf senescence." },
+    { q: "81. Two cytokinins are kinetin and Zeatin. What is the difference between the two?", opts: ["Kinetin is the active form of zeatin", "Zeatin is the active form of kinetin", "Zeatin is a synthetic cytokinin and kinetin is naturally occuring", "Zeatin is a naturally occuring plant cytokinin, kinetin is not"], ans: 3, exp: "Zeatin is a naturally occuring plant cytokinin, kinetin is not." },
+    { q: "82. Cytokinins are formed primarily in which area of the plant?", opts: ["Tips of shoot", "Root", "Stem", "Lateral buds and leaves"], ans: 1, exp: "Root." },
+    { q: "83. Auxin and Cytokinin are antagonistic in which of the following functions?", opts: ["Cell division", "Phototropism", "Apical dominance", "Geotropism"], ans: 2, exp: "Apical dominance." },
+    { q: "84. Natural cytokinins are synthesised in -", opts: ["Root apices", "Developing shoot buds", "Young fruits", "All"], ans: 3, exp: "All." },
+    { q: "85. Kinetin, a modified adenine (purine) was discovered from-", opts: ["the autoclaved herring sperm DNA", "Coconut milk", "Corn-Kernel", "Fungus"], ans: 0, exp: "the autoclaved herring sperm DNA." },
+    { q: "86. Zeatin is -", opts: ["an auxin", "a GA", "a cytokinin", "None"], ans: 2, exp: "a cytokinin." },
+    { q: "87. Zeatin was extracted for the first time from -", opts: ["Maize", "Coconut", "Fungus", "Autoclaved herring sperm"], ans: 0, exp: "Maize." },
+    { q: "88. Cytokinins help to produce all except -", opts: ["New leaves", "Chloroplast in leaves", "Lateral shoot growth and adventitious shoot formation", "Rooting on stem cut"], ans: 3, exp: "Rooting on stem cut." },
+    { q: "89. Cytokinin helps in delay of leaf senescene by -", opts: ["Increasing more water absorption by root", "Increasing rate of translaeation of organic solutes", "Promoting nutrients mobilization", "Formation of adventitious buds"], ans: 2, exp: "Promoting nutrients mobilization." },
+    { q: "90. C2H4 is synthesised in large amounts by -", opts: ["Shoot tip", "Root tip", "Young leaves", "Tissue undergoing senescence and ripening fruits"], ans: 3, exp: "Tissue undergoing senescence and ripening fruits." },
+    { q: "91. I. C2H4 promotes leaf senescence\nII. C2H4 speeds the ripening of fruits\nIII. C2H4 causes apical hook formation\nIV. C2H4 promotes horizontal growth of seedling and swelling of axis\nV. C2H4 promotes male flowers in cucumber thereby increasing the yield\nWhich one is false?", opts: ["All", "I and V", "II and IV", "V"], ans: 3, exp: "V." },
+    { q: "92. During ripening of the fruits, rate of respiration is increased under the influence of hormone. It is called Climacteric respiration. The hormone is-", opts: ["ABA", "Auxin", "C2H4", "GA"], ans: 2, exp: "C2H4." },
+    { q: "93. Which hormone is used to initiate flowering and synchronising fruit set in pineapple?", opts: ["C2H2", "C2H4", "GA3", "IAA"], ans: 1, exp: "C2H4." },
+    { q: "94. Seed dormancy is regulated by -", opts: ["C2H4", "ABA", "IAA", "None"], ans: 1, exp: "ABA." },
+    { q: "95. I. Cytokinin is primarily concerned with cell division\nII. C2H4 breaks seed and bud dormancy\nIII. ABA stimulates the opening of stomata\nIV. C2H4 initiates germination in peanut seeds, sprouting of potato tubers\nV. ABA is synergistic to GA\nThe false statement is -", opts: ["I, II, IV", "III, V", "III, IV", "IV, V"], ans: 1, exp: "III, V." },
+    { q: "96. Which one is stress hormone -", opts: ["ABA", "GA", "C2H4", "IAA"], ans: 0, exp: "ABA." },
+    { q: "97. I. \"Y\" hormone induces flowering in mango and also promotes rapid internode/petiole elongation in deep water plants and hence helping leaves or upper part of shoot above water.\nII. \"X\" hormone promotes root growth and root hairs formation\nIII. \"Z\" hormone inhibits the seed germination, increases the tolerance of plant to various stresses, play important role in seed development, maturation and dormancy.\nIdentify the correct names of hormones", opts: ["Y = ABA; X = Auxin; Z = GA", "Z = GA; X = Auxin; Y = C2H4", "Y = Auxin; X = C2H4; Z = GA", "Y = C2H4; X = Auxin; Z = ABA"], ans: 3, exp: "Y = C2H4; X = Auxin; Z = ABA." },
+    { q: "98. The most widely used compound as a source of C2H4 is -", opts: ["Kinetin", "Zeatin", "IBA", "Ethephon"], ans: 3, exp: "Ethephon." },
+    { q: "99. Ethephon hastens the fruit ripening in tomatoes and apple and accelerates abscission in flowers and fruits. Above statement indicates that ethephon must release -", opts: ["ABA", "C2H4", "IAA", "GA7"], ans: 1, exp: "C2H4." },
+    { q: "100. Which hormone promotes female flowers in cucumber -", opts: ["ABA", "C2H4", "GA4", "GA3"], ans: 1, exp: "C2H4." },
+    { q: "101. Which of the following is incorrect?", opts: ["Any PGR has diverse physiological effects on plants", "Diverse PGRs manifest similar effect", "PGRs may act synergistically and antagonistically", "None"], ans: 3, exp: "None." },
+    { q: "102. Long day plants flower specially when the-", opts: ["Light period is lesser than some critical length", "Light period is greater than some critical period", "Dark period is less than some critical length", "Dark period is more than some critical length"], ans: 1, exp: "Light period is greater than some critical period." },
+    { q: "111. The correct sequence of the developmental process in a plant cell is", opts: ["Plasmatic growth, Differentiation, Senescence and Maturation respectively", "Plasmatic growth, Differentiation, Maturation and Senescence respectively", "Maturation, Plasmatic growth, Differentiation and Senescence respectively", "Differentiation, Plasmatic growth, Maturation and Senescence respectively"], ans: 1, exp: "Plasmatic growth, Differentiation, Maturation and Senescence respectively." },
+    { q: "114. Match the plant hormones listed in column A with their major role listed in column B and select the correct option from the codes given below - Column A: (A) Auxin, (B) Cytokinins, (C) Abscisic acid, (D) Ethylene. Column B: (i) Fruit ripening, (ii) Phototropism, (iii) Antagonist to GAs, (iv) Stomatal opening and closing, (v) Growth of lateral buds", opts: ["A-IV; B-V; C-III, II; D-I", "A-II; B-IV; C-III, IV; D-I", "A-II; B-IV, V; C-III; D-I", "A-III, IV; B-V; C-II; D-I"], ans: 2, exp: "A-II; B-IV, V; C-III; D-I." },
+    { q: "115. Which of the following effects is brought about by gibberellins but not by auxins?", opts: ["stimulation of cambial activity", "stimulation of fruit development", "inhibition of leaf abscission", "breaking of dormancy in leaf buds"], ans: 3, exp: "breaking of dormancy in leaf buds." },
+    { q: "116. Four potted plants (I, II, III, and IV) of cabbage (biennial plant) are subjected to different temperatures for several weeks as given in the table. Pot I: 5°C, Pot II: 24°C, Pot III: 27°C, Pot IV: 32°C. Which potted plant will show flowering?", opts: ["I", "II", "III", "IV"], ans: 0, exp: "I." },
+    { q: "117. Four potted plants I, II, III, and IV (of short day plant, which has the critical period of 14 hours) are taken and exposed to light for different time periods as listed in the given table. Pot I: 16 hrs, Pot II: 15 hrs, Pot III: 14 hrs, Pot IV: 10 hrs. Which potted plant will show flowering after exposure to light?", opts: ["I", "II", "III", "IV"], ans: 3, exp: "IV." },
+    { q: "118. The given table enlists various compounds containing plant hormones and their function in agriculture.\nNo. | Compound | Function\n1. | 2, 4-D | i\n2. | ii | Fruit ripening\nThe information in which alternative completes the given table?", opts: ["i-Weedicide; ii-Ethephon", "i-Insecticide; ii-Ethephon", "i-Insecticide; ii-Kinetin", "i-Weedicide; ii-Kinetin"], ans: 0, exp: "i-Weedicide; ii-Ethephon." },
+    { q: "119. The given table enlists various types of developmental processes in plant cells and their corresponding tissues.\nNo. | Tissue | Function\n1. | i | Redifferentation\n2. | Cork cambium | ii\nThe information in which alternative completes the given table?", opts: ["i-Primary xylem; ii-Differentiation", "i-Phellogen; ii-Differentiation", "i-Cork; ii-differentiated", "i-Primary xylem; ii-Dedifferentiation"], ans: 1, exp: "i-Phellogen; ii-Differentiation." },
+    { q: "120. The given table enlists various plant hormones and their functions.\nHormone | Function\ni | Increases the length of grape stalk\nii | Promotes seed dormancy\nThe information in which alternative completes the given table?", opts: ["i-Gibberellic acid; ii-Abscisic acid", "i-Abscisic acid; ii-Auxin", "i-Auxin; ii-Ethylene", "i-Ethylene; ii-Gibberellic acid"], ans: 0, exp: "i-Gibberellic acid; ii-Abscisic acid." },
+    { q: "122. The given table enlists various plant hormones and their chemical composition.\nPlant hormone | Chemical composition\nAuxin | i\nii | Terpenes\niii | Adenine derivatives\nThe information in which alternative completes the given table?", opts: ["i-Indole derivative; ii-Gibberellic acid; iii-Cytokinin", "i-Indole derivative; ii-Abscisic acid; iii-Ethylene", "i-Carotenoid derivative; ii-Abscisic acid; iii-Cytokinin", "i-Amino acid; ii-Gibberellic acid; iii-Cytokinin"], ans: 0, exp: "i-Indole derivative; ii-Gibberellic acid; iii-Cytokinin." },
+    { q: "123. Through their effect on plant growth regulators, what do the temperature and light control in the plants?", opts: ["Apical dominance", "Flowering", "Closure of stomata", "Fruit elongation"], ans: 1, exp: "Flowering." },
+    { q: "124. Which one of the following generally acts as an antagonist to gibberellins ?", opts: ["Zeatin", "Ethylene", "ABA", "IAA"], ans: 2, exp: "ABA." },
+    { q: "125. Vernalisation stimulates flowering in:", opts: ["Zamikand", "Turmeric", "Carrot", "Ginger"], ans: 2, exp: "Carrot." },
+    { q: "126. To speed up the malting process in brewing industry the growth hormone used is", opts: ["auxin", "gibberellic acid", "kinetin", "ethylene."], ans: 1, exp: "gibberellic acid." },
+    { q: "127. Meristem which is consumed in the formation of organ is", opts: ["lateral meristem", "secondary meristem", "indeterminate meristem", "determinate meristem"], ans: 3, exp: "determinate meristem." },
+    { q: "128. During seed germination its stored food is mobilized by:", opts: ["Ethylene", "Cytokinin", "ABA", "Gibberellin"], ans: 3, exp: "Gibberellin." },
+    { q: "129. Cell enlargement may occur in", opts: ["all direction", "linear direction", "both a and b", "none of these."], ans: 2, exp: "both a and b." },
+    { q: "130. The maximum growth phase is", opts: ["lag phase", "steady phase", "log phase", "senescent phase"], ans: 2, exp: "log phase." },
+    { q: "131. Dr. F. Went noted that if coleoptile tips were removed and placed on agar for one hour, the agar would produce a bending when placed on one side of freshly-cut coleoptile stumps. Of what significance is this experiment?", opts: ["It made possible the isolation and exact identification of auxin.", "It is the basis for quantitative determination of small amounts of growth promoting substances.", "It supports the hypothesis that IAA is auxin.", "It demonstrated polar movement of auxins."], ans: 1, exp: "It is the basis for quantitative determination of small amounts of growth promoting substances." },
+    { q: "132. Which one of the following growth regulators is known as stress hormone?", opts: ["Abscissic acid", "Ethylene", "GA3", "Indole acetic acid"], ans: 0, exp: "Abscissic acid." },
+    { q: "133. If a plant produces flowers when exposed only to alternating periods of 5 hours light and 3 hours dark, in a 24-h cycle, then the plant should be a _", opts: ["short-long day plant", "short day plant", "day neutral plant", "long day plant"], ans: 1, exp: "short day plant." },
+    { q: "134. The pineapple which under natural conditions is difficult to blossom has been made to produce fruits throughout the year by application of", opts: ["IAA, IBA", "NAA, 2, 4-D", "Phenyl acetic acid", "Cytokinin"], ans: 1, exp: "NAA, 2, 4-D." },
+    { q: "135. Which one of the following is a growth regulator produced by plants ?", opts: ["Naphthalene acetic acid", "Zeatin", "2,4-Dichlorophenoxyacetic acid", "Benzyl aminopurine"], ans: 1, exp: "Zeatin." },
+    { q: "136. Match the items in column I with those in column II, and choose the CORRECT answer.\nColumn I: P. Control of weeds, Q. Induction of germination, R. Ripening of fruit, S. Delaying of senescence\nColumn II: i. Gibberellin, ii. Cytokinin, iii. 2, 4-D, iv. Ethylene", opts: ["P-ii, Q-iv, R-iii, S-i", "P-iii, Q-i, R-iv, S-ii", "P-i, Q-ii, R-iv, S-iii", "P-ii, Q-iii, R-i, S-iv"], ans: 1, exp: "P-iii, Q-i, R-iv, S-ii." },
+    { q: "137. Cytokinin is not found in .", opts: ["root apex", "shoot apex", "young fruits", "mature fruits"], ans: 3, exp: "mature fruits." },
+    { q: "138. Select the correctly matched pair.", opts: ["C. Darwin and S. F. Darwin - Gibberellic acid", "F. W. Went-Auxin", "E. Kurosawa - Ethylene", "Skoog and Miller -Abscisic acid"], ans: 1, exp: "F. W. Went-Auxin." },
+    { q: "139. One hormone stimulates the closure of stomata and another one influences the swelling of the axis in dicot plants. They are", opts: ["Gibberellins and ethylene", "Abscisic acid and cytokinins", "Gibberellins and cytokinins", "Abscisic acid and ethylene"], ans: 3, exp: "Abscisic acid and ethylene." },
+    { q: "140. Which of the following statements regarding photoperiodism is false?", opts: ["The response of plants to periods of light/day is termed photoperiodism", "The shoot apices cannot perceive photoperiods", "In day neutral plants there is no correlation between exposure to light duration and induction of flowering response", "The site of perception of the light/dark duration is the flower."], ans: 3, exp: "The site of perception of the light/dark duration is the flower." },
+    { q: "141. One hormone hastens maturity period in juvenile conifers, a second hormone controls xylem differentiation, while the third increases the tolerance of plants to various stresses. They are respectively", opts: ["Gibberellin, Auxin, Cytokinin", "Auxin, Gibberellin, Cytokinin", "Gibberellin, Auxin, ABA", "Auxin, Gibberellin, ABA"], ans: 2, exp: "Gibberellin, Auxin, ABA." },
+    { q: "142. The aleurone synthesises and secretes digestive enzymes that hydrolyse nutrients stored in the endosperm, in presence of", opts: ["Auxin", "Gibberellin", "Cytokinin", "ethylene"], ans: 1, exp: "Gibberellin." },
+    { q: "143. Bolting means", opts: ["Elongation of stem in rossette plants", "Dwarfing of stem", "Increase in flowering", "Appearance of flowers"], ans: 0, exp: "Elongation of stem in rossette plants." },
+    { q: "144. Typical growth curve in plants is", opts: ["Stair-steps shaped", "Parabolic", "Sigmoid", "Linear"], ans: 2, exp: "Sigmoid." },
+    { q: "145. What causes a green plant exposed to the light, on only one side, to bend towards the source of light as it grows?", opts: ["Light stimulates plant cells on the lighted side to grow faster", "Auxin accumulates on the shaded side, stimulating greater cell elongation there", "Green plants need light to perform photosynthesis", "Green plants seek light because they are phototropic"], ans: 1, exp: "Auxin accumulates on the shaded side, stimulating greater cell elongation there." },
+    { q: "146. Auxin can be bioassayed by", opts: ["Potometer", "Lettuce hypocotyl elongation", "Avena coleoptile curvature", "Hydroponics"], ans: 2, exp: "Avena coleoptile curvature." },
+    { q: "147. If you were to prune the shoot tips of a plant, what would be the effect on the plant and the leaf area index?", opts: ["bushier plants; lower leaf area index", "tall plants; higher leaf area index", "short plants; lower leaf area index", "bushier plants; higher leaf area indexes"], ans: 3, exp: "bushier plants; higher leaf area indexes." },
+    { q: "148. The Avena curvature is used for bioassay of :", opts: ["ABA", "GA3", "IAA", "Ethylene"], ans: 2, exp: "IAA." },
+    { q: "149. You are given a tissue with its potential for differentiation in an artificial culture. Which of the following pairs of hormones would you add to the medium to secure shoots as well as roots?", opts: ["Auxin and abscisic acid", "Gibberellin and abscisic acid", "IAA and gibberellin", "Auxin and cytokinin"], ans: 3, exp: "Auxin and cytokinin." },
+    { q: "150. Seed dormancy can be broken by :", opts: ["ABA and GA3", "GA3 and ethylene", "IAA and ABA", "ABA and IPA"], ans: 1, exp: "GA3 and ethylene." },
+    { q: "151. Plants which disregard the requirement of a definite day length for the following are called :", opts: ["Short day plants", "Long day plants", "Day neutral plants", "Long short-day plants"], ans: 2, exp: "Day neutral plants." },
+    { q: "152. Which of the following is a potent weedicide ?", opts: ["IPA", "TIBA", "BAP", "2, 4-D"], ans: 3, exp: "2, 4-D." },
+    { q: "153. Vernalization is the effect of low temperature on :", opts: ["Delaying of flowering", "Inhibition of flowering", "Acceleration of fruit ripening", "Acceleration of flowering"], ans: 3, exp: "Acceleration of flowering." },
+    { q: "154. Seed dormancy can be broken by the following combination of chemicals", opts: ["GA3, IAA and ABA", "KNO3, GA3 and Ethylene chlorohydrin", "NAA, 2, 4, 5-T and IAA", "ABA, BAP and GA3"], ans: 1, exp: "KNO3, GA3 and Ethylene chlorohydrin." },
+    { q: "155. Seedless fruits can be induced by", opts: ["ABA and IAA", "ABA and Zeatin", "IAA and GA3", "Ethylene and ABA"], ans: 2, exp: "IAA and GA3." },
+    { q: "156. The primary hormone causing abscission of leaves is", opts: ["IAA", "Ethylene", "ABA", "Cytokinin"], ans: 1, exp: "Ethylene." },
+    { q: "157. Which of the following is most likely to occur when a small piece containing the primary meristem at the tip of a dicot shoot is cut off?", opts: ["The plant will send out lateral branches", "The plant will lose its leaves", "The growth of buds at nodes is inhibited", "The plant grows tall and spindly"], ans: 0, exp: "The plant will send out lateral branches." },
+    { q: "158. Fruit and leaf drop at early stages can be prevented by the application of:", opts: ["Ethylene", "Auxins", "Gibberellic acid", "Cytokinins"], ans: 1, exp: "Auxins." },
+    { q: "159. A plant has critical photoperiod of 10 hours and it is being considered as long day plant because it flowers when :", opts: ["Photoperiod of less than 10 hours is given", "Seed is exposed to 10 hours of light before sowing", "Photoperiod of more than 10 hours is given to shoot apex", "Photoperiod of more than 10 hours is given to leaves."], ans: 2, exp: "Photoperiod of more than 10 hours is given to shoot apex." },
+    { q: "160. Which of the following plant activity is not an example of growth promotion activity?", opts: ["Germination of seeds", "Cell division", "Delay in senescence", "Abscission"], ans: 3, exp: "Abscission." },
+    { q: "161. A long day plant with critical day length of 14 hrs will flower under which of the following treatments?", opts: ["7 hrs light - 2 hrs darkness - 3 hrs light - 5 hrs darkness - 7 hrs light", "5 hrs light - 2 hrs darkness - 3 hrs light - 5 hrs darkness - 7 hrs light", "11 hrs darkness - 2 hrs darkness - 3 hrs light - 5 hrs darkness - 7 hrs light", "6 hrs light - 2 hrs darkness - 3 hrs light - 5 hrs darkness - 7 hrs light"], ans: 0, exp: "7 hrs light - 2 hrs darkness - 3 hrs light - 5 hrs darkness - 7 hrs light." },
+    { q: "162. Cytokinin involves", opts: ["Kinetin, zeatin, BAP", "GA3, IBA, Kinetin", "Zeatin, GA3, BAP", "IAA, Zeatin, kinetin"], ans: 0, exp: "Kinetin, zeatin, BAP." },
+    { q: "163. Which of the following statement is wrong about Abscisic acid :", opts: ["It helps in general plant metabolism", "It is antagonistic to GA3", "It helps in seed maturation & dormancy", "Morphogenesis"], ans: 0, exp: "It helps in general plant metabolism." },
+    { q: "164. Vernalization", opts: ["Help in shortening the period between germination and flowering", "Is useless for monocots", "Is high temperature treatment to some annual crops", "More than one option is correct."], ans: 0, exp: "Help in shortening the period between germination and flowering." },
+    { q: "165. A flash of red light followed by a flash of far red light given during the middle of the light to a short day plant will :", opts: ["Cause increased flower production", "Have no effect upon flowering", "Inhibit flowering", "Stimulate flowering"], ans: 1, exp: "Have no effect upon flowering." },
+    { q: "166. Removal of shoot tips is a very useful technique to boost the production of tealeaves. This is because :", opts: ["Gibberellins delay senescence of leaves.", "Gibberellins prevent bolting and are inactivated.", "Auxins prevent leaf drop at early stages.", "Effect of auxins is removed and growth of lateral buds is enhanced."], ans: 3, exp: "Effect of auxins is removed and growth of lateral buds is enhanced." },
+    { q: "167. In order to increase the yield of sugarcane crop, which of the following plant growth regulators should be sprayed?", opts: ["Cytokinins", "Ethylene", "Auxins", "Gibberellin"], ans: 3, exp: "Gibberellin." },
+    { q: "168. It takes very long time for pineapple plants to produce flowers. Which combination of hormones can be applied to artificially induce flowering in pineapple plants throughout the year to increase yield?", opts: ["Auxin and Ethylene", "Gibberellin and Cytokinin", "Gibberellin and Abscisic acid", "Cytokinin and Abscisic acid"], ans: 0, exp: "Auxin and Ethylene." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Save Result + Back Button
+// ========================================
+const CHAPTER_NUM = 13; // ⚠️ यहाँ chapter number बदलें!
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to also save
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        try {
+          const marks = correctCount * 1 - wrongCount * 0.25;
+          const percent = ((marks / totalQ) * 100).toFixed(2);
+          
+          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+          const key = 'chapter' + CHAPTER_NUM;
+          
+          const newAttempt = {
+            correct: correctCount,
+            wrong: wrongCount,
+            total: totalQ,
+            marks: parseFloat(marks.toFixed(2)),
+            percent: parseFloat(percent),
+            date: new Date().toISOString(),
+            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
+          };
+          
+          if (!results[key]) {
+            results[key] = { attempts: [], totalAttempts: 0 };
+          }
+          
+          results[key].attempts.push(newAttempt);
+          results[key].totalAttempts = results[key].attempts.length;
+          
+          // Keep only last 10 attempts
+          if (results[key].attempts.length > 10) {
+            results[key].attempts = results[key].attempts.slice(-10);
+          }
+          
+          // Calculate best
+          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+          
+          localStorage.setItem('cbt_results', JSON.stringify(results));
+          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
+        } catch(e) {
+          console.log('Save error:', e);
+        }
+      };
+    }
+  }, 500);
+});
+window.addEventListener('load', function() {
+  const container = document.querySelector('.container');
+  if (container) {
+    const backBtn = document.createElement('div');
+    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
+    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
+    container.appendChild(backBtn);
+  }
+});
+</script>
+</body>
+</html>
