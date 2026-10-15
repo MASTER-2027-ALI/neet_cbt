@@ -84,7 +84,8 @@ chapters.forEach(ch => {
   card.className = 'chapter-card';
   card.href = ch.file;
 
-  const result = results['chapter' + ch.num];
+  const currentUser = JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown';
+const result = results[currentUser + '_chapter' + ch.num];
   let statusHTML = '';
   
   if (result && result.attempts && result.attempts.length > 0) {
