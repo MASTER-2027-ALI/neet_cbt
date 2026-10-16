@@ -31,13 +31,11 @@
       <div class="label">Average Score</div>
     </div>
   </div>
-
-  <h2 class="chapters-title">📚 Class 11 Biology - All Chapters</h2>
-  <div class="chapters-grid" id="chaptersGrid"></div>
-</div>
-
-<script src="keys.js"></script>
 <script>
+// ========================================
+// NEET CBT Dashboard - Firebase Version
+// ========================================
+
 // Check login
 const userData = localStorage.getItem('cbt_user');
 if (!userData) {
@@ -46,11 +44,12 @@ if (!userData) {
 const user = JSON.parse(userData);
 document.getElementById('userBadge').textContent = '👤 ' + user.name;
 
-  // Show Admin Panel button only for Master
+// Show Admin button for master
 if (user.role === 'master') {
   document.getElementById('adminBtn').style.display = 'inline-block';
 }
-// Chapter list (19 chapters)
+
+// Chapter list
 const chapters = [
   { num: 1, name: "The Living World", file: "chapter1.html" },
   { num: 2, name: "Biological Classification", file: "chapter2.html" },
@@ -73,60 +72,121 @@ const chapters = [
   { num: 19, name: "Chemical Coordination and Integration", file: "chapter19.html" }
 ];
 
-// Render chapters
-const grid = document.getElementById('chaptersGrid');
-const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
-let attempted = 0;
-let totalPercent = 0;
-
-chapters.forEach(ch => {
-  const card = document.createElement('a');
-  card.className = 'chapter-card';
-  card.href = ch.file;
-
-  const currentUser = JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown';
-const result = results[currentUser + '_chapter' + ch.num];
-  let statusHTML = '';
-  
-  if (result && result.attempts && result.attempts.length > 0) {
-    attempted++;
-    const attemptsCount = result.attempts.length;
-    const lastAttempt = result.attempts[attemptsCount - 1];
-    const bestAttempt = result.best || lastAttempt;
-    totalPercent += parseFloat(lastAttempt.percent);
+// ========================================
+// LOAD RESULTS FROM FIREBASE
+// ========================================
+async function loadResults() {
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, query, where, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
     
-    const bestClass = bestAttempt.percent >= 50 ? 'done' : '';
-    const lastClass = lastAttempt.percent >= 50 ? 'done' : '';
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
     
-    statusHTML = `
-      <div class="chapter-status ${bestClass}">🏆 Best: <strong>${bestAttempt.percent}%</strong> (${bestAttempt.correct}/${bestAttempt.total})</div>
-      <div class="chapter-status" style="color:#94a3b8; font-size:12px; margin-top:4px;">
-        📊 Last: ${lastAttempt.percent}% &nbsp;|&nbsp; 🔁 Attempts: <strong>${attemptsCount}</strong>
-      </div>
-    `;
-  } else {
-    statusHTML = `<div class="chapter-status">📝 Not attempted yet</div>`;
+    // Get current user's results only
+    const q = query(collection(db, "results"), where("userName", "==", user.name));
+    const snapshot = await getDocs(q);
+    
+    // Group by chapter
+    const userResults = {};
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const chNum = data.chapterNum;
+      if (!userResults[chNum]) {
+        userResults[chNum] = { attempts: [], best: null };
+      }
+      userResults[chNum].attempts.push(data);
+    });
+    
+    // Sort attempts by timestamp
+    for (const chNum in userResults) {
+      userResults[chNum].attempts.sort((a, b) => 
+        new Date(a.timestamp) - new Date(b.timestamp)
+      );
+      const attempts = userResults[chNum].attempts;
+      const bestPercent = Math.max(...attempts.map(a => a.percent));
+      userResults[chNum].best = attempts.find(a => a.percent === bestPercent);
+    }
+    
+    renderChapters(userResults);
+    
+  } catch (e) {
+    console.error('Firebase load error:', e);
+    document.getElementById('chaptersGrid').innerHTML = 
+      '<div style="padding:20px;color:#f87171;">⚠️ Firebase se data load nahi hua. Internet check karein.</div>';
   }
+}
 
-  card.innerHTML = `
-    <div class="chapter-num">CHAPTER ${ch.num}</div>
-    <div class="chapter-name">${ch.name}</div>
-    ${statusHTML}
-  `;
-  grid.appendChild(card);
-});
+// ========================================
+// RENDER CHAPTERS
+// ========================================
+function renderChapters(userResults) {
+  const grid = document.getElementById('chaptersGrid');
+  grid.innerHTML = '';
+  let attempted = 0;
+  let totalPercent = 0;
+  
+  chapters.forEach(ch => {
+    const card = document.createElement('a');
+    card.className = 'chapter-card';
+    card.href = ch.file;
+    
+    const result = userResults[ch.num];
+    let statusHTML = '';
+    
+    if (result && result.attempts.length > 0) {
+      attempted++;
+      const attemptsCount = result.attempts.length;
+      const lastAttempt = result.attempts[attemptsCount - 1];
+      const bestAttempt = result.best || lastAttempt;
+      totalPercent += parseFloat(lastAttempt.percent);
+      
+      const bestClass = bestAttempt.percent >= 50 ? 'done' : '';
+      
+      statusHTML = `
+        <div class="chapter-status ${bestClass}">🏆 Best: <strong>${bestAttempt.percent}%</strong> (${bestAttempt.correct}/${bestAttempt.total})</div>
+        <div class="chapter-status" style="color:#94a3b8; font-size:12px; margin-top:4px;">
+          📊 Last: ${lastAttempt.percent}% &nbsp;|&nbsp; 🔁 Attempts: <strong>${attemptsCount}</strong>
+        </div>
+      `;
+    } else {
+      statusHTML = `<div class="chapter-status">📝 Not attempted yet</div>`;
+    }
+    
+    card.innerHTML = `
+      <div class="chapter-num">CHAPTER ${ch.num}</div>
+      <div class="chapter-name">${ch.name}</div>
+      ${statusHTML}
+    `;
+    grid.appendChild(card);
+  });
+  
+  document.getElementById('attemptedCount').textContent = attempted;
+  document.getElementById('avgScore').textContent = attempted > 0 
+    ? (totalPercent / attempted).toFixed(1) + '%' 
+    : '0%';
+}
 
-document.getElementById('attemptedCount').textContent = attempted;
-document.getElementById('avgScore').textContent = attempted > 0 
-  ? (totalPercent / attempted).toFixed(1) + '%' 
-  : '0%';
-
-// Logout
+// ========================================
+// LOGOUT
+// ========================================
 function logout() {
   localStorage.removeItem('cbt_user');
   localStorage.removeItem('cbt_login_time');
+  // ⚠️ cbt_results NAHI delete karenge
   window.location.href = 'index.html';
 }
+
+// ========================================
+// INIT
+// ========================================
+loadResults();
 </script>
+  <h2 class="chapters-title">📚 Class 11 Biology - All Chapters</h2>
+  <div class="chapters-grid" id="chaptersGrid"></div>
+</div>
+
+<script src="keys.js"></script>
+
 </body>
 </html>
