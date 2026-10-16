@@ -2,7 +2,7 @@
 // NEET 2027 CBT - Passkeys Configuration
 // ========================================
 
-// 👑 Master Key (Admin - Aapke liye)
+// 👑 Master Key (Admin)
 const MASTER_KEY = "MASTER-2027-ALI";
 
 // 👥 12 Friend Keys
@@ -20,6 +20,7 @@ const FRIEND_KEYS = {
   "friend11": { key: "NEET-2027-K2P9", name: "Friend 11" },
   "friend12": { key: "NEET-2027-L3O8", name: "Friend 12" }
 };
+
 // ========================================
 // FIREBASE CONFIGURATION
 // ========================================
