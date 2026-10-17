@@ -141,7 +141,7 @@
     <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
   </div>
 </div>
-
+<script src="keys.js"></script>
 <script>
 const questions = [
   { q: "Metathoracic wings in cockroaches are —", opts: ["Halteres", "Tegmina", "Hemielytra", "None of these"], ans: 3, exp: "None of these." },
@@ -493,15 +493,16 @@ function resetQuiz() {
 renderPalette();
 renderQuestion();
 // ========================================
-// NEET CBT - Save Result + Back Button
+// NEET CBT - Firebase Result Save + Back Button
 // ========================================
-const CHAPTER_NUM = 7; // ⚠️ यहाँ chapter number बदलें!
+const CHAPTER_NUM = 7; // ⚠️ Chapter number (Yahan 7 hai)
 
 // Check login
 const _userData = localStorage.getItem('cbt_user');
 if (!_userData) {
   window.location.href = 'index.html';
 }
+const _currentUser = JSON.parse(_userData);
 
 window.addEventListener('load', function() {
   setTimeout(function() {
@@ -515,63 +516,67 @@ window.addEventListener('load', function() {
       document.body.appendChild(topBtn);
     }
 
-    // Override showResult to also save
+    // Override showResult to save to localStorage + Firebase
     if (typeof window.showResult === 'function') {
       const _originalShowResult = window.showResult;
       window.showResult = function() {
         _originalShowResult();
         
-        try {
-          const marks = correctCount * 1 - wrongCount * 0.25;
-          const percent = ((marks / totalQ) * 100).toFixed(2);
-          
-          const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
-          const key = 'chapter' + CHAPTER_NUM;
-          
-          const newAttempt = {
-            correct: correctCount,
-            wrong: wrongCount,
-            total: totalQ,
-            marks: parseFloat(marks.toFixed(2)),
-            percent: parseFloat(percent),
-            date: new Date().toISOString(),
-            userName: JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Unknown'
-          };
-          
-          if (!results[key]) {
-            results[key] = { attempts: [], totalAttempts: 0 };
-          }
-          
-          results[key].attempts.push(newAttempt);
-          results[key].totalAttempts = results[key].attempts.length;
-          
-          // Keep only last 10 attempts
-          if (results[key].attempts.length > 10) {
-            results[key].attempts = results[key].attempts.slice(-10);
-          }
-          
-          // Calculate best
-          const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
-          results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
-          
-          localStorage.setItem('cbt_results', JSON.stringify(results));
-          console.log('✅ Attempt #' + results[key].totalAttempts + ' saved for Chapter ' + CHAPTER_NUM);
-        } catch(e) {
-          console.log('Save error:', e);
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
         }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
       };
     }
   }, 500);
 });
-window.addEventListener('load', function() {
-  const container = document.querySelector('.container');
-  if (container) {
-    const backBtn = document.createElement('div');
-    backBtn.style.cssText = 'text-align:center; margin-top:20px;';
-    backBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:12px 30px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;">← Back to Dashboard</a>';
-    container.appendChild(backBtn);
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
   }
-});
+}
 </script>
 </body>
 </html>
