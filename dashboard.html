@@ -5,10 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard - NEET 2027 CBT</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  /* Class 11 & 12 ke liye thoda extra style */
+  .class-heading {
+    font-size: 20px;
+    color: #2b6cb0;
+    margin: 30px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .class-heading span {
+    background: #ebf8ff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #2c5282;
+  }
+</style>
 </head>
 <body>
 <div class="dashboard-container">
- <div class="dash-header">
+  <div class="dash-header">
     <h1>🧬 NEET 2027 CBT</h1>
     <div class="user-info">
       <span class="user-badge" id="userBadge">👤 User</span>
@@ -19,7 +39,7 @@
 
   <div class="stats-bar">
     <div class="stat-card">
-      <div class="num">19</div>
+      <div class="num">32</div>
       <div class="label">Total Chapters</div>
     </div>
     <div class="stat-card">
@@ -31,6 +51,18 @@
       <div class="label">Average Score</div>
     </div>
   </div>
+
+  <!-- Class 11 Heading -->
+  <h2 class="class-heading">📚 Class 11 Biology <span>19 Chapters</span></h2>
+  <div class="chapters-grid" id="class11Grid"></div>
+
+  <!-- Class 12 Heading -->
+  <h2 class="class-heading">📚 Class 12 Biology <span>13 Chapters</span></h2>
+  <div class="chapters-grid" id="class12Grid"></div>
+
+</div>
+
+<script src="keys.js"></script>
 <script>
 // ========================================
 // NEET CBT Dashboard - Firebase Version
@@ -49,8 +81,8 @@ if (user.role === 'master') {
   document.getElementById('adminBtn').style.display = 'inline-block';
 }
 
-// Chapter list
-const chapters = [
+// Chapter Lists
+const class11Chapters = [
   { num: 1, name: "The Living World", file: "chapter1.html" },
   { num: 2, name: "Biological Classification", file: "chapter2.html" },
   { num: 3, name: "Plant Kingdom", file: "chapter3.html" },
@@ -70,6 +102,22 @@ const chapters = [
   { num: 17, name: "Locomotion and Movement", file: "chapter17.html" },
   { num: 18, name: "Neural Control and Coordination", file: "chapter18.html" },
   { num: 19, name: "Chemical Coordination and Integration", file: "chapter19.html" }
+];
+
+const class12Chapters = [
+  { num: 20, name: "Sexual Reproduction in Flowering Plants", file: "chapter20.html" },
+  { num: 21, name: "Human Reproduction", file: "chapter21.html" },
+  { num: 22, name: "Reproductive Health", file: "chapter22.html" },
+  { num: 23, name: "Principles of Inheritance and Variation", file: "chapter23.html" },
+  { num: 24, name: "Molecular Basis of Inheritance", file: "chapter24.html" },
+  { num: 25, name: "Evolution", file: "chapter25.html" },
+  { num: 26, name: "Human Health and Disease", file: "chapter26.html" },
+  { num: 27, name: "Microbes in Human Welfare", file: "chapter27.html" },
+  { num: 28, name: "Biotechnology: Principles and Processes", file: "chapter28.html" },
+  { num: 29, name: "Biotechnology and its Applications", file: "chapter29.html" },
+  { num: 30, name: "Organisms and Populations", file: "chapter30.html" },
+  { num: 31, name: "Ecosystem", file: "chapter31.html" },
+  { num: 32, name: "Biodiversity and Conservation", file: "chapter32.html" }
 ];
 
 // ========================================
@@ -112,19 +160,41 @@ async function loadResults() {
     
   } catch (e) {
     console.error('Firebase load error:', e);
-    document.getElementById('chaptersGrid').innerHTML = 
+    document.getElementById('class11Grid').innerHTML = 
       '<div style="padding:20px;color:#f87171;">⚠️ Firebase se data load nahi hua. Internet check karein.</div>';
+    document.getElementById('class12Grid').innerHTML = '';
   }
 }
 
 // ========================================
-// RENDER CHAPTERS
+// RENDER CHAPTERS (Separate for Class 11 & 12)
 // ========================================
 function renderChapters(userResults) {
-  const grid = document.getElementById('chaptersGrid');
-  grid.innerHTML = '';
-  let attempted = 0;
+  renderGrid(class11Chapters, 'class11Grid', userResults);
+  renderGrid(class12Chapters, 'class12Grid', userResults);
+  
+  // Calculate overall stats
+  let totalAttempted = 0;
   let totalPercent = 0;
+  const allChapters = [...class11Chapters, ...class12Chapters];
+  
+  allChapters.forEach(ch => {
+    const result = userResults[ch.num];
+    if (result && result.attempts.length > 0) {
+      totalAttempted++;
+      totalPercent += parseFloat(result.best.percent);
+    }
+  });
+  
+  document.getElementById('attemptedCount').textContent = totalAttempted;
+  document.getElementById('avgScore').textContent = totalAttempted > 0 
+    ? (totalPercent / totalAttempted).toFixed(1) + '%' 
+    : '0%';
+}
+
+function renderGrid(chapters, gridId, userResults) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
   
   chapters.forEach(ch => {
     const card = document.createElement('a');
@@ -135,11 +205,9 @@ function renderChapters(userResults) {
     let statusHTML = '';
     
     if (result && result.attempts.length > 0) {
-      attempted++;
       const attemptsCount = result.attempts.length;
       const lastAttempt = result.attempts[attemptsCount - 1];
       const bestAttempt = result.best || lastAttempt;
-      totalPercent += parseFloat(lastAttempt.percent);
       
       const bestClass = bestAttempt.percent >= 50 ? 'done' : '';
       
@@ -160,11 +228,6 @@ function renderChapters(userResults) {
     `;
     grid.appendChild(card);
   });
-  
-  document.getElementById('attemptedCount').textContent = attempted;
-  document.getElementById('avgScore').textContent = attempted > 0 
-    ? (totalPercent / attempted).toFixed(1) + '%' 
-    : '0%';
 }
 
 // ========================================
@@ -173,7 +236,6 @@ function renderChapters(userResults) {
 function logout() {
   localStorage.removeItem('cbt_user');
   localStorage.removeItem('cbt_login_time');
-  // ⚠️ cbt_results NAHI delete karenge
   window.location.href = 'index.html';
 }
 
@@ -181,12 +243,6 @@ function logout() {
 // INIT
 // ========================================
 loadResults();
-</script>
-  <h2 class="chapters-title">📚 Class 11 Biology - All Chapters</h2>
-  <div class="chapters-grid" id="chaptersGrid"></div>
-</div>
-
-<script src="keys.js"></script>
 </script>
 </body>
 </html>
