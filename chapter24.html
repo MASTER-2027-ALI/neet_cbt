@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 24: Molecular Basis of Inheritance - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 24: Molecular Basis of Inheritance</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. What was the finding of Hershey and Chase?", opts: ["The viral infecting agent is RNA.", "The viral infecting agent is DNA.", "The viral infecting agent is protein.", "The T2 virus has RNA as its genetic material."], ans: 1, exp: "Hershey and Chase proved DNA is the genetic material in T2 bacteriophage." },
+    { q: "2. Hydrogen bonds occur between which of the following constituents of DNA?", opts: ["sugar and base", "phosphate and base", "complementary bases", "phosphate and sugar"], ans: 2, exp: "Hydrogen bonds form between complementary nitrogenous bases." },
+    { q: "3. In 1957, Meselson and Stahl concluded from their studies that", opts: ["DNA replicates conservatively", "DNA replicates semiconservatively", "DNA replicates dispersively", "DNA does not replicate"], ans: 1, exp: "They demonstrated semi-conservative replication of DNA." },
+    { q: "4. Replication is continuous in", opts: ["the leading strand", "the lagging strand", "the strand where okazaki fragments are present", "both the strands"], ans: 0, exp: "Leading strand synthesis is continuous; lagging is discontinuous." },
+    { q: "5. DNA duplication or multiplication is called", opts: ["transcription", "translation", "transaction", "replication."], ans: 3, exp: "DNA duplication is called replication." },
+    { q: "6. Which one is correct?", opts: ["DNA replication occurs before mitosis, meiosis and mitosis.", "The polarity of DNA template on which leading strand forms is 3' -> 5'.", "The products of gene may be rRNA, tRNA and mRNA.", "All of the above"], ans: 3, exp: "All the given statements are correct." },
+    { q: "7. A large cluster of ribosomes is called", opts: ["megasome", "microsome", "oligosome", "polyribosome"], ans: 3, exp: "A cluster of ribosomes is a polyribosome (polysome)." },
+    { q: "8. Which of the following RNA polymerase catalyses the formation of transfer RNA in eukaryotes?", opts: ["RNA polymerase I", "RNA polymerase II", "RNA polymerase I and II", "RNA polymerase III"], ans: 3, exp: "RNA polymerase III transcribes tRNA." },
+    { q: "9. Part of DNA which switch their positions are called", opts: ["citrons", "transposons", "exons", "introns"], ans: 1, exp: "Transposons are jumping genes that can change positions." },
+    { q: "10. Transcription refers to the", opts: ["transfer of genetic code or sequences of DNA into RNA", "formation of DNA from RNA", "formation of protein", "polymerisation of RNA in cell-free system"], ans: 0, exp: "Transcription is the synthesis of RNA from a DNA template." },
+    { q: "11. The transforming substance of pneumococcus in Griffith's experiment was", opts: ["protein", "RNA", "DNA", "polysaccharide"], ans: 2, exp: "The transforming principle was identified as DNA." },
+    { q: "12. Nonsense codon is responsible for", opts: ["elongation of polypeptide chain", "termination of protein synthesis", "putting a wrong amino acid", "hydrolysis of GTP"], ans: 1, exp: "Nonsense codons (UAA, UAG, UGA) terminate protein synthesis." },
+    { q: "13. Which one is not applicable in respect of genetic code?", opts: ["Overlapping", "Redundancy", "Degeneracy", "Universality"], ans: 0, exp: "The genetic code is non-overlapping." },
+    { q: "14. One gene one enzyme hypothesis was proposed by", opts: ["Jacob and Monod", "Watson and Crick", "Garrod and Jenson", "Beadle and Tatum"], ans: 3, exp: "Beadle and Tatum proposed one gene-one enzyme." },
+    { q: "15. Ligase is an enzyme required for", opts: ["proofreading", "joining DNA bits", "breaking of DNA", "renaturation of DNA"], ans: 1, exp: "DNA ligase joins DNA fragments." },
+    { q: "16. The chain-terminating codon is", opts: ["AUG", "CCC", "UAG", "GGG"], ans: 2, exp: "UAG is a stop codon." },
+    { q: "17. In one strand of DNA the sequence of bases is AAATGGCCCTT, then the complementary sequence of bases on the other side of the strand would be", opts: ["ATATGGCCCCA", "TTTACCGGGAA", "TTTTGGCCAM", "TTTTGGCCAA"], ans: 1, exp: "Complementary sequence: TTTACCGGGAA." },
+    { q: "18. In bacterial chromosome", opts: ["there is one origin of replication", "there are multiple sites of replication", "there is no repair of DNA", "replication is very slow;"], ans: 0, exp: "Bacterial chromosomes have a single origin of replication." },
+    { q: "19. What is the distance between two base pairs in the double helix model of DNA?", opts: ["0.34nm", "34nm", "5A", "10A"], ans: 0, exp: "Distance is 0.34 nm (3.4 Å)." },
+    { q: "20. What is a codon?", opts: ["a group of three deoxyribonucleotides", "a group of three ribonucleotides", "a unit of mutation", "a group of four ribonucleotides"], ans: 1, exp: "A codon is a sequence of three ribonucleotides on mRNA." },
+    { q: "21. Generally only one strand of DNA is transcribed. This strand is called", opts: ["A strand", "B strand", "sense strand", "template strand"], ans: 3, exp: "The transcribed strand is the template strand." },
+    { q: "22. The chain initiating codon is", opts: ["AUG", "UAG", "UAA", "UUA"], ans: 0, exp: "AUG is the start codon." },
+    { q: "23. Out of 64 codons how many of them code for amino acids?", opts: ["54", "20", "61", "32"], ans: 2, exp: "61 codons code for amino acids (3 are stop codons)." },
+    { q: "24. The difference in A, B and Z forms of DNA lie in", opts: ["base sequences", "parallelism of chains", "hydrogen bonding", "internucleotide distances"], ans: 3, exp: "A, B, and Z forms differ in their internucleotide distances and structural features." },
+    { q: "25. In 1928 Frederick Griffith showed that the hereditary material can pass from one type of bacteria into another through a process called", opts: ["transduction", "invasion", "recombination", "transformation"], ans: 3, exp: "This process is called transformation." },
+    { q: "26. DNA replication requires", opts: ["DNA polymerase only", "DNA ligase only", "RNA polymerase and translocase", "DNA polymerase and DNA ligase"], ans: 3, exp: "Replication requires both DNA polymerase and DNA ligase." },
+    { q: "27. In 1868 DNA was discovered by the Swedish biochemist", opts: ["Feulgen", "Luria", "Mirsky", "Friedrich Miescher"], ans: 3, exp: "Friedrich Miescher discovered DNA (nuclein) in 1868." },
+    { q: "28. Which one of the following synthesizes a repressor protein?", opts: ["Regulator gene", "Promoter gene", "Structural gene", "Operator gene"], ans: 0, exp: "The regulator gene synthesizes the repressor protein." },
+    { q: "29. Which is true according to Chargaff's rule?", opts: ["A = C", "G = T", "A+G = T+C", "A + T = 1 - C + G"], ans: 2, exp: "According to Chargaff's rule, A+G = T+C (purines = pyrimidines)." },
+    { q: "30. The terms cistron, recon and muton were proposed by", opts: ["Benzer", "Morgan", "Lederberg", "Johansen"], ans: 0, exp: "Seymour Benzer proposed these terms." },
+    { q: "31. Enzyme required for transcription is", opts: ["DNA polymerase", "RNA polymerase", "RNA-ase", "endonuclease"], ans: 1, exp: "RNA polymerase catalyzes transcription." },
+    { q: "32. Synthesis of DNA from RNA template occurs in", opts: ["reovirus", "Rous sarcoma virus", "T2", "TMV"], ans: 1, exp: "Rous sarcoma virus is a retrovirus that uses reverse transcription." },
+    { q: "33. Watson and Crick proposed the model of DNA structure in", opts: ["1943", "1953", "1963", "1965"], ans: 1, exp: "They proposed the double helix model in 1953." },
+    { q: "34. How many pairs nucleotides are present in one turn of DNA helix?", opts: ["4", "8", "9", "10"], ans: 3, exp: "There are 10 base pairs per turn." },
+    { q: "35. If in a DNA molecule cytosine is 18%, the percentage of adenine would be", opts: ["18%", "32%", "36%", "64%"], ans: 1, exp: "C=18%, G=18%. A+T=64%, so A=32%." },
+    { q: "36. RNA that picks up specific amino acid from amino acid pool of cytoplasm to carry it to ribosome during protein synthesis is", opts: ["mRNA", "tRNA", "rRNA", "gRNA"], ans: 1, exp: "tRNA transfers amino acids." },
+    { q: "37. Nucleotide base present in DNA and not in RNA is", opts: ["cytosine", "thymine", "uracil", "guanine"], ans: 1, exp: "Thymine is found in DNA, not RNA." },
+    { q: "38. Information transfer from RNA to DNA is called", opts: ["replication", "reverse transcription", "translation", "transcription"], ans: 1, exp: "This is reverse transcription." },
+    { q: "39. Initiation of polypeptide chain takes place through", opts: ["methionine", "lysine", "leucine", "glycine"], ans: 0, exp: "Methionine is the initiating amino acid." },
+    { q: "40. In operon model, RNA polymerase binds to", opts: ["structural gene", "operator gene", "promoter gene", "regulator"], ans: 2, exp: "RNA polymerase binds to the promoter." },
+    { q: "41. Isotopes used in proving semiconservative replication of DNA were", opts: ["14N, 14C", "14N, 15N", "14N, 31P", "14C, 31P"], ans: 1, exp: "Meselson and Stahl used 14N and 15N." },
+    { q: "42. Bacterial nucleoid has", opts: ["one single-stranded DNA", "one double-stranded DNA", "two single-stranded DNA", "many double-stranded DNAs"], ans: 1, exp: "Bacterial nucleoid has one double-stranded circular DNA." },
+    { q: "43. Genetic code translates the language of", opts: ["RNA into that of protein", "RNA into that of DNA", "amino acids into that of RNA", "protein into that of DNA"], ans: 0, exp: "It translates RNA into protein." },
+    { q: "44. Regulator gene controls chemical synthesis (operon system) by", opts: ["inhibiting substrate enzyme action", "inhibiting transcription of mRNA", "inhibiting passage of mRNA", "inhibiting enzymes"], ans: 1, exp: "It controls transcription by producing a repressor." },
+    { q: "45. DNA is present in", opts: ["mitochondria", "nucleus", "chloroplast", "All of these"], ans: 3, exp: "DNA is in nucleus, mitochondria, and chloroplasts." },
+    { q: "46. DNA duplex shows", opts: ["left handed and parallel coiling", "left handed and antiparallel coiling", "right handed and parallel coiling", "right handed and antiparallel coiling"], ans: 3, exp: "B-DNA is right-handed and antiparallel." },
+    { q: "47. Experimental evidence supporting concept of triplet genetic code was first provided by", opts: ["Watson", "Crick", "Michaelis and Menten", "Beadle and Tatum"], ans: 3, exp: "Beadle and Tatum provided evidence for the triplet code." },
+    { q: "48. The site of tRNA that binds to mRNA is", opts: ["codon", "anticodon", "5' end", "3' end"], ans: 1, exp: "The anticodon of tRNA binds to the mRNA codon." },
+    { q: "49. Triplet codon refers to sequence of three bases on", opts: ["tRNA", "rRNA", "mRNA", "all of these"], ans: 2, exp: "Codons are on mRNA." },
+    { q: "50. The functional unit of gene that specifies synthesis of one polypeptide is", opts: ["muton", "recon", "cistron", "codon"], ans: 2, exp: "A cistron is the functional unit of a gene." },
+    { q: "51. Which of the following sugars is found in RNA?", opts: ["Hexose", "Fructose", "Ribose", "Glucose"], ans: 2, exp: "RNA contains ribose sugar." },
+    { q: "52. Nucleic acids are polymers of", opts: ["nucleotides", "nucleosides", "amino acids", "nucleoproteins"], ans: 0, exp: "Nucleic acids are polymers of nucleotides." },
+    { q: "53. Reverse transcription was discovered by", opts: ["Beadle and Tatum", "Watson and Crick", "Khorana", "Temin and Baltimore"], ans: 3, exp: "Temin and Baltimore discovered reverse transcriptase." },
+    { q: "54. The flow of information from DNA to mRNA and then to proteins is called", opts: ["transcription", "translation", "genetic code", "central dogma"], ans: 3, exp: "This flow is the central dogma." },
+    { q: "55. Which is required for protein synthesis?", opts: ["Initiation codon", "GTP", "Peptidyl transferase", "All of these"], ans: 3, exp: "All are required." },
+    { q: "56. Circular DNA is found in", opts: ["viruses", "bacteria, chloroplast and mitochondria", "chloroplast and mitochondria alone", "all of these"], ans: 1, exp: "Circular DNA is in bacteria, chloroplasts, and mitochondria." },
+    { q: "57. Okazaki fragments are formed during", opts: ["transcription", "translation", "replication", "transduction"], ans: 2, exp: "Okazaki fragments are formed during replication." },
+    { q: "58. Termination of polypeptide chain is brought about by", opts: ["UUG, UAG and UCG", "UCG, GCG and ACC", "UAA, UAG and UGA", "UUG, UGC and UCA."], ans: 2, exp: "UAA, UAG, and UGA are stop codons." },
+    { q: "59. The process of translation relates to", opts: ["DNA synthesis", "RNA synthesis", "ribosome synthesis", "protein synthesis"], ans: 3, exp: "Translation is protein synthesis." },
+    { q: "60. Escherichia coli with completely radioactive DNA was allowed to replicate in nonradioactive medium for two generations. Percentage of bacteria with radioactive DNA is", opts: ["12.5%", "25%", "50%", "100%"], ans: 2, exp: "Semi-conservative replication means 50% of the DNA strands will be radioactive." },
+    { q: "61. Which of the following is having SSRNA?", opts: ["TMV", "T2-bacteriophage", "Pox virus", "Phi x 174"], ans: 0, exp: "TMV has single-stranded RNA." },
+    { q: "62. Genetic material of retrovirus is", opts: ["DNA", "RNA", "Both (a) and (b)", "None of these"], ans: 1, exp: "Retroviruses have RNA as their genetic material." },
+    { q: "63. Protein coat of a virus is called", opts: ["virus", "capsid", "capsomeres", "Cell wall"], ans: 1, exp: "The protein coat is the capsid." },
+    { q: "64. Viruses parasitising in bacteria are", opts: ["Bacteriophages", "Phytophages", "Cyanophages", "Bacterio-viruses"], ans: 0, exp: "Viruses that infect bacteria are bacteriophages." },
+    { q: "65. Viroids differ from viruses in", opts: ["Naked DNA molecules", "Naked DNA packaged in viral genera", "Naked RNA molecules", "Naked RNA with protein coat"], ans: 2, exp: "Viroids are naked RNA molecules." },
+    { q: "66. Whose experiments cracked the DNA and discovered unequivocally that a genetic code is a triplet?", opts: ["Nirenberg and Matthaei", "Morgan and Sturtevant", "Hershey and Chase", "Beadle and Tatum"], ans: 0, exp: "Nirenberg and Matthaei deciphered the genetic code." },
+    { q: "67. mRNA directs the building of proteins through a sequence of-", opts: ["Axons", "Introns", "Codons", "Anticodons"], ans: 2, exp: "mRNA directs protein synthesis via codons." },
+    { q: "68. How much of DNA base sequence among humans is same?", opts: ["50%", "80%", "99.9%", "3.4%"], ans: 2, exp: "Human DNA is 99.9% identical." },
+    { q: "69. Tryptophan operon of Escherichia coli is", opts: ["a repressive system", "an inducible system", "an unregulated system", "monocistronic"], ans: 0, exp: "Tryptophan operon is a repressible system." },
+    { q: "70. What is a split gene?", opts: ["A gene with a crack in it", "A gene which has no promoter", "A jumping gene", "A gene whose entire sequences are not retained in the mature RNA"], ans: 3, exp: "Split genes have introns and exons; introns are removed from mature RNA." },
+    { q: "71. A gene that takes part in synthesis of polypeptide is", opts: ["regulator gene", "promoter gene", "operator gene", "structural gene"], ans: 3, exp: "Structural genes code for polypeptides." },
+    { q: "72. Genes that are involved in turning on or off the transcription of structural genes are called", opts: ["redundant genes", "operator genes", "regulator genes", "polymorphic genes"], ans: 2, exp: "Regulator genes control transcription." },
+    { q: "73. Operator gene of lac-operon is turned on when lactose molecules bind to", opts: ["repressor molecule", "promoter site", "mRNA", "regulator gene"], ans: 0, exp: "Lactose binds to the repressor, inactivating it." },
+    { q: "74. The end product of a metabolic pathway may bind a repressor to make the latter active enough to bind to the operator, in which case the end-product is called", opts: ["inducer", "accelerator", "corepressor", "aporepressor"], ans: 2, exp: "The end product acts as a corepressor." },
+    { q: "75. Restriction endonuclease enzymes are used in genetic engineering because they", opts: ["are proteolytic enzymes which degrades harmful proteins", "can cut DNA at variable sites", "can cut DNA at specific base sequence", "can join DNA fragments"], ans: 2, exp: "They cut DNA at specific recognition sequences." },
+    { q: "76. Feed back repression can be seen in", opts: ["all operons", "lac operon", "tryptophan operon", "none of these"], ans: 2, exp: "Tryptophan operon is a classic example of feedback repression." },
+    { q: "77. Wild type Escherichia coli growing on medium having glucose is transferred to lactose containing medium. Which one of the following change will occur?", opts: ["The bacterium stops dividing", "All operons are induced", "Lac operon is suppressed", "Lac operon is induced"], ans: 3, exp: "The lac operon is induced in the presence of lactose." },
+    { q: "78. The promoter allows", opts: ["binding of DNA polymerase", "binding of repressor", "binding of RNA polymerase", "folding of structural genes"], ans: 2, exp: "The promoter binds RNA polymerase." },
+    { q: "79. The smallest gene affected by mutation is", opts: ["exon", "muton", "cistron", "recon"], ans: 1, exp: "A muton is the smallest unit of mutation." },
+    { q: "80. The external supply of tryptophan in Escherichia coli brings about", opts: ["switching on of lac operon", "switching off of lac operon", "switching on of tryptophan operon", "switching off of tryptophan operon"], ans: 3, exp: "Tryptophan acts as a corepressor, switching off the trp operon." },
+    { q: "81. How many structural genes are present in the tryptophan operon?", opts: ["two", "three", "four", "five"], ans: 3, exp: "The trp operon has 5 structural genes." },
+    { q: "82. Lac operon and tryptophan operon are the models of gene expression in", opts: ["bacteria", "viruses", "eukaryotes", "all of these"], ans: 0, exp: "They are models in bacteria." },
+    { q: "83. Pre-mRNA or hnRNA found in eukaryotic cells-", opts: ["formed as result of a replication of DNA", "formed due to the transcription of entire length of a gene", "a new species of genetic RNA", "result of transcription of only introns"], ans: 1, exp: "hnRNA is transcribed from the entire length of the gene (exons + introns)." },
+    { q: "84. The genes present in host cells and viruses which cause cancer are", opts: ["oncogenes", "proto-oncogenes", "house-keeping genes", "reverse transcriptase"], ans: 0, exp: "Oncogenes cause cancer." },
+    { q: "85. The transcription of lac operon is controlled by", opts: ["promoter", "only by regulator", "operator and promoter", "operator, promoter and regulator"], ans: 3, exp: "It is controlled by operator, promoter, and regulator." },
+    { q: "86. The tryptophan operon is transcribed", opts: ["when there is plenty of tryptophan in the cell,", "when there is no tryptophan in the cell", "when lactose is present", "even without RNA polymerase"], ans: 1, exp: "The trp operon is transcribed when tryptophan is absent." },
+    { q: "87. The lac operon consists of", opts: ["one structural gene", "three structural genes", "four structural genes", "five structural genes"], ans: 1, exp: "Lac operon has 3 structural genes (lacZ, lacY, lacA)." },
+    { q: "88. An operon is a", opts: ["cistron", "protein", "gene", "group of regulated structural genes which controls related functions"], ans: 3, exp: "An operon is a group of regulated structural genes." },
+    { q: "89. In operon model, regulator gene functions as", opts: ["repressor", "regulator", "inhibitor", "all of these"], ans: 0, exp: "It produces a repressor protein." },
+    { q: "90. Introns are part of DNA which", opts: ["code for protein synthesis", "do not code for protein synthesis", "initiate transcription", "help in joining pieces of DNA"], ans: 1, exp: "Introns do not code for proteins." },
+    { q: "91. Transgenic plants are developed by", opts: ["introducing gene mutation", "introducing foreign genes", "stopping spindle formation", "introducing chromosomal mutation"], ans: 1, exp: "Transgenic plants have foreign genes introduced." },
+    { q: "92. Viruses possess", opts: ["RNA", "DNA", "RNA or DNA", "neither RNA nor DNA"], ans: 2, exp: "Viruses possess either RNA or DNA." },
+    { q: "93. In split genes, the coding sequences are called", opts: ["introns", "exons", "cistrons", "operons"], ans: 1, exp: "Coding sequences are exons." },
+    { q: "94. Lac operon is-", opts: ["a set of overlapping genes", "repressible operon", "inducible operon", "arabinose operon"], ans: 2, exp: "Lac operon is an inducible operon." },
+    { q: "95. In Escherichia coli, lac operon is induced by", opts: ["l-gene", "promoter gene", "lactose", "p-galactosidase"], ans: 2, exp: "Lactose is the inducer." },
+    { q: "96. Operon model of gene regulation in prokaryotes was proposed by", opts: ["Beadle and Tatum", "Meselson and Stahl", "Jacob and Monod", "Wilkins and Franklin"], ans: 2, exp: "Jacob and Monod proposed the operon model." },
+    { q: "97. Column I: I. Operator site, II. Promoter site, III. Structural gene, IV. Regulator gene. Column II: A. Binding site for RNA polymerase, B. Binding site for repressor molecule, C. Codes for enzyme protein, D. Code for repressor molecules. The correct match is", opts: ["I-B, II-A, III-C, IV-D", "I-B, II-A, III-D, IV-C", "I-D, II-C, III-A, IV-B", "I-B, II-C, III-A, IV-D"], ans: 0, exp: "I-B, II-A, III-C, IV-D." },
+    { q: "98. At one point as a cell carried out its day-to-day activities, the nucleotides GAT were paired with the nucleotides CUA. This pairing occurred", opts: ["in a double-stranded DNA molecule.", "during translation.", "during transcription.", "when an RNA codon paired with a tRNA anticodon"], ans: 2, exp: "This pairing occurs during transcription (DNA to RNA)." },
+    { q: "99. Column I: I. 5' AUG 3', II. RNA with introns and Exon, III. Gene, IV. Nucleosomes. Column II: A. Segment of DNA, B. Chromatin, C. hn-RNA, D. Initiation codon. The correct match is", opts: ["I-D, II-B, III-A, IV-C", "I-B, II-A, III-D, IV-C", "I-D, II-C, III-A, IV-B", "I-B, II-C, III-A, IV-D"], ans: 2, exp: "I-D, II-C, III-A, IV-B." },
+    { q: "100. A particular ____ carry the information for making a particular polypeptide, but ____ can be used to make any polypeptide.", opts: ["gene and ribosome... a tRNA and an mRNA", "gene and mRNA... a ribosome and a tRNA", "ribosome and mRNA... a gene and a tRNA", "gene and tRNA... a ribosome and an mRNA"], ans: 1, exp: "A gene and mRNA carry information for a specific polypeptide; a ribosome and tRNA can be used for any polypeptide." },
+    { q: "101. For transcription RNA polymerase attaches to the", opts: ["regulator", "cofactor", "repressor", "promoter"], ans: 3, exp: "RNA polymerase attaches to the promoter." },
+    { q: "102. Imagine an error occurring during DNA replication in a cell, so that where there is supposed to be a T in one of the genes there is instead a G. What effect will this probably have on the cell?", opts: ["The amino acid sequence of one of its kinds of proteins will be completely changed.", "An amino acid will be missing from each of its kinds of proteins.", "One of its kinds of proteins might contain an incorrect amino acid.", "An amino acid will be missing from one of its kinds of proteins."], ans: 2, exp: "A point mutation might cause one incorrect amino acid." },
+    { q: "103. Column I: I. mRNA, II. Anticodon, III. Semiconservative mode of DNA Replication, IV. Griffith. Column II: A. tRNA, B. Codon, C. Transformation, D. Meselson & Stahl. The correct match is", opts: ["I-D, II-B, III-A, IV-C", "I-B, II-A, III-D, IV-C", "I-D, II-C, III-A, IV-B", "I-B, II-C, III-A, IV-D"], ans: 1, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "104. DNA- A. acts as genetic material in all cellular organisms B. was discovered by F. Miescher who named it as 'Nuclein'. C. Is acidic in nature D. Cannot be digested by DNAase", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 3, exp: "DNA can be digested by DNAase (D is false)." },
+    { q: "105. A. At the time of Mendel, the nature of the 'factors' regulating the pattern of inheritance was very clear. B. The determination of complete nucleotide sequence of human genome during last 2 decade has set in a new era of genomics. C. In double stranded DNA D. DNA is acid but DNAase is not enzyme", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 2, exp: "Mendel did not know the nature of factors (A is false)." },
+    { q: "106. A transcription unit in DNA consists of A. A promoter B. The structural gene C. A terminator D. None", opts: ["A, C", "B, D", "D", "A, B, C"], ans: 3, exp: "A transcription unit has a promoter, structural gene, and terminator." },
+    { q: "107. Column I: I. Griffith, II. Hershey and Chase, III. Prokaryotic DNA, IV. Euchromatin. Column II: A. Nucleoid, B. Active chromatin, C. Transduction, D. Transformation. The correct match is", opts: ["I-B, II-A, III-C, IV-D", "I-C, II-A, III-D, IV-B", "I-D, II-C, III-A, IV-B", "I-B, II-C, III-A, IV-D"], ans: 2, exp: "I-D, II-C, III-A, IV-B." },
+    { q: "108. Which of the following is true? A. 'Operon hypothesis' was proposed by Jacob and Monod. B. 'One gene-one enzyme theory' was proposed by Beadle and Tatum. C. 'Southern blotting' is used in DNA fingerprinting. D. Uracil bases remain present in DNA.", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 3, exp: "Uracil is in RNA, not DNA (D is false)." },
+    { q: "109. DNA replication needs", opts: ["RNA primer", "DNA template", "dNTPs", "All are correct"], ans: 3, exp: "Replication needs RNA primer, DNA template, and dNTPs." },
+    { q: "110. Cauliflower mosaic virus has-", opts: ["ssRNA", "ssDNA", "dsDNA", "dsRNA"], ans: 2, exp: "Cauliflower mosaic virus has double-stranded DNA." },
+    { q: "111. Repressor protein is produced by-", opts: ["Regulator gene", "Operator gene", "Structural gene", "Promotor gene"], ans: 0, exp: "The regulator gene produces the repressor." },
+    { q: "112. Column I: I. Exon, II. Intron, III. Genetic code, IV. DNA package. Column II: A. Noncoding sequence, B. Nirenberg, Khorana and Mathaei, C. Nucleosome, D. Coding sequence. The correct match is", opts: ["I-B, II-A, III-C, IV-D", "I-B, II-C, III-A, IV-D", "I-D, II-A, III-B, IV-C", "I-B, II-C, III-A, IV-D"], ans: 2, exp: "I-D, II-A, III-B, IV-C." },
+    { q: "113. A sequence of three RNA base can function as - A. Codon B. gene C. anticodon D. nucleosides", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "A sequence of 3 RNA bases can be a codon or an anticodon." },
+    { q: "114. A. Both DNA and RNA are able to mutate: B. RNA being unstable, mutates at a faster rate C. RNA is also known to be catalytic, hence reactive D. The presence of thymine at place of uracil confers additional stability to DNA.", opts: ["All are correct", "All are incorrect", "Only A, B and D are correct", "Only D is correct"], ans: 0, exp: "All are correct." },
+    { q: "115. Protein synthesis involves A. transcription B. translation C. transversion D. translation", opts: ["A, B", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "Protein synthesis involves transcription and translation." },
+    { q: "116. The structure of DNA is characterized by", opts: ["Right-handed double helix & antiparallel strands", "Right-handed single helix", "Right-handed double helix and parallel strands", "left handed double helix and parallel strands"], ans: 0, exp: "B-DNA is a right-handed double helix with antiparallel strands." },
+    { q: "117. A nucleosome consists of - A. RNA B. Protein C. Histone octamer D. 200 bps long DNA", opts: ["C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "A nucleosome consists of a histone octamer and ~200 bp of DNA." },
+    { q: "118. The structures in chromatin seen as 'bead-on string' when viewed under electron microscope are called:", opts: ["Nucleotides", "Nucleosides", "Histone octamers", "Nucleosomes"], ans: 3, exp: "Nucleosomes give the bead-on-string appearance." },
+    { q: "119. In DNA you find which type(s) of bond A. Phosphodiester B. Phosphoester C. Hydrogen D. Glycosidic bond", opts: ["C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All these bonds are found in DNA." },
+    { q: "120. It is nonsense to think that DNA has -", opts: ["4 types of nitrogenous base (NB)", "2 types of NB", "3 types of NB", "6 types of NB"], ans: 3, exp: "DNA has 4 types of nitrogenous bases, not 6." },
+    { q: "121. Column I: I. Termination, II. Translation, III. Transcription, IV. DNA replication. Column II: A. Aminoacyl tRNA synthetase, B. Okazaki fragments, C. GTP dependent release factor, D. RNA polymerase. The correct match is", opts: ["I-B, II-A, III-C, IV-D", "I-C, II-A, III-D, IV-B", "I-D, II-C, III-A, IV-B", "I-B, II-C, III-A, IV-D"], ans: 1, exp: "I-C, II-A, III-D, IV-B." },
+    { q: "122. Adenosine is", opts: ["a nitrogenous base", "a nucleotide", "a ribonucleoside", "a ribonucleotide"], ans: 2, exp: "Adenosine is a ribonucleoside (adenine + ribose)." },
+    { q: "123. A. Taylor et al used radioactive thymidine in root tip of Vicia faba (Broad Bean) and proved that chromosome replicates semiconservatively B. In eukaryotes replication of DNA takes place in S-phase of the cell cycle. C. A failure in cell division after DNA replication results into polyploidy. D. Crick pointed out that DNA replicates semiconservatively but first proof for it came from the experiment of Meselson and Stahl.", opts: ["All are correct", "All are incorrect", "Only A, B and C are correct", "Only D is correct"], ans: 0, exp: "All are correct." },
+    { q: "124. Which one/ones is/are false for DNA replication?", opts: ["Ori is a definite region in DNA where replication starts.", "Deoxyribonucleoside triphosphates (dNTPs) serve as substrates as well as source of energy for polymerization.", "Both leading and lagging strands are synthesized in 3' -> 5' direction.", "replication of DNA is responsible for continuity of life on earth."], ans: 2, exp: "DNA is synthesized in the 5' -> 3' direction, not 3' -> 5'." },
+    { q: "125. In the lac operon the structural genes are switched off when-", opts: ["Repressor binds to operator", "Repressor binds to promotor", "Repressor binds to regulator", "Repressor binds to inducer"], ans: 0, exp: "The repressor binds to the operator to switch off genes." },
+    { q: "126. DNA replication includes-", opts: ["DNA ligase", "DNA polymerase and ligase", "RNA polymerase", "All of the above"], ans: 1, exp: "It requires both DNA polymerase and DNA ligase." },
+    { q: "127. Column I: I. AUG, II. UAA, III. Operon model, IV. Jumping gene. Column II: A. Jacob and Monod, B. Transposons, C. Chain terminating codon, D. Methionine. The correct match is", opts: ["I-B, II-A, III-C, IV-D", "I-B, II-A, III-D, IV-C", "I-D, II-C, III-A, IV-B", "I-B, II-C, III-A, IV-D"], ans: 2, exp: "I-D, II-C, III-A, IV-B." },
+    { q: "128. Which of the following has single ring structure", opts: ["Uracil", "Thymine", "Adenine", "Guanine"], ans: 0, exp: "Uracil (and thymine, cytosine) are pyrimidines with a single ring." },
+    { q: "129. Column I: I. Genome of Phi x 174 bacteriophage, II. Purine, III. Catalytic RNA, IV. Any chemical change in DNA. Column II: A. Ribozyme, RNAase, B. 5386 Nucleotides, C. Adenine & Guanine, D. Mutation. The correct match is", opts: ["I-D, II-B, III-A, IV-C", "I-B, II-A, III-D, IV-C", "I-D, II-C, III-A, IV-B", "I-B, II-C, III-A, IV-D"], ans: 3, exp: "I-B, II-C, III-A, IV-D." },
+    { q: "130. Nature of DNA replication is-", opts: ["Semi-conservative", "Non-conservative", "Conservative", "Dispersive"], ans: 0, exp: "DNA replication is semi-conservative." },
+    { q: "131. Semi-conservative mode of DNA replication was first reported in E. coli with the help of N15 heavy nitrogen by-", opts: ["Kornberg and Ochoa", "Luria and Delbruck", "Meselson and Stahl", "Watson and Crick"], ans: 2, exp: "Meselson and Stahl proved it." },
+    { q: "132. Column I: I. Splicing, II. Okazaki fragments, III. Jacob and Monod, IV. Inducer. Column II: A. Lac operon, B. lagging strands, C. Lactose, D. removals of intron. The correct match is", opts: ["I-D, II-B, III-A, IV-C", "I-B, II-A, III-D, IV-C", "I-D, II-C, III-A, IV-B", "I-B, II-C, III-A, IV-D"], ans: 0, exp: "I-D, II-B, III-A, IV-C." },
+    { q: "133. Intron is - A. coding sequence B. Non-coding sequence C. Character of Prokaryotic genome D. Character of eukaryotic genome", opts: ["B, D", "A, C", "B, C", "A, D"], ans: 0, exp: "Introns are non-coding and typical of eukaryotic genomes." },
+    { q: "134. Column I: I. Helicase, II. Gyrase, III. Primase, IV. DNA polymerase III. Column II: A. Joining of nucleotides, B. Opening of DNA, C. Unwinding of DNA, D. RNA priming. The correct match is", opts: ["I-B, II-A, III-C, IV-D", "I-B, II-A, III-D, IV-C", "I-D, II-C, III-A, IV-B", "I-B, II-C, III-D, IV-A"], ans: 3, exp: "I-B, II-C, III-D, IV-A." },
+    { q: "135. In chromosome, DNA is associated with - A. Negatively charged proteins B. Positively charged proteins C. Neutral proteins D. NHC protein", opts: ["B, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "DNA is associated with positively charged histone proteins and non-histone chromosomal (NHC) proteins." },
+    { q: "136. Heterochromatin - A. Is more densely packed B. Is stains dark C. Is transcriptionally active D. Is transcriptionally inactive", opts: ["A, C", "A, B, C, D", "A, B, D", "A, B, C"], ans: 2, exp: "Heterochromatin is densely packed, stains dark, and is transcriptionally inactive." },
+    { q: "137. DNA replication - A. is semiconservative B. Is bidirectional C. takes place in 5' -> 3' direction. D. is semidiscontinuous", opts: ["B, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All statements are correct." },
+    { q: "138. Which one of the following triplet code is correctly matched with its specificity for an amino acid in protein synthesis or as start or 'stop' signal-", opts: ["UUU- stop", "UAU- Leucine", "UAG- Tyrosine", "UCA- start"], ans: 0, exp: "Based on standard mutations, none are perfectly matched, but UUU is not a stop codon." },
+    { q: "139. The difference(s) between mRNA and tRNA is/are that - A. mRNA has more elaborated 3-dimensional structure due to extensive base-pairing B. tRNA has more elaborated 3-dimensional structure due to extensive pairing. C. tRNA is usually smaller than mRNA D. mRNA bears anticodon but tRNA has codons.", opts: ["A, C", "A, B, C, D", "B, C", "A, B, C"], ans: 2, exp: "tRNA has a more elaborated structure and is smaller. mRNA has codons, tRNA has anticodons." },
+    { q: "140. Genetic code consists of - A. adenine and guanine B. riboflavin and ATP C. cytosine and guanine D. cytosine and uracil", opts: ["A, C, D", "B, C, D", "A, B", "A, C"], ans: 0, exp: "Genetic code consists of nitrogenous bases (A, G, C, U)." },
+    { q: "141. A ribotide is made up of-", opts: ["Adenine + Deoxyribose + Phosphate", "Cytosine + Ribose + Phosphate", "Thymine + Ribose + Phosphate", "Uracil + Deoxyribose + Phosphate"], ans: 1, exp: "A ribotide has ribose sugar. Cytosine + Ribose + Phosphate is a ribotide." },
+    { q: "142. Which one / ones did not affect the transformation? A. DNAase B. RNAase C. Peptidase D. Lipase", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 2, exp: "RNAase, peptidase, and lipase do not affect transformation. DNAase does." },
+    { q: "143. Euchromatin is - A. loosely packed B. Stains light C. Transcriptionally active D. Early replicating", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All statements are correct." },
+    { q: "144. DNA polymerase- A. is the main enzyme for RNA synthesis B. Is DNA dependent DNA polymerising hormone C. Is highly efficient enzyme D. Is catalysts reaction with high degree of accuracy.", opts: ["C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "DNA polymerase is highly efficient and accurate." },
+    { q: "145. Antiparallel relationship of the two strands of DNA refers to the -", opts: ["Strands being the opposite of parallel - they are twisted.", "Strands providing alternate branching", "One strand runs in 5' -> 3' and other in 3' -> 5' direction", "Both strands run in 5' -> 3' direction"], ans: 2, exp: "One runs 5'->3', the other 3'->5'." },
+    { q: "146. DNA repairing is done by-", opts: ["Ligase", "DNA polymerase I", "DNA polymerase II", "Both (a) and (b)"], ans: 3, exp: "Both ligase and DNA polymerase I help in repair." },
+    { q: "147. DNA is a double helix and-", opts: ["Complementary and parallel", "Complementary and antiparallel", "Without supercoils", "Always circular"], ans: 1, exp: "DNA strands are complementary and antiparallel." },
+    { q: "148. Anticodon is present on-", opts: ["rRNA", "tRNA", "mRNA", "mtRNA"], ans: 1, exp: "Anticodon is on tRNA." },
+    { q: "149. Which of the following makes use of RNA as a template to synthesize DNA ?", opts: ["Reverse transcriptase", "DNA dependent RNA polymerase", "DNA polymerase", "RNA polymerase"], ans: 0, exp: "Reverse transcriptase uses RNA as a template." },
+    { q: "150. The phosphodiester bonds between nucleotides are called -", opts: ["Backbone of DNA", "Steps of DNA", "Imidazole", "Hydrophobic attraction"], ans: 0, exp: "They form the backbone of DNA." },
+    { q: "151. In 1953 James Watson and F. Crick proposed Double Helix model of DNA and got Nobel Prize their model of DNA was based on - A. X-ray diffraction of DNA produced by M. Wilkins and R. Franklin B. Griffith's experiment. C. Hershey - Chase experiment D. Chargaff's rule of base equivalence (A + G / T + C = 1)", opts: ["A, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "They used X-ray data and Chargaff's rules." },
+    { q: "152. In one polynucleotide chain of a DNA molecule the ratio of A+T/G+C is 0.3. What is the A+G/T+C ratio of the entire DNA molecule", opts: ["0.3", "0.6", "1.2", "1"], ans: 3, exp: "A+G/T+C is always 1 (Chargaff's rule)." },
+    { q: "153. Nucleic acids are made up of A. nitrogenous bases B. amino acids C. sugar D. phosphate", opts: ["A, C, D", "A, D", "B, C, D", "A, B, C"], ans: 0, exp: "Nucleic acids have bases, sugar, and phosphate." },
+    { q: "154. E-coli about to replicate was placed in a medium containing radioactive thymidine for 5 minutes. Then it was made to replicate in a normal medium. Which of the following observations will be correct-", opts: ["Both the strands of DNA will be radioactive", "One strand radioactive", "Each strand half radioactive", "None of radioactive"], ans: 1, exp: "Due to semi-conservative replication, only one strand of each DNA molecule will be radioactive." },
+    { q: "155. The chemical knives of DNA are", opts: ["Ligases", "Polymerases", "Endonucleases", "Transcriptases"], ans: 2, exp: "Endonucleases are the chemical knives." },
+    { q: "156. DNA is methylated at", opts: ["A-residue", "G-residue", "T-residue", "C-residue"], ans: 3, exp: "DNA is typically methylated at cytosine residues." },
+    { q: "157. Polymorphism in DNA sequence A. is the basis of genetic mapping of human genome B. arises due to mutation C. is the basis of DNA finger printing D. None", opts: ["A, C", "A, B", "D", "A, B, C"], ans: 3, exp: "All A, B, and C are true." },
+    { q: "158. In human A. Non-coding DNA is the most abundant. B. The function of more than 50% discovered genes are unknown. C. Less than 2% of genome codes for protein D. Total number of genes is 30,000.", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All statements are correct." },
+    { q: "159. The human genome consists of over ____ base pairs", opts: ["1 million", "3 billion", "46 billion", "3.6 million"], ans: 1, exp: "The human genome has over 3 billion base pairs." },
+    { q: "160. A. In eukaryotes there are at least three RNA polymerase B. hnRNA has both exons and introns C. hnRNA is formed in both prokaryotes and eukaryotes D. Any mistake in DNA replication may cause mutation.", opts: ["All are correct", "All are incorrect", "Except C, all are correct", "Only D is correct"], ans: 2, exp: "hnRNA is only in eukaryotes." },
+    { q: "161. Satellite DNA A. Is classified in many categories such as micro-satellites, minisatellites, etc on the basis of base composition length of segments and number of repetitive units. B. Normally does not code for any protein C. Shows polymorphism D. Forms the basis of DNA finger printing.", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All statements are correct." },
+    { q: "163. The experimental proof for DNA as genetic material comes from A. transformation B. transduction C. conjugation D. mutation", opts: ["A, C", "A, B, C, D", "C, D", "A, B"], ans: 3, exp: "Transformation and transduction provided proof." },
+    { q: "165. Nucleosome contains A. RNA B. DNA C. histones D. all of these", opts: ["A, C", "A, B, C, D", "B, C", "A, B, C"], ans: 2, exp: "Nucleosomes contain DNA and histones." },
+    { q: "166. The current estimate of the number of genes in the human -", opts: ["Is based on the number of genes in the fruitfly", "Has not changed from previous estimate", "Has increased greatly from previous estimate", "Has decreased greatly from previous estimates."], ans: 3, exp: "The estimated number of human genes has decreased to about 20,000-25,000." },
+    { q: "167. In prokaryotes, gene regulation occurs at the level of", opts: ["Transcription", "Translation", "Post transcription", "Post translation"], ans: 0, exp: "Gene regulation in prokaryotes is mainly at the level of transcription." },
+    { q: "168. Transcription is most similar to -", opts: ["Chemiosmosis", "DNA replication", "Translation", "Transposition"], ans: 1, exp: "Transcription is most similar to DNA replication (both involve nucleic acid synthesis)." },
+    { q: "169. In eukaryotes the gene expression is regulated at A. Transcriptional level B. Processing level C. Transport of mRNA from nucleus to the cytoplasm D. Translation level", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All levels are involved." },
+    { q: "170. Characteristic(s) of most DNA is/are A. A pairs with T by 2 hydrogen bonds. B. Antipolarity of complementary chains C. 20A° diameter D. 10bps/turn", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are correct characteristics of DNA." },
+    { q: "171. Which of the following statements is/are incorrect about tRNA? A. It binds to DNA, initiating translation B. It has a greater molecular weight than mRNA C. It transfers the code from the nucleus to cytoplasm D. There is at least one form for each kind of amino acid.", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 3, exp: "tRNA does not bind to DNA (A), is smaller than mRNA (B), and mRNA transfers code (C)." },
+    { q: "172. Which of the following is/are correct matching(s) Codon Amino acid A. 'AGU' Serine B. 'UAC' Tyrosine C. 'AUG' Methionine D. 'GUG' Valine", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are correctly matched." },
+    { q: "173. Transcription needs - A. DNA template B. NTPs C. RNA polymerase D. Sigma & Rho factors", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are required." },
+    { q: "174. The function of the promoter is to signal RNA polymerase as to - A. where to stop transcribing the DNA B. where to start transcribing the DNA C. which strand of the DNA to be read D. None", opts: ["B, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "Promoter signals where to start and which strand to read." },
+    { q: "175. Termination of protein synthesis needs A. AUG codon B. UAA C. Stop signal / Non-sense codon D. Release/termination factor", opts: ["A, C", "A, B, C, D", "C, D", "A, B, C"], ans: 2, exp: "Termination needs a stop codon and release factor." },
+    { q: "176. A translational unit in mRNA includes A. Start codon B. Stop codon C. Untranslated regions (UTR) D. Coding sequence is located between the start codon and termination codon", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are included." },
+    { q: "177. Which one is nonsense codon? A. UUA B. UAA C. UAG D. UGA", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 2, exp: "UAA, UAG, and UGA are nonsense codons." },
+    { q: "178. Split genes include A. pseudoalleles B. transposons C. exons D. introns", opts: ["A, C", "A, B, C, D", "C, D", "A, B, C"], ans: 2, exp: "Split genes have exons and introns." },
+    { q: "179. Complete the central dogma of molecular basis of inheritance (by Crick) - A DNA -> B mRNA -> C Protein", opts: ["A - Replication, B - Transcription, C - Translation", "A - Replication, B - Termination, C - Translation", "A - Replication, B - Translocation, C - Translation", "A - Replication, B - Transposition, C - Translation"], ans: 0, exp: "A is Replication, B is Transcription, C is Translation." },
+    { q: "180. Which one is correct? A. DNA cannot produce its copies without DNA polymerase. B. DNA cannot produce RNA. C. RNA can produce complementary DNA / cDNA D. DNA helps in protein synthesis", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "DNA can produce RNA (B is false)." },
+    { q: "181. A cell is grown in a solution containing radioactive nucleotides, so that its DNA is labeled with radioactivity. It is removed from the radioactive solution and grown in a normal medium, so that any new DNA strands it makes will not be radioactive. In the normal medium, the cell replicates its DNA and divides. The two daughter cells also replicate their DNA and divide, producing a total of four cells. If a dotted line represents a radioactive DNA strand and a solid line represents a nonradioactive DNA strand, which of the following depicts the DNA of the four cells?", opts: ["Two cells with one radioactive and one non-radioactive strand, and two cells with both non-radioactive strands.", "All four cells with one radioactive and one non-radioactive strand.", "Four cells with non-radioactive strands.", "None of the above."], ans: 0, exp: "Semi-conservative replication results in 2 hybrid and 2 completely new molecules." },
+    { q: "182. Certain molecular processes are given in column A. Provide the terms given to these processes in column B after selecting them from terms: recombination, gene regulation, prokaryotic transcription, eukaryotic transcription, translation, replication, gene transfer, DNA finger printing. Column A: (i) DNA -> DNA (ii) DNA -> hnRNA (iii) mRNA -> Protein (iv) Repressor protein + Operator = No transcription", opts: ["(i) - Replication, (ii) Transcription, (iii) Translation, (iv) Gene regulation", "(i) - Replication, (ii) Gene transport, (iii) Translation, (iv) Gene regulation", "(i) - Replication, (ii) Transcription, (iii) Gene regulation, (iv) Translation", "(i) - Replication, (ii) DNA finger printing, (iii) Translation, (iv) Gene regulation"], ans: 0, exp: "(i) Replication, (ii) Transcription, (iii) Translation, (iv) Gene regulation." },
+    { q: "183. Genetic code is A. triplet B. degenerate C. nonambiguous D. universal", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are correct." },
+    { q: "184. Which of the following statements is correct about Human Genome Project -", opts: ["To develop ways of mapping the human genome at increasing fine level of precision", "To store this information in databases and develop tools for data analysis", "To address the ethical, legal and social issue that may arise from this project", "All of the above"], ans: 3, exp: "All are goals of HGP." },
+    { q: "187. Refer to the following diagram which shows the synthesis of part of a protein molecule. Which of the following is the first part of the protein molecule that would be translated from mRNA2? start of protein", opts: ["Met", "Phe", "Leu", "Ser"], ans: 0, exp: "Start codon AUG codes for Methionine." },
+    { q: "188. Given below are two statements (A and B) each with some blanks. Select the option which correctly fills up the blanks in the statements : A. The ribosome consists of structural and about 80 different In its inactive state, it exists as subunits. There are two sites in the large subunit, for subsequent amino acids to bind to and thus, be close enough to each other for the formation of a bond. The ribosome also acts as a catalyst (23S rRNA in bacteria is the enzyme ) for the formation of peptide bond. B. A translational unit in is the sequence of RNA that is flanked by the start codon (AUG) and the stop codon and codes for a polypeptide. An mRNA also has some additional sequences that are not translated and are referred as untranslated regions (UTR). The UTRs are present at both 5'-end (before start codon) and at 3'-end (after stop codon). They are required for efficient process.", opts: ["A - (i) RNAs, (ii) proteins, (iii) two, (iv) peptide, (v) ribozyme B - (i) mRNA, (ii) translation", "A - (i) proteins, (ii) RNAs, (iii) two, (iv) peptide, (v) ribozyme B - (i) mRNA, (ii) translation", "A - (i) RNAs, (ii) proteins, (iii) two, (iv) peptide, (v) ribozyme B - (i) mRNA, (ii) transcription", "A - (i) RNAs, (ii) proteins, (iii) two, (iv) peptide, (v) cytozyme B - (i) mRNA, (ii) translation"], ans: 0, exp: "The correct fill-ups are RNAs, proteins, two, peptide, ribozyme; mRNA, translation." },
+    { q: "190. The fact that the genetic code is almost universal in living organisms is considered to be evidence that all organisms", opts: ["are evolutionary related", "are genetically identical", "have the same sequence of anticodons", "none of the above"], ans: 0, exp: "Universality indicates common evolutionary origin." },
+    { q: "191. Circular DNA is found in A. viruses B. bacteria C. mitochondria D. chloroplasts", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 2, exp: "Circular DNA is found in bacteria, mitochondria, and chloroplasts." },
+    { q: "192. Similarity between DNA and RNA is that both have A. adenine B. guanine", opts: ["A, C", "A, B, C, D"], ans: 0, exp: "Both have adenine and guanine." },
+    { q: "193. DNA replication involves A. unwinding of helix B. transcription", opts: ["A, C", "A, B, C, D"], ans: 0, exp: "DNA replication involves unwinding of the helix." },
+    { q: "194. A free transfer RNA molecule can combine with", opts: ["one specific amino acid only,", "three different amino acids."], ans: 0, exp: "tRNA is specific to one amino acid." },
+    { q: "195. A mRNA template is", opts: ["translated from protein,", "transcribed into protein", "translated in DNA", "transcribed from DNA"], ans: 3, exp: "mRNA is transcribed from DNA." },
+    { q: "197. Listed below are the stages in the cellular synthesis of a protein. 1 movement of mRNA from nucleus to cytoplasm 2 linking of adjacent amino acid molecules 3 transcription of mRNA from a DNA template 4 formation of the polypeptide chain 5 attachment of the mRNA strand to a ribosome. In which order do these stages take place?", opts: ["1,3,2,5,4", "1,5,3,4,2", "3,1,5,2,4", "3,4,1,2,5"], ans: 2, exp: "Transcription (3) -> movement (1) -> attachment (5) -> linking (2) -> polypeptide (4)." },
+    { q: "200. Which one of the following correctly represents the manner of replication of DNA?", opts: ["Semi-conservative, bidirectional, antiparallel", "Conservative, unidirectional, parallel", "Dispersive, bidirectional, antiparallel", "Semi-conservative, unidirectional, parallel"], ans: 0, exp: "Replication is semi-conservative, bidirectional, and antiparallel." },
+    { q: "202. Using code dictionary select the option which correctly fills up the blanks in the following table. (DNA triplet 3'->5': TAC, GGA, TTC, ATC. mRNA Codon 5'->3': AUG, CCU, AAG, UAG. Anticodon: UAC, GGA, UUC, AUC. Amino Acid: methionine, proline, lysine, stop)", opts: ["TAC, GGA, TTC, ATC", "AUG, CCU, AAG, UAG", "UAC, GGA, UUC, AUC", "Met, Pro, Lys, Stop"], ans: 0, exp: "The table correctly pairs DNA triplet, mRNA codon, anticodon, and amino acid." },
+    { q: "203. Find the sequence of binding of the following amino acyl-tRNA complexes during translation to a mRNA transcribed by a DNA segment having the base sequence 3' TACATGGGTCCG5'. (Anticodons: AUG, UAC, CCG, GGU)", opts: ["a, b, c, d", "b, a, c, d", "a, b, d, c", "b, a, d, c"], ans: 1, exp: "The correct sequence is b, a, c, d." },
+    { q: "204. The diagram represents part of a DNA molecule. What would be the appearance after semi-conservative replication had occurred?", opts: ["One old strand and one new strand in each molecule", "Two old strands in one molecule, two new strands in another", "Mixed old and new strands", "All new strands"], ans: 0, exp: "Semi-conservative replication yields molecules with one old and one new strand." },
+    { q: "206. In the following diagram of the lac operon, an operon for inducible enzymes, Identify components and enzymes - (i is repressor, p is promoter, o is operator, z is beta-galactosidase, y is permease, a is transacetylase)", opts: ["Inducer (lactose), Repressor protein, beta-Galactosidase, Permease, Transacetylase", "Repressor protein, Inducer (lactose), beta-Galactosidase, Permease, Transacetylase", "Inducer (lactose), Repressor protein, beta-Galactosidase, Transacetylase, Permease", "Repressor protein, Inducer (lactose), beta-Galactosidase, Transacetylase, Permease"], ans: 0, exp: "X is inducer, Y is repressor, E1 is beta-galactosidase, E2 is permease, E3 is transacetylase." },
+    { q: "207. The following events occur in the replication of DNA: 1 bonds between complementary bases break 2 bonds between complementary bases form 3 DNA molecule uncoils 4 opposite strands separate 5 sugar-phosphate bonds form 6 free nucleotides align with complementary nucleotides on each strand. In which order do these events take place?", opts: ["1,3,6,4,2,5", "3,1,4,6,2,5", "3,6,1,4,5,2", "4,3,1,6,5,2"], ans: 1, exp: "Uncoiling (3) -> H-bonds break (1) -> strands separate (4) -> alignment (6) -> H-bonds form (2) -> sugar-phosphate bonds form (5)." },
+    { q: "209. Observe the following tRNA molecules with their anticodon pairing with respective codons. Which types of tRNA is not possible. (T1 has anticodon UCA, T2 has UAC, T3 has AUU, T4 has AUC, T5 has ACA. mRNA codons are AGU, AUG, UAA, UAG, UGU)", opts: ["T1 and T2", "T1, T2 and T3", "T1 and T4", "T3, T4 and T5"], ans: 2, exp: "Anticodons must be complementary to codons. T1 (UCA) pairs with AGU (possible). T4 (AUC) pairs with UAG (possible). The non-pairing ones are T1 and T4 based on standard pairing rules." },
+    { q: "211. Three types of RNA involved in comprising the structural and functional core for protein synthesis, serving as a template for translation, and transporting amino acid, respectively, are:", opts: ["mRNA, tRNA, rRNA", "rRNA, tRNA, mRNA", "tRNA, mRNA, rRNA", "rRNA, mRNA, tRNA"], ans: 3, exp: "rRNA is structural, mRNA is template, tRNA transports amino acids." },
+    { q: "212. Avery, MacLeod and McCarty used the S (virulent) and R (avirulent) strains of D. pneumococci. They isolated and purified proteins, DNA, RNA, carbohydrates and lipids from the S strain. They treated the living avirulent R strain with each of these chemicals and identify the transforming principle (DNA). (A: R+S, B: S, C: R+S, D: S)", opts: ["R + S, R + S, R + S, S", "R + S, S, R + S, R", "S, S, S, R", "R, R, R, S"], ans: 0, exp: "Only DNA (D) caused transformation to S. Others remained R+S." },
+    { q: "214. Frederick Griffith conducted experiments testing the virulence of two strains of Streptococcus (R-strain and S-strain). His experiment had four specific 'treatments' to it. Treatment 1, he injected mice with the R-strain and the mice lived. Treatment 2, he injected mice with the S-strain and the mice died. Treatment 3, he injected mice with heat-killed S-strain and the mice lived. Treatment 4, he injected mice with heat-killed S-strain mixed with R-strain and the mice died. Which treatment in his experiment is considered the experimental treatment?", opts: ["Treatment 3 is the experimental treatment", "Treatments 1 and 2 are experimental treatments,", "Treatment 1 is the experimental treatment.", "Treatments 3 and 4 are the experimental treatments."], ans: 3, exp: "Treatments 3 and 4 are the experimental treatments." },
+    { q: "216. The following diagram refers to Griffith's demonstration of transformation in pneumococcus. A, B, C and D indicate the fates of mice after they are injected with specific bacteria. Identify these fate of mice.", opts: ["A - dies, B-dies, C-lives, D-lives", "A - lives, B-lives, C-dies, D-dies", "A - dies, B-lives, C-lives, D-dies", "A - lives, B-dies, C-dies, D-lives"], ans: 2, exp: "S strain (A) dies, R strain (B) lives, Heat-killed S (C) lives, Heat-killed S + R (D) dies." },
+    { q: "217. Frederick Griffith conducted experiments testing the virulence of two strains of Streptococcus (R-strain and S-strain). His experiment had 4 specific 'treatments' to it. Treatment 1, he injected mice with the R-strain and the mice lived. Treatment 2, he injected mice with the S-strain and the mice died. Treatment 3, he injected mice with heat-killed S-strain and the mice lived. Treatment 4, he injected mice with heat-killed S-strain mixed with R-strain and the mice died. Which treatment in his experiment is considered a control treatment?", opts: ["Treatment 3 is the control treatment.", "Treatment 1 is the control treatment.", "There are no control treatments in this experiment.", "Treatments 1 and 2 are control treatments."], ans: 3, exp: "Treatments 1 and 2 are controls." },
+    { q: "218. Why are mice killed by smooth (S) strains of Streptococcus, but not rough (R) strains?", opts: ["Rough strains are virulent, and smooth strains are not.", "Rough strains have a polysaccharide capsule that makes the mouse immune system recognize and destroy them.", "Smooth strains have a polysaccharide capsule, which hides them from the mouse immune system.", "Smooth strains grow faster than rough strains."], ans: 2, exp: "Smooth strains have a capsule that hides them from the immune system." },
+    { q: "219. Select the correct statements - I. In eukaryotes, RNA pol III catalyses the synthesis of 5S rRNA, tRNA and SnRNA - II. DNA generally acts as a template for the synthesis of DNA and RNA III. During protein synthesis, amino acid gets attached to tRNA with the help of aminoacyl synthetase, ATP is also used. IV. The first amino acid in any polypeptide chain of prokaryote is always formylated methionine but in eukaryotes it is methionine. V. A single anticodon can recognize more than one codon of mRNA. Thus phenomenon is termed as Wobble hypothesis", opts: ["I and II are correct", "II and III are correct", "All are correct", "IV and V are correct"], ans: 2, exp: "All statements are correct." },
+    { q: "220. Which one is false?", opts: ["Glucose and galactose can act as inducers for lac operon.", "The presence of introns in split gene is reminiscent of antiquity and the process of splicing represents the dominance of DNA-world", "In eukaryotes - DNA -> hnRNA -> mRNA", "Regulation of lac operon by repressor is referred to as negative regulation. Lac / Lactose operon is under control of positive regulation as well."], ans: 1, exp: "Introns are not reminiscent of antiquity; they are common in eukaryotes." },
+    { q: "221. The regulator gene of a bacterial operon", opts: ["codes for inducer substances.", "codes for repressor proteins.", "acts as an on-off switch for the structural genes.", "is a binding site for RNA polymerase."], ans: 1, exp: "It codes for repressor proteins." },
+    { q: "222. According to the Jacob-Monod (lac operon) model of gene regulation, inducer substances in bacterial cells probably", opts: ["combine with operator regions, activating the associated operons.", "combine with structural genes, stimulating them to synthesize messenger RNA.", "combine with repressor proteins, inactivating them.", "combine with promoter regions, activating RNA polymerase."], ans: 2, exp: "Inducers bind to repressor proteins and inactivate them." },
+    { q: "224. Which of the following statements is correct? I. The biochemical nature of genetic material was not defined from the experiments conducted by Griffith II. Working on transformation Avery et al concluded DNA is genetic material but not all biologists were convinced III. RNA is the genetic material in TMV, QB bacteriophage etc. IV DNA is the predominant genetic material while RNA performs dynamic functions of messenger adapter V. Viruses having DNA genome and having shorter life span mutate and evolve faster", opts: ["All", "I and II", "All except V", "III and IV"], ans: 2, exp: "Viruses with RNA genome mutate faster, not DNA (V is false)." },
+    { q: "225. The sugar lactose induces synthesis of the enzyme lactase. What happens when an E. coli (bacterial) cell runs out of lactose?", opts: ["Repressor protein binds to the operator.", "Repressor protein binds to the promoter,", "RNA polymerase attaches to the promoter.", "RNA polymerase attaches to the repressor."], ans: 0, exp: "Without lactose, the repressor binds to the operator to block transcription." },
+    { q: "226. Which of the following statements concerning the regulator gene (R) associated with the lac operon is correct?", opts: ["mRNA is transcribed from the R gene whether lactose is present or not.", "mRNA is transcribed from the R gene only when lactose is present.", "mRNA is transcribed from the R gene only when lactose is not present.", "Lactose inhibits the translation of R gene mRNA."], ans: 0, exp: "The regulator gene is transcribed continuously." },
+    { q: "227. A very low level of expression of lac operon has to be present in the cell all the time, otherwise -", opts: ["Glucose can't enter the cells", "Water can't enter the cells", "Ions can't enter the cells", "Lactose can't enter the cells"], ans: 3, exp: "A basal level of permease is needed for lactose to enter." },
+    { q: "228. Following paragraph refers to a transcription unit. Fill up the blanks - The A is located towards 5' end / B of the structural gene (the reference is made with respect to the polarity of coding strand). Both the strands of DNA are involved in forming the C The D is located towards 3' end (E) of the coding stream", opts: ["A - promoter, B - upstream, C - promoter, D - terminator, E - downstream", "A - promoter, B - upstream, C - terminator, D - promoter, E - downstream", "A - promoter, B - downstream, C - promoter, D - terminator, E - upstream", "A - terminator B - upstream, C - promoter, D - terminator, E - downstream"], ans: 0, exp: "A - promoter, B - upstream, C - promoter, D - terminator, E - downstream." },
+    { q: "229. The length of DNA has 45000 base pairs. How many complete turns will the DNA molecule take?", opts: ["45000", "450", "4500", "45"], ans: 2, exp: "10 bp per turn. 45000 / 10 = 4500 turns." },
+    { q: "230. An RFLP is a:", opts: ["DNA probe used for hybridization", "Variation of a DNA segment cut by restriction enzyme(s)", "Recessive form of a deleterious allele", "Restrictive enzyme used to cut DNA"], ans: 1, exp: "RFLP is a variation in DNA fragment length after restriction digestion." },
+    { q: "231. A codon consists of three bases and there are four kinds of bases in a nucleic acid altogether. How many codons will be there?", opts: ["60", "4^3", "3^4", "4^6"], ans: 1, exp: "4^3 = 64 codons." },
+    { q: "232. DNA profiling has been used to:", opts: ["Determine the identity of murder victims", "Establish paternity", "Identify victims of terrorism", "All of these"], ans: 3, exp: "DNA profiling is used for all these purposes." },
+    { q: "233. The year 2003 was celebrated as the 50th anniversary of discovery of", opts: ["transposon by Barbara McClintock", "structure of DNA by Watson and Crick", "Mendel's law", "Biotechnology by Kary Mullis"], ans: 1, exp: "2003 marked 50 years since the discovery of DNA structure (1953)." },
+    { q: "234. A DNA sequence is polymorphic if:", opts: ["The carrier frequency is less than 2 percent", "It can be cut with a restriction enzyme", "A variant sequence occurs in at least 1 percent of the population", "It is present in more than 100 genes"], ans: 2, exp: "Polymorphism requires a variant in at least 1% of the population." },
+    { q: "235. Tailoring of hnRNA is done by", opts: ["Snurps", "Introns", "Exons", "18S rRNA"], ans: 0, exp: "snRNPs (snurps) are involved in splicing hnRNA." },
+    { q: "236. Which of the following have the longest DNA sequences?", opts: ["VNTRs", "STRs", "SNPs", "Thymine dimers"], ans: 0, exp: "VNTRs (Variable Number Tandem Repeats) are longer." },
+    { q: "237. Which of the following are used in DNA Profiling?", opts: ["VNTRs", "STRs", "RFLPs", "All of these"], ans: 3, exp: "All are used." },
+    { q: "238. The sequence of structural gene in lac operon is", opts: ["Lac A, Lac Y, Lac Z", "Lac A, Lac Z, Lac Y", "Lac Y, Lac Z, Lac A", "Lac Z, Lac Y, Lac A"], ans: 3, exp: "Lac Z, Lac Y, Lac A." },
+    { q: "239. The Okazaki fragments in DNA chain growth", opts: ["polymerize in the 3' to 5' direction and forms replication fork.", "prove semi-conservative nature of DNA replication", "polymerize in the 5' to 3' direction and explain 3' to 5' DNA replication", "result in transcription"], ans: 2, exp: "They polymerize 5' to 3' and explain discontinuous replication." },
+    { q: "240. The length of DNA molecule greatly exceeds the dimensions of the nucleus in the eukaryotic cells. How is this DNA accommodated?", opts: ["Super coiling in nucleosomes", "DNAse digestion", "Through elimination of repetitive DNA", "Deletion of non-essential genes"], ans: 0, exp: "Supercoiling in nucleosomes." },
+    { q: "241. The antiparallel relationship of the two strands of DNA refers to the", opts: ["strands being the opposite of parallel—they are twisted.", "strands providing alternative branching.", "strands going such that one strand starts with a 3' carbon, the other with a 5' carbon.", "view looking at one end of the molecule: one strand has an A wherever the other has a T, and one has a G wherever the other has a C."], ans: 2, exp: "One starts 3', the other 5'." },
+    { q: "242. The Hershey-Chase experiment determined that", opts: ["protein and DNA are the hereditary materials of viruses.", "protein, not DNA, is the hereditary material of viruses.", "viruses do not contain hereditary material.", "DNA, not protein, is the hereditary material of viruses."], ans: 3, exp: "DNA is the hereditary material." },
+    { q: "243. The above diagram shows - (DNA fingerprinting process)", opts: ["Method of DNA fingerprinting", "Human Genome Project", "Humoral Analysis", "Chromosome walking"], ans: 0, exp: "Shows DNA fingerprinting." },
+    { q: "244. The structure of DNA is characterized by a", opts: ["right- or left-handed double helix and antiparallel strands.", "right-handed double helix and antiparallel strands.", "right-handed single helix.", "right-handed single helix and parallel strands."], ans: 1, exp: "B-DNA is right-handed double helix with antiparallel strands." },
+    { q: "245. The full form of ELSI is -", opts: ["Embedded Low/Software Index", "Ear Lung Spleen Immunity", "Ethical, Legal and Social Issue", "Endonuclease Ligase Surface Immunity"], ans: 2, exp: "ELSI = Ethical, Legal and Social Issues." },
+    { q: "246. Which of the following criteria must be fulfilled by a genetic material.", opts: ["Replication and Mutation", "Stability", "Express itself in the form of Mendelian Characters,", "All of the above"], ans: 3, exp: "All are criteria." },
+    { q: "247. DNA fingerprinting works because -", opts: ["Genes containing the same alleles make it simple to compare different individuals", "PCR allows amplification of proteins from single cells", "There are multiple alleles for some DNA sequences, making it possible to obtain unique patterns for each individual", "DNA in the skin cells is very diverse"], ans: 2, exp: "Multiple alleles create unique patterns." },
+    { q: "248. Before the discovery of DNA, why was the hereditary material thought to be made of proteins and not nucleic acids?", opts: ["Nucleic acids are made up of 20 different bases, while proteins are made up of only 5 amino acids.", "Protein subunits can combine to form larger proteins.", "Proteins seemed to be much more diverse chemically.", "Proteins can be enzymes."], ans: 2, exp: "Proteins seemed more diverse." },
+    { q: "249. The rules formulated by Erwin Chargaff state that", opts: ["A = T and G = C in any molecule of DNA", "A = C and G = T in any molecule of DNA", "A = G and C = T in any molecule of DNA", "A = U and G = C in any molecule of RNA"], ans: 0, exp: "A=T and G=C in DNA." },
+    { q: "250. Nonhistone chromosomal protein which forms core or axis of chromosome is", opts: ["HMG protein", "Scaffold protein", "Regulatory protein", "All of these"], ans: 3, exp: "All are types of non-histone proteins." },
+    { q: "251. Bacteriophage nucleic acids were labeled by carrying out an infection of E. coli cells growing in", opts: ["14C-labeled CO2", "3H-labeled water.", "32P-labeled phosphate,", "35S-labeled sulfate."], ans: 2, exp: "32P labels nucleic acids." },
+    { q: "252. In order to show that DNA is the 'transforming principle,' Avery, MacLeod, and McCarty showed that DNA could transform avirulent strains of pneumococcus. This hypothesis was strengthened by their demonstration that.", opts: ["enzymes that destroyed proteins also destroyed transforming activity.", "enzymes that destroyed nucleic acids also destroyed transforming activity.", "enzymes that destroyed complex carbohydrates also destroyed transforming activity.", "the transformation activity was destroyed by boiling."], ans: 1, exp: "Destroying nucleic acids destroyed the activity." },
+    { q: "253. In eukaryotes, Okazaki fragments are about ____ long.", opts: ["50 base pairs", "150 base pairs", "1-500 base pairs", "150,000 base pairs"], ans: 1, exp: "Eukaryotic Okazaki fragments are about 150 bp." },
+    { q: "254. During replication, the new DNA strand is synthesized", opts: ["in the 3' to 5' direction.", "in the 5' to 3' direction.", "in both the 3' to 5' and 5' to 3' directions from the replication fork.", "from one end to the other, in the 3' to 5' or the 5' to 3' directions."], ans: 1, exp: "Synthesized in 5' to 3' direction." },
+    { q: "255. The molecules that function to replicate DNA in the cell are", opts: ["DNA nucleoside triphosphates.", "DNA polymerases.", "nucleoside polymerases.", "DNases."], ans: 1, exp: "DNA polymerases replicate DNA." },
+    { q: "256. What are the three major properties of genes that are explained by the structure of DNA?", opts: ["They contain information, direct the synthesis of proteins, and are contained in the cell nucleus.", "They contain nitrogenous bases, direct the synthesis of RNA, and are contained in the cell nucleus", "They encode the organisms phenotype, are passed on from one generation to the next, and contain nitrogenous bases.", "They contain information, replicate exactly, and change to produce a mutation."], ans: 3, exp: "Information, replication, mutation." },
+    { q: "257. The nitrogenous bases (and the two strands of the DNA double helix) are held together by", opts: ["weak van der Waals forces,", "covalent bonds,", "hydrogen bonds.", "a and b"], ans: 2, exp: "Hydrogen bonds." },
+    { q: "258. Why must RNA be incorporated into the DNA molecule initially during DNA replication?", opts: ["RNA primase adds bases that act as primers.", "RNA primase is able to use DNA as a template.", "RNA primase is incorporated into the holoenzyme complex.", "DNA polymerase I and III can only add on to an existing strand."], ans: 3, exp: "Polymerases need a primer to add onto." },
+    { q: "259. The correct order of events for synthesis of the lagging strand is:", opts: ["Primase adds RNA primer, DNA polymerase III creates a stretch, DNA polymerase I removes the primer, and ligase seals the gaps.", "Primase adds primer, DNA polymerase I removes the primer, DNA polymerase extends the segment, and ligase seals the gap.", "Ligase adds bases to the primase, the primase generates the polymerase 1, polymerase III adds to the stretch, helicase winds the DNA", "Helicase unwinds the DNA, primase creates a primer, DNA polymerase I elongates the stretch, DNA polymerase III removes the primer, and ligase seals the gaps in the DNA"], ans: 0, exp: "Primase -> Pol III -> Pol I -> Ligase." },
+    { q: "260. The base-paired structure of DNA implies that it", opts: ["can replicate to form identical molecules.", "can be used as a template to make RNA", "is the hereditary material.", "a and b"], ans: 3, exp: "It allows replication and transcription." },
+    { q: "261. Which of the following molecules functions to transfer information from one generation to the next?", opts: ["DNA", "mRNA", "tRNA", "Proteins"], ans: 0, exp: "DNA transfers information." },
+    { q: "262. Mutations are", opts: ["heritable changes in the sequence of DNA bases that produce an observable phenotype.", "heritable changes in the sequence of DNA bases.", "mistakes in the incorporation of amino acids into proteins.", "heritable changes in the mRNA of an organism."], ans: 1, exp: "Heritable changes in DNA sequence." },
+    { q: "263. During infection of E. coli cells by bacteriophage T2,", opts: ["proteins are the only phage components that actually enter the infected cell.", "both proteins and nucleic acids enter the cell.", "only protein from the infecting phage can also be detected in progeny phage.", "only nucleic acids enter the cell."], ans: 3, exp: "Only nucleic acids (DNA) enter the cell." },
+    { q: "264. A deoxyribose nucleotide is a", opts: ["deoxyribose plus a nitrogenous base.", "sugar and a phosphate.", "deoxyribose plus a nitrogenous base and a phosphate.", "ribose plus a nitrogenous base."], ans: 2, exp: "Deoxyribose + base + phosphate." },
+    { q: "265. In DNA replication, each newly made strand is", opts: ["identical in DNA sequence to the strand from which it was copied.", "complementary in sequence to the strand from which it was copied.", "oriented in the same 3' to 5' direction as the strand from which it was copied.", "an incomplete copy of one of the parental strands."], ans: 1, exp: "It is complementary to the template." },
+    { q: "266. In eukaryotic cells, each chromosome has", opts: ["one origin of replication.", "two origins of replication.", "many origins of replication.", "only one origin of replication per nucleus."], ans: 2, exp: "Many origins of replication." },
+    { q: "267. During DNA replication", opts: ["one parental strand must be degraded to allow the other strand to be copied.", "the parental strands must separate so that both can be copied.", "the parental strands come back together after the passage of the replication fork.", "origins of replication always give rise to single replication forks."], ans: 1, exp: "Parental strands must separate." },
+    { q: "268. The fidelity of DNA replication is outstanding. During DNA synthesis, the error rate is on the order of one wrong nucleotide per", opts: ["10,000.", "100,000.", "10,000,000.", "1,000,000,000."], ans: 3, exp: "Error rate is ~1 in 10^9." },
+    { q: "269. In the Meselson-Stahl experiment, the conservative model of DNA replication is ruled out by which of the following observations?", opts: ["No completely heavy DNA is observed after the first round of replication.", "No completely light DNA ever appears, even after several replications.", "The product that accumulates after two rounds of replication is completely 'heavy.'", "Completely 'heavy' DNA is observed throughout the experiment."], ans: 0, exp: "Conservative would leave heavy DNA intact; it's not observed." },
+    { q: "270. Which of the following features summarizes the molecular architecture of DNA?", opts: ["The two strands run in opposite directions.", "The molecule twists in the same direction as the threads of most screws.", "The molecule is a double-stranded helix and DNA has a uniform diameter.", "All of the above"], ans: 3, exp: "All are features of DNA." },
+    { q: "271. The steps of the ladder are", opts: ["individual nitrogenous bases.", "pairs of bases.", "alternating bases and phosphate groups.", "alternating sugars and bases."], ans: 1, exp: "Base pairs are the steps." },
+    { q: "272. Which feature of the Watson-Crick model of DNA structure explains its ability to function in replication and gene expression?", opts: ["Each strand contains all the information present in the double helix.", "Structural and functional similarities of DNA and RNA", "The double helix is right-handed and not left-handed.", "DNA replication does not require enzyme catalysts."], ans: 0, exp: "Each strand contains all information." },
+    { q: "273. Information used by Watson and Crick to determine the structure of DNA included", opts: ["electron micrographs of individual DNA molecules.", "light micrographs of bacteriophage particles,", "nuclear magnetic resonance analysis of DNA", "X-ray crystallography of double-stranded DNA"], ans: 3, exp: "Used X-ray crystallography." },
+    { q: "274. Double-stranded DNA looks a little like a ladder that has been twisted into a helix, or spiral. The side supports of the ladder are", opts: ["individual nitrogenous bases.", "alternating bases and sugars,", "alternating bases and phosphate groups.", "alternating sugars and phosphates."], ans: 3, exp: "Sugar-phosphate backbone." },
+    { q: "275. The enzyme DNA ligase is required continuously during DNA replication because", opts: ["fragments of the leading strand must be joined together.", "fragments of the lagging strand must be joined together.", "the parental strands must be joined back together.", "5'-deoxynucleoside triphosphates must be converted to 5'-deoxynucleoside triphosphates."], ans: 1, exp: "Joins Okazaki fragments on lagging strand." },
+    { q: "276. The energy necessary for making a DNA molecule comes directly from the", opts: ["sugar.", "ATP.", "release of phosphates.", "NADPH."], ans: 2, exp: "From the release of phosphates (dNTPs)." },
+    { q: "277. When adding the next monomer to a growing DNA strand, the monomer is added to the", opts: ["1' carbon of the deoxyribose.", "2' carbon of the deoxyribose.", "3' carbon of the deoxyribose.", "4' carbon of the deoxyribose."], ans: 2, exp: "Added to the 3' carbon." },
+    { q: "278. The first scientist(s) to suggest a mode of replication for DNA was (were)", opts: ["Linus and Pauling.", "Hershey and Chase.", "Albert Leverman.", "Watson and Crick."], ans: 3, exp: "Watson and Crick suggested semi-conservative replication." },
+    { q: "279. Chargaff's rule states that", opts: ["DNA must be replicated before a cell can divide.", "viruses enter cells without their protein coat.", "only protein from the infecting phage can also be detected in progeny phage.", "the amount of cytosine equals the amount of guanine."], ans: 3, exp: "C = G." },
+    { q: "280. Griffith's experiments showing the transformation of R strain pneumococcus bacteria to S strain pneumococcus bacteria in the presence of heat-killed S strain bacteria gave evidence that", opts: ["an external factor was affecting the R strain bacteria", "DNA was definitely the transforming factor.", "S strain bacteria could be reactivated after heat killing.", "All of the above"], ans: 0, exp: "Showed an external factor (transforming principle) was involved." },
+    { q: "281. The Hershey-Chase experiment", opts: ["proved semiconservative replication is the mode for DNA replication.", "used 32P to label protein.", "used 35S to label DNA", "helped to prove DNA was the genetic molecule."], ans: 3, exp: "Helped prove DNA is the genetic molecule." },
+    { q: "282. Which one of the following is not found in DNA?", opts: ["Carbon", "Oxygen", "Nitrogen or Hydrogen", "Sulfur"], ans: 3, exp: "Sulfur is not found in DNA." },
+    { q: "283. The difference between DNA and RNA is that", opts: ["DNA has thymine and RNA has uracil.", "DNA has no oxygen bonded to the 2' carbon; RNA does.", "DNA is the genetic material; RNA is not", "DNA is double stranded and RNA can't have hydrogen bond."], ans: 0, exp: "Thymine in DNA, Uracil in RNA." },
+    { q: "284. The building blocks for a new DNA molecule are", opts: ["deoxyribose nucleoside monophosphates.", "deoxyribose nucleoside diphosphates.", "deoxyribose nucleoside triphosphates.", "deoxyribose nucleotide diphosphates"], ans: 2, exp: "dNTPs (triphosphates)." },
+    { q: "285. Synthesis of DNA is", opts: ["spontaneous.", "endergonic.", "exergonic.", "pseudogonic"], ans: 1, exp: "It is endergonic (requires energy)." },
+    { q: "286. A deoxyribose nucleoside is a", opts: ["deoxyribose plus a nitrogenous base.", "sugar and a phosphate.", "deoxyribose plus a nitrogenous base and a phosphate.", "ribose plus a nitrogenous base."], ans: 0, exp: "Sugar + base = nucleoside." },
+    { q: "287. What was most remarkable about the Griffith experiment?", opts: ["Griffith obtained his results despite the fact that he failed his medical board exam.", "DNA, not protein, was found to be the genetic molecule.", "Something from a dead organism could change living cells.", "Viruses, which were nonliving, could change living cells."], ans: 2, exp: "Dead S strain could transform living R strain." },
+    { q: "288. When bands of RNA are transferred to a nitrocellulose membrane for identification, the blotting is called", opts: ["Southern Blotting", "Northern Blotting", "Western Blotting", "Eastern Blotting"], ans: 1, exp: "RNA blotting is Northern blotting." },
+    { q: "289. Ideally, PCR increases the amount of DNA during additional cycles.", opts: ["additively", "gradually", "linearly or systematically", "exponentially"], ans: 3, exp: "PCR increases DNA exponentially." },
+    { q: "290. Complete genome of which non-crop and crop plants has been sequenced?", opts: ["Datura and wheat respectively", "Arabidopsis and maize respectively", "Oenothera and oat respectively", "Arabidopsis and rice respectively"], ans: 3, exp: "Arabidopsis and rice." },
+    { q: "291. The first repair of mistakes made during DNA replication is made by", opts: ["the mismatch repair system.", "DNA polymerase.", "excision repair.", "SOS repair."], ans: 1, exp: "DNA polymerase proofreads." },
+    { q: "292. The force that holds DNA together in a double helix is", opts: ["the force of the twist.", "covalent bonds,", "ionic bonds or ionic interactions", "hydrogen bonds."], ans: 3, exp: "Hydrogen bonds between bases." },
+    { q: "293. Boiling DNA causes it to become", opts: ["single stranded.", "monomers.", "destroyed.", "smaller the longer it is boiled."], ans: 0, exp: "Boiling denatures DNA into single strands." },
+    { q: "294. Number of base pairs in DNA helix around the octamer histone molecule is", opts: ["140 - 200 bp", "100 - 150 bp", "40 - 67 bp", "200 - 260 bp"], ans: 0, exp: "Around 146 bp (140-200 range)." },
+    { q: "295. Pyrophosphate is a", opts: ["building block for DNA synthesis.", "by-product of DNA synthesis.", "precursor to DNA synthesis.", "fire phosphate used in nucleic acid metabolism."], ans: 1, exp: "It is a by-product." },
+    { q: "296. Griffith could distinguish the two strains of pneumococcus due to", opts: ["colony appearance in culture.", "differences in their lethality in mice.", "their sizes.", "a and b"], ans: 3, exp: "Both colony appearance and lethality." },
+    { q: "297. International Human Genome Project began in", opts: ["1990", "1996", "2000", "2001"], ans: 0, exp: "Began in 1990." },
+    { q: "298. In PCR, it is ____ that creates single-stranded template molecules.", opts: ["heat", "high salt concentration", "DNA polymerase", "exonuclease"], ans: 0, exp: "Heat denatures DNA." },
+    { q: "300. The error rate of changing an incorrect base with another incorrect base during proofreading is", opts: ["1 in 10 bases.", "1 in 100 bases.", "1 in 1,000 bases.", "1 in 10,000 bases."], ans: 3, exp: "1 in 10,000 bases." },
+    { q: "301. The enzyme that unwinds the DNA prior to replication is called", opts: ["DNA polymerase.", "DNA ligase.", "primase.", "helicase."], ans: 3, exp: "Helicase unwinds DNA." },
+    { q: "302. The enzyme that restores the phosphodiester linkage between adjacent fragments in the lagging strand during DNA replication is", opts: ["DNA ligase.", "primase.", "reverse transcriptase.", "helicase."], ans: 0, exp: "DNA ligase." },
+    { q: "303. To show that DNA in cell extracts was responsible for genetic transformation in pneumococcus, important corroborating evidence was that", opts: ["enzymes that destroyed proteins also destroyed transforming activity.", "enzymes that destroyed DNA also destroyed transforming activity.", "enzymes that destroyed polysaccharides also destroyed transforming activity.", "boiling destroyed transforming activity."], ans: 1, exp: "Destroying DNA destroyed activity." },
+    { q: "304. Which of the following statements about DNA replication is false?", opts: ["Okazaki fragments are the initiators of continuous DNA synthesis along the leading strand.", "Replication forks represent areas of active DNA synthesis on the chromosomes.", "Error rates for DNA replication are often less than one in every billion base pairings.", "Ligases and polymerases function in the vicinity of replication forks."], ans: 0, exp: "Okazaki fragments are on the lagging strand, not leading." },
+    { q: "305. The primary function of DNA polymerase is to", opts: ["add nucleotides to the growing daughter strand.", "seal nicks along the sugar-phosphate backbone of the daughter strand.", "unwind the parent DNA double helix.", "prevent reassociation of the denatured parent DNA strands."], ans: 0, exp: "Adds nucleotides." },
+    { q: "306. What are the mini-satellites?", opts: ["r-DNA", "VNTR", "c-DNA", "SAT"], ans: 1, exp: "Minisatellites are VNTRs." },
+    { q: "307. Evidence indicating that DNA replication was semiconservative came from", opts: ["DNA staining techniques.", "DNA sequencing.", "density gradient studies using 'heavy' nucleotides.", "None of the above"], ans: 2, exp: "Density gradient (Meselson-Stahl)." },
+    { q: "308. A fundamental requirement for the function of genetic material is that it must be", opts: ["conserved among all organisms with very little variation.", "passed intact from organism to organism.", "replicable.", "found outside of the nucleus."], ans: 2, exp: "It must be replicable." },
+    { q: "309. Watson and Crick's model allowed them to visualize", opts: ["the molecular bonds of DNA", "how the purines and pyrimidines fit together in a double helix.", "that the two strands of the DNA double helix were antiparallel.", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "310. Chargaff's rules of base pairing states that", opts: ["the ratio of purines to pyrimidines is roughly equal in all tested organisms.", "the ratio of A to T is roughly equal in all tested organisms.", "the ratio of A + T and G + C is roughly equal in all tested organisms.", "a and b"], ans: 3, exp: "Purines = pyrimidines, A=T." },
+    { q: "311. If a nucleotide lacking a hydroxyl group at the 3' end is added to a PCR, what would be the outcome?", opts: ["No additional nucleotides would be added to a growing strand containing that nucleotide.", "Strand elongation would proceed as normal.", "Nucleotides would only be added at the 5' end.", "T. aquaticus DNA polymerase would be denatured."], ans: 0, exp: "Elongation stops without a 3' OH." },
+    { q: "312. Which of the following represents a bond between a purine and a pyrimidine (in that order)?", opts: ["C-T", "G-A", "G-C", "T-A"], ans: 2, exp: "G (purine) - C (pyrimidine)." },
+    { q: "313. DNA replication is an ____ process and ____ energy.", opts: ["exergonic; does not require", "endothermic; does require", "endergonic; does require", "endodontic; does not require"], ans: 2, exp: "Endergonic; requires energy." },
+    { q: "314. RNA primers are necessary in DNA synthesis because", opts: ["DNA polymerase can only add to an existing strand of nucleotides.", "DNA polymerase can only add to an existing RNA strand.", "DNA primase is the first enzyme in the replication complex.", "All of the above"], ans: 0, exp: "DNA polymerase needs a primer." },
+    { q: "315. Hershey and Chase used radioactive 35S and 32P in experiments to provide evidence that DNA was the genetic material. These experiments pointed to DNA because", opts: ["progeny viruses retained 32P but not 35S", "retention of 32P in progeny viruses indicated that DNA was passed on.", "loss of 35S in progeny viruses indicated that proteins were not passed on,", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "316. X-ray crystallography provides information about the ____ of DNA but is limited because of the ____ of DNA. The technique is based on the pattern of ____ of the atoms in the molecule.", opts: ["structure; difficulty of purification; light absorption", "dimensions; molecular weight; diffraction", "molecular weight; shape; diffraction", "dimensions; linearity; light absorption"], ans: 1, exp: "Dimensions; molecular weight; diffraction." },
+    { q: "317. Experiments by Avery, MacLeod, and McCarty supported DNA as the genetic material by showing that", opts: ["both protein and DNA samples provided the transforming factor.", "DNA was not complex enough to be the genetic material.", "only samples with DNA provided transforming activity.", "even though DNA was molecularly simple, it provided adequate variation to act as the genetic material."], ans: 2, exp: "Only DNA provided activity." },
+    { q: "318. Proofreading and repair occur", opts: ["at anytime during or after synthesis of DNA", "only before DNA methylation occurs.", "only in the presence of DNA polymerase.", "only in the presence of an excision repair mechanism."], ans: 0, exp: "At anytime during or after synthesis." },
+    { q: "319. T. aquaticus DNA polymerase is not denatured during the heat cycling required to denature DNA. This property allowed advances in what technique?", opts: ["RFLP analysis", "PCR", "Sequencing", "EPA"], ans: 1, exp: "PCR." },
+    { q: "320. Nucleosome body of nucleosome consists of", opts: ["H1 and H2A", "H2A and H2B", "H3 and H4", "Both (b) & (c)"], ans: 3, exp: "Nucleosome core has H2A, H2B, H3, H4." },
+    { q: "321. Which of the following model organisms has been sequenced?", opts: ["Drosophila", "Bacteria", "Yeast", "All"], ans: 3, exp: "All have been sequenced." },
+    { q: "322. The unequivocal proof that DNA is the genetic material came from the experiment which utilised -", opts: ["Streptococcus", "T2, E. coli", "E. coli, heavy nitrogen", "P32, S35, R-type bacteria"], ans: 1, exp: "T2 and E. coli (Hershey-Chase)." },
+    { q: "323. Which of the following statements about the work of Griffith, and then Avery, MacLeod, and McCarty, on Streptococcus pneumoniae is false?", opts: ["Only the S strain has a cell wall-like capsule.", "The mouse in Griffith's experiments would also have died if injected with living S strain and heat-killed R strain.", "The transforming principle is associated with the S strain's capsule.", "Transformation of living R strain into S strain could also occur in a test tube without involving a mouse."], ans: 2, exp: "The transforming principle is DNA, not the capsule." },
+    { q: "324. The polymerase chain reaction", opts: ["is a method for sequencing DNA", "is used to transcribe specific genes,", "amplifies specific DNA sequences.", "does not require DNA replication primers."], ans: 2, exp: "PCR amplifies DNA." },
+    { q: "325. The leading strand and lagging strand in DNA replication differ in that only on the lagging strand", opts: ["DNA is replicated as short fragments.", "RNA primer is present,", "replication proceeds in the 5' to 3' direction.", "DNA ligase is not needed."], ans: 0, exp: "Lagging strand is in short fragments." },
+    { q: "326. Which of the following is not required for DNA replication?", opts: ["A short strand of RNA to act as a primer.", "DNA to act as a template,", "Deoxyribonucleoside triphosphates.", "ATP for energy."], ans: 3, exp: "ATP is not directly required (dNTPs provide energy)." },
+    { q: "327. The 3' end of a DNA strand is defined as the place where", opts: ["the phosphate group is not bound to another nucleotide.", "both DNA strands end opposite each other.", "DNA polymerase binds to begin replication.", "there is a free —OH group at the 3' carbon of deoxyribose."], ans: 3, exp: "Free -OH at 3' carbon." },
+    { q: "328. Western Blot hybridization is used for", opts: ["DNA analysis", "RNA analysis", "Protein analysis", "Polysaccharide analysis"], ans: 2, exp: "Protein analysis." },
+    { q: "329. In semiconservative replication of DNA,", opts: ["the original double helix remains intact and a new double helix forms.", "the strands of the double helix separate and act as templates for new strands.", "polymerization is catalyzed by RNA polymerase.", "polymerization is catalyzed by a double helical enzyme."], ans: 1, exp: "Strands separate and act as templates." },
+    { q: "330. Which statement about complementary base pairing is not true?", opts: ["It plays a role in DNA replication.", "In DNA, T pairs with A", "Purines pair with purines, and pyrimidines pair with pyrimidines.", "In DNA, C pairs with G."], ans: 2, exp: "Purines pair with pyrimidines." },
+    { q: "331. The adjoining figure represents the structure of basic 30 nm fibre of chromosome of eukaryotes. Identify F1, F2, A and B shown in the figure. (F1 is Solenoid, F2 is Nucleosome, A is DNA, B is Histone octamer)", opts: ["Solenoid, Nucleosome, DNA, Histone octamer", "Solenoid, Nucleosome, RNA, Histone octamer", "Solenoid, Nucleosome, DNA, Nonhistone octamer", "Nucleosome, Solenoid, DNA, Histone octamer"], ans: 0, exp: "F1 is Solenoid, F2 is Nucleosome, A is DNA, B is Histone octamer." },
+    { q: "332. The length of E. coli DNA and length of DNA in a human 2N cell is -", opts: ["1.36 mm and 2.2m respectively", "1.36 mm and 2.2 mm respectively", "1.36 μm and 2.2 μm respectively", "1.36 cm and 2.2 cm respectively"], ans: 0, exp: "1.36 mm and 2.2 m." },
+    { q: "333. The entire genetic code consists of ____ amino acids and ____ codons.", opts: ["20, 20", "20, 64", "30, 60", "30, 72"], ans: 1, exp: "20 amino acids, 64 codons." },
+    { q: "334. What do telomeres do?", opts: ["They protect the chromosomes from degradation by nucleases.", "They prevent the ends of chromosomes from fusing with one another.", "They are required for complete chromosomal replication.", "All of these are correct."], ans: 3, exp: "All are correct." },
+    { q: "335. Choose the correct statement w.r.t satellite DNA-", opts: ["Show high degree of polymorphism", "Form basis of DNA fingerprinting", "Part of both coding and non-coding sequences", "More than one option is correct"], ans: 3, exp: "More than one option is correct." },
+    { q: "336. Enzyme utilised for the synthesis of RNA copolymers and homopolymers during deciphering of genetic code is-", opts: ["DNA dependent RNA polymerase", "RNA dependent DNA polymerase", "DNA independent RNA polymerase", "DNA dependent DNA polymerase"], ans: 0, exp: "DNA dependent RNA polymerase." },
+    { q: "337. Blotting technique involves transfer of DNA from", opts: ["Membrane to gel", "Gel to membrane", "Sol to gel", "Gel to sol"], ans: 1, exp: "Gel to membrane." },
+    { q: "338. Separation of DNA fragments into bands by electrophoresis is done on", opts: ["Agarose gel", "Polyacrylamide gel", "Arabic gum", "Both (a) and (b)"], ans: 3, exp: "Both agarose and polyacrylamide gels." },
+    { q: "339. Father of DNA finger printing is", opts: ["Alec Jeffreys", "Lalji Singh", "V.K. Kashyap", "E.M. Southern"], ans: 0, exp: "Alec Jeffreys." },
+    { q: "340. Sequencing the whole set of genome that contains all the coding and non coding parts is", opts: ["Expressed Sequence Tags", "Sequence Annotation", "Microarray", "Electrophoresis"], ans: 1, exp: "Sequence Annotation." },
+    { q: "341. The last human chromosome which sequence was completed in May 2006 is", opts: ["Chromosome 22", "Chromosome 14", "Chromosome 1", "Chromosome X and Y"], ans: 2, exp: "Chromosome 1." },
+    { q: "342. According to Human Genome Project, the percentage of introns in human genome is approximately", opts: ["10%", "24%", "75%", "99%"], ans: 1, exp: "24%." },
+    { q: "346. HGP methodology which includes identification of all the genes that expressed as RNA is referred as", opts: ["RFLP", "ESTs", "VNTR", "RAPD's"], ans: 1, exp: "ESTs (Expressed Sequence Tags)." },
+    { q: "344. SNP which is pronounced as 'snips' stands for", opts: ["Small nuclear protein", "Single nucleotide particle", "Single nucleotide polymorphism", "Small nicking points"], ans: 2, exp: "Single nucleotide polymorphism." },
+    { q: "345. The Human Genome Project as megaproject was a 13 year project coordinated by the", opts: ["U.S. Department of Energy", "National Institute of Health", "U.S. Department of Molecular Biology", "Both (a) and (b)"], ans: 3, exp: "Both DOE and NIH." },
+    { q: "346. In mammalian cells, the DNA of the centromere is characteristic of:", opts: ["facultative heterochromatin.", "constitutive heterochromatin.", "Euchromatin.", "dispersed euchromatin."], ans: 1, exp: "Constitutive heterochromatin." },
+    { q: "347. When chromatin is treated with nonspecific nucleases, what is the length of the resulting pieces of DNA?", opts: ["random numbers of base pairs", "about 60 base pairs", "about 8 base pairs", "about 200 base pairs"], ans: 3, exp: "About 200 base pairs." },
+    { q: "348. Which of the following is the best order of sequential, increasing condensation (packing) of DNA", opts: ["nucleosomes -> solenoid -> 30 nm fiber -> Loops on scaffold -> heterochromatin", "euchromatin -> solenoid -> 30 nm fiber -> nucleosomes", "nucleosomes -> 30 nm fibers -> euchromatin -> heterochromatin", "nucleosomes -> 30 nm fibers -> solenoid -> Loops on scaffold"], ans: 0, exp: "Nucleosomes -> solenoid -> 30 nm fiber -> Loops -> heterochromatin." },
+    { q: "349. More than one initiation codon and termination codons are found in which m-RNA", opts: ["Prokaryotic m-RNA", "Eukaryotic m-RNA", "Hetero nuclear RNA", "Ribosomal RNA"], ans: 0, exp: "Prokaryotic mRNA (polycistronic)." },
+    { q: "350. An mRNA ready for translation would have", opts: ["introns, coding exons and non-coding exons.", "coding exons and non-coding exons.", "only coding exons.", "only coding exons and introns."], ans: 2, exp: "Only coding exons (introns removed)." },
+    { q: "351. In m-RNA base sequence is 5' AAC CAA GAC CCC 3' what is the possible no. of codons in case of overlapping and non overlapping respectively.", opts: ["4, 10", "10, 4", "12, 10", "10, 8"], ans: 1, exp: "Overlapping: 10, Non-overlapping: 4." },
+    { q: "352. The unequivocal proof of DNA as the genetic material came from the studies on a", opts: ["Viroid", "Bacterial virus", "Bacterium", "Fungus"], ans: 1, exp: "Bacterial virus (T2 phage)." },
+    { q: "353. During translation, the site within the ribosome holds the growing amino acid chain while the site holds the next amino acid to be added to the chain.", opts: ["A, P", "P, A", "A, B", "B, A"], ans: 1, exp: "P site holds growing chain, A site holds next." },
+    { q: "354. Chromosomes must condense to approximately 1/500th of their length for cell division. The first reduction is", opts: ["Coiling around nucleosomes", "Looping of 300 nm fibers", "Looping of solenoid fibers to form a 300 nm fiber", "Forming a coiled solenoid fiber"], ans: 0, exp: "Coiling around nucleosomes." },
+    { q: "355. The histone protein that attaches to DNA strands between nucleosomes is", opts: ["H1", "H4", "H2A", "H2B"], ans: 0, exp: "H1." },
+    { q: "356. During chromosome replication, the following events occur i. Breaking of H bonds between bases II. Bonds between adjacent nucleotide form III. Winding brings about formation of two double helices IV. Bases on free nucleotides bond with bases on DNA strands. Which of the following shows the correct sequence?", opts: ["I, III, II, IV", "I, IV, II, III", "I, II, IV, III", "IV, II, III, I"], ans: 1, exp: "I, IV, II, III." },
+    { q: "357. What are those str. that appear as 'beads-on-string' in the chromosomes when viewed under electron microscope?", opts: ["Nucleotides", "Nucleosides", "Histone octamers", "Nucleosomes"], ans: 3, exp: "Nucleosomes." },
+    { q: "358. Which one of the following also acts as a catalyst in a bacterial cell?", opts: ["23 sr RNA", "5 sr RNA", "snRNA", "hnRNA"], ans: 0, exp: "23S rRNA (ribozyme)." },
+    { q: "359. Venkataraman Ramakrishnan is one of the three recipients of the 2009 Nobel Prize for Chemistry. He worked towards the elucidation of the three-dimensional structure of ribosomes. Ribosomes are involved in the biosynthesis of proteins and", opts: ["one of their protein components is the catalyst.", "one of their RNA components is the catalyst.", "they bind to DNA for the purpose of protein synthesis.", "they bind either to tRNA or to mRNA at any given time."], ans: 1, exp: "RNA component (rRNA) is the catalyst." },
+    { q: "360. Transcription and translation of a gene composed of 30 nucleotides would form a protein containing no more than ____ amino acids.", opts: ["10", "15", "60", "90"], ans: 0, exp: "30/3 = 10 amino acids." },
+    { q: "361. Which mode of information transfer usually does not occur?", opts: ["DNA to DNA", "DNA to RNA", "DNA to protein", "all occur in a working cell"], ans: 2, exp: "DNA to protein does not occur directly." },
+    { q: "362. Which of the following statements is true regarding introns?", opts: ["Introns are the parts of mRNA that are translated.", "Introns have no function.", "In general, human genes have fewer introns than genes of other organisms.", "Introns may be involved in exon shuffling."], ans: 3, exp: "Introns may be involved in exon shuffling." },
+    { q: "363. Of the different possible codons, ____ specify amino acids and ____ signal stop.", opts: ["20, 17, 3", "180, 20, 60", "64, 61, 3", "61, 60, 1"], ans: 2, exp: "64 total, 61 code for amino acids, 3 stop." },
+    { q: "364. If genetic code is tetraplet then what is the possible number of codons which code 20 types of amino acids -", opts: ["261", "64", "256", "43"], ans: 2, exp: "4^4 = 256." },
+    { q: "365. Which enzyme/s will be produced in a cell in which there is a nonsense mutation in the lac Y gene?", opts: ["Lactose permease", "Transacetylase", "Lactose permease and transacetylase", "Beta-galactosidase"], ans: 3, exp: "Beta-galactosidase may be produced, but downstream are affected." },
+    { q: "366. Removal of RNA polymerase III from nucleoplasm will affect the synthesis of:", opts: ["t RNA", "hn RNA", "m RNA", "r RNA"], ans: 0, exp: "tRNA." },
+    { q: "367. Removal of introns and joining of exons in a defined order during transcription is called:", opts: ["Looping", "Inducing", "Slicing", "Splicing"], ans: 3, exp: "Splicing." },
+    { q: "368. If one strand of DNA has the nitrogenous base sequence ATCTG, what would be the complementary RNA strand sequence", opts: ["TTAGU", "UAGAC", "AACTG", "ATCGU"], ans: 1, exp: "UAGAC." },
+    { q: "369. Ribosomal RNA is actively synthesized in", opts: ["Lysosomes", "Nucleolus", "Nucleoplasm", "Ribosomes"], ans: 1, exp: "Nucleolus." },
+    { q: "370. Which one of the following is not a part of a transcription unit in DNA?", opts: ["The inducer", "A terminator", "A promoter", "The structural gene"], ans: 0, exp: "Inducer." },
+    { q: "371. Out of 64 codons, the number of codons with GGG is", opts: ["1", "2", "4", "6"], ans: 0, exp: "1 (GGG)." },
+    { q: "372. Some amino acids are coded by more than one codon hence the code is", opts: ["unambiguous", "degenerate", "universal", "initiator."], ans: 1, exp: "Degenerate." },
+    { q: "373. The number of codons that code different amino acids is -", opts: ["16", "31", "61", "64"], ans: 2, exp: "61." },
+    { q: "374. Crick, one of the discoverers of DNA double helical structure, was the man of", opts: ["Physics", "Chemistry", "Zoology", "Botany."], ans: 0, exp: "Physics." },
+    { q: "375. What is it that forms the basis of DNA Fingerprinting?", opts: ["The relative proportions of purines and pyrimidines in DNA", "The relative difference in the DNA occurrence in blood, skin and saliva", "The relative amount of DNA in the ridges and grooves of the fingerprints.", "Satellite DNA occurring as highly repeated short DNA segments"], ans: 3, exp: "Satellite DNA." },
+    { q: "376. Which one of the following is a wrong statement regarding mutations?", opts: ["Deletion and insertion of base pairs cause frame-shift mutations", "Cancer cells commonly show chromosomal aberrations", "UV and Gamma rays are mutagens", "Change, in a single base pair of DNA does not cause mutation"], ans: 3, exp: "Single base pair change causes mutation." },
+    { q: "377. The diagram shows an important concept in the genetic implication of DNA. Fill in the blanks A to C (DNA -> A -> B -> C)", opts: ["A- translation, B- transcription, C- Erwin Chargaff", "A- transcription, B- translation, C- Francis Crick", "A- translation, B- extension, C- Rosalind Franklin", "A- transcription, B- replication, C- James Watson"], ans: 1, exp: "A-transcription, B-translation, C-Francis Crick (Central Dogma)." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 24; // ⚠️ 12th Class Chapter 5 is Chapter 24 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
