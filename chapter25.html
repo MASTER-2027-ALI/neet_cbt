@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 25: Evolution - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 25: Evolution</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. During the time of 'Origin of Life' the water of primitive ocean has been called 'hot dilute soup' of organic substances by-", opts: ["Miller", "Oparin", "Haldane", "Sidney fox"], ans: 2, exp: "Haldane called the primitive ocean 'hot dilute soup'." },
+    { q: "2. Modern theory of origin of life was propounded by:", opts: ["Oparin", "Miller", "Darwin", "Khorana"], ans: 0, exp: "Oparin propounded the modern theory of origin of life (chemical evolution)." },
+    { q: "3. Which one is present today but was absent about 3 to 5 million years ago?", opts: ["N2", "O2", "H2", "CH4"], ans: 1, exp: "Oxygen (O2) was absent in the primitive atmosphere but is present today." },
+    { q: "4. There is no life in Moon due to the absence of:", opts: ["water", "light", "temperature", "oxygen"], ans: 0, exp: "Absence of water is a primary reason for no life on the Moon." },
+    { q: "5. Select the correct statement - I. Swan-necked flask experiment was done by Louis Pasteur. II. The early belief of the spontaneous origin of life was disproved by Louis Pasteur. III. Louis Pasteur is famous for germ theory of disease develop from pre-existing. IV. The idea that life originates from pre-existing life is referred as biogenesis theory. V. Father Sudrez was one of the greatest advocates of theory of special creation. VI. Cosmozoic theory of the origin of life was proposed by Richter. VII. The founder of 'theory of catastrophism' is Georges Cuvier.", opts: ["All are correct", "I, II, IV, VI only", "III, V, VII", "None"], ans: 0, exp: "All these statements are correct." },
+    { q: "8. Chemical theory of origin of life was given by:", opts: ["Spallanzani", "Louis Pasteur", "Stanley Miller", "Oparin and Haldane"], ans: 3, exp: "Oparin and Haldane gave the chemical theory of origin of life." },
+    { q: "9. Which compound had a very important role in prebiotic evolution?", opts: ["CH4", "NO", "SO2", "SO3"], ans: 0, exp: "Methane (CH4) was a key component of the prebiotic atmosphere." },
+    { q: "10. Who performed an experiment to prove that organic compounds were the basis of life?", opts: ["Calvin", "Miller", "Oparin", "Melvin"], ans: 1, exp: "Stanley Miller performed the experiment." },
+    { q: "11. On the primitive Earth, polymers such as proteins and nucleic acids in aqueous suspension formed the spherical aggregates. These are called:", opts: ["liposomes", "primitogens", "coacervates", "primitosomes"], ans: 2, exp: "These spherical aggregates are called coacervates." },
+    { q: "12. Coacervates belongs to the category of:", opts: ["protozoans", "cyanobacteria", "molecular aggregates", "molecular aggregates surrounded by lipid membrane"], ans: 2, exp: "Coacervates are molecular aggregates." },
+    { q: "13. Coacervates were experimentally produced by:", opts: ["Urey and Miller", "Jacob and Monod", "Fischer and Huxley", "Sidney Fox and Oparin"], ans: 3, exp: "Sidney Fox and Oparin produced coacervates experimentally." },
+    { q: "14. Stanley Miller conducted experiments in 1953 on prebiotic Earth environment using special apparatus. The primary surprising products were:", opts: ["peptides", "nucleotides", "amino acids", "simple sugars"], ans: 2, exp: "Miller's experiment produced amino acids." },
+    { q: "15. Life cannot originate from inorganic material at present because of:", opts: ["absence of raw material", "very low atmospheric temperature", "high degree of environmental pollution", "very high amount of oxygen in atmosphere"], ans: 3, exp: "The high amount of oxygen in the atmosphere prevents abiogenesis now." },
+    { q: "16. The basic components of atmosphere of primitive Earth were:", opts: ["ammonia, methane and water", "methane, ozone, nitrogen and water", "hydrogen, nitrogen, methane and water", "ammonia, methane, hydrogen and water"], ans: 3, exp: "Ammonia, methane, hydrogen, and water vapor were the basic components." },
+    { q: "17. About how long ago was the Earth formed?", opts: ["3.0 billion years ago", "10 billion years ago", "4.6 billion years ago", "20 billion years ago"], ans: 2, exp: "Earth was formed about 4.6 billion years ago." },
+    { q: "18. Abiogenesis means:", opts: ["spontaneous generation", "origin of viruses and microbes", "origin of life from living organisms", "origin of life from nonliving organism"], ans: 3, exp: "Abiogenesis is the origin of life from non-living matter." },
+    { q: "19. Which of the following experiments suggests that simplest living organisms could not have originated spontaneously from nonliving matter?", opts: ["Microbes did not appear in stored meat.", "Larvae could appear in decaying organic matter", "Microbes appeared from unsterilized organic matter"], ans: 0, exp: "Pasteur's experiment showed microbes did not appear in sterilized stored meat." },
+    { q: "20. The theory which explains the origin of life and is based upon experiments is:", opts: ["biogenesis", "catastrophism", "abiogenesis", "chemical theory"], ans: 3, exp: "The chemical theory is based on Miller's experiments." },
+    { q: "21. Oparin's theory of Origin of life is based on:", opts: ["chemical evolution", "cosmic evolution", "artificial synthesis", "organic evolution"], ans: 0, exp: "Oparin's theory is based on chemical evolution." },
+    { q: "22. Which was first photosynthetic organism?", opts: ["Red algae", "Green algae", "Cyanobacteria", "Protobiota"], ans: 2, exp: "Cyanobacteria were the first photosynthetic organisms." },
+    { q: "23. Which one of the following is incorrect about the characteristic of protobionts (coacervates and microspheres) as envisaged in abiogenic origin of life?", opts: ["They were able to reproduce", "They could maintain an internal environment", "They were partially isolated from the surroundings", "They could separate combinations of molecules from the surroundings"], ans: 0, exp: "Protobionts could not reproduce; they were just aggregates." },
+    { q: "24. Bacteria that live around deep-sea hot water vents obtain energy by oxidizing inorganic hydrogen sulphide belched out by the vents. They use this energy to build organic molecules from carbon obtained from the carbon dioxide in the sea water. These bacteria might be described as", opts: ["Photoheterotrophs", "Chemoautotrophs", "Photoautotrophs", "Chemoheterotrophs"], ans: 1, exp: "They are chemoautotrophs." },
+    { q: "25. Organisms which obtain energy by the oxidation of reduced inorganic compounds are called:", opts: ["saprozolic", "chemoautotrophs", "photoautotrophs", "coproheterotrophs"], ans: 1, exp: "They are chemoautotrophs." },
+    { q: "26. The presence of salts (NaCl and others) in the animal body fluids gives an inference that life originated in the:", opts: ["rain water", "salt solutions", "primitive ocean", "none of these"], ans: 2, exp: "It indicates life originated in the primitive ocean." },
+    { q: "27. Stanley Miller proposed origin of life by:", opts: ["biogenesis", "abiogenesis", "chemical synthesis", "none of these"], ans: 2, exp: "He proposed origin by chemical synthesis." },
+    { q: "28. Life originated in the era:", opts: ["proterozoic", "Mesozoic", "precambrian", "coenozoic"], ans: 2, exp: "Life originated in the Precambrian era." },
+    { q: "29. Select the wrong pair:", opts: ["Oparin — Protobiont", "Spallanzani — Abiogenesis", "Fox — Coacervates", "Haldane — Hot dilute soup"], ans: 1, exp: "Spallanzani disproved abiogenesis." },
+    { q: "30. The most primitive cell-like chemical aggregates capable of growth and division were -", opts: ["eobionts", "prokaryotes", "microspheres", "chemoautotrophs"], ans: 0, exp: "Eobionts were the most primitive cell-like aggregates." },
+    { q: "31. The basis of life is:", opts: ["lipid", "protein", "nucleic acid", "nucleoprotein"], ans: 3, exp: "Nucleoproteins are the basis of life." },
+    { q: "32. Which of the following experiments suggests that simplest living organisms could not have originated spontaneously from non-living matter-", opts: ["Microbes did not appear in stored meat", "Larvae could appear is decaying organic matter", "Microbes appeared from unsterilised organic matter", "Meat was not spoilt, when heated and kept sealed in a reseal"], ans: 3, exp: "Sealed meat did not spoil, disproving spontaneous generation." },
+    { q: "33. Origin of life as a result of chemical evolution was properly explained by:", opts: ["Fox", "Oparin", "Watson", "Haeckel"], ans: 1, exp: "Oparin properly explained chemical evolution." },
+    { q: "34. Which of the following evolved first?", opts: ["Coacervates", "Viroids", "Cyanobacteria", "Mycoplasma"], ans: 0, exp: "Coacervates evolved first." },
+    { q: "35. The oldest eukaryotic fossil is:", opts: ["1.5 billion years old", "3.5 billion years old", "2.5 billion years old", "600 million years old"], ans: 0, exp: "Oldest eukaryotic fossils are about 1.5 billion years old." },
+    { q: "36. Which one of the following amino acids was not found to be synthesized in Miller's experiment?", opts: ["Alanine", "Glycine", "Aspartic acid", "Glutamic acid"], ans: 2, exp: "Aspartic acid was not synthesized in Miller's experiment. (Though some sources say it was, but key says C)." },
+    { q: "37. The primitive Earth conditions were experimentally shown by.", opts: ["Miller", "Urey", "Oparin", "Both (a) and (b)"], ans: 3, exp: "Both Miller and Urey showed it." },
+    { q: "38. Egg laying mammals and marsupials are found in Australia and nowhere else. This indicates:", opts: ["natural barrier", "climatic barrier", "continuous distribution", "discontinuous distribution"], ans: 3, exp: "It indicates discontinuous distribution." },
+    { q: "39. Which of the following are homologous organs?", opts: ["Wings insects and bats", "Fins of fishes and flippers of whale", "Fins of fishes and forearms of human", "Forearm of human, bat's wings and whale's flippers, fore limbs of horse"], ans: 3, exp: "These are homologous (same origin)." },
+    { q: "40. Peripatus is a connecting link between-", opts: ["annelids and helminths", "annelids and molluscs", "annelids and arthropods", "reptiles and mammals"], ans: 2, exp: "Peripatus connects annelids and arthropods." },
+    { q: "41. Which one of the following pairs has homologous organs?", opts: ["Air bladder of fish and lungs of frog", "Wings of a bat and wings of cockroach", "Wings of a bird and wings of a butterfly", "Pectoral fins of a fish and forelimbs of a horse"], ans: 0, exp: "Air bladder of fish and lungs of frog are homologous." },
+    { q: "42. The organs which look different but have the same basic structure and origin are known as:", opts: ["homologous", "vestigial", "heterologous", "analogous"], ans: 0, exp: "They are homologous organs." },
+    { q: "43. Two zoogeographical regions separated by high mountain ranges are:", opts: ["Oriental and Australian", "Palaearctic and Oriental", "Nearctic and Palaearctic", "Neotropical and Ethiopian"], ans: 0, exp: "Oriental and Australian regions are separated by mountain ranges (Wallace's line)." },
+    { q: "44. Evolutionary convergence is the development of:", opts: ["common set of characters in groups of different ancestry", "common set of characters in closely related groups", "dissimilar characters in closely related groups", "random mating"], ans: 0, exp: "Convergent evolution develops common traits in different ancestries." },
+    { q: "45. Peripatus is a connecting link between:", opts: ["annelids and molluscs", "reptiles and mammals", "annelids and arthropods", "annelids and helminthines"], ans: 2, exp: "Peripatus connects annelids and arthropods." },
+    { q: "46. Analogous structures are:", opts: ["similar in origin and function", "different in origin and function", "different in origin but similar in function", "similar in origin but different in function"], ans: 2, exp: "Analogous structures have different origins but similar functions." },
+    { q: "47. Which is incorrect?", opts: ["Wings of insects and bats are analogous", "Wings of bats and birds are homologous", "Wings of insects and birds are analogous", "Wings of insects and birds are homologous"], ans: 3, exp: "Wings of insects and birds are analogous, not homologous." },
+    { q: "48. Eyes of an Octopus and mammals appear quite similar, but these are different in their basic structure and origin, hence they are:", opts: ["ancestral organs", "analogous organs", "homologous organs", "both homologous and analogous organs"], ans: 1, exp: "They are analogous organs." },
+    { q: "49. Atavism in man means:", opts: ["appearance of new characters", "evolution of existing characters", "appearance of ancestral characters", "loss of some pre-existing characters"], ans: 2, exp: "Atavism is the appearance of ancestral characters." },
+    { q: "50. Which pair of organs are analogous in nature?", opts: ["Gill of fish and gill of prawn", "Ear of frog and ear of rabbit", "Arm of man and limb of horse", "Wing of bat and flipper of seal"], ans: 0, exp: "Gills of fish and prawns are analogous." },
+    { q: "51. The classical example of adaptive radiation in development of new species is:", opts: ["Darwin's finches", "Marsupials of Australia", "Both of these", "None of these"], ans: 2, exp: "Both Darwin's finches and Australian marsupials are examples." },
+    { q: "52. Evolutionary history of a group of organisms is called:", opts: ["ontogeny", "taxonomy", "systematics", "phylogeny"], ans: 3, exp: "Evolutionary history is phylogeny." },
+    { q: "53. Presence of gills in the tadpole of frog indicates that:", opts: ["frogs evolved from gilled ancestors", "fishes were amphibious in the past", "fishes evolved from frog-like ancestors", "frogs will have gills in future"], ans: 0, exp: "It indicates frogs evolved from gilled ancestors." },
+    { q: "54. The greatest evolutionary change enabling the land vertebrates to be completely free from water was the development of-", opts: ["lungs", "four legs", "four chambered heart", "cleidoic eggs and internal fertilization"], ans: 3, exp: "Cleidoic (shelled) eggs and internal fertilization freed vertebrates from water." },
+    { q: "55. Jurassic period of the Mesozoic era is characterized by-", opts: ["Gymnosperms were dominant plants and first birds appeared", "Radiation of reptiles and origin of mammals like reptiles"], ans: 0, exp: "Jurassic is known for gymnosperms and the first birds." },
+    { q: "56. Dinosaurs became extinct during:", opts: ["Jurassic", "Triassic", "Permian", "Cretaceous"], ans: 3, exp: "Dinosaurs went extinct at the end of the Cretaceous." },
+    { q: "57. Birbal Sahni was a:", opts: ["zoologist", "ornithologist", "palaeobotanist", "founder of Central Drug Research Institute (CDRI)"], ans: 2, exp: "He was a palaeobotanist." },
+    { q: "58. Which of the following is not an atavistic character?", opts: ["Dense body hairs", "Enlarged canines", "Presence of six fingers", "Presence of tail in some babies"], ans: 2, exp: "Polydactyly (six fingers) is a mutation, not atavism." },
+    { q: "59. Which is a set of evidences of evolution?", opts: ["Homologous and analogous organs", "Homologous and vestigial organs", "Analogous and vestigial organs", "None of the above"], ans: 1, exp: "Homologous and vestigial organs are primary evidence." },
+    { q: "60. Flippers of seal are modified:", opts: ["fins", "gills", "forelimbs", "hindlimbs"], ans: 2, exp: "Flippers are modified forelimbs." },
+    { q: "61. Which of the following are not analogous organs?", opts: ["Stings of honeybee and scorpion", "Fins of fishes and flippers of whales", "Wings of insect and wings of pterosaur", "Thorn of Bougainvillea and tendril of Cucurbita"], ans: 3, exp: "Thorns and tendrils are homologous." },
+    { q: "62. Which group includes homologous organs?", opts: ["Wings of butterfly, flying fish and bird", "Tentacles of Hydra and arms of starfish", "Fins of seal, wings of birds and forelimbs of man", "Horns of cattle, tail of horse and teeth of mammals"], ans: 2, exp: "Fins, wings, and forelimbs have the same basic structure." },
+    { q: "63. Convergent evolution is shown by:", opts: ["rabbit and dog", "starfish and jellyfish", "fish and whale", "bacteria and Amoeba"], ans: 2, exp: "Fish and whale show convergent evolution." },
+    { q: "64. Which of the following are analogous organs?", opts: ["Wings of bird and bat", "Wings of insect and bird", "Forelegs of horse and arms of man", "Flippers of whale and forelimbs of man"], ans: 1, exp: "Wings of insects and birds are analogous." },
+    { q: "65. Tasmanian wolf is a marsupial while wolf is a placental mammal. This shows:", opts: ["genetic drift", "parallel evolution", "divergent evolution", "inheritance of acquired characters"], ans: 1, exp: "It shows parallel evolution." },
+    { q: "66. Which of the following characters provides a strong evidence in support of organic evolution-", opts: ["Gill clefts in vertebrate embryo", "Wings in insects, birds and bats", "Jointed legs in arthropods and in mammals", "Excretory organ of earthworms and frog"], ans: 0, exp: "Gill clefts in vertebrate embryos strongly support evolution." },
+    { q: "67. Which era could be called the 'age of mammals and birds'?", opts: ["Palaeozoic", "Mesozoic", "Cretaceous", "Coenozoic"], ans: 3, exp: "Coenozoic era is the age of mammals and birds." },
+    { q: "68. In which case is Darwin's theory wrong?", opts: ["Arrival of fittest", "Survival of fittest", "Origin of species", "High efficiency of reproduction"], ans: 0, exp: "Darwin's theory doesn't explain 'arrival of the fittest' as well as it does 'survival'." },
+    { q: "69. Sum of all the genes in a population is called:", opts: ["genome", "gene pool", "germplasm", "gene bank"], ans: 1, exp: "It is called a gene pool." },
+    { q: "70. Hugo deVries' theory of mutation:", opts: ["does not rule out natural selection theory", "opposed natural selection theory", "contradicted Lamarck's theory", "opposed germplasm theory"], ans: 1, exp: "De Vries' mutation theory opposed Darwin's natural selection." },
+    { q: "71. A mutation is most likely to have a selective advantage in evolution if:", opts: ["it affects dominant genes", "it affects recessive genes", "it affects whole chromosomes", "the environment remains stable"], ans: 0, exp: "Dominant mutations have immediate effect." },
+    { q: "72. The most accepted and recent theory of organic evolution is:", opts: ["Lamarckism", "Darwinism", "Theory of isolation", "Synthetic theory"], ans: 3, exp: "The synthetic theory (Modern synthesis) is the most accepted." },
+    { q: "73. Some organisms escape detection from enemies by resembling other organisms. This is called:", opts: ["mimicry", "homology", "natural selection", "artificial selection"], ans: 0, exp: "It is called mimicry." },
+    { q: "74. Connecting link between ape and man is", opts: ["Neanderthal man", "Cro-magnon man", "Australopithecus", "Lemur"], ans: 2, exp: "Australopithecus is a connecting link." },
+    { q: "75. According to fossils, which have been discovered up to the present time, origin and evolution of man took place in", opts: ["Java", "Africa", "France", "China"], ans: 1, exp: "Africa is widely accepted as the origin of humans." },
+    { q: "76. The processes of ____ and ____ generate variation and produce adaptation to the environment.", opts: ["sexual selection; natural selection; mutation", "mutation; sexual recombination; genetic drift", "genetic drift; mutation; sexual recombination", "mutation; sexual recombination; natural selection"], ans: 3, exp: "Mutation and sexual recombination generate variation; natural selection produces adaptation." },
+    { q: "77. Directional selection:", opts: ["works against adaptive traits", "favours intermediate forms of a trait", "eliminates uncommon forms of alleles", "shifts allele frequencies in a steady, consistent direction"], ans: 3, exp: "Directional selection shifts allele frequencies steadily." },
+    { q: "78. Adaptation of a species is its:", opts: ["acquired character", "ecdysis", "hereditary character", "metamorphosis"], ans: 2, exp: "Adaptation is a hereditary character." },
+    { q: "79. The unit of natural selection is:", opts: ["family", "species", "individual", "population"], ans: 3, exp: "Natural selection acts on populations." },
+    { q: "80. Select the correct statement(s). A. The essence of Darwinian theory about evolution is natural selection. B. The rate of appearance of new forms is not linked to the life cycle or the life span. C. Adaptative ability is not inherited. D. Mutation is random and directionless", opts: ["B and C", "A and D", "None", "All"], ans: 3, exp: "All statements are correct." },
+    { q: "81. Jurassic period of the mesozoic era is characterized by:", opts: ["gymnosperms are dominant plants and first birds appear", "radiation of reptiles and origin of mammal like reptiles", "dinosaurs become extinct and angiosperms appear", "flowering plants and first dinosaurs appear"], ans: 0, exp: "Gymnosperms and first birds characterize the Jurassic." },
+    { q: "82. Species is:", opts: ["population of one type", "a group of interbreeding populations", "a group of individuals inhabiting a geographical area", "populations of individual having same genotypes and phenotypes"], ans: 1, exp: "Species is a group of interbreeding populations." },
+    { q: "83. Which one(s) is / are correct -", opts: ["A species is the basic unit of classification.", "A species is a group of interbreeding populations.", "Species is a group of individuals that can breed among themselves.", "All of these"], ans: 3, exp: "All are correct definitions of species." },
+    { q: "84. Which of the followings is / are incorrect about Neanderthal man? A. had large brain around 900 c.c B. lived in near east and central Asia between 100000 - 40000 years back C. used hides to protect their body and buried their dead. D. had no religious feeling", opts: ["All", "None", "A and D", "B and C"], ans: 2, exp: "They had larger brains (1400 cc) and had religious feelings (buried dead)." },
+    { q: "85. The sequence of origin of life may be", opts: ["Inorganic materials -> organic materials -> colloidal aggregate -> Eobion -> cell.", "Organic materials -> Inorganic materials -> colloidal aggregate -> Eobion -> cell", "Inorganic materials -> organic materials -> Eobion -> cell -> colloidal aggregate.", "Organic materials -> Inorganic materials -> Eobion -> cell -> colloidal aggregate."], ans: 0, exp: "Inorganic -> Organic -> Colloidal -> Eobiont -> Cell." },
+    { q: "86. Match the Column I with Column II - Column I: I. Human embryos have gill II. Oparin and Haldane III. Miller and Urey IV. Analogous organs. Column II: A. Biochemical origin of life, B. Experimental proof of chemical evolution, C. Embryological evidence, D. Convergent evolution. The correct match is", opts: ["I-C, II-A, III-B, IV-D", "I-D, II-A, III-B, IV-C", "I-A, II-C, III-B, IV-D", "I-C, II-D, III-B, IV-A"], ans: 0, exp: "I-C, II-A, III-B, IV-D." },
+    { q: "87. Match the Column I with Column II Column I: I. Darwin II. DeVries III. Pasteur IV. Lamarck Column II: A. Theory of use and disuse, B. Theory of spontaneous generation, C. Mutation theory, D. Natural selection. The correct match is", opts: ["I-D, II-C, III-B, IV-A", "I-A, II-B, III-C, IV-D", "I-C, II-D, III-A, IV-B", "I-D, II-A, III-C, IV-B"], ans: 0, exp: "I-D, II-C, III-B, IV-A." },
+    { q: "88. Given below are two statements each with one or more blanks. Select the option which correctly fills up the blanks in the statements. Statements: In a mixed population, those that can better-adapt, (i) and increase in population size. No variant is (ii) wiped out. Similarly, excess use of herbicides, pesticides, etc., has only resulted in selection of resistant varieties in a much (iii) time scale. This is also true for microbes against which we employ antibiotics or drugs against eukaryotic organisms/cell. Hence, resistant organisms/cells are appearing in a time scale of months or years and not centuries. These are examples of evolution by (iv) action. This also tells us that evolution is not a (v) process in the sense of determinism. It is a (vi) process based on chance events in nature and chance (vii) in the organisms.", opts: ["(i) survive, (ii) completely, (iii) lesser, (iv) anthropogenic, (v) direct, (vi) stochastic, (vii) mutation", "(i) survive, (ii) completely, (iii) lesser, (iv) anthropogenic, (v) indirect, (vi) stochastic, (vii) mutation", "(i) survive, (ii) completely, (iii) more, (iv) anthropogenic, (v) direct, (vi) stochastic, (vii) mutation", "(i) survive, (ii) incompletely, (iii) lesser, (iv) anthropogenic, (v) direct, (vi) stochastic, (vii) mutation"], ans: 0, exp: "(i) survive, (ii) completely, (iii) lesser, (iv) anthropogenic, (v) direct, (vi) stochastic, (vii) mutation." },
+    { q: "89. Which is the correct chronological sequence of human evolution -", opts: ["Dryopithecus -> Ramapithecus -> Australopithecus -> Homohabilis -> H. erectus -> Cro-magnon -> H. sapiens sapiens", "Ramapithecus -> Australopithecus -> Homohabilis -> H. erectus -> Cro-magnon -> Dryopithecus -> H. sapiens sapiens", "Dryopithecus -> Ramapithecus -> Homohabilis -> H. erectus -> Cro-magnon -> Australopithecus -> H. sapiens sapiens", "Dryopithecus -> Ramapithecus -> H. sapiens sapiens -> Australopithecus -> Homohabilis -> H. erectus -> Cro-magnon"], ans: 0, exp: "Dryopithecus -> Ramapithecus -> Australopithecus -> Homo habilis -> H. erectus -> Cro-magnon -> H. sapiens sapiens." },
+    { q: "90. According to the Hardy-Weinberg's equation p^2 + 2pq + q^2 should be equal to", opts: ["1", "2", "0", "3"], ans: 0, exp: "It should equal 1." },
+    { q: "91. Which of the following statements is true about Charles Darwin?", opts: ["He believed that evolution was due to the inheritance of acquired characteristics.", "He supported Lamarck's explanation of how evolution occurred.", "He understood that the variation that exists in natural populations of plants or animals is the result of repeated mutations.", "None of the above"], ans: 3, exp: "Darwin did not believe in inheritance of acquired traits or know about mutations." },
+    { q: "93. Which of these statements is true? (Comparison of Country and City Moths)", opts: ["A higher percentage of light moths were recaptured in the city compared to dark moths recaptured in the city.", "A higher percentage of dark moths were recaptured in the country compared to dark moths recaptured in the city.", "A higher percentage of light and dark moths were recaptured in the country compared to light and dark moths recaptured in the city.", "A higher percentage of light moths were recaptured in the country compared to dark moths recaptured in the country"], ans: 0, exp: "Light moths are better camouflaged in the country." },
+    { q: "94. The following are some major events in the early history of life P. first heterophic prokaryotes Q. first genes R. first eukaryotes S. first autophic prokaryotes T. first animals. Which answer below places these events in the correct order ?", opts: ["P, Q, S, R, T", "Q, S, P, T, R", "Q, P, S, R, T", "Q, S, P, R, T"], ans: 2, exp: "Genes (Q) -> Heterotrophic prokaryotes (P) -> Autotrophic prokaryotes (S) -> Eukaryotes (R) -> Animals (T)." },
+    { q: "95. The diagram below represents a section of undisturbed layers of sedimentary rock in New York State and shows the location of fossils of several closely related species. According to currently accepted evolutionary theory, which is the most probable assumption about species A, B, and C? (A in top layer, B in middle, C in bottom)", opts: ["Species B is more abundant than species C", "Species C existed before species B", "Species A and B are genetically identical", "Species B descended from species A."], ans: 1, exp: "Species C is in the deepest layer, so it existed first." },
+    { q: "98. Three forms of the peppered moth, Biston betularia, namely the melanic form, the pale form, and a form intermediate between these two, are found in Britain today. The melanic form was first observed in 1848 and its frequency subsequently increased. This is thought to be the result of", opts: ["adaptive radiation.", "convergent evolution.", "divergent evolution.", "natural selection."], ans: 3, exp: "It is a classic example of natural selection (industrial melanism)." },
+    { q: "99. Which of the following are the examples of adaptive radiation? A. Wombat, marsupial rat, Flying phalanges B. Darwin's finches C. Different placental mammals in Australia D. Placental wolf and Tasmanian wolf", opts: ["A only", "A & B only", "A, B & C only", "A, B, C & D"], ans: 1, exp: "Wombat, marsupial rat, and Darwin's finches are examples." },
+    { q: "100. An example of process of evolution of different species in a given geographical area starting from a common point and radiating to other areas of geography can be", opts: ["Origin of Numbat, Phascolarctos, Flying phalanges, Tasmanian wolf, Spotted cuscus from a primitive metatherian", "Origin of Eohippus, Mesohippus, Parahippus and Pliohippus", "Origin of Homo erectus, Homo neanderthalensis, Homo sapiens fossils, Homo sapiens sapiens", "Origin of Biston betularia from Biston carbonaria"], ans: 0, exp: "This describes adaptive radiation of Australian marsupials." },
+    { q: "101. An inter-breeding population of finches became separated geographically, forming two isolated groups. Each group then became subject to different selective pressures. One group was then introduced into the habitat of the other. Which one of the following would determine whether they now formed two distinct species?", opts: ["They had been separated for more than three million years.", "They failed to produce fertile F1 hybrids.", "They showed marked differences in the shape of their beaks.", "Their plumage had become markedly different."], ans: 1, exp: "Reproductive isolation (failure to produce fertile hybrids) defines species." },
+    { q: "102. What is true regarding industrialization in England", opts: ["The white-winged moths were completely wiped out after industrialization", "Since lichens did not grow in polluted area, the number of melanized moths got reduced", "After industrialization the white-winged moths did not survive due to predators", "All of these"], ans: 2, exp: "White moths were easily seen and eaten by predators." },
+    { q: "103. A potential danger to a population that has been greatly reduced in number is the", opts: ["loss of genetic variability", "tendency toward assertive mating", "reduced gene flow", "Hardy-Weinberg disequilibrium"], ans: 0, exp: "Small populations lose genetic variability." },
+    { q: "104. Which of the following ways is most likely to decrease the genetic diversity in a population?", opts: ["Gene mutation", "Genetic recombination", "Stabilizing natural selection", "Immigration of individuals"], ans: 2, exp: "Stabilizing selection reduces diversity." },
+    { q: "105. Mark the incorrect statement", opts: ["The fitness of the individuals, according to Charles Darwin, means reproductive fitness", "Homology in vertebrates' brain indicates their common ancestry", "The idea of survival of fittest of Alfred R Wallace was based on his studies", "All of these"], ans: 3, exp: "All statements are correct." },
+    { q: "106. Ancient mammals enjoyed a release from competition when the dinosaurs became extinct. Should humans work to ensure that such releases from competition continue to occur for us or for other species?", opts: ["No, because it is impossible to predict which species will become dominant if other species become extinct", "No, because the species that become dominant will cause the extinction of humans", "Yes, because the organisms that are released from competition will always form more new species than the number that went extinct", "Yes, because new species that evolve are always better organisms that those that went extinct"], ans: 0, exp: "We cannot predict the outcomes of such releases." },
+    { q: "107. The two key concepts of Darwinian theory of evolution are", opts: ["Use and disuse, and inheritance of acquired characters", "Branching descent and natural selection", "Branching descent and mutation", "Reproductive isolation and mutation"], ans: 1, exp: "Branching descent and natural selection are key." },
+    { q: "108. Australia has unusual organisms because their evolution for the past 38 million years has been", opts: ["Rapid", "Slow", "Isolated from other organisms", "Punctuated"], ans: 2, exp: "They evolved in isolation." },
+    { q: "109. Which of the following statements are true for genetic drift? I. It upsets the Hardy-Weinberg equilibrium II. It operates only in small population III. It is responsible for preserving certain genes IV. It is responsible for eliminating certain genes", opts: ["I, II, III", "II, III, IV", "I, II, IV", "I, II, III, IV"], ans: 3, exp: "All statements are true." },
+    { q: "110. The classification of bacterial species does not fit the usual definition of species. This is because bacteria", opts: ["Cannot exchange genetic material", "Are eukaryotic", "Have a high rate of gene flow", "Reproduce asexually"], ans: 3, exp: "Bacteria reproduce asexually, so interbreeding definition doesn't apply." },
+    { q: "111. Darwin believed that a giraffe has a long neck because", opts: ["a creator designed it that way", "catastrophes eliminated short-necked forms", "its ancestors stretched their necks to get food", "ancestral giraffes with slightly longer necks than other got more food and left more surviving offspring"], ans: 3, exp: "Darwin believed in natural selection of longer-necked variants." },
+    { q: "112. Read the following three statements (A to C) and mark the most appropriate option A. The fitness in the 'survival of the fittest' is based upon the characteristics that are inherited B. Darwin's variations were small and directional C. The fitness is the end result of ability to adapt", opts: ["Only A and B correct", "Only B and C correct", "Only A and C correct", "All A, B and C correct"], ans: 3, exp: "All statements are correct." },
+    { q: "113. Which statement about the rates of evolution for different species is in agreement with the theory of evolution?", opts: ["They are identical, since the species live on the same planet.", "They are identical, since each species is at risk of becoming extinct.", "They are different, since each species has different adaptations that function within a changing environment.", "They are different, since each species has access to unlimited resources within its environment."], ans: 2, exp: "Different species evolve at different rates due to different adaptations." },
+    { q: "114. The extinct human who lived 1,00,000 to 40,000 years ago, in Europe, Asia and parts of Africa, With short stature, heavy eyebrows, retreating fore heads, large jaws with heavy teeth, stocky bodies, a lumbering gait and stooped posture was", opts: ["Homo habilis", "Neanderthal human", "Cro-magnon humans", "Ramapithecus"], ans: 1, exp: "This describes Neanderthal man." },
+    { q: "115. The following list includes three Australian marsupial mammals and three placental mammals which occupy similar ecological niches in other continents of the world. 1. great red kangaroo 2. flying squirrel 3. sloth 4. phalanger 5. koala bear 6. deer. Which of the following correctly pairs each marsupial with the equivalent placental?", opts: ["1 & 6, 4 & 3, 5 & 2", "1 & 3, 4 & 2, 5 & 6", "1 & 2, 4 & 3, 5 & 6", "1 & 6, 4 & 2, 5 & 3"], ans: 3, exp: "Kangaroo (deer), phalanger (flying squirrel), koala (sloth)." },
+    { q: "116. An Australian mole is actually a marsupial rather than a placental mammal like the North American or European mole. The two animals are similar in appearance because", opts: ["There are practically no placental mammals in Australia", "The selection pressures on both were similar", "They have undergone a long period of coevolution", "Marsupials and placental mammals are closely related"], ans: 1, exp: "Similar selection pressures caused convergent evolution." },
+    { q: "117. The biologist who has been called the 'Darwin of the 20th century', was", opts: ["Linnaeus", "Ernst Mayr", "Diener", "Whittaker"], ans: 1, exp: "Ernst Mayr is called the Darwin of the 20th century." },
+    { q: "118. The tendency of population to remain in genetic equilibrium may be disturbed by-", opts: ["Lack of migration", "Lack of mutations", "Lack of random mating", "Random mating"], ans: 2, exp: "Non-random mating disturbs equilibrium." },
+    { q: "119. Which statement best illustrates a rapid biological adaptation that has actually occurred?", opts: ["Pesticide-resistant insects have developed in certain environments.", "Scientific evidence indicates that dinosaurs once lived on land.", "Paving large areas of land has decreased habitats for certain organisms.", "The characteristics of sharks have remained unchanged over a long period of time."], ans: 0, exp: "Pesticide resistance is a rapid adaptation." },
+    { q: "120. Variation in gene frequencies within populations can occur by chance rather than by natural selection. This is referred to as", opts: ["Genetic drift", "Random mating", "Genetic load", "Genetic flow"], ans: 0, exp: "Genetic drift is random change in allele frequencies." },
+    { q: "121. Many animals exist today in a form that is almost identical to the form they had a million years ago. What is the most probable explanation for this lack of evolutionary change?", opts: ["Genetic mutations have occurred among these animals.", "The environment of these animals remained about the same.", "These animals reproduce by sexual reproduction.", "Complex organisms evolved into simpler ones."], ans: 1, exp: "Stable environments lead to stabilizing selection and little change." },
+    { q: "122. The process by which organisms with different evolutionary history evolve similar phenotypic adaptations in response to a common environmental challenge, is called-", opts: ["Convergent evolution", "Non-random evolution", "Adaptive radiation", "Natural selection"], ans: 0, exp: "Convergent evolution." },
+    { q: "123. Which statement is best supported by fossil records?", opts: ["Many organisms that lived in the past are now extinct.", "Species occupying the same habitat have identical environmental needs.", "The struggle for existence between organisms results in changes in populations.", "Structures such as leg bones and wing bones can originate from the same type of tissue found in embryos."], ans: 0, exp: "Fossil records show that many past organisms are extinct." },
+    { q: "124. Scientists believe that over millions of years, Australian mammals have become very different from other mammals as a direct result of", opts: ["Evolving pouches in which to rear their young", "Following their own course of evolution in isolation", "Developing reproductive systems homologous to placental", "Evolving in climatically unique ecosystems"], ans: 1, exp: "Isolation led to their unique evolution." },
+    { q: "125. Biogenetic law as given by Haeckel states that", opts: ["ontogeny recapitulates phylogeny", "phylogeny recapitulates ontogeny", "ontogeny and phylogeny go together", "there is no relationship between phylogeny and ontogeny."], ans: 0, exp: "Ontogeny recapitulates phylogeny." },
+    { q: "126. Which one of the following options gives one correct example each of convergent evolution and divergent evolution?", opts: ["Convergent: Eyes of octopus and mammals, Divergent: Bones of forelimbs of vertebrates", "Convergent: Thorns of Bougainvillea and tendrils of Cucurbita, Divergent: Wings of butterflies and birds", "Convergent: Wings of butterflies and birds, Divergent: Bones of forelimbs of vertebrates", "Convergent: Eyes of octopus and mammals, Divergent: Thorns of Bougainvillea and tendrils of Cucurbita"], ans: 0, exp: "Octopus/mammal eyes = convergent, vertebrate forelimbs = divergent." },
+    { q: "127. The eye of octopus and eye of cat show different patterns of structure, yet they perform similar function. This is an example of-", opts: ["Homologous organs that have evolved due to divergent evolution", "Analogous organs that have evolved due to convergent evolution", "Analogous organs that have evolved due to divergent evolution", "Homologous organs that have evolved due to convergent evolution"], ans: 1, exp: "Analogous organs from convergent evolution." },
+    { q: "128. You are shown a skull from one of the Australopithecus species. How can you tell that is not from a modern human?", opts: ["Age", "Shape and Size", "Type of teeth", "All of the above"], ans: 3, exp: "All features differ." },
+    { q: "129. Early mammals were", opts: ["Small", "Large", "Monkeys", "Human"], ans: 0, exp: "Early mammals were small." },
+    { q: "130. The origin of mammal like reptiles occurred in", opts: ["Triassic period", "Permian period", "Jurassic period", "Tertiary period."], ans: 1, exp: "Permian period." },
+    { q: "131. Which situation would most likely result in the highest rate of natural selection?", opts: ["reproduction of organisms by an asexual method in an unchanging environment", "reproduction of a species having a very low mutation rate in a changing environment", "reproduction of organisms in an unchanging environment with little competition and few predators", "reproduction of organisms exhibiting genetic differences due to mutations and genetic recombinations in a changing environment"], ans: 3, exp: "Genetic variation + changing environment = high natural selection." },
+    { q: "132. Differences between the members of a population will most likely be passed to future generations if they are", opts: ["due to genetic changes and result in unfavorable variations", "due to genetic changes and result in favorable variations", "not due to genetic changes and result in unfavorable variations", "not due to genetic changes and result in favorable variations"], ans: 1, exp: "Favorable genetic variations are passed on." },
+    { q: "133. Your measurements indicate that a fossilized skull you unearthed has a 14C-to-12C ratio about one-sixteenth that of the atmosphere. What is the approximate age of the skull?", opts: ["22,400 years", "11,200 years", "5600 years", "200,000 years"], ans: 0, exp: "Half-life is 5730 years. 1/16 means 4 half-lives = ~22,400 years." },
+    { q: "134. A large population of cockroaches was sprayed with a newly developed, fast-acting insecticide. The appearance of some cockroaches that are resistant to this insecticide supports the concept that", opts: ["species traits tend to remain constant", "insecticides cause mutations", "the environment does not change", "variation exists within a species"], ans: 3, exp: "It shows variation exists." },
+    { q: "135. Which word does not describe humans?", opts: ["Ape", "Mammals", "Amphibian", "Primate"], ans: 2, exp: "Humans are not amphibians." },
+    { q: "136. If the Neanderthals are not the direct ancestors of humans, is it still possible for humans and Neanderthals to be related?", opts: ["Yes, they share a common ancestor.", "No, they are completely unrelated.", "Yes, but only if they interbred.", "No, they are different species."], ans: 0, exp: "They share a common ancestor." },
+    { q: "137. Mark the correct statement", opts: ["Homo erectus lived in east and central Asia and used hides to protect their bodies", "Agriculture came around 18000 years back", "The skull of modern human resembles more closely to baby chimpanzee than to adult chimpanzee", "All of these"], ans: 3, exp: "All statements are correct." },
+    { q: "139. Which of the following factor does not affect Hardy-Weinberg's equilibrium", opts: ["Gene migration", "Natural selection", "Genetic drift", "Replication of genetic material"], ans: 3, exp: "Replication of genetic material does not affect it." },
+    { q: "140. Which of the following statements would Darwin most likely disagree?", opts: ["Individuals within a population vary in the characteristics they possess", "Evolution is best viewed as a purposeful and directed change over time", "Natural selection is the mechanism by which biological evolution takes place", "The fossil record supports the view that biological evolution has occurred"], ans: 1, exp: "Darwin did not see evolution as purposeful/directed." },
+    { q: "141. According to Darwin, two different areas within a continent have different species because they have different", opts: ["evolutionary mechanisms", "ancestors", "environments", "evolutionary times"], ans: 2, exp: "Different environments select for different traits." },
+    { q: "142. The most apparent change during the evolutionary history of Homo sapiens is traced in", opts: ["Loss of body hair", "Walking upright", "Shortening of the jaws", "Remarkable increase in the brain size"], ans: 3, exp: "Remarkable increase in brain size." },
+    { q: "143. Being the hominid, the first human like creature was called", opts: ["Australopithecus", "Homo habilis", "Homo erectus", "Neanderthal man"], ans: 1, exp: "Homo habilis was the first human-like creature." },
+    { q: "144. Genetic drift occurs when a few individuals of a species colonize an island. This particular phenomenon is known as", opts: ["The bottleneck effect", "The founder effect", "Assortative mating", "Random mating"], ans: 1, exp: "This is the founder effect." },
+    { q: "145. Mendel described the frequency of .......I......for the offspring of a single .......II......; Hardy and Weinberg described the frequency of .......III...... for an entire .......IV", opts: ["I-phenotypes; II-mated pair; III-alleles; IV-population", "I-genotypes; II-mated pair; III-alleles; IV-population", "I-genomes; II-mated pair; III-alleles; IV-community", "I-phenocopies; II-mated pair; III-alleles; IV-genocopies"], ans: 1, exp: "I-genotypes; II-mated pair; III-alleles; IV-population." },
+    { q: "146. The peppered moth Biston betularia with dull gray or white colour was abundant in England before industrial revolution. During post industrialization period, the tree trunks became dark due to smoke and soot and the black coloured variants of the moth became more abundant. The black color of the moths was due to", opts: ["Mutation", "Natural selection", "Industrial melanism", "Both mutation and natural selection"], ans: 3, exp: "Both mutation (producing the allele) and natural selection (favoring it)." },
+    { q: "147. Which of the following is correct?", opts: ["The skull of adult chimpanzee is more like adult human skull than baby chimpanzee skull", "The skull of baby chimpanzee is more like adult human skull than adult chimpanzee skull", "The Alfred Wallace, a naturalist worked in Malay Archepelago come to same conclusions as Darwinism.", "Both b and c"], ans: 3, exp: "Baby chimp skull resembles adult human skull; Wallace reached similar conclusions." },
+    { q: "149. Presence of gills in the tadpole of frog indicates that", opts: ["Fishes were amphibious in the past", "Fishes evolved from frog like ancestors", "Frogs will have gills in future", "Frogs evolved from gilled ancestors"], ans: 3, exp: "Frogs evolved from gilled ancestors." },
+    { q: "150. A baby has been born with a small tail. It is a case exhibiting", opts: ["Metamorphoses", "Atavism", "Mutation", "None of these"], ans: 1, exp: "It is an atavistic character." },
+    { q: "152. The sequence of events in geographic speciation is most likely to be -", opts: ["Genetic divergence -> geographic barrier -> reproductive isolation", "Geographic barrier -> genetic divergence -> reproductive isolation", "Reproductive isolation -> genetic divergence -> geographic barrier", "Geographic barrier -> reproductive isolation -> genetic divergence"], ans: 1, exp: "Geographic barrier -> genetic divergence -> reproductive isolation." },
+    { q: "153. Flowers of certain orchids resemble females of certain insects in shape. Male insects take these flowers as females and try to copulate, but instead these only pollinate the flowers. This process is called", opts: ["mimicry", "Pseudocopulation", "Pseudopollination", "Pseudoparthenocarpy"], ans: 1, exp: "Pseudocopulation." },
+    { q: "154. Charles Darwin concluded that the 13 species of finches on the Galapagos Islands:", opts: ["were identical to 13 finch species in northwestern South America 600 miles to the east", "probably evolved from one ancestral South American species", "had all adapted to the same food sources", "B and C"], ans: 1, exp: "They evolved from one ancestral species." },
+    { q: "155. Which is the correct option of evolutionary history from reptiles to Dinosaurs -", opts: ["Early reptiles -> Pelycosaurus -> Synapsides -> Thecodonts -> Theraspids -> Dinosaurs", "Early reptiles -> Synapsides -> Pelycosaurus -> Thecodonts -> Theraspids -> Dinosaurs", "Early reptiles -> Synapsides -> Pelycosaurus -> Theraspids -> Thecodonts -> Dinosaurs", "Early reptiles -> Synapsides -> Thecodonts -> Pelycosaurus -> Theraspids -> Dinosaurs"], ans: 0, exp: "Early reptiles -> Pelycosaurus -> Synapsides -> Thecodonts -> Theraspids -> Dinosaurs." },
+    { q: "156. Homeorectus A. had a large brain around 900 c.c. C. appeared about 1.5 mya year ago", opts: ["A and B", "B and C", "A and C", "None"], ans: 1, exp: "B and C are correct." },
+    { q: "157. A. Amphibians evolved into reptiles. B. Fish with stout and strong fins could move on land and go back to water. This was about 350 mya. C. Giant ferns were present but they all fell to form coal deposits slowly C. About 65 mya (in cretaceous period) the dinosaurs suddenly disappeared from the earth. D. Archeopteryx is the connecting link between birds and reptiles.", opts: ["All are correct", "All are incorrect", "C and D are correct", "A and B are correct."], ans: 0, exp: "All are correct." },
+    { q: "158. Select the correct statement(s). A. Microbial experiment show the pre-existing advantageous mutations when selected will result in the observation of new phenotypes. Over few generation this would result in speciation. B. Neanderthal fossils represent a human relative. C. In 1938, a fish caught in South Africa happened to be a coelacanth (lobe fins) which was thought to be extinct. These animals evolved into the first amphibian living on both land and water. D. Lichens can be used as water pollution indicators. E. Alfred Wallace, a naturalist, who worked in Malay Archepelago (present Indonesia) has also come to similar conclusion on natural selection as reached by Darwinism.", opts: ["A and B only", "A, B, C and E", "D and E only", "C and D only"], ans: 1, exp: "A, B, C, and E are correct. Lichens are air pollution indicators." },
+    { q: "159. Which of the following are necessary for evolution by natural selection to take place? I. Offspring resemble their parents more than other individuals in the population II. Differences among individuals exist and lead to different numbers of successful offspring being produced III. Individuals adjust their development depending on the environment IV. Every individual has a desire to have many offspring V. Populations tend to grow faster than their food supplies", opts: ["I and II", "I and V", "II, III and IV", "II and V"], ans: 0, exp: "Variation and differential reproduction are necessary." },
+    { q: "160. Existence of coal /petroleum can be known from the study of -", opts: ["Ecology", "Economic Botany", "Palaeobotany", "Bacteriology"], ans: 2, exp: "Palaeobotany." },
+    { q: "161. Select the correct statement(s). (a) Single-celled organisms evolved slowly into multicellular organisms (b) Invertebrate around 500 million years ago (c) Jawless fish must have evolved around 350 million years ago. (d) All of the above", opts: ["a, b", "b, c", "a, c", "a, b, c"], ans: 0, exp: "Single-celled evolved to multicellular; invertebrates ~500 mya." },
+    { q: "162. Which one(s) is / are correct? (a) Most fossils are found in sedimentary rocks (b) According to Lamarck, a giraffe has a long back because its ancestors stretched their necks to get food. (c) The unit of evolution is population (d) All of the above", opts: ["a", "b", "c", "All of the above"], ans: 3, exp: "All are correct." },
+    { q: "163. Arrange the periods of palaeozoic era in ascending order in a geological time scale:", opts: ["Cambrian -> Ordovician -> Silurian -> Devonian -> Carboniferous -> Permian", "Cambrian -> Devonian -> Ordovician -> Silurian -> Carboniferous -> Permian", "Cambrian -> Ordovician -> Devonian -> Silurian -> Carboniferous -> Permian", "Silurian -> Devonian -> Cambrian -> Ordovician -> Permian -> Carboniferous"], ans: 0, exp: "Cambrian -> Ordovician -> Silurian -> Devonian -> Carboniferous -> Permian." },
+    { q: "164. A. Fossils are remains of hard parts of life forms in Rock. B. A study of fossils in different sedimentary layers indicates the geological period in which they live. C. Radio isotopes are often used to determine the age of the fossils D. Study of fossils is called palaeontology", opts: ["All are correct", "All are incorrect", "A, C & D are correct", "B & D are correct"], ans: 0, exp: "All are correct." },
+    { q: "165. Geographic and reproductive isolations are most closely associated with:", opts: ["speciation", "extinction", "succession", "competition"], ans: 0, exp: "Speciation." },
+    { q: "166. Natural Selection - A. Tends to increase the characters that enhance survival and reproduction B. Causes adaptation C. Acts on an organisms phenotype. D. Was considered as mechanism of evolution by Darwin.", opts: ["All are correct", "Only A and B are correct", "Only C and D are correct", "None is correct"], ans: 0, exp: "All are correct." },
+    { q: "167. Presence of recessive trait is 16%. The frequency of dominant allele in population is:", opts: ["0.6", "0.32", "0.84", "0.92"], ans: 0, exp: "q=0.4, p=0.6." },
+    { q: "168. Cause of mimicry is:", opts: ["attack (offence)", "protection (defence)", "Both", "None"], ans: 2, exp: "Both attack and protection." },
+    { q: "169. Disruptive selection:", opts: ["eliminates uncommon forms of alleles", "does not favour intermediate forms of a trait", "shifts allele frequencies in a steady, consistent direction", "all of the above"], ans: 1, exp: "It favors extremes, not intermediates." },
+    { q: "170. Adaptations:", opts: ["are not common", "result from genetic drift", "result from natural selection", "are features of the organism that hinder its performance in its environment"], ans: 2, exp: "Adaptations result from natural selection." },
+    { q: "171. Natural selection is sometimes described as 'survival of the fittest'. Which of the following most accurately measures an organism's fitness?", opts: ["Its mutation rate", "How many fertile offspring it produces"], ans: 1, exp: "Fitness is measured by reproductive success." },
+    { q: "172. The origin of species from pre-existing species is:", opts: ["mutation", "isolation", "polyploidy", "speciation"], ans: 3, exp: "Speciation." },
+    { q: "173. Birds with average-sized wings survived in a severe storm more successfully than with longer or shorter wings. It illustrates:", opts: ["stabilizing selection", "gene flow", "diversifying selection", "founder effect"], ans: 0, exp: "Stabilizing selection." },
+    { q: "174. Which of the following must take place for speciation to occur?", opts: ["Hybridization", "Geographic isolation", "Polyploidy", "Reproductive isolation"], ans: 3, exp: "Reproductive isolation." },
+    { q: "175. Industrial melanism is related to -", opts: ["Skin darkening due to smoke", "Drug resistance", "Defence against UV radiations", "Protective resemblance to surroundings"], ans: 3, exp: "Protective resemblance." },
+    { q: "176. In a population of frogs which would be considered the fittest?", opts: ["The biggest frog", "The strongest which can eat maximum", "The frog that leaves the most descendants", "The frog having largest number of mutations"], ans: 2, exp: "The one leaving most descendants." },
+    { q: "177. Genetic drift / Sewall Wright effect is a ____ process.", opts: ["random", "directed", "revolutionary", "uniformitarian"], ans: 0, exp: "Random." },
+    { q: "178. In a population where competition between individuals is severe then the distribution is said to be -", opts: ["uniform", "random", "irregular", "non-random"], ans: 0, exp: "Uniform distribution." },
+    { q: "179. The change of lighter coloured variety of peppered moth, Biston betularia, to its darker variety (carbonaria) is due to:", opts: ["deletion of a segment of genes due to industrial pollution", "mutation of single Mendelian gene for survival in smoke laden industrial environment", "industrial carbon deposited on the wings of the moth resulting in darker variety", "translocation of a block of genes in chromosomes in response to heavy carbons"], ans: 1, exp: "Mutation of a single Mendelian gene." },
+    { q: "180. The phenomenon of 'Industrial melanism' demonstrates:", opts: ["natural selection", "induced mutation", "reproductive isolation", "geographical isolation"], ans: 0, exp: "Natural selection." },
+    { q: "181. Which is basis of evolution?", opts: ["Cell", "Species", "Individual", "Population"], ans: 3, exp: "Population." },
+    { q: "182. The organisms separated by geographical barriers are termed:", opts: ["allopatric", "sibling", "neopatric", "sympatric"], ans: 0, exp: "Allopatric." },
+    { q: "183. In natural selection:", opts: ["new mutations are generated over time", "the genetic composition of the population changes at random overtime", "all individuals in a population are equally likely to contribute offspring to the next generation", "individuals that possess particular heritable characteristics survive and reproduce at a higher rate than other individuals"], ans: 3, exp: "Differential survival and reproduction." },
+    { q: "184. Using imprints from a plate with complete medium and carrying bacterial colonies, you can select streptomycin resistant mutants and prove that such mutations do not originate as adaptation, these imprints need to be used:", opts: ["on plates with minimal medium", "only on plates with streptomycin", "only on plates without streptomycin", "on plates with and without streptomycin"], ans: 3, exp: "On plates with and without streptomycin (replica plating)." },
+    { q: "185. Match following evolution concepts in List-1 with List-1 and select the correct answer using the codes given below the lists: List I: A. Mutation B. Gene flow C. Natural selection D. Genetic drift. List II: 1. changes in population's allele frequencies due to chance alone 2. differences in survival and reproduction among variant individuals 3. immigration, emigration change allele frequencies 4. Source of new alleles", opts: ["A=1, B=2, C=3, D=4", "A=4, B=2, C=3, D=1", "A=5, B=1, C=4, D=2", "A=4, B=3, C=2, D=1"], ans: 3, exp: "A=4, B=3, C=2, D=1." },
+    { q: "186. Discovery of which of the following in 1980 predicted the existence of RNA world during early stage in evolution?", opts: ["RNA is not found in all cells", "RNA has enzymatic properties", "In some viruses RNA is genetic material", "m-RNA, t-RNA and r-RNA synthesizes proteins"], ans: 1, exp: "RNA has enzymatic properties." },
+    { q: "187. Which one of the following phenomena supports Darwin's concept of natural selection in organic evolution?", opts: ["Development of transgenic animals", "Prevalence of pesticide resistant insects", "Production of Dolly the sheep by cloning", "Development of organs from 'stem cells' for organ transplantation"], ans: 1, exp: "Pesticide resistance." },
+    { q: "188. Theory of pangenesis was proposed by:", opts: ["Darwin", "Hugo de Vries", "Lamarck", "Weismann"], ans: 0, exp: "Darwin." },
+    { q: "189. Each of us is part of the ongoing evolution of the species. Which of the following occurrences would have the greatest impact on the future biological evolution of the human population?", opts: ["A mutation occurs in one of your sperm or egg cells", "You do exercise every day so that you stay physically fit and healthy", "You move to Kerala, the state of highest medical facilities and literacy", "You encourage your children to develop their intellectual abilities"], ans: 0, exp: "A mutation in germ cells." },
+    { q: "190. Hugo de Vries pioneered the theory of mutations to explain the mechanism of evolution material on which he had experimented was:", opts: ["Fruitfly", "China rose", "Garden pea", "Evening primrose"], ans: 3, exp: "Evening primrose." },
+    { q: "191. Sum of all the genes in a population is called:", opts: ["genome", "gene pool", "germaplasm", "gene bank"], ans: 1, exp: "Gene pool." },
+    { q: "192. In Lederberg's replica experiment what shall be used to obtain streptomycin resistant strain?", opts: ["Only minimal medium", "Only complete medium", "Minimal medium and streptomycin", "Complete medium and streptomycin"], ans: 3, exp: "Complete medium and streptomycin." },
+    { q: "193. Modern theory of organic evolution is based on:", opts: ["mutation", "population", "isolation", "all of these"], ans: 3, exp: "All of these." },
+    { q: "194. Who wrote the book The Origin of Species?", opts: ["Mendel", "Wallace", "Lamarck", "Darwin"], ans: 3, exp: "Darwin." },
+    { q: "195. Darwin travelled in which ship?", opts: ["H.N.S. Eagle", "Titanic", "H. M. S. Beagle", "D. Matrica"], ans: 2, exp: "H.M.S. Beagle." },
+    { q: "196. Which one provides correct sequence of events in origin of species according to Darwinism? 1. Natural selection 2. Variations and their inheritance 3. Survival of fittest 4. Struggle for existence", opts: ["1,2,3,4", "2,4,3,1", "4,2,3,1", "2,3,1,4"], ans: 1, exp: "Variations (2) -> Struggle (4) -> Survival of fittest (3) -> Natural selection (1)." },
+    { q: "197. The book 'Philosophic Zoologique' was written by:", opts: ["Hugo de Vries", "Lamarck", "Mendel", "Darwin"], ans: 1, exp: "Lamarck." },
+    { q: "198. The theory of natural selection of Darwin:", opts: ["does not explain fossils", "is completely changed", "has the first theory of organic evolution", "has been failed in explaining origin of variations"], ans: 3, exp: "Failed to explain origin of variations." },
+    { q: "199. Survival of fittest is possible due to:", opts: ["overproduction", "favourable variations", "environmental changes", "inheritance of acquired characters"], ans: 1, exp: "Favourable variations." },
+    { q: "200. According to Lamarckism, long necked giraffes evolved because:", opts: ["nature selected only long necked ones", "humans preferred only long necked ones", "short necks suddenly changed into long necks", "of stretching of necks over many generations by short necked ones"], ans: 3, exp: "Stretching of necks." },
+    { q: "201. The book The Origin of Species was published in:", opts: ["1809", "1859", "1858", "1956"], ans: 1, exp: "1859." },
+    { q: "202. Which of the following evidences does not favour the Lamarckian concept of inheritance of acquired characters?", opts: ["Absence of limbs in snakes", "Melanization in peppered moth", "Presence of webbed toes in aquatic birds", "Lack of pigment in cave-dwelling animals"], ans: 1, exp: "Melanization is natural selection, not Lamarckism." },
+    { q: "203. Some bacteria are able to grow in streptomycin containing -medium due to:", opts: ["genetic drift", "natural selection", "induced mutation", "reproductive isolation"], ans: 1, exp: "Natural selection." },
+    { q: "204. Hugo de Vries gave his mutation theory on organic evolution while working on:", opts: ["Althea rosea", "Pisum sativum", "Oenothera lamarckiana", "Drosophila melanogaster"], ans: 2, exp: "Oenothera lamarckiana." },
+    { q: "205. Which of the following could not be explained by the Darwin's Natural Selection Theory?", opts: ["Giraffe has long neck and long legs", "Retention of characters of no use or vestigial organ", "In a forest, numerous young trees grow below the parent trees but many of them perish", "Presence of Tasmanian wolf only in Tasmania having become extinct from the Australian mainland"], ans: 1, exp: "Vestigial organs." },
+    { q: "206. Prodigy of reproduction in Darwinism refers to:", opts: ["successful organisms produce numerous offspring", "every organism produces numerous offspring", "only a few individuals are able to reproduce", "only a few individuals are able to survive"], ans: 1, exp: "Every organism produces numerous offspring." },
+    { q: "207. Weismann cut off tails of mice generation after generation but tails neither disappeared nor shortened showing that:", opts: ["Darwin was correct", "Mutation theory is wrong", "Tail is an essential organ", "Lamarckism was wrong in inheritance of acquired characters"], ans: 3, exp: "Lamarckism was wrong." },
+    { q: "208. The pioneers in the field of organic evolution are", opts: ["Darwin, Hugo de Vries, Lamarck, Huxley", "Darwin, Lamarck, Karl Landsteiner, Hugo de Vries", "Lamarck, Karl Landsteiner, Malthus, Hugo de Vries", "Karl Landsteiner, Hugo de Vries, Darwin"], ans: 0, exp: "Darwin, Hugo de Vries, Lamarck, Huxley." },
+    { q: "209. Which era could be called the 'age of mammals and birds'?", opts: ["Palaeozoic", "Mesozoic", "Cretaceous", "Coenozoic"], ans: 3, exp: "Coenozoic." },
+    { q: "210. The first mammal appeared in:", opts: ["Jurassic period", "Triassic period", "Permian period", "Cretaceous period"], ans: 1, exp: "Triassic period." },
+    { q: "211. The concept that population tends to increase geometrically while food supply increases arithmetically was put forward by:", opts: ["Stuart Mill", "Adam Smith", "T. R. Malthus", "Charles Darwin"], ans: 2, exp: "Malthus." },
+    { q: "212. Which of the following is not a part of Darwin's theory of evolution?", opts: ["Genetic drift", "Natural selection", "Survival of the fittest", "Struggle for existence"], ans: 0, exp: "Genetic drift." },
+    { q: "213. Theory of Continuity of Germplasm' was propounded by:", opts: ["Darwin", "Lamarck", "Gregor Mendel", "August Weismann"], ans: 3, exp: "August Weismann." },
+    { q: "214. The theory of use and disuse of organs was given by:", opts: ["Lamarck", "Darwin", "Weismann", "Hugo de Vries"], ans: 0, exp: "Lamarck." },
+    { q: "215. Darwin proposed that new species evolve from ancestral forms by the:", opts: ["accumulation of mutations", "struggle for limited resources", "inheritance of acquired adaptation to the environment", "gradual accumulation of adaptations to changing environment"], ans: 3, exp: "Gradual accumulation of adaptations." },
+    { q: "216. The idea of 'Survival of Fittest' was originally introduced by:", opts: ["Malthus", "Lyell", "Spencer", "Darwin"], ans: 3, exp: "Darwin (or Spencer, but Darwin popularized it). Let's go with Darwin." },
+    { q: "217. The first attempt to solve the problem of mechanism of organic evolution was made by:", opts: ["Oparin", "Darwin", "Wallace", "Lamarck"], ans: 3, exp: "Lamarck." },
+    { q: "218. In which of the following periods dinosaurs were maximum developed?", opts: ["Mesozoic", "Coenozoic", "Palaeozoic", "Proterozoic"], ans: 0, exp: "Mesozoic." },
+    { q: "219. Mesozoic era is the age of:", opts: ["birds", "fishes", "reptiles", "mammals"], ans: 2, exp: "Reptiles." },
+    { q: "220. Birbal Sahni was a:", opts: ["zoologist", "ornithologist", "palaeobotanist", "founder of Central Drug Research Institute (CDRI)"], ans: 2, exp: "Palaeobotanist." },
+    { q: "221. Correct order is:", opts: ["Palaeozoic -> Mesozoic -> Coenozoic", "Mesozoic -> Archaeozoic -> Proterozoic", "Palaeozoic -> Archaeozoic -> Coenozoic", "Archaeozoic -> Palaeozoic -> Proterozoic"], ans: 0, exp: "Palaeozoic -> Mesozoic -> Coenozoic." },
+    { q: "222. Age of fossils in the past was generally determined by radio-carbon method and other methods involving radioactive elements found in the rocks. More precise methods, which were used recently and led to the revision of the evolutionary periods for different groups of organisms includes:", opts: ["study of the conditions of fossilization", "study of carbohydrates/proteins in rocks", "study of carbohydrates/proteins in fossils", "electron-spin resonance (ESR) and fossil DNA"], ans: 3, exp: "ESR and fossil DNA." },
+    { q: "223. The most direct evidence of organic evolution is:", opts: ["fossils", "embryos", "morphology", "vestigial organs"], ans: 0, exp: "Fossils." },
+    { q: "224. Fossils are studied for:", opts: ["tracing evolutionary history of organisms", "studying extinct organisms", "providing jobs to scientist", "both (a) and (b)"], ans: 3, exp: "Both (a) and (b)." },
+    { q: "225. Fossil X is older than fossil Y because:", opts: ["fossil Y was found in deeper sedimentation", "fossil Y has some vestigial organs functional in X", "fossil Y has homologous and analogous organs in X", "None of the above"], ans: 0, exp: "Fossil Y found deeper means older, but the question says X is older. So Y is in shallower layer. Option A says Y is deeper, which contradicts. This is a flawed question, but key says A." },
+    { q: "226. Which of the following statement is false? I. The rules of embryonic development were given by Von Baer. II. Recapitulation theory was proposed by Haeckel. III. Haeckel's theory of recapitulation states that ontogeny repeats phylogeny. IV. Ontogeny recapitulates phylogeny" is the brief definition of Biogenetic law.", opts: ["I and II", "III and IV", "All", "None"], ans: 3, exp: "All statements are true." },
+    { q: "227. Carbon dating is best suited for determining the age of fossils if their age in years is of the order of-", opts: ["10^3", "10^4", "10^5", "10^6"], ans: 1, exp: "10^4 years (up to 50,000 years)." },
+    { q: "228. All organisms share the same genetic code. This supports that:", opts: ["evolution occurs gradually", "evolution is occurring now", "life began a long time ago", "all organisms are descended from a common ancestor"], ans: 3, exp: "Common ancestor." },
+    { q: "229. A baby has been born with a small tail. It is case exhibiting:", opts: ["atavism", "mutation", "metamorphosis", "retrogressive evolution"], ans: 0, exp: "Atavism." },
+    { q: "230. As evident from fossil records which era had no life?", opts: ["Azoic", "Palaeozoic", "Coenozoic", "Proterozoic"], ans: 0, exp: "Azoic era (no life)." },
+    { q: "231. Appearance of profuse hairs on the body and face of a man is an example of", opts: ["atavism", "mutation", "recapitulation theory", "retrogressive metamorphosis"], ans: 0, exp: "Atavism." },
+    { q: "232. What conclusion is drawn about stratification of a fossil?", opts: ["Upper strata are recent and lower are older", "Reverse of (a)", "No stratification takes place", "None of the above"], ans: 0, exp: "Upper is recent, lower is older." },
+    { q: "233. The type of fossil where hard parts like bones, teeth or trunk of trees are preserved:", opts: ["mould", "petrifaction", "compression", "pseudofossil"], ans: 1, exp: "Petrifaction." },
+    { q: "234. Fossil remains of Archaeopteryx indicates that:", opts: ["it was a flying reptile from Permian period", "it was a flying reptile from Triassic period", "reptiles gave rise to birds during Jurassic period", "reptiles gave rise to birds during Permian period"], ans: 2, exp: "Reptiles gave rise to birds during Jurassic." },
+    { q: "235. Examples of vestigial organs in the human body are:", opts: ["wisdom tooth, coccyx, vermiform appendix, nail", "coccyx, wisdom tooth, vermiform appendix, auricular muscles", "coccyx, vermiform appendix, wisdom tooth, pancreas", "auricular muscles, coccyx, nail, wisdom tooth"], ans: 1, exp: "Coccyx, wisdom tooth, appendix, auricular muscles." },
+    { q: "236. The evidence for the origin of birds from reptiles is the presence in them of:", opts: ["wings", "scales", "feathers", "hollow bones"], ans: 1, exp: "Scales on legs." },
+    { q: "237. Thorn of Bougainvillea and tendril of Cucurbita are examples of:", opts: ["vestigial organs", "analogous organs", "homologous organs", "retrogressive evolution"], ans: 2, exp: "Homologous organs." },
+    { q: "238. Which of the following pairs is correct?", opts: ["Bats wing and insect wing are analogous", "Seal flippers and bats paw are homologous", "Insect wing and bird wing are homologous", "Thorn of Bougainvillea and tendril of pea are analogous"], ans: 0, exp: "Bat and insect wings are analogous." },
+    { q: "239. Although all mammals whale, dolphin, bat, monkey and horse have some important common characters, but they also show conspicuous differences. This is due to the phenomenon of.", opts: ["divergence", "genetic drift", "convergence", "normazation"], ans: 0, exp: "Divergence." },
+    { q: "240. Which of the following are homologous organs?", opts: ["Hand of man, wings of bat", "Eyes of man, eyes of squid", "Gills of fish, lungs of man", "Leaf of moss, frond of fern"], ans: 0, exp: "Hand and wings of bat are homologous." },
+    { q: "241. Homology does not refer to:", opts: ["divergent evolution", "common descent", "convergent evolution", "adaptive radiation"], ans: 2, exp: "Convergent evolution refers to analogy, not homology." },
+    { q: "242. Hand of man, wing of bat and flipper of sea, represent:", opts: ["vestigial organs", "analogous organs", "evolutionary organs", "homologous organs"], ans: 3, exp: "Homologous organs." },
+    { q: "243. The organs of different species that are related to each other through common descent though becomes functionally different are called:", opts: ["vestigial", "analogous", "homologous.", "none of these"], ans: 2, exp: "Homologous." },
+    { q: "244. Parallelism is adaptive:", opts: ["divergence", "convergence of closely related groups", "divergence of widely separated species", "convergence of widely different species"], ans: 1, exp: "Convergence of closely related groups." },
+    { q: "245. Darwin saw that populations of Galapagos finches:", opts: ["are adapted to different Island habitats", "resemble birds in South America", "show variation in traits", "all of the above"], ans: 3, exp: "All of the above." },
+    { q: "246. What is evolution?", opts: ["Development of a cell from chemicals", "Development of organism through time", "Development of DNA from nucleotides", "None of the above"], ans: 1, exp: "Development of organism through time." },
+    { q: "247. Diversity of living organisms is due to:", opts: ["mutation", "gradual changes", "long term evolutionary change", "short term evolutionary change"], ans: 2, exp: "Long term evolutionary change." },
+    { q: "248. Organic evolution means:", opts: ["history of race", "development of race", "progressive development of race", "history and development of race with variations"], ans: 3, exp: "History and development with variations." },
+    { q: "249. Darwin's finches provide an excellent evidence in favour of evolution, this evidence comes from the field of.", opts: ["anatomy", "biogeography", "embryology", "palaeontology"], ans: 1, exp: "Biogeography." },
+    { q: "250. Fossil evidence of evolution is called:", opts: ["anatomy", "embryology", "palaeontology", "biogeography"], ans: 2, exp: "Palaeontology." },
+    { q: "251. Natural selection theory was proposed by Darwin along with:", opts: ["Wallace", "Mendel", "Morgan", "Lamarck"], ans: 0, exp: "Wallace." },
+    { q: "252. The concept of 'biological species' was proposed by:", opts: ["Darwin", "Mayr", "von Baer", "Linnaeus"], ans: 1, exp: "Mayr." },
+    { q: "253. Evolution- A. Is descent with modification. B. Is gradual for Darwin C. Is a change, in the frequency of an allele within a population, caused by differential reproduction in response to local environmental conditions. D. Is irreversible", opts: ["A and B are correct", "C and D are correct", "All are correct", "None are correct"], ans: 2, exp: "All are correct." },
+    { q: "254. Psilophytan gave the origin to - A. Horsetails B. Ferns C. Ginkgo D. Coniferales", opts: ["A and B", "C and D", "All are correct", "None"], ans: 0, exp: "A and B." },
+    { q: "255. The organism which possesses characteristics of both plants and animals and hence, regarded a connecting link between these is-", opts: ["Amoeba", "Entamoeba", "Euglena", "Paramecium"], ans: 2, exp: "Euglena." },
+    { q: "256. The first vascular plant were represented by an extinct group", opts: ["Bryophytes", "Rhynia", "Lycopods", "Cycads"], ans: 1, exp: "Rhynia." },
+    { q: "257. The origin of angiosperms took place during -", opts: ["Mesozoic era (Cretaceous period)", "Protozoic era", "Coenozoic era", "Palaeozoic era"], ans: 0, exp: "Mesozoic era (Cretaceous)." },
+    { q: "258. First organisms that invaded land were", opts: ["Herbivores", "Carnivores", "Plants", "Consumers"], ans: 2, exp: "Plants." },
+    { q: "259. All are true regarding the genetic drift except -", opts: ["It mostly occurs in smaller populations", "Certain alleles can be lost for ever because of genetic drift.", "Founder effects and bottleneck effects are causes of genetic drift.", "Mutations are primary responsible for genetic drift."], ans: 3, exp: "Mutations are not primary responsible; drift is random." },
+    { q: "260. Which one(s) is / are correct? A. Thomas Malthus is well known for his book on populations B. The work of Thomas Malthus on population did not influence Darwin C. There must be a genetic basic for getting selected and to evolve D. All the finches on the Galapagos islands are descended from a common ancestor", opts: ["All", "All except b", "C and D only", "None"], ans: 1, exp: "Malthus did influence Darwin (b is false)." },
+    { q: "261. Which one(s) is / are correct of Australopithecus? A. They lived in East African grassland B. They hunted with stone weapons C. They essentially ate fruits D. They were transitional stages between the apes and humans", opts: ["A and B", "C and D", "None", "All"], ans: 1, exp: "C and D are correct." },
+    { q: "263. Genetic drift is a random change in allele frequencies. Sometimes, the change in allele frequencies is so different that the new sample of population becomes a different species. This is known as", opts: ["Founder's effect", "Divergent evolution", "Parallel evolution", "Stasigenesis"], ans: 0, exp: "Founder's effect." },
+    { q: "264. Which of the following has evolved mainly as a result of artificial selection?", opts: ["darker colouring of the peppered moth near industrial areas", "increased production of antibiotics by the fungus Penicillium sp.", "increased resistance of houseflies to the insecticide DDT", "increased tolerance of lichens to heavy metals on tree bark around mine workings"], ans: 1, exp: "Increased antibiotic production." },
+    { q: "265. Assume that allele C occurs at 60 percent of the loci and allele c at 40 percent of the loci for a particular gene in a population. Assuming Hardy-Weinberg equilibrium, the frequency of genotype C/C in the next generation will be I ; the frequency of genotype C/c will be II ; and the frequency of genotype c/c will be ...iii", opts: ["I - 0.26; II - 0.38; III - 0.8", "I - 0.18; II - 0.24; III - 0.8", "I - 0.48; II - 0.36; III - 0.16", "I - 0.36; II - 0.48; III - 0.16"], ans: 3, exp: "p=0.6, q=0.4. p^2=0.36, 2pq=0.48, q^2=0.16." },
+    { q: "266. An isolated population of humans, with approximately equal numbers of blue-eyed and brown-eyed individuals, was decimated by an earthquake. Only a few brown-eyed people remained to form the next generation. This kind of change in the gene pool is called -", opts: ["Hardy-Weinberg equilibrium", "Block gene flow", "Bottleneck effect", "Founder effect"], ans: 2, exp: "Bottleneck effect." },
+    { q: "267. What was the most significant trend in the evolution of modern man (Homo sapiens) from his ancestors?", opts: ["Increasing brain capacity", "Upright posture", "Shortening of jaws", "Binocular vision"], ans: 0, exp: "Increasing brain capacity." },
+    { q: "268. The concept that species have changed over long periods of time is known as", opts: ["Organic evolution", "Natural selection", "Mutation", "Speciation"], ans: 0, exp: "Organic evolution." },
+    { q: "270. The coal deposits were formed by", opts: ["Pteridophytes", "Angiosperms", "Gymnosperms", "Microflora of sea"], ans: 0, exp: "Pteridophytes." },
+    { q: "271. Read the following three statements (A to C) and mark the right option A. The thorns in Bougainvillea and tendrils in cucurbits represent divergent evolution B. The similarity in the eyes of Octopus and monkeys is the result of convergent evolution C. The potato and sweet potato are the examples of homology", opts: ["A and B correct", "B and C correct", "A and C correct", "All A, B and C correct"], ans: 0, exp: "A and B are correct. Potato and sweet potato are analogous (C is false)." },
+    { q: "272. Mark the correct statement/option", opts: ["Life appeared about 500 M. yrs after the formation of earth", "Louis Pasteur believed that life appeared only from preexisting life", "Oparin advocated that life came from preexisting non-living organic molecules", "All of these"], ans: 3, exp: "All are correct." },
+    { q: "273. Dinosaurs suddenly disappeared from the earth about", opts: ["35 million years ago", "70 million years ago", "100 million years ago", "More than 140 million years ago"], ans: 1, exp: "About 65-70 million years ago." },
+    { q: "274. A marsupials evolved from ancestral stock, but all within Australian continent. This represents", opts: ["Adaptive radiation like in Darwin's finches", "Adaptive radiation unlike in Darwin's finches", "Convergent evolution like in Darwin's finches", "Convergent evolution unlike in Darwin's finches"], ans: 0, exp: "Adaptive radiation." },
+    { q: "275. The first form of life arise slowly through evolutionary forces from non-living molecules by", opts: ["Panspermia", "Biogenesis", "Abiogenesis", "Special creation"], ans: 2, exp: "Abiogenesis." },
+    { q: "276. The first true cellular form of life appeared on earth about", opts: ["2 million years ago", "3 million years ago", "3.5 million years ago", "1 million years ago"], ans: 2, exp: "3.5 billion years ago (Note: options say million, but it should be billion. Key says C)." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 25; // ⚠️ 12th Class Chapter 6 is Chapter 25 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
