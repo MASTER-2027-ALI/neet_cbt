@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 20: Sexual Reproduction in Flowering Plants - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 20: Sexual Reproduction in Flowering Plants</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. Double fertilisation was first discovered by Nawaschin (1898) in-", opts: ["Lilium and Fritillaria", "Mango and sugarcane", "Papaya and Pea", "Brassica and Conduit"], ans: 0, exp: "Nawaschin discovered double fertilization in Lilium and Fritillaria." },
+    { q: "2. If testa is removed from the water soaked gram seed, the remaining structure is-", opts: ["Full mature embryo", "Cotyledon with endosperm", "Cotyledon filled with starch", "None of the above"], ans: 0, exp: "The testa is the seed coat. Removing it reveals the embryo (cotyledons, radicle, plumule)." },
+    { q: "3. Which of the following is false?", opts: ["Flowers do not exist only for us to be used for our own selfishness", "All flowering plants show sexual reproduction", "Gymnosperms, being nonflowering, do not show sexual reproduction", "Flowers are objects of aesthetic, ornamental, social, religious and cultural value"], ans: 2, exp: "Gymnosperms do not have flowers but they do show sexual reproduction (via cones)." },
+    { q: "5. Microsporangium is generally surrounded by 4 wall layers. Which of the following 3 wall layers perform the function of protection and help in the dehiscence of anther to release the pollen?", opts: ["Epidermis, tapetum, endothecium", "Epidermis, aril, endothecium", "Epidermis, endodermis, mesocarp", "Epidermis, middle layer and endothecium"], ans: 3, exp: "The epidermis, middle layer, and endothecium form the protective layers, with the endothecium helping in dehiscence." },
+    { q: "6. Each cell of sporogenous tissue in anther is -", opts: ["Microspore", "Pollen", "Potential pollen or microspore mother cell", "Megaspore mother cell"], ans: 2, exp: "Sporogenous tissue cells are potential pollen mother cells (microspore mother cells) which undergo meiosis." },
+    { q: "9. Which of the following sequences of development of embryo sac / female gametophyte is correct?", opts: ["Nucleus -> Megaspore -> Embryo sac", "Nucleus -> Megaspore mother cell -> Megaspore -> embryo sac", "Nucleus -> Megasporangium -> Megaspore -> Embryo sac", "Nucleus -> Megagametophyte -> Megaspore -> Embryo sac"], ans: 1, exp: "The correct sequence is Nucellus -> Megaspore mother cell -> Megaspore -> Embryo sac." },
+    { q: "10. Match the Column I with Column II\nColumn I: A. Funicle, B. Hilum, C. Integument, D. Chalaza, E. Nucellus\nColumn II: I. Mass of cells within ovule with more food, II. Basal part of ovule, III. One or 2 protective layers of ovule, IV. Region where body of ovule fuses with funicle, V. Stalk of ovule", opts: ["A-I, B-II, C-III, D-IV, E-V", "A-V, B-IV, C-III, D-II, E-I", "A-IV, B-II, C-I, D-III, E-V", "A-I, B-III, C-V, D-II, E-IV"], ans: 1, exp: "Funicle (V), Hilum (IV), Integument (III), Chalaza (II), Nucellus (I)." },
+    { q: "11. Which of the following is correct about Parthenium (Carrot grass)?", opts: ["Parthenium came into India as a contaminant with imported wheat", "It has become ubiquitous in occurrence", "It causes pollen allergy", "All of the above"], ans: 3, exp: "All statements about Parthenium (Carrot grass) are correct." },
+    { q: "12. In angiosperms pollination occurs when pollen grains are in -", opts: ["2-celled stage", "3-celled stage", "2 or 3 celled stage", "Uninucleate stage"], ans: 2, exp: "Pollen grains are usually shed at the 2-celled stage, but in some plants, they are shed at the 3-celled stage." },
+    { q: "13. Which of the following statements is false?\nI. Pollen grains represents immatured male gametophyte\nII. In angiosperms partially developed male gametophytes are pollinated\nIII. Generative cell is siponogenous while vegetative cell is spermatogenous\nIV. Formation and differentiation of pollen grains is called microsporogenesis\nV. Hay fever is a pollen allergy\nVI. Pollen grains of some plants produce severe allergy and respiratory or bronchial diseases\nVII. Pollen grains are poor in nutrients.", opts: ["I and II", "III, IV and VII", "III and VII", "II and IV"], ans: 2, exp: "Generative cell is spermatogenous (forms sperms), vegetative cell is siphonogenous (forms pollen tube). Pollen grains are rich in nutrients." },
+    { q: "14. Which of the following has the least pollen viability?", opts: ["Cereals like wheat and rice", "Members of Rosaceae", "Members of Leguminoseae", "Members of Solanaceae"], ans: 0, exp: "Pollen viability is very short in cereals like wheat and rice (about 30 minutes)." },
+    { q: "15. In typical embryo sac, the nuclei are arranged as -", opts: ["3 + 2 + 3", "3 + 3 + 2", "2 + 3 + 3", "2 + 4 + 2"], ans: 0, exp: "A typical embryo sac has 8 nuclei arranged as 3 antipodals, 2 polar nuclei (in central cell), and 3 egg apparatus (1 egg + 2 synergids)." },
+    { q: "17. Embryo sac is monosporic when it develops from -", opts: ["One of the four megaspores of a megaspore mother cell (MMC)", "3 megaspores of a megaspore tetrad", "2 megaspores", "The MMC where meiosis has occurred but cytokinesis does not take place"], ans: 0, exp: "Monosporic development means the embryo sac develops from a single functional megaspore out of the four." },
+    { q: "18. For the formation of embryo sac, the megaspore mother cell undergoes -", opts: ["Two meiotic and two mitotic divisions", "One meiotic and three mitotic divisions", "Two meiotic divisions", "One meiotic and two mitotic divisions"], ans: 1, exp: "The MMC undergoes one meiotic division to form a megaspore, which then undergoes three mitotic divisions to form the 8-nucleate embryo sac." },
+    { q: "20. Match Column I with Column II-\nColumn I: A. Megasporogenesis, B. Megaspore, C. Monosporic development, D. Female gametophyte\nColumn II: I. Monosporic development, II. Megaspore mother cell, III. 8-nucleate embryo sac, IV. Functional megaspore", opts: ["A-II, B-IV, C-I, D-III", "A-I, B-II, C-III, D-IV", "A-III, B-I, C-IV, D-II", "A-IV, B-III, C-II, D-I"], ans: 0, exp: "Megasporogenesis (A-II), Megaspore (B-IV), Monosporic development (C-I), Female gametophyte (D-III)." },
+    { q: "21. An interesting modification of flower shape for insect pollination occurs in some orchids in which a male insect mistakes the pattern on the orchid flower for the female of his species and tries to copulate with it, thereby pollinating the flower. This phenomenon is called-", opts: ["Pseudoparthenocarpy", "Mimicry", "Pseudopollination", "Pseudocopulation"], ans: 3, exp: "This specific orchid pollination mechanism is called pseudocopulation." },
+    { q: "22. Pollination by snail and slug is known as-", opts: ["Ornithophily", "Chiropterophily", "Entomophily", "Malacophily"], ans: 3, exp: "Pollination by snails and slugs is called malacophily." },
+    { q: "24. Pollen grains can be stored in liquid nitrogen at -", opts: ["70°C", "100°C", "-196°C", "0°C"], ans: 2, exp: "Pollen grains are stored in liquid nitrogen at -196°C for years in pollen banks." },
+    { q: "25. The viability of pollen grains depends upon -", opts: ["Prevailing temperature", "Prevailing humidity", "Genetic potentiality of the concerned species", "All of the above"], ans: 3, exp: "Pollen viability depends on temperature, humidity, and the genetic potential of the species." },
+    { q: "27. Which of the following points is incorrect about sporopollenin?", opts: ["It is one of the most resistant organic material known", "It can withstand high temperature and strong acids and alkali", "2 enzymes that degrade sporopollenin are known so far", "Pollen grains are well preserved as fossils because of presence of sporopollenin"], ans: 2, exp: "No enzyme that degrades sporopollenin is known so far." },
+    { q: "28. Which of the following sequences is correct for microsporogenesis?", opts: ["Micro S.M.C (2N) -> Microspore tetrad (2N) -> Microspore (N)", "Micro S.M.C (2N) -> Microspore tetrad (N) -> Microspores (N)", "Microspore tetrad (2N) -> Microspores (N)", "Micro S.M.C (2N) -> Microspore tetrad (2N) -> Microspores (2N)"], ans: 1, exp: "Microspore mother cell (2N) undergoes meiosis to form a tetrad of microspores (N), which separate into individual microspores (N)." },
+    { q: "29. The proximal part of filament of stamen is attached to -", opts: ["Thalamus or petal", "Sepals or thalamus", "Pedicel or petiole", "Ovary or ovule"], ans: 0, exp: "The proximal end of the stamen filament is attached to the thalamus or petals." },
+    { q: "32. As the anthers mature and dehydrate, the separate dissociate from each other and develop into", opts: ["Megaspore, embryo sac", "Microspores, pollen grains", "Pollen grains, megaspores", "Megaspores, microspores"], ans: 1, exp: "Microspores dissociate from the tetrad and develop into pollen grains." },
+    { q: "34. The female gametophyte /embryo sac of typical dicot (Polygonum) or monosporic embryo sac is -", opts: ["7-celled and 7-nucleate", "8-celled and 8-nucleate", "7-celled and 8-nucleate", "8-celled and 7-nucleate"], ans: 2, exp: "It is 7-celled (1 egg, 2 synergids, 3 antipodals, 1 central cell) and 8-nucleate (central cell has 2 polar nuclei)." },
+    { q: "35. Geitonogamy is -", opts: ["Functionally cross pollination involving a pollinating agent", "genetically it is similar to autogamy since the pollen grains come from the same plant", "Functionally and genetically autogamy", "Both a and b are correct"], ans: 3, exp: "Geitonogamy is functionally cross-pollination but genetically similar to autogamy." },
+    { q: "36. Which of the following is false about xenogamy?", opts: ["It is the transfer of pollen grains from another to stigma of another plant of the same species", "It produces genetic variation", "It is genetically and ecologically (= functionally) cross pollination", "It occurs in Cleistogamous flowers"], ans: 3, exp: "Cleistogamous flowers are strictly autogamous (self-pollinating) and do not undergo xenogamy." },
+    { q: "37. Autogamy is -", opts: ["Transfer of pollen grains from anther to stigma of the same flower", "transfer of pollen grains from anther to stigma of another flower", "Pollination between two flowers", "Maturation of anther and stigma at different times"], ans: 0, exp: "Autogamy is self-pollination within the same flower." },
+    { q: "38. A monocarpic plant is one which-", opts: ["Has only one carpel", "Flowers and fruits only once in life time and thereafter dies", "Produces only seed", "None of the above"], ans: 1, exp: "Monocarpic plants flower and fruit only once in their lifetime (e.g., bamboo)." },
+    { q: "39. Maturation of male and female sex organ at different times is known as-", opts: ["Herkogamy", "Dichogamy", "Polygamy", "Apogamy"], ans: 1, exp: "Dichogamy is the maturation of male and female reproductive organs at different times to prevent self-pollination." },
+    { q: "40. Embryo sac is also known as-", opts: ["Microgametophyte", "Megagametophyte", "Microsporangium", "Megasporangium"], ans: 1, exp: "The embryo sac is the female gametophyte, also called the megagametophyte." },
+    { q: "41. The term pollination signifies -", opts: ["Dehiscence of anther", "The transfer of pollen grains from anther to stigma", "The transfer of pollen grains from anther to the stigma of the same flower", "Formation of pollinia"], ans: 1, exp: "Pollination is the transfer of pollen grains from the anther to the stigma." },
+    { q: "42. During the formation of embryo sac from megaspore mitotic divisions occurs. These mitotic divisions are -", opts: ["Strictly free nuclear", "Strictly cellular", "Strictly reduction", "Strictly cytoplasmic"], ans: 0, exp: "The mitotic divisions during embryo sac formation are free nuclear (nuclear divisions without immediate cell wall formation)." },
+    { q: "43. Which of the following devices is not used by plants to prevent autogamy -", opts: ["Self-incompatibility", "Production of unisexual flowers", "Heterostyly", "Production of Cleistogamous flowers"], ans: 3, exp: "Cleistogamous flowers ensure autogamy rather than preventing it." },
+    { q: "44. Go through the following statements -\nI. Flowers are bisexual and homogamous maturing anther and stigma of a flower at the same time.\nII. Mechanical devices bringing anthers and stigma close together in a bisexual chasmogamous flower.\nIII. Cleistogamy (bisexual flowers remain closed)\nIV. Anther and stigma of an intersexual flower mature, in bud condition.\nThe above contrivances favour -", opts: ["allogamy", "Autogamy", "Xenogamy", "Cross pollination"], ans: 1, exp: "These devices promote autogamy (self-pollination)." },
+    { q: "45. Pollination occurring in closed flowers is -", opts: ["Bud pollination", "Cleistogamy", "Chasmogamy", "Allogamy"], ans: 1, exp: "Cleistogamy is pollination occurring in closed, unopened flowers." },
+    { q: "46. Cleistogamous flowers produces assured seed-set even in the absence of pollinator - why?", opts: ["Because they have fragrance", "Because they remain open", "Because they are autogamous", "Because they are colourful"], ans: 2, exp: "Cleistogamous flowers are autogamous (self-pollinating) and do not require pollinators." },
+    { q: "47. Egg apparatus of an embryo sac consists of -", opts: ["Egg cell only", "Egg cell + 3 antipodal cells", "One oosphere (egg) + 2 synergids", "One oosphere (egg) + 2 synergids + 2 antipodal cells"], ans: 2, exp: "The egg apparatus consists of one egg cell and two synergids." },
+    { q: "48. Go through the following points.\nI. Dicliny (unisexuality of flower)\nII. Dichogamy (protoandry or protogyny)\nIII. Self sterility / self incompatibility\nIV. Heterostyly\nV. Herkogamy (Barrier between anther and stigma of a bisexual homogamous flower)\nThese are adaptations for -", opts: ["Geitonogamy", "Xenogamy", "Allogamy", "Autogamy"], ans: 2, exp: "These are outbreeding devices that promote allogamy (cross-pollination)." },
+    { q: "49. Subterranean Cleistogamous and geophilous flowers occur in-", opts: ["Viola", "Commelina", "Ficus bengalensis", "Anthocephalus"], ans: 0, exp: "Viola produces both chasmogamous (aerial) and cleistogamous (subterranean) flowers." },
+    { q: "50. The root cell of wheat plant has 42 chromosomes what would be the number of chromosomes in the synergid cell", opts: ["7", "14", "21", "28"], ans: 2, exp: "Root cell is diploid (2n=42). Synergid is haploid (n=21)." },
+    { q: "51. 8 nucleated embryo sacs are-", opts: ["monoploid only", "Bisporic only", "Tetrasporic only", "Any of these"], ans: 3, exp: "8-nucleate embryo sacs can develop from monosporic, bisporic, or tetrasporic types." },
+    { q: "52. Contrivance for self-pollination/autogamy is -", opts: ["Homogamy", "bisexuality", "Cleistogamy", "All"], ans: 3, exp: "Homogamy, bisexuality, and cleistogamy all favor self-pollination." },
+    { q: "53. The ploidy levels of the cells of the nucellus, MMC, the functional megaspore and female gametophyte -", opts: ["2N, N, 2N, N", "N, N, 2N, N", "2N, 2N, N, N", "N, 2N, 2N, N"], ans: 2, exp: "Nucellus (2N), MMC (2N), Functional megaspore (N), Female gametophyte/Embryo sac (N)." },
+    { q: "54. Chasmogamy is pollination in -", opts: ["Bud condition", "Closed flowers", "Unrelated flowers", "Opened flowers"], ans: 3, exp: "Chasmogamy refers to pollination in opened flowers." },
+    { q: "55. Which of the following plants produce(s) chasmogamous and Cleistogamous flowers?", opts: ["Viola (Common pansy)", "Oxalis", "Commelina", "All"], ans: 3, exp: "Viola, Oxalis, and Commelina all produce both types of flowers." },
+    { q: "57. The process whereby a perfect flower is pollinated by its pollen is called -", opts: ["Allogamy", "Autogamy", "Xenogamy", "Hydrogamy"], ans: 1, exp: "Autogamy is self-pollination within the same flower." },
+    { q: "58. Transfer of pollen grains from anther to the stigma of another flower of same plant is -", opts: ["Geitonogamy", "Xenogamy", "Autogamy", "Cleistogamy"], ans: 0, exp: "Geitonogamy is pollination between two flowers of the same plant." },
+    { q: "59. The development of fruit without fertilisation is -", opts: ["Parthenogenesis", "Parthenocarpy", "Apomixis", "Apogamy"], ans: 1, exp: "Parthenocarpy is the development of a fruit without fertilization (seedless fruit)." },
+    { q: "60. Which type of association is found in between entomophilous flower and pollinating agent-", opts: ["Mutualism", "Commensalism", "Cooperation", "None of these"], ans: 0, exp: "The relationship is mutualistic, as both the flower (gets pollinated) and insect (gets nectar/pollen) benefit." },
+    { q: "61. In nature, allogamy is met within - surely-", opts: ["unisexual flowers", "Neuter flowers", "Underground flowers", "Bisexual flower"], ans: 0, exp: "Allogamy (cross-pollination) is guaranteed in unisexual flowers where male and female parts are on different flowers." },
+    { q: "62. In Tapegrass (Vallisneria) -", opts: ["The female flower reach the surface of water by long stalk and male flowers / pollen grains are released on to the surface", "Monoeicism is found", "Pollen grains or flowers are actively carried by water current", "All the above are correct"], ans: 0, exp: "In Vallisneria, female flowers reach the surface by a long stalk, and male flowers release pollen on the surface." },
+    { q: "63. I. Flowers are small. They are often packed in inflorescence\nII. Flowers are colourless, nectarless and odourless\nIII. Well exposed stamens\nIV. Pollen grains - produced in large number, light, non-sticky\nV. Flowers often have a single ovule in each ovary\nVI. Stigma - large, often feathery.\nThe above contrivances favour-", opts: ["Self pollination", "Anemophily (pollination by wind)", "Ornithophily (pollination by birds)", "Entomophily (pollination by insects)"], ans: 1, exp: "These are typical adaptations for wind pollination (anemophily)." },
+    { q: "64. Anthesis is a phenomenon which refers to-", opts: ["Formation of pollen", "Development of anther", "Opening of flower bud", "Reception of pollen"], ans: 2, exp: "Anthesis is the opening of a flower bud." },
+    { q: "65. Plants of which of these groups are pollinated by the same agency-", opts: ["Triticum, Cocos, Mangifera", "Ficus, Kigelia, Casuarina", "Salvia, Mocus, Euphorbia", "Bombax, Butea, Bactiria"], ans: 0, exp: "Triticum (wheat), Cocos (coconut), and Mangifera (mango) are all wind-pollinated (anemophilous)." },
+    { q: "67. Which of the following statements is correct.", opts: ["Majority of plants use biotic agents for pollination", "Pollination by wind is more common among abiotic pollinators", "Pollination by water is quite rare in flowering plants", "All"], ans: 3, exp: "All these statements are correct." },
+    { q: "69. Which of the following statements is false?\nI. Vallisneria and Hydrilla are fresh water plants while sea-grasses (e.g. Zostera) are marine plant.\nII. Vallisneria is epihydrophilous while Zostera is hypohydrophilous.\nIII. Pollination in water lily / Lotus (Nymphaea) and Eichhornia (water hyacinth) takes place by insects.\nIV. In majority of aquatic plants flowers emerge above the level of water and are pollinated by insects or wind.\nV. In most of the water pollinated species, pollen grains are protected from wetting due to absence of mucilaginous covering.\nVI. In hydrophilous plants pollen grains are spherical", opts: ["All", "None", "VI", "IV"], ans: 0, exp: "Statement V is false (they have mucilaginous covering), and statement VI is false (pollen grains are often ribbon-like, not spherical). Therefore, 'All' is the intended answer if we consider the false statements, but wait, the question asks for 'false', so it might be 'All' as in 'All are false statements'? Actually, looking at the options, it seems the question is flawed, but V is definitely false. Let's assume it asks for 'Which of the following is false' and the answer is 'None' because I, II, III, IV are correct, V is false, VI is false. The provided answer key says 'All', meaning all are false, which is incorrect for I, II, III, IV. Let's stick to the key's 'All' but logically it's a flawed question. I will put 'All' as per key)." },
+    { q: "70. Which of the following is false?", opts: ["Wind-pollination is quite common in grasses", "Hydrophily is limited to about 30 genera mostly monocots", "Both wind and water pollinated flowers are not very colourful and do not produce nectar", "None of the above"], ans: 3, exp: "All statements A, B, and C are correct." },
+    { q: "71. Match List I with List II and select the correct option.\nList-I: A. Gemmules, B. Leaf buds, C. Bulbil, D. Offset, E. Conidia\nList-II: 1. Agave, 2. Penicillium, 3. Water hyacinth, 4. Sponges, 5. Bryophyllum", opts: ["A-4, B-5, C-1, D-3, E-2", "A-4, B-3, C-2, D-1, E-5", "A-3, B-5, C-4, D-2, E-1", "A-4, B-1, C-5, D-3, E-2"], ans: 0, exp: "Gemmules-Sponges, Leaf buds-Bryophyllum, Bulbil-Agave, Offset-Water hyacinth, Conidia-Penicillium." },
+    { q: "72. All of the following include outbreeding devices except -", opts: ["Unisexuality of flowers, self-incompatibility", "Pollen release and stigma receptivity are not synchronized", "Anthers and stigma are placed at different position", "Bisexuality, homogamy, cleistogamy"], ans: 3, exp: "Bisexuality, homogamy, and cleistogamy are contrivances for autogamy (inbreeding), not outbreeding." },
+    { q: "73. I. Flowers are usually large, colourful, fragrant\nII. Pollen grains are produced in large number\nIII. Pollen grains are light in weight and non-sticky\nIV. Sticky pollen grains\nV. Stigma rough and sticky\nVI. Stigma is feathery\nWhich of the above characters favour entomophily?", opts: ["II, IV, V", "I, II, III", "III, IV, V", "I, IV, V"], ans: 3, exp: "Entomophilous flowers are large, colourful, fragrant (I), have sticky pollen (IV), and sticky stigmas (V)." },
+    { q: "74. Which of the following would not have an effect on flowering of a particular plant species?", opts: ["Plant age", "Nutritional status", "Temperature", "Prevailing wind"], ans: 3, exp: "Prevailing wind does not directly affect the internal physiological process of flowering." },
+    { q: "75. Choose the mismatched options-", opts: ["Wind-pollination : Anemophily", "Insects-Salvia : Entomophily", "Water-pollination : Hydrophily", "Birds-pollination : Chiropterophily"], ans: 3, exp: "Bird pollination is called Ornithophily, while Chiropterophily is pollination by bats." },
+    { q: "76. Self-incompatibility - \nI. Is a device to prevent inbreeding.\nII. Provides a biochemical block to self-fertilization.\nIII. Ensures cross-fertilization.\nIV. Is governed by pollen-pistil interaction\nV. Is governed by series of multiple alleles.\nVI. Prevents self pollen (from the same flower or other flowers of the same plant) from fertilizing the ovules by inhibiting pollen germination or pollen tube growth in the pistil.", opts: ["I, II, III, IV, V, VI", "I, II, III", "I, II, V, VI", "All"], ans: 3, exp: "All the given statements about self-incompatibility are correct." },
+    { q: "77. Majority of flowering plants-", opts: ["Produce hermaphrodite flowers", "Are dioecious", "Show self-pollination", "Show autogamy"], ans: 0, exp: "Most flowering plants produce bisexual (hermaphrodite) flowers." },
+    { q: "78. Which of the following is the tallest flower?", opts: ["Vallisneria", "Lotus", "Amorphophallus", "Zostera"], ans: 2, exp: "Amorphophallus has the tallest flower (inflorescence) in the world." },
+    { q: "79. Which of the following pairs has haploid number of chromosomes", opts: ["Nucellus and Antipodal cells", "Egg nucleus and secondary nucleus", "Megaspore mother cell and Egg nucleus", "Egg cell and antipodal cells"], ans: 3, exp: "Egg cell (n) and antipodal cells (n) are both haploid." },
+    { q: "80. A plant that is self-incompatible has a genotype of S5S9 for S-locus. It receives pollen from a plant that is S3S9. Which of the following is most likely to occur?", opts: ["All of the pollen will germinate, forming pollen tubes", "None of the pollen will germinate", "About half of the pollen will germinate", "Fertilization will occur in about pollinated plant"], ans: 2, exp: "The S9 allele in the pollen will be rejected by the S9 allele in the stigma. The S3 pollen will germinate." },
+    { q: "82. Unisexuality of flower prevents -", opts: ["Geitonogamy but not xenogamy", "Autogamy but not geitonogamy", "Autogamy and geitonogamy", "Both geitonogamy and xenogamy"], ans: 2, exp: "Unisexual flowers (dicliny) prevent both autogamy (same flower) and geitonogamy (same plant) by physically separating male and female parts." },
+    { q: "83. Which of the following are usual floral rewards to pollinating animals?", opts: ["Shelter and pollen grains", "Shelter and fragrance", "Nectar and pollen grains", "Nectar and fragrance"], ans: 2, exp: "Nectar and pollen grains are the primary floral rewards for pollinators." },
+    { q: "84. Moth (Pronuba / Tegaticula) passes its larval stage in plant pollinated by it. The plant is", opts: ["Ficus", "Tagetes", "Cosmos", "Yucca"], ans: 3, exp: "The Yucca moth (Pronuba) and Yucca plant have an obligate mutualistic relationship." },
+    { q: "85. The most common type of pollination is -", opts: ["Entomophily", "Ornithophily", "Malacophily (by snails)", "Chiropterophily (by bats)"], ans: 0, exp: "Entomophily (pollination by insects) is the most common type of pollination." },
+    { q: "86. Long silky hair coming out of the cob of maize are-", opts: ["Meant for fruit dispersal", "Meant for attracting insects", "Meant for protecting seeds", "Long styles and stigma"], ans: 3, exp: "The long silky threads are styles and stigmas to catch wind-borne pollen." },
+    { q: "87. Find out the correct option -", opts: ["Among animals, insects, particularly bees are the dominant biotic pollinating agents", "Often flowers of animal-pollinated plants are specially adapted for particular species of animals", "In some species floral rewards like edible nectar, pollen grains, shelter for egg laying are given to pollinating animals", "All"], ans: 3, exp: "All the given statements are correct." },
+    { q: "89. In which part of a flower do both meiosis and fertilization occur?", opts: ["Ovary", "Anther", "Stigma", "Style"], ans: 0, exp: "Meiosis occurs in the ovule (inside ovary) to form the egg, and fertilization also occurs in the ovule." },
+    { q: "91. What is the genetic importance of outcrossing?", opts: ["Outcrossing is a characteristic of pollinators", "Outcrossing increases genetic diversity in a population", "Outcrossing increases the chances of sterility", "Outcrossing promotes inbreeding in a population"], ans: 1, exp: "Outcrossing (cross-pollination) creates new combinations of genes, increasing genetic diversity." },
+    { q: "92. Repeated self pollination over the generations produces -", opts: ["New varieties", "Better progenies", "Inbreeding depression", "Elimination of weak traits"], ans: 2, exp: "Continuous self-pollination leads to inbreeding depression." },
+    { q: "93. Which of the following plants provide floral rewards to their pollinating agents -", opts: ["Zostera and Vallisneria", "Hydrilla and Commelina", "Amorphophallus and Yucca", "Sugarcane and Pisum"], ans: 2, exp: "Amorphophallus and Yucca provide rewards like food or shelter to their specific pollinators." },
+    { q: "94. An obligate association between flower and pollinating agent is found in -", opts: ["Yucca", "Maize", "Cosmos", "Avena"], ans: 0, exp: "Yucca and its moth pollinator have an obligate mutualistic relationship." },
+    { q: "95. Seedless banana is-", opts: ["Parthenocarpic fruit", "Multiple fruit", "Seven celled", "Eight celled"], ans: 0, exp: "Seedless banana is a parthenocarpic fruit, developed without fertilization." },
+    { q: "96. Double fertilisation involves,", opts: ["Fertilisation of the egg by two male gametes", "Fertilisation of two egg in the same embryo sac by two sperms brought by one pollen tube", "Fertilisation of the egg and the central cell by two sperms brought by different pollen tubes", "fertilisation of the egg and central cell by two sperms brought by the same pollen tube"], ans: 3, exp: "Double fertilization involves the fusion of one male gamete with the egg and the other with the two polar nuclei, both brought by the same pollen tube." },
+    { q: "97. Select the correct order of endosperm types.", opts: ["Cellular, helobial, free nuclear", "Cellular, free nuclear, Helobial", "Helobial, free nuclear, cellular", "Free nuclear, cellular, helobial"], ans: 3, exp: "The correct sequence is Free nuclear -> Cellular -> Helobial." },
+    { q: "98. In castor and maize autogamy is prevented but geitonogamy occurs because -", opts: ["Plants are dioecious", "Plants are unisexual", "Flowers are bisexual", "Flowers are unisexual"], ans: 3, exp: "Castor and maize have unisexual flowers (monoecious), which prevents autogamy but allows geitonogamy." },
+    { q: "99. Endosperm of the seed develops from-", opts: ["Haploid nucleus", "Triploid nucleus", "gymnosperms", "Angiosperms"], ans: 1, exp: "In angiosperms, the endosperm develops from the triploid primary endosperm nucleus (PEN)." },
+    { q: "101. Which of the following options is correct?", opts: ["Pollination gives the guarantee of the promotion of post-pollination events that lead to fertilization", "The events- 'from pollen deposition on stigma until pollen tubes enter the ovule' are together referred to as pollen-pistil interaction", "Pollen-pistil interaction is a dynamic process involving pollen recognition followed by only promotion (not rejection) of the pollen", "Pistil has no ability to recognise the pollen, whether right or wrong type."], ans: 1, exp: "Pollen-pistil interaction includes all events from pollen landing on the stigma to the pollen tube entering the ovule." },
+    { q: "102. Total number of nuclei involved in double fertilization is -", opts: ["2", "3", "4", "5"], ans: 3, exp: "Double fertilization involves 5 nuclei: 2 male gametes, 1 egg nucleus, and 2 polar nuclei." },
+    { q: "103. Double fertilization is unique to", opts: ["Pteridophytes", "Bryophytes", "Gymnosperms", "Angiosperms"], ans: 3, exp: "Double fertilization is a unique feature of angiosperms." },
+    { q: "104. Entry of the pollen tube through the micropyle is-", opts: ["Anisogamy", "misogamy", "porogamy", "chalazogamy"], ans: 2, exp: "Entry of the pollen tube through the micropyle is called porogamy." },
+    { q: "105. Emasculation is not required when flowers are -", opts: ["Bisexual", "Intersexual", "Unisexual", "Either a or b"], ans: 2, exp: "Emasculation (removal of anthers) is not needed in unisexual flowers (only female flowers are used)." },
+    { q: "107. A homogamous tall pistillate plant (TT) is crossed with homogamous dwarf staminate plant (tt). What is the genotype of endosperm?", opts: ["TT", "TTt", "Tt", "ttt"], ans: 1, exp: "Endosperm is triploid (3n). Female parent contributes 2 polar nuclei (T and T), male contributes 1 sperm (t). So, TT + t = TTt." },
+    { q: "108. Pollen tube enters the embryo sac usually -", opts: ["By penetrating egg cell", "Through one degenerated synergid", "By destroying antipodal cells", "Between persistent synergid and central cell"], ans: 1, exp: "The pollen tube usually enters the embryo sac through one of the synergids, which degenerates after entry." },
+    { q: "111. The ability of the pistil to recognise the pollen followed by its acceptance or rejection is the result of a continuous dialogue between pollen grain and the pistil. This dialogue is mediated by chemical components of the pollen interacting with those of the pistil. Which of the following chemicals mainly takes part in the interaction -", opts: ["Nucleotides", "Proteins", "Minerals", "Lipids"], ans: 1, exp: "Proteins (like lectins and glycoproteins) are the main chemicals involved in pollen-pistil recognition." },
+    { q: "112. The role of double fertilization in angiosperms is to produce-", opts: ["Cotyledon", "Endocarp", "Endosperm", "Hormones"], ans: 2, exp: "Double fertilization results in the formation of the endosperm, which nourishes the developing embryo." },
+    { q: "113. Which of the following is correct?", opts: ["Double fertilization - characteristic of angiosperms", "Double fertilization or triple fusion was discovered by Nawaschin", "Pollen tube shows tip growth and chemotropic movement", "All"], ans: 3, exp: "All the given statements are correct." },
+    { q: "114. Coffee plant has chromosome no. of '2n' in its somatic cells, what is the chromosome number in the edible part of coffee seed.", opts: ["n", "2n", "3n", "4n"], ans: 1, exp: "The edible part of the coffee seed is the perisperm (2n). Endosperm is 3n but the edible part is perisperm." },
+    { q: "115. Through which cell of the embryo sac does the pollen tube enter the embryo sac", opts: ["Egg cell", "Central cell", "Persistent synergid", "Degenerated synergid"], ans: 3, exp: "The pollen tube enters through a degenerated synergid." },
+    { q: "118. After triple fusion central cell changes into -", opts: ["Embryo", "Embryo sac", "Primary endosperm cell (PEC)", "Primary endosperm nucleus"], ans: 2, exp: "The central cell after triple fusion becomes the Primary Endosperm Cell (PEC), which develops into the endosperm." },
+    { q: "119. Fertilization is depicted by the condition -", opts: ["N -> 2N", "2N -> N", "2N -> 4N", "4N -> 2N"], ans: 0, exp: "Fertilization is the fusion of two haploid (N) gametes to form a diploid (2N) zygote." },
+    { q: "120. In double fertilization total number of male nuclei and total number of female nuclei involved are-", opts: ["3, 2 respectively", "2, 3 respectively", "2, 2 respectively", "3, 3 respectively"], ans: 1, exp: "2 male nuclei (sperms) and 3 female nuclei (1 egg + 2 polar nuclei) are involved." },
+    { q: "121. The cells of endosperm have 24 chromosomes. What will be number of chromosomes in the gametes -", opts: ["8", "16", "72", "24"], ans: 0, exp: "Endosperm is 3n = 24, so n = 8. Gametes are haploid (n = 8)." },
+    { q: "123. Which one of the following produces both enzymes and hormones-", opts: ["Tapetum", "Endothecium", "Middle layers", "Epidermis"], ans: 0, exp: "The tapetum nourishes the developing pollen and produces enzymes and hormones." },
+    { q: "124. Which of the following is false about emasculation?", opts: ["During emasculation process, stigma is removed.", "Emasculated flowers are bagged in order to prevent self-pollination", "Emasculation is the removal of stamens before maturation of selected bisexual flowers", "It is one of the steps for artificial hybridization"], ans: 0, exp: "Emasculation is the removal of anthers, not the stigma." },
+    { q: "127. Albuminous / endospermic seeds are -", opts: ["Coconut, castor, sunflower", "Bean, pea", "Groundnut, pea", "None"], ans: 0, exp: "Coconut, castor, and sunflower are albuminous seeds (retain endosperm)." },
+    { q: "128. In coconut liquid nuclear endosperm is surrounded by white kernel which is -", opts: ["Integument/seed coat", "Cellular endosperm", "Helobial endosperm", "fibrous mesocarp"], ans: 1, exp: "The white edible kernel of coconut is cellular endosperm." },
+    { q: "129. Which of the following is false?\nI. Endosperm formation starts prior to first division of zygote\nII. Angiospermic endosperm is mostly 3N while gymnospermic one is N.\nIII. The most common type of endosperm is nuclear.\nIV. Coconut has both liquid nuclear (multinucleate) and cellular endosperm.\nV. Milky water of green tender coconut is liquid female gametophyte.", opts: ["I and II only", "III only", "V only", "II only"], ans: 2, exp: "Milky water of green coconut is liquid endosperm, not female gametophyte." },
+    { q: "130. The study of formation, growth and development of new individual from an egg is called -", opts: ["Embryology", "Embryogenesis", "Morphogenesis", "Embryolysis"], ans: 0, exp: "Embryology is the study of embryos and their development." },
+    { q: "131. Endosperm is completely consumed by developing embryo before seed maturation or exalbuminous / nonendospermic seeds are found in -", opts: ["Pea, ground nut, beans", "Coconut, castor", "Maize, wheat", "Coconut, Wheat"], ans: 0, exp: "Pea, groundnut, and beans are non-endospermic (exalbuminous) seeds." },
+    { q: "134. During germination, micropyle of seed takes part in -", opts: ["Forming weak point for emergence of radicle", "Entry of water and oxygen", "passage of gases", "Leaching inhibitors"], ans: 1, exp: "The micropyle allows the entry of water and oxygen into the seed during germination." },
+    { q: "135. Which plant part has two generations, one within the other is -", opts: ["Embryo", "Germinated pollen grain", "Unfertilized ovule", "Seed"], ans: 3, exp: "A seed contains the embryo (next generation) within the seed coat (parent generation)." },
+    { q: "136. Aleurone layer takes part in -", opts: ["Protection of delicate embryo", "Enzyme synthesis", "Transfer of food to cotyledons", "Is also called scutellum"], ans: 1, exp: "The aleurone layer synthesizes enzymes (like amylase) during germination to digest endosperm." },
+    { q: "137. Which of the following statements is correct?", opts: ["Parthenocarpic fruits (seedless fruits) develop without fertilization e.g. banana.", "Parthenocarpy can be induced by hormones", "Seed is the basis of our agriculture", "All"], ans: 3, exp: "All the given statements are correct." },
+    { q: "138. Germination of pollen grains on the stigma is-", opts: ["Autogamy", "in situ germination", "in vitro germination", "in vivo germination"], ans: 1, exp: "Germination of pollen on the stigma is in situ (in the natural place) germination." },
+    { q: "139. Match the Column I with Column II -\nColumn I: A. Ovary, B. Ovule, C. Wall of ovary, D. Fleshy fruit, E. Dry fruits\nColumn II: I. Groundnut, mustard, II. Guava, orange, mango, III. Pericarp, IV. Seed, V. Fruit", opts: ["A-V, B-IV, C-III, D-II, E-I", "A-I, B-II, C-III, D-IV, E-V", "A-I, B-II, C-IV, D-IV, E-V", "A-V, B-IV, C-I, D-II, E-III"], ans: 0, exp: "Ovary (V), Ovule (IV), Wall of ovary (III), Fleshy fruit (II), Dry fruits (I)." },
+    { q: "140. In citrus, a seed has 10 embryos. Out of 10 embryos -", opts: ["One is normal and 9 are adventive, mostly nucellar embryos", "One is adventive, mostly nucellar and 9 are normal embryos", "5 are nucellar and 5 are normal embryos", "One is normal and 9 are monozygotic embryos"], ans: 0, exp: "Citrus seeds show polyembryony, with one zygotic embryo and many nucellar (adventive) embryos." },
+    { q: "141. Perisperm differs from endosperm in-", opts: ["Having no reserve food", "Being a diploid tissue", "Its formation by fusion of secondary nucleus with several sperms", "Being a haploid tissue"], ans: 1, exp: "Perisperm is a diploid (2n) tissue (remnant of nucellus), while endosperm is triploid (3n)." },
+    { q: "142. Which one of the following statements is correct?", opts: ["Hard outer layer of pollen is called intine", "Sporogenous tissue is haploid", "Endothecium produces the microspores", "Tapetum nourishes the developing pollen"], ans: 3, exp: "The tapetum nourishes the developing pollen grains." },
+    { q: "143. What would be number of chromosomes of aleurone cells of plant with 42 chromosome in its root tip cells?", opts: ["42", "63", "84", "21"], ans: 1, exp: "Root tip is 2n=42. Aleurone is triploid (3n) = 63." },
+    { q: "144. What is common between vegetative reproduction and Apomixis?", opts: ["Both occur round the year", "Both produces progeny identical to the parent", "Both are applicable to only dicot plants", "Both bypass the flowering phase"], ans: 1, exp: "Both asexual reproduction and apomixis produce clones (genetically identical offspring)." },
+    { q: "145. Active research is going on in many laboratories around the world to understand the genetics of apomixis. What is the purpose of such active research?", opts: ["Hybrid plants are directly formed by apomixis", "Apomixis is the method to produce seed without fertilization", "To transfer apomictic genes into hybrid varieties which will prevent loss of hybrid vigour with successive years", "Apomixis produces genetically different individuals"], ans: 2, exp: "Transferring apomixis genes to hybrid crops would allow farmers to save seeds without losing hybrid vigour." },
+    { q: "146. In most plants; the fruit develops from the ovary, other parts degenerate and fall off such fruits are called-", opts: ["False fruits", "True fruits", "parthenocarpic fruit", "None of the above"], ans: 1, exp: "Fruits that develop solely from the ovary are called true fruits." },
+    { q: "147. An example of a seed with endosperm, perisperm and caruncle is -", opts: ["Castor", "Coffee", "Lily", "Cotton"], ans: 0, exp: "Castor seed has endosperm, perisperm, and a caruncle." },
+    { q: "148. In some seeds like black pepper and beet, remnants of nucellus are present. This residual, persistent nucellus is called-", opts: ["Aleurone layer", "Endothelium", "Perisperm", "Obturator"], ans: 2, exp: "The persistent nucellus is called perisperm." },
+    { q: "149. Embryos of monocotyledons possess only one A. In the grass family the cotyledon is called B that is situated towards one side (lateral) of the embryonal axis. At its lower end, the embryonal axis has the radical and root cap enclosed in an undifferentiated sheath called C. The portion of the embryonal axis above the level of attachment of scutellum is the D which has a shoot apex enclosed in a foliar structure called E.", opts: ["A - cotyledon, B - scutellum, C - coleorrhiza, D - epicotyl, E - coleoptile", "A - scutellum, B - cotyledon, C - coleorrhiza, D - epicotyl, E - coleoptile", "A - cotyledon, B - scutellum, C - coleorrhiza, D - hypocotyl, E - coleoptile", "A - cotyledon, B - scutellum, C - coleoptile, D - epicotyl, E - coleorrhiza"], ans: 0, exp: "A: cotyledon, B: scutellum, C: coleorrhiza, D: epicotyl, E: coleoptile." },
+    { q: "151. Endosperm in angiosperms is formed from secondary nucleus -", opts: ["After fertilization but prior to embryogenesis", "Before fertilization but after embryogenesis", "As post-fertilized and post-embryogenetic tissue", "As pre-fertilized and pre-embryogenetic tissue"], ans: 0, exp: "Endosperm formation occurs after fertilization, often before the first division of the zygote." },
+    { q: "152. In a fertilized ovule, n, 2n and 3n conditions occur respectively in -", opts: ["antipodals, egg, endosperm", "megaspore mother cell, nucellus, endosperm", "egg, nucellus, microspore", "endosperm, micropyle, egg"], ans: 0, exp: "Antipodals (n), egg (n) - wait, egg is n. Endosperm is 3n. Nucellus is 2n. So antipodals (n), nucellus (2n), endosperm (3n). Option A has antipodals (n), egg (n), endosperm (3n) which is n, n, 3n. Option B has MMC (2n), nucellus (2n), endosperm (3n). The question asks for n, 2n, 3n respectively. So egg(n), nucellus(2n), endosperm(3n). The closest is none, but antipodals(n), nucellus(2n), endosperm(3n) is not there. Let's re-read A: antipodals (n), egg (n), endosperm (3n). B: MMC (2n), nucellus (2n), endosperm (3n). The correct answer should be n, 2n, 3n, which is not perfectly matched, but B has MMC (2n) which is wrong. Actually, in option A, if we consider 'egg' as 2n? No. Let's check the key. The key says A." },
+    { q: "153. Father of Indian embryology is-", opts: ["P. Maheshwari", "Swaminathan", "R. Misra", "Butler"], ans: 0, exp: "Prof. P. Maheshwari is known as the Father of Indian Embryology." },
+    { q: "154. For artificial hybridisation experiment in bisexual flower, which of the sequences is correct?", opts: ["Bagging -> Emasculation -> Cross pollination -> Rebagging", "Emasculation -> Bagging -> Cross pollination -> Rebagging", "Cross pollination -> Bagging -> Emasculation -> Rebagging", "Self-pollination -> Bagging -> Emasculation -> Rebagging"], ans: 1, exp: "The correct sequence is Emasculation -> Bagging -> Cross pollination -> Rebagging." },
+    { q: "155. The purpose of bagging an emasculated flower in artificial hybridisation programme is", opts: ["To prevent intrafloral pollination", "To prevent self-pollination (from the pollen of the same flower)", "To prevent contamination of its stigma with unwanted pollen", "For rebagging"], ans: 2, exp: "Bagging prevents contamination of the stigma by unwanted (foreign) pollen." },
+    { q: "157. Maize grain is a-", opts: ["seed", "Ovule", "embryo", "fruit"], ans: 0, exp: "Maize grain is a single-seeded fruit (caryopsis) where the seed coat is fused with the fruit wall, commonly called a seed." },
+    { q: "158. Which are the external conditions required for seed germination-", opts: ["Oxygen, carbon dioxide and suitable temperature", "Oxygen, light and suitable temperature", "Light, moisture and suitable temperature", "Oxygen, moisture and suitable temperature"], ans: 3, exp: "Seeds require oxygen, water (moisture), and a suitable temperature for germination." },
+    { q: "159. Which of the following is false?", opts: ["The storage tissue of rice and other cereal grains, is endosperm", "Outermost layer of endosperm of maize grain is Aleurone layer", "Aleurone layer of maize grain is specially rich in proteins", "The transformation of ovules into seeds and ovary into fruit does not proceed simultaneously"], ans: 3, exp: "The transformation of ovules into seeds and ovary into fruit proceeds simultaneously." },
+    { q: "160. The world's oldest viable seed, excavated from Arctic Tundra is of -", opts: ["Phoenix dactylifera", "Calotropis", "Lupine (Lupinus)", "Victoria"], ans: 2, exp: "The oldest viable seed is of Lupinus arcticus, excavated from Arctic Tundra." },
+    { q: "161. Hybrid seeds have to be produced every year because -", opts: ["Hybrid plants become sterile in coming years", "They show more heterosis in coming years", "Hybrid vigour is not maintained beyond one generation as segregation of genes begins in the second generation", "Hybrid seed industry tends to increase cost of the seeds"], ans: 2, exp: "Hybrid vigour (heterosis) is lost in the next generation due to segregation of genes." },
+    { q: "162. An organic substance that can withstand environmental extremes and cannot be degraded by any enzyme is:", opts: ["Cuticle", "Sporopollenin", "Lignin", "Cellulose"], ans: 1, exp: "Sporopollenin is highly resistant and no enzyme can degrade it." },
+    { q: "163. Wind pollination is common in", opts: ["Orchids", "Legumes", "Lilies", "Grasses"], ans: 3, exp: "Wind pollination (anemophily) is very common in grasses." },
+    { q: "164. Even in absence of pollinating agents seed setting is assured in", opts: ["Commelina", "Zostera", "Salvia", "Fig"], ans: 0, exp: "Commelina produces cleistogamous flowers, which are self-pollinated even without pollinators." },
+    { q: "165. Which of the following statements is true-", opts: ["Endothecium lies behind epidermis", "Fusion of egg with male gamete is called apogamy", "synergids are lipoid", "The point at which funicle touches the ovule is called hilum"], ans: 3, exp: "The point of attachment of the funicle to the ovule body is called the hilum." },
+    { q: "167. Collar like outgrowth that arises from the base of the ovule and forms a sort of third integument is called-", opts: ["caruncle", "aril", "operculum", "funiculus"], ans: 1, exp: "An aril is an outgrowth from the funicle or base of the ovule." },
+    { q: "168. False fruits (thalamus also contributes to fruit formation) are found in -", opts: ["Apple and pear", "Strawberry", "Cashewnut", "All"], ans: 3, exp: "Apple, pear, strawberry, and cashew are all examples of false fruits." },
+    { q: "169. Which of the following is not correct?", opts: ["As the seed matures, its water content is reduced and seeds become relatively dry(10-15% moisture by mass)", "The seed dormancy is the internal or innate inhibition of generation of normal or viable seeds", "Embryo in dormant seed shows higher rate of general metabolic rate", "Because of dormancy seeds remain viable for longer period and can be stored"], ans: 2, exp: "In dormant seeds, the metabolic rate is very low, not higher." },
+    { q: "170. Seed dormancy allows the plants to-", opts: ["Overcome unfavourable climatic conditions", "Develop healthy seeds", "Reduce viability", "Prevent deterioration of seeds"], ans: 0, exp: "Dormancy helps seeds survive unfavorable conditions." },
+    { q: "172. What is the function of germ pore?", opts: ["Emergence of radicle", "Absorption of water for seed germination", "Initiation of pollen tube", "Release of male gametes"], ans: 2, exp: "The germ pore is the area on the pollen grain exine from which the pollen tube emerges." },
+    { q: "173. The gynoecium consists of many free pistils in flowers of", opts: ["Aloe", "Tomato", "Papaver", "Michelia"], ans: 3, exp: "Michelia has an apocarpous gynoecium (free pistils)." },
+    { q: "174. Which of the sequences is correct for embryogenesis in dicots?", opts: ["Zygote -> Globular stage -> Proembryo -> Heart shaped stage -> Matured embryo", "Zygote -> Heart shaped stage -> Globular stage -> Matured embryo", "Zygote -> Proembryo -> Globular stage -> Heart shaped stage -> Matured embryo", "Zygote -> Globular stage -> Heart shaped stage -> Proembryo -> Matured embryo"], ans: 2, exp: "The correct sequence is Zygote -> Proembryo -> Globular -> Heart-shaped -> Mature embryo." },
+    { q: "175. Nuclear or cellular nature of endosperm can be known at a -", opts: ["Mature stage", "Cordate stage of embryo", "First and subsequent divisions of PEN", "beginning of divisions in embryo"], ans: 2, exp: "The type of endosperm development is determined by the initial divisions of the Primary Endosperm Nucleus (PEN)." },
+    { q: "176. An ovule has generally how many embryo sac?", opts: ["1", "3", "4", "8"], ans: 0, exp: "Typically, an ovule contains a single embryo sac." },
+    { q: "178. Micropyle is found in", opts: ["Seed", "Ovule", "Both ovule and seed", "Fruit"], ans: 2, exp: "The micropyle is present in both the ovule and the resulting seed." },
+    { q: "179. Microspore Mitosis -> Generative Cell Mitosis -> 2 male gametes. Which of the following cells has more food and a large irregular shaped nucleus?", opts: ["Vegetative cell", "Generative cell", "Microspore", "Either Vegetative cell or Generative cell"], ans: 0, exp: "The vegetative cell is larger, has abundant food reserve, and an irregularly shaped nucleus." },
+    { q: "180. The inner wall of pollen grain -", opts: ["Is thin, continuous and pectocellulosic and is called intine", "Comes out in the form of pollen tube through germpore", "Is thick and consists of sporopollenin", "a and b"], ans: 3, exp: "The intine is the inner thin wall (pectocellulosic) that emerges as the pollen tube." },
+    { q: "181. The first division in a pollen grain results in formation of -", opts: ["a larger vegetative cell and smaller generative cell", "a larger generative cell and smaller vegetative cell", "2 equal cells", "4 male gametes"], ans: 0, exp: "The microspore divides mitotically to form a large vegetative cell and a small generative cell." },
+    { q: "182. Pollen grain has prominent apertures called where sporopollenin is", opts: ["intine, germpore, absent", "exine, germpore, absent", "exine, germpore, present", "exine, foramen ovale, absent"], ans: 1, exp: "Germ pores are apertures in the exine where sporopollenin is absent." },
+    { q: "183. Pollen grains of different species show characteristic difference in -", opts: ["Shapes, size and colours only", "Shapes, sizes, colours and ploidy only", "Shapes, sizes, colour and design only", "Ploidy only"], ans: 2, exp: "Pollen grains differ in shape, size, color, and surface design." },
+    { q: "185. Which of the following statements is false about filiform apparatus?", opts: ["The synergids have special cellular thickenings at the micropylar tip called filiform apparatus", "It plays an important role in guiding the pollen tubes into the synergid", "Both", "Pollen tube stimulates the formation of filiform apparatus"], ans: 3, exp: "The filiform apparatus is not formed by the stimulation of the pollen tube; it is a pre-existing structure." },
+    { q: "186. In an angiosperm, male plant is diploid and the female plant is tetraploid, endosperm will be-", opts: ["Haploid", "Triploid", "Tetraploid", "Pentaploid"], ans: 3, exp: "Endosperm = 2 polar nuclei (from 4n female) + 1 male gamete (from 2n male) = 2n+2n+n = 5n (Pentaploid)." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 20; // ⚠️ 12th Class Chapter 1 is Chapter 20 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
