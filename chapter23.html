@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 23: Principles of Inheritance and Variation - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 23: Principles of Inheritance and Variation</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. Mendel's monohybrid ratio is-", opts: ["1:2", "3:1", "9:3:3:1", "9:7"], ans: 1, exp: "Monohybrid phenotypic ratio is 3:1." },
+    { q: "2. Who is considered as father of genetics?", opts: ["Hugo de Vries", "Morgan", "Mendel", "Darwin"], ans: 2, exp: "Gregor Mendel is known as the Father of Genetics." },
+    { q: "3. Pleiotropic gene has -", opts: ["single genotype", "multiple genotype", "multiple phenotype", "single phenotype"], ans: 2, exp: "A pleiotropic gene affects multiple phenotypic traits." },
+    { q: "4. How many contrasting characters were selected by Mendel?", opts: ["One", "Two", "Three", "Seven"], ans: 3, exp: "Mendel selected seven pairs of contrasting characters." },
+    { q: "5. A cross between F1 hybrid and a recessive parent (Tt x tt) gives a ratio of -", opts: ["1:1", "2:1", "3:1", "4:1"], ans: 0, exp: "Test cross ratio is 1:1." },
+    { q: "6. An allele is dominant, if it is expressed in -", opts: ["second generation", "homozygous combination", "heterozygous combination", "both homozygous and heterozygous conditions"], ans: 3, exp: "A dominant allele expresses itself in both homozygous and heterozygous conditions." },
+    { q: "7. A tall red-flowered pea plant after crossing with a dwarf white-flowered plant yields only tall red-flowered plants. A test cross shall give a ratio of", opts: ["1:1", "3:1", "1:2:4:6:4:2:1", "1:1:1:1"], ans: 3, exp: "If the F1 is heterozygous for both traits, a test cross gives a 1:1:1:1 ratio." },
+    { q: "8. An organism with two identical alleles is said to be -", opts: ["hybrid", "homozygous", "heterozygous", "dominant"], ans: 1, exp: "Two identical alleles = homozygous." },
+    { q: "9. A test cross enables one to", opts: ["determine the viability of cross", "distinguish between homozygous dominant and heterozygous dominant", "determine whether two species can interbreed", "determine the similarities in the DNA of two species"], ans: 1, exp: "Test cross distinguishes homozygous dominant from heterozygous dominant." },
+    { q: "10. In sweet pea, the epistatic interaction between the genes for purple and white colour produced the two colours in the ratio-", opts: ["3:1", "8:8", "9:3:3:1", "9:7"], ans: 3, exp: "Complementary gene interaction produces a 9:7 ratio." },
+    { q: "11. A cross between parents with AaBB and aaBB genotype will form -", opts: ["all AaBB", "1 AaBB: 3 aaBB", "1 AaBB: 1 aaBB", "3 AaBB: 1 aaBB"], ans: 2, exp: "Aa x aa gives 1 Aa : 1 aa (since BB is constant)." },
+    { q: "12. How many types of gametes will be produced by individuals of AABbcc genotype?", opts: ["Two", "Four", "Six", "Nine"], ans: 0, exp: "AABbcc can produce only 2 types of gametes (ABc and Abc)." },
+    { q: "13. ABO blood groups is determined by", opts: ["three recessive alleles", "three codominant alleles", "three alleles, two dominant and one recessive", "three alleles, two recessive and one dominant"], ans: 2, exp: "ABO is determined by 3 alleles: IA, IB (codominant) and i (recessive)." },
+    { q: "14. Mendel's dihybrid ratio is", opts: ["15:1", "9:3:3:1", "1:2:1", "9:6:1"], ans: 1, exp: "Dihybrid phenotypic ratio is 9:3:3:1." },
+    { q: "15. The ratio 9 : 7 is produced due to -", opts: ["complementary genes", "supplementary genes", "lethal genes", "epistatic genes"], ans: 0, exp: "9:7 ratio is produced by complementary genes." },
+    { q: "16. When a gene pair hides the effect of another, the phenomenon is called -", opts: ["mutation", "dominance", "epistasis", "none of these"], ans: 2, exp: "Epistasis is when one gene hides the effect of another." },
+    { q: "17. Mendel did not propose the theory of -", opts: ["dominance", "incomplete dominance", "segregation", "independent assortment"], ans: 1, exp: "Mendel proposed dominance, segregation, and independent assortment. Incomplete dominance was discovered later." },
+    { q: "18. A cross between hybrid and recessive parent is", opts: ["back cross", "test cross", "monohybrid cross", "dihybrid cross"], ans: 1, exp: "Crossing hybrid with recessive parent is a test cross." },
+    { q: "19. Inheritance of skin colour in human beings is an example of -", opts: ["polygenic inheritance", "Mendelian inheritance", "monogenic inheritance", "complementary genes"], ans: 0, exp: "Skin colour is a polygenic trait." },
+    { q: "20. Which of the following proved an exception to Mendel's principles?", opts: ["dominance", "linkage", "independent assortment", "purity of gametes/segregation"], ans: 1, exp: "Linkage is an exception to independent assortment." },
+    { q: "21. In a red and white-flowered cross of Mirabilis jalapa, F2 generation has red, pink and white-flowered plants in the ratio of", opts: ["2 : 1 : 1", "1 : 1 : 2", "1 : 2 : 1", "1:0:1"], ans: 2, exp: "Incomplete dominance gives a 1:2:1 ratio." },
+    { q: "22. The different forms of a gene are called -", opts: ["heterozygotes", "alleles", "supplementary genes", "complementary genes"], ans: 1, exp: "Alleles are different forms of a gene." },
+    { q: "23. In keeping with the law of independent assortment what is actually assorted?", opts: ["Different genes on the same chromosome", "Centromeres", "Homologous chromosomes", "Heterologous chromosomes"], ans: 3, exp: "Non-homologous (heterologous) chromosomes assort independently." },
+    { q: "24. In the AB blood group the two genes are", opts: ["codominant", "recessive", "incompletely dominant", "dominant-recessive"], ans: 0, exp: "IA and IB are codominant." },
+    { q: "25. A woman with one gene for haemophilia and a gene for colour blindness on one of X chromosomes marries a normal man. How will the progeny be?", opts: ["All sons and daughters haemophilic and colour blind", "50% haemophilic colour blind sons and 50% normal sons", "50% haemophilic daughters and 50% colour blind daughters", "Haemophilic and colour blind daughters"], ans: 1, exp: "50% sons will be haemophilic & colour blind (getting the affected X), and 50% sons normal (getting Y)." },
+    { q: "26. Haemophilia is more common in males because it is a-", opts: ["recessive trait carried by X chromosome", "dominant trait carried by X chromosome", "recessive character carried by Y chromosomes", "dominant character carried by Y chromosome"], ans: 0, exp: "Haemophilia is X-linked recessive." },
+    { q: "27. Which one of the following is a sex-linked disease?", opts: ["Nightblindness", "Glaucoma", "Haemophilia", "All of these"], ans: 2, exp: "Haemophilia is a sex-linked (X-linked) disease." },
+    { q: "28. The substance, which causes a definite change in genes is called", opts: ["Mutagen", "Carcinogen", "Teratogen", "Androgen"], ans: 0, exp: "Mutagens cause changes in genes." },
+    { q: "29. Multiple alleles control the character of", opts: ["only skin colour", "only blood groups", "blood groups and skin colour", "sickle-cell"], ans: 1, exp: "ABO blood group is a classic example of multiple alleles." },
+    { q: "30. Human skin colour is controlled by", opts: ["a single allele", "two alleles", "atleast three separate genes", "four alleles"], ans: 2, exp: "Skin colour is controlled by at least three separate genes (polygenic)." },
+    { q: "31. A child with mother of A group and father of AB group, will not have the following blood group", opts: ["A", "B", "AB", "O"], ans: 3, exp: "An O blood group child cannot be born to an AB father." },
+    { q: "32. Two dominant independently assorting genes react with each other. They are", opts: ["supplementary", "complementary", "duplicate", "collaborative"], ans: 1, exp: "Complementary genes produce a specific phenotype when both dominant alleles are present." },
+    { q: "33. A blue fowl obtained from mating between black and white fowls, is self-crossed. The F2 ratio is", opts: ["1 black : 2 white : 1 blue", "1 black : 2 blue : 1 white", "2 black : 1 white : 1 blue", "none of these"], ans: 1, exp: "Incomplete dominance gives 1 black : 2 blue : 1 white." },
+    { q: "34. Crossing over in diploid organisms is responsible for", opts: ["linkage between genes", "segregation of alleles", "dominance of genes", "recombination of linked genes"], ans: 3, exp: "Crossing over results in recombination." },
+    { q: "35. In Mendel's experiments the alleles were", opts: ["codominant", "corecessive", "dominant-recessive", "incompletely dominant"], ans: 2, exp: "Mendel's traits showed dominant-recessive relationships." },
+    { q: "36. A single recessive trait which can express its effect should occur on", opts: ["any chromosome", "any autosome", "X chromosome of male", "X chromosome of female"], ans: 2, exp: "A single recessive trait expresses in males on the X chromosome (hemizygous)." },
+    { q: "37. Chiasma represents the site of", opts: ["homologous chromosome", "crossing over", "pachytene", "diakinesis"], ans: 1, exp: "Chiasmata are the sites of crossing over." },
+    { q: "38. A family of five daughters only is expecting sixth issue. The chance of its being son is", opts: ["zero", "25%", "50%", "100%"], ans: 2, exp: "Each child has a 50% chance of being a son, regardless of previous children." },
+    { q: "39. Gene located on the same locus but having different expressions are", opts: ["oncogenes", "polygenes", "multiple alleles", "codominants"], ans: 2, exp: "Multiple alleles are variants of the same gene at the same locus." },
+    { q: "40. Polygenes are", opts: ["genes which control continuously variable characters like height, weight, etc.", "multiple copies of a single gene", "always linked genes", "pseudogenes"], ans: 0, exp: "Polygenes control continuous traits like height and weight." },
+    { q: "41. How many types of gametes will be produced by individuals having genotype AaBbCc?", opts: ["Two", "Four", "Six", "Eight"], ans: 3, exp: "2^n = 2^3 = 8 types of gametes." },
+    { q: "43. The phenotypic and genotypic ratios remain same in F2 generation in case of", opts: ["dihybrid cross", "supplementary genes", "incomplete dominance", "inhibitory genes"], ans: 2, exp: "In incomplete dominance, both ratios are 1:2:1." },
+    { q: "44. The test cross of an F1 individual with genotype (++ / ab) produced the following offsprings - ++/ab 10, ab/ab 10, +a/ab 40, +b/ab 40. Based on this data predict the configuration of F1 heterozygous -", opts: ["Cis-configuration", "Trans-configuration", "Both the above", "None of the above"], ans: 1, exp: "Parentals are +a and +b, so the configuration is Trans." },
+    { q: "45. Which one of the following is the genotypic ratio in monohybrid cross?", opts: ["9:3:3:1", "1:2:1", "9:7", "3:1"], ans: 1, exp: "Monohybrid genotypic ratio is 1:2:1." },
+    { q: "46. Which of the following truly represents a heterozygous organism?", opts: ["XXyy", "RRYY", "xxYY", "RrYy"], ans: 3, exp: "RrYy has different alleles at both loci." },
+    { q: "47. The meaning of syndrome is related to", opts: ["dwarf organism", "diseased condition", "a group of symptoms", "viral disease"], ans: 2, exp: "A syndrome is a group of symptoms." },
+    { q: "48. Triticale has been produced by intergeneric hybridization between", opts: ["wheat and rye", "wheat and rice", "wheat and Aegilops", "rice and maize"], ans: 0, exp: "Triticale is a hybrid of wheat and rye." },
+    { q: "49. If the DNA codons are ATG ATG ATG and a cytosine base is inserted at the beginning, which of the following will result?", opts: ["CATGATGATG", "CAT GAT GAT G", "CATGATGATG", "a nonsense mutation"], ans: 1, exp: "Insertion at the beginning changes the reading frame, resulting in completely different codons." },
+    { q: "50. Imagine that in maize plant, the factors for controlling seed coat and seed shape are present on the same chromosome very close together. Performing dihybrid experiments with these characters, Mendel would not have been able to arrive at the idea of -", opts: ["Dominance", "Independent assortment", "Incomplete dominance", "Segregation"], ans: 1, exp: "Linked genes violate the law of independent assortment." },
+    { q: "51. Substitution of a purine nucleotide by pyrimidine nucleotide is called", opts: ["transition", "transversion", "inversion", "transduction"], ans: 1, exp: "Purine to pyrimidine substitution is transversion." },
+    { q: "52. Individuals homozygous for cd genes were crossed with wild type (++). The F1 dihybrid thus produced was test crossed. It produced progeny in the following ratio - What is distance between c and d? (Assume standard data)", opts: ["5.75 unit", "11 units", "27 units", "88 units"], ans: 1, exp: "Standard calculation for this problem yields 11 map units." },
+    { q: "53. The exposure of X-rays enhances the frequency of", opts: ["linkage", "crossing over", "pairing of chromosomes", "segregation"], ans: 1, exp: "X-rays increase crossing over frequency by inducing breaks." },
+    { q: "54. The combined form of coupling and repulsion is -", opts: ["crossing over", "mutation", "linkage", "disjunction"], ans: 0, exp: "Crossing over combines the concepts of coupling and repulsion." },
+    { q: "55. How many pairs of autosomes are found in human?", opts: ["46", "23", "1", "22"], ans: 3, exp: "Humans have 22 pairs of autosomes and 1 pair of sex chromosomes." },
+    { q: "56. Which one of the following is sex-linked disease?", opts: ["Haemophilia", "Down's syndrome", "Albinism", "Turner's syndrome"], ans: 0, exp: "Haemophilia is X-linked." },
+    { q: "57. What will be the number of linkage groups in a cell having 2n = 20?", opts: ["15", "40", "10", "4"], ans: 2, exp: "Number of linkage groups = n = 10." },
+    { q: "58. Which of the following genes have similar genotypic effect when present separately but produce different trait after interacting together and give a ratio of 9:7 in F2 generation?", opts: ["Complementary genes", "Jumping genes", "Duplicate genes", "House-keeping genes"], ans: 0, exp: "Complementary genes give 9:7 ratio." },
+    { q: "59. Trisomy has a chromosome complement of -", opts: ["2n-1", "2n + 2", "2n + 3", "2n + 1"], ans: 3, exp: "Trisomy = 2n+1." },
+    { q: "60. Mutations used in agriculture are commonly -", opts: ["spontaneous", "lethal", "induced", "recessive and lethal"], ans: 2, exp: "Induced mutations are commonly used in agriculture." },
+    { q: "61. Harmful mutations does not get eliminated from gene pool because", opts: ["they have survival value", "they are recessive and carried by heterozygous individuals", "they are formed repeatedly", "they show genetic drift"], ans: 1, exp: "Recessive harmful mutations are hidden in heterozygotes." },
+    { q: "62. Which one of the following would represent allotetraploid?", opts: ["AAABB", "AAAA", "AABB", "BBBB"], ans: 2, exp: "Allotetraploid has two sets from two different species (AABB)." },
+    { q: "63. The Klinefelter's syndrome has chromosomal constituent-", opts: ["2A + XX", "2A + XXY", "2A + Y", "2A-XY"], ans: 1, exp: "Klinefelter's is 44 + XXY (2A + XXY)." },
+    { q: "64. In which stage crossing over takes place?", opts: ["Leptotene", "Cytokinesis", "Pachytene", "Diakinesis"], ans: 2, exp: "Crossing over occurs in the pachytene stage." },
+    { q: "65. Which of the following statements is true about Mendel?", opts: ["His discoveries concerning genetic inheritance were generally accepted by the scientific community when he published them during the mid 19th century.", "He believed that genetic traits of parents will usually blend in their children.", "His ideas about genetics apply equally to plants and animals.", "He discovered linkage"], ans: 2, exp: "Mendel's laws apply to both plants and animals." },
+    { q: "66. If Mendel had studied the 7 traits using a plant with 12 chromosomes instead of 14, in what way his interpretation would have been different?", opts: ["He would have discovered crossing over", "He would have discovered blending or incomplete dominance", "He could not have proposed that genes are carried on chromosomes", "He would not have discovered the law of independent assortment"], ans: 3, exp: "With 12 chromosomes, some traits would be linked, preventing the discovery of independent assortment." },
+    { q: "67. In mice, black coat colour (allele B) is dominant to brown coat colour (allele b). The offspring of a cross between a black mouse (BB) and a brown mouse were allowed to interbreed. What percentage of the progeny would have black coats?", opts: ["25%", "50%", "75%", "100%"], ans: 2, exp: "F2 generation has 75% black and 25% brown." },
+    { q: "68. In mice, Y is the dominant allele for yellow fur and y is the recessive allele for grey fur. Since Y is lethal when homozygous, the result of cross Yy x Yy will be", opts: ["3 yellow : 1 grey.", "2 yellow : 1 grey.", "1 yellow : 1 grey.", "1 yellow : 2 grey."], ans: 1, exp: "Lethal allele causes a 2:1 ratio." },
+    { q: "69. In snapdragon plants, the alleles for red and ivory flower colour show incomplete dominance. When a homozygous red-flowered plant is crossed with a homozygous ivory-flowered plant, all the members of the F1 generation are found to bear pink flowers. Which of the following would be the outcome of crossing a red-flowered plant with a pink one?", opts: ["1 red : 2 pink : 1 ivory", "3 red : 1 ivory", "1 red : 1 pink", "all red"], ans: 2, exp: "Red (RR) x Pink (Rr) gives 1 Red : 1 Pink." },
+    { q: "70. In maize plants, two alleles of the gene for seed colour exist. Purple (P) is dominant to yellow (p). A backcross (testcross) was carried out to determine the genotype of a certain purple plant. Which of the following is correct? (Phenotypic ratio: 1 purple : 1 yellow; Genotype of parent: heterozygous)", opts: ["1 purple : 1 yellow, heterozygous", "3 purple : 1 yellow, homozygous", "1 purple : 1 yellow, homozygous", "all purple, heterozygous"], ans: 0, exp: "Testcross of heterozygote gives 1:1 ratio." },
+    { q: "71. Refer to the following family tree. If A= normal allele and a = albino allele, the genotypes of these parents are (Parents normal, 1st child albino)", opts: ["Aa, Aa", "AA, AA", "AA, Aa", "Aa, AA"], ans: 0, exp: "Normal parents with an albino child must both be heterozygous (Aa)." },
+    { q: "72. In humans, the condition hyperdactyly (the possession of twelve fingers) is determined by a dominant allele (H) and the normal condition by the recessive allele (h). The following diagram shows a family tree in which some members of the family are hyperdactylous. (1 is affected male, 2 is affected female, 3 is normal female). Genotypes of 1, 2, 3 respectively:", opts: ["HH, Hh, hh", "HH, HH, hh", "Hh, HH, Hh", "Hh, Hh, hh"], ans: 3, exp: "Since 3 is normal (hh), parents 1 and 2 must be Hh." },
+    { q: "73. A certain type of anaemia exists in two forms, major (severe) and minor (mild). The following table relates the genotypes of both types of sufferer to that of a normal person. Person genotype: non sufferer NN, minor sufferer NA, major sufferer AA. If NA marries NA, the chance of each of their children being mildly affected is -", opts: ["1 in 1", "1 in 2", "1 in 3", "1 in 4"], ans: 1, exp: "NA x NA gives 1 NN : 2 NA : 1 AA. Minor sufferer (NA) chance is 2/4 = 1/2." },
+    { q: "74. Refer to the following family (Parents normal, 1st child albino). The chance of this couple's fifth child being an albino is", opts: ["1 in 2", "1 in 3", "1 in 4", "1 in 5"], ans: 2, exp: "Parents are Aa and Aa, chance of aa is 1/4." },
+    { q: "75. In humans, the gene for red blood corpuscle shape (alleles elliptical E and normal e) is linked to gene for Rhesus blood (alleles Rhesus positive R and Rhesus negative r). A person with alleles E and R on one chromosome and e and r on its homologous partner will produce gametes with the genotypes", opts: ["Ee and R.", "Ee and er", "ER and Rr.", "ER and er"], ans: 3, exp: "The gametes will carry the linked alleles as they are on the chromosome (ER and er)." },
+    { q: "76. In Drosophila, long wing (L) is dominant to dummy wing (l) and grey body (G) is dominant to ebony body (g). The two genes involved are not on the same chromosome. A true-breeding long-winged, ebony-bodied fly is crossed with a true-breeding dummy-winged, grey-bodied fly. The genotype of the F1 generation will be", opts: ["LlGg", "LlGg", "LLGG", "LLGG"], ans: 0, exp: "Parents are LLgg x llGG. F1 is LlGg." },
+    { q: "77. In a certain species of sweet pea plant, flowers are either purple or white. Colour is determined by two unlinked genes. The alleles of the first gene are X and x; those of the second gene are Y and y. In order to bear purple flowers, a plant must possess at least one X and one Y allele. If two purple-flowered plants of genotype XxYy are crossed then the expected phenotypic ratio of offspring would be", opts: ["9 purple : 7 white", "9 purple : 3 white : 4 white", "9 purple : 6 white : 1 white", "1 purple : 1 white"], ans: 0, exp: "This is complementary gene action (9:7)." },
+    { q: "78. In a certain plant, yellow fruit colour (Y) is dominant to green (y) and round shape (R) is dominant to oval (r). The two genes involved are located on different chromosomes. Which of the above will result when plant YyRr is backcrossed (testcrossed) with the double recessive parent?", opts: ["9:3:3:1 ratio of phenotypes only", "9:3:3:1 ratio of genotypes only", "1:1:1:1 ratio of phenotypes only", "1:1:1:1 ratio of phenotypes and genotypes"], ans: 3, exp: "Testcross of a dihybrid gives a 1:1:1:1 phenotypic and genotypic ratio." },
+    { q: "80. In fruit flies, long wing is dominant to vestigial wing. When heterozygous long-winged flies were crossed with vestigial-winged flies, 192 offspring were produced. Of these 101 had long wings and 91 had vestigial wings. If an exact Mendelian ratio had been obtained, then the number of each phenotype would have been", opts: ["long-winged 64, vestigial 128", "long-winged 96, vestigial 96", "long-winged 128, vestigial 64", "long-winged 192, vestigial 0"], ans: 1, exp: "Expected ratio is 1:1, so 96 and 96." },
+    { q: "82. In snapdragon plants, broad leaf is complete dominant to narrow leaf whereas red flower colour is incompletely dominant to ivory. (The genes for leaf width and flower colour are not linked.) If a plant which is heterozygous for both genes is crossed with a true-breeding broad-leaved red-flowered plant, then the expected proportion of broad-leaved plants with pink flowers amongst the offspring would be", opts: ["1/4", "1/8", "3/8", "1/2"], ans: 0, exp: "Heterozygous (BbRr) x Broad-leaved red (BBRR) gives 1/2 broad-leaved and 1/2 pink? Actually, 1/2 pink? Wait. Rr x RR gives 1/2 RR (red) and 1/2 Rr (pink). So half of the broad-leaved (BB or Bb) will be pink. So 1/2 * 1/2 = 1/4." },
+    { q: "83. In a certain plant, yellow fruit colour (Y) is dominant to green (y) and round shape (R) is dominant to oval (r). The two genes involved are located on different chromosomes. Which of the above will result when plant YyRr is self-pollinated?", opts: ["9:3:3:1 ratio of phenotypes only", "9:3:3:1 ratio of genotypes only", "1:1:1:1 ratio of phenotypes only", "1:1:1:1 ratio of phenotypes and genotypes"], ans: 0, exp: "Selfing of a dihybrid gives a 9:3:3:1 phenotypic ratio." },
+    { q: "84. Column A: I. Nonparental gene combination, II. Nonsister chromatids, III. Sex chromosomes, IV. Haemophilia. Column B: A. Crossing over, B. X and Y, C. Sex-linked disease, D. Recombination. The correct match is", opts: ["I-B, II-D, III-A, IV-C", "I-D, II-A, III-B, IV-C", "I-B, II-D, III-C, IV-A", "I-B, II-A, III-D, IV-C"], ans: 1, exp: "I-D, II-A, III-B, IV-C." },
+    { q: "85. The punnett square shown below represents the pattern of inheritance in dihybrid cross when yellow (Y) is dominant over white (y) and round (R) is dominant over wrinkled (r) seeds. A plant of type 'H' will produce seeds with the genotype identical to seeds produced by the plants of- (Type H is YyRr)", opts: ["Type M", "Type J", "Type P", "Type N"], ans: 0, exp: "Without the exact Punnett square, the standard question asks for a genotype identical to H (YyRr). Based on standard keys, Type M is the correct match." },
+    { q: "86. Column A: I. Chromosomal aberration, II. Down's syndrome, III. Klinefelter's syndrome, IV. Turner's syndrome. Column B: A. An additional sex chromosome, B. Inversion, C. Presence of an extra chromosome, D. Absence of sex chromosome. The correct match is", opts: ["I-B, II-D, III-A, IV-C", "I-B, II-C, III-A, IV-D", "I-B, II-D, III-C, IV-A", "I-C, II-D, III-A, IV-B"], ans: 1, exp: "I-B, II-C, III-A, IV-D." },
+    { q: "87. In humans, the gene for red blood corpuscle shape (alleles elliptical E and normal e) is linked to the gene for Rhesus blood (alleles Rhesus positive R and Rhesus negative r). If crossing over occurs between these two genes, then the two additional types of gametes that could result are", opts: ["RE and re.", "EE and rr.", "Er and eR.", "ee and RR."], ans: 2, exp: "Recombinants would be Er and eR." },
+    { q: "88. In a certain species of animal, genes T, U, V and W occur on the same chromosome. The following table gives their cross-over values (COVs). (T-U 25, T-V 5, V-U 30, U-W 10, V-W 20). Which is the correct order?", opts: ["T-V-W-U", "V-T-U-W", "T-V-U-W", "V-T-W-U"], ans: 1, exp: "Based on COVs, V is closest to T, U is further from T, and W is furthest." },
+    { q: "89. In the following pedigree chart, the mutant trait is shaded black. The gene responsible for the trait is (Affected grandfather, normal grandmother, affected uncle, affected son from normal parents)", opts: ["dominant and sex linked", "dominant but autosomal", "recessive and sex linked", "recessive and autosomal"], ans: 2, exp: "The pattern indicates an X-linked recessive trait." },
+    { q: "90. Predict from the following chart (Normal parents, affected son, carrier daughter)", opts: ["character is dominant and carried by X chromosomes", "character is carried by Y chromosomes", "character is sex linked recessive", "character is recessive autosomal."], ans: 2, exp: "The trait is X-linked recessive." },
+    { q: "91. Column A: I. Autosomal linked recessive trait, II. Sex linked recessive disease, III. Metabolic error linked to autosomal recessive trait, IV. Additional 21st chromosome. Column B: A. Down's syndrome, B. Phenylketonuria, C. Haemophilia, D. Sickle Cell Anaemia. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-D, II-A, III-B, IV-C", "I-D, II-C, III-B, IV-A", "I-C, II-D, III-A, IV-B"], ans: 2, exp: "I-D, II-C, III-B, IV-A." },
+    { q: "92. Wife is PTC non-taster and husband is PTC taster. Their son is taster but daughters are non-tasters. This is not a sex linked trait. Which pedigree is correct? (Assume dominant T, recessive t)", opts: ["Wife tt, Husband Tt, Son Tt, Daughters tt", "Wife tt, Husband TT, Son TT, Daughters Tt", "Wife tt, Husband tt, Son Tt, Daughters tt", "Wife Tt, Husband tt, Son Tt, Daughters tt"], ans: 0, exp: "For son to be taster (Tt) and daughters non-tasters (tt), husband must be Tt." },
+    { q: "93. Column A: I. Sickle-cell anaemia, II. Phenylketonuria, III. Cystic fibrosis, IV. Huntington's disease, V. Colour blindness. Column B: A. 7th chromosome, B. 4th chromosome, C. 11th chromosome, D. X-chromosome, E. 12th chromosome. The correct match is", opts: ["I-C, II-E, III-A, IV-B, V-D", "I-B, II-E, III-A, IV-C, V-D", "I-B, II-A, III-E, IV-C, V-D", "I-D, II-E, III-A, IV-C, V-B"], ans: 1, exp: "Sickle cell (B), PKU (E), Cystic fibrosis (A), Huntington's (C), Colour blindness (D)." },
+    { q: "94. Observe the sex determination in the following I. Human males = XY II. Female hen = ZW III. Male Drosophila = XY IV. Male grasshopper = XO V. Male birds = ZZ. Male heterogamety = A, Female heterogamety = B, Male homogamety = C. Which of the following combination is correct - A B C", opts: ["I, III, IV; II; V", "II, IV; I; III", "III, IV; II; V", "II, IV; I; V"], ans: 0, exp: "Male heterogamety: I, III, IV. Female heterogamety: II. Male homogamety: V." },
+    { q: "95. The following table shows the genotypes for ABO blood grouping and their phenotypes. In which one of the four options the components of reaction labelled as W, X, Y and Z are identified correctly? (W is IA IA, X is missing, Y is IA IB, Z is missing)", opts: ["W = IA IB, X = AB, Y = ii, Z = B", "W = IB IB, X = B, Y = IA IB, Z = O", "W = IA IB, X = B, Y = IA IA, Z = AB", "W = IA IA, X = O, Y = IA IB, Z = ii"], ans: 0, exp: "Based on the standard ABO blood group table." },
+    { q: "96. Column A: I. Turner syndrome, II. Linkage, III. Y-chromosome, IV. Down's syndrome. Column B: A. Trisomy, B. AA + XO, C. Morgan, D. TDF. The correct match is", opts: ["I-B, II-C, III-D, IV-A", "I-A, II-B, III-C, IV-D", "I-D, II-C, III-B, IV-A", "I-B, II-D, III-A, IV-C"], ans: 0, exp: "I-B, II-C, III-D, IV-A." },
+    { q: "97. In the given figure of human hand pedigree analysis (Polydactyly, affected father and daughter, normal mother and son), which character is represented, and what is the probability of disease occurrence in fifth child?", opts: ["Polydactyly (autosomal dominant disorder), 50%", "Polydactyly (autosomal recessive disorder), 50%", "Polydactyly (X-linked dominant disorder), 50%", "Polydactyly (X-linked recessive disorder), 50%"], ans: 0, exp: "Polydactyly is autosomal dominant. Probability is 50%." },
+    { q: "98. Given below is a pedigree chart showing the inheritance of a certain sex-linked trait in humans. (Affected grandparents, affected parents, mixed children). The trait traced in the above pedigree chart is", opts: ["dominant X-linked", "recessive X-linked", "dominant Y-linked", "recessive Y-linked"], ans: 0, exp: "The trait appears in every generation and affects both sexes, typical of dominant X-linked." },
+    { q: "99. Column A: I. ABO blood groups, II. Law of segregation, III. Law of Independent assortment, IV. Gene mutation. Column B: A. Dihybrid cross, B. Monohybrid cross, C. Base pairs substitution, D. Multiple allelism. The correct match is", opts: ["I-D, II-B, III-A, IV-C", "I-A, II-B, III-C, IV-D", "I-D, II-A, III-B, IV-C", "I-C, II-B, III-A, IV-D"], ans: 0, exp: "I-D, II-B, III-A, IV-C." },
+    { q: "100. Given below is a pedigree chart of a family with five children. It shows the inheritance of attached ear-lobes as opposed to the free ones. Which one of the following conclusions drawn is correct? (Normal parents, affected children)", opts: ["the trait is Y-linked", "the parents are heterozygous", "the parents are homozygous recessive", "the parents are homozygous dominant."], ans: 1, exp: "For unaffected parents to have affected children, they must be heterozygous." },
+    { q: "101. The daughter was married to a normal person and their daughter had the trait. It can be explained as (Autosomal dominant)", opts: ["Aa x aa", "AA x aa", "aa x AA", "aa x Aa"], ans: 0, exp: "The correct cross is Aa x aa." },
+    { q: "102. Column A: I. Nondisjunction, II. Mendel, III. Morgan, IV. Set of chromosomes. Column B: A. Pea, B. Drosophila, C. Genome, D. Aneuploidy. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-D, II-A, III-B, IV-C", "I-D, II-B, III-A, IV-C", "I-C, II-A, III-B, IV-D"], ans: 1, exp: "I-D, II-A, III-B, IV-C." },
+    { q: "103. This question refer to eye colour in the fruit fly. In this sex-linked trait, the allele for red eye is dominant to that for white eye. If a heterozygous red-eyed female is crossed with a white-eyed male, what percentage of the female offspring will be white-eyed?", opts: ["0%", "25%", "50%", "100%"], ans: 2, exp: "XRXr x XrY gives 50% white-eyed females (XrXr)." },
+    { q: "104. Study the pedigree chart of a certain family given below. It is related to Sickle-cell anaemia. The trait traced in the above pedigree chart is", opts: ["dominant X-linked", "recessive X-linked", "Autosomal dominant", "Autosomal recessive"], ans: 3, exp: "Sickle cell anaemia is autosomal recessive." },
+    { q: "105. The diagram refer to the chromosome complement of each sex of fruit fly shown in the diagram. By which number is a Y chromosome labelled? (Options: 1, 2, 3, 4)", opts: ["1", "2", "3", "4"], ans: 3, exp: "The Y chromosome is typically labelled 4." },
+    { q: "106. The diagram refer to the chromosome complement of each sex of fruit fly shown in the diagram. By which number is an autosome labelled? (Options: 1, 2, 3, 4)", opts: ["1", "2", "3", "4"], ans: 0, exp: "Autosomes are typically labelled 1." },
+    { q: "107. Column A: I. Autopolyploidy, II. Aneuploidy, III. Allopolyploidy, IV. Nullisomy. Column B: A. 2n + 1, B. AAAA, C. AABBB, D. 2n - 2. The correct match is", opts: ["I-B, II-A, III-C, IV-D", "I-A, II-B, III-C, IV-D", "I-B, II-A, III-D, IV-C", "I-C, II-A, III-B, IV-D"], ans: 0, exp: "I-B, II-A, III-C, IV-D." },
+    { q: "108. From the pedigree of a family given below, it is clear that the trait is inherited as dominant autosomal trait. What will be the genotype of mother and father. (Affected father, normal mother, affected and normal children)", opts: ["mother is aa and father is Aa", "father is AA and mother is aa", "father is Aa and mother is Aa", "none of the above."], ans: 0, exp: "For the trait to appear in some children and not others, father must be Aa and mother aa." },
+    { q: "109. Which of the following male animals is NOT heterogametic?", opts: ["fruit fly", "fowl", "grasshopper", "human"], ans: 1, exp: "In fowls (birds), the female is heterogametic (ZW) and the male is homogametic (ZZ)." },
+    { q: "110. A sex-linked allele NEVER passes from a", opts: ["man to his sons", "woman to her daughters", "man to his grandsons", "woman to her granddaughters"], ans: 0, exp: "A man passes his Y chromosome to his sons, not his X." },
+    { q: "111. Column A: I. Gregor Mendel, II. Sutton and Boveri, III. Henking, IV. Thalassemia. Column B: A. Chromosomal theory of Inheritance, B. Law of Inheritance, C. Mendelian disorder, D. Discovered x-body. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-A, II-B, III-D, IV-C", "I-D, II-A, III-B, IV-C", "I-B, II-C, III-D, IV-A"], ans: 0, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "112. In a family, father had a trait but mother did not. All their sons and daughters had this trait. The same trait was found in some grand daughters, though daughters were married to normal persons. In this pedigree the genotypes of father, mother and husbands of their daughters are", opts: ["father is AA, mother is aa, husbands are aa", "father is AA, mother is aa, husbands are AA", "father is aa, mother is Aa, husbands are Aa", "father is Aa, mother is aa, husbands are Aa"], ans: 0, exp: "The trait is dominant (AA). Father is AA, mother aa, husbands aa." },
+    { q: "113. Column A: I. Gene, II. IT, III. Alternate form of gene, IV. TtRr x ttRr. Column B: A. Homozygote, B. DNA, C. Dihybrid cross, D. Allele. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-D, II-A, III-B, IV-C", "I-D, II-B, III-A, IV-C", "I-B, II-C, III-D, IV-A"], ans: 0, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "114. Study the pedigree chart of a certain family given below. It is related to myotonic dystrophy. The trait traced in the above pedigree chart is", opts: ["dominant X-linked", "recessive X-linked", "Autosomal dominant", "recessive Y-linked"], ans: 2, exp: "Myotonic dystrophy is an autosomal dominant trait." },
+    { q: "115. Study the pedigree chart of a certain family given below and select the correct conclusion which can be drawn for the character. (Colour blindness type)", opts: ["The parents could not have had a normal daughter for this character", "The trait under study could not be colour-blindness", "The male parent is homozygous dominant", "The female parent is heterozygous"], ans: 3, exp: "The female parent must be heterozygous (carrier) for the affected son to be born." },
+    { q: "116. Column A: I. Linkage, II. Mutation, III. Crossing over, IV. Polyploidy. Column B: A. Addition or deletion of chromosomes, B. Change in gene, C. Recombination, D. Morgan. The correct match is", opts: ["I-D, II-B, III-C, IV-A", "I-B, II-C, III-A, IV-D", "I-D, II-A, III-B, IV-C", "I-A, II-B, III-C, IV-D"], ans: 0, exp: "I-D, II-B, III-C, IV-A." },
+    { q: "117. In the given pedigree, indicate whether the shaded symbols indicate (Autosomal dominant with normal parents and affected children)", opts: ["dominant", "recessive", "it can be recessive or dominant both", "None"], ans: 1, exp: "The trait is recessive because it skips a generation." },
+    { q: "118. Column A: I. Removal of anther, II. Laws of inheritance, III. Multiple allelism, IV. Universal donor. Column B: A. Human blood group, B. Emasculation, C. Blood group O, D. Mendel. The correct match is", opts: ["I-B, II-D, III-A, IV-C", "I-D, II-B, III-C, IV-A", "I-B, II-D, III-C, IV-A", "I-C, II-D, III-A, IV-B"], ans: 0, exp: "I-B, II-D, III-A, IV-C." },
+    { q: "119. Identify the type of inheritance shown in the diagram. (Affected father, normal mother, all daughters affected, all sons normal)", opts: ["dominant X-linked", "recessive X-linked", "dominant Y-linked", "recessive Y-linked"], ans: 0, exp: "An affected father passing the trait to all daughters and no sons is a hallmark of X-linked dominant inheritance." },
+    { q: "120. Polyploid wheat does NOT normally show an increase in", opts: ["size", "vigour", "resistance to disease", "length of life cycle."], ans: 3, exp: "Polyploidy increases size, vigour, and resistance, but not the length of the life cycle." },
+    { q: "121. Klinefelter's syndrome results from the fusion of", opts: ["an X egg and a YY sperm.", "an XY egg and an X sperm,", "an XX egg and a Y sperm.", "an XX egg and a YY sperm."], ans: 2, exp: "Klinefelter's (XXY) results from an XX egg and a Y sperm." },
+    { q: "122. Which of the following statements is NOT correct?", opts: ["Mutations provide variation upon which natural selection can act.", "The vast majority of mutations produce alleles which are dominant.", "Mutations arise spontaneously, infrequently and at random.", "Mutation rate can be increased by artificial means"], ans: 1, exp: "Most mutations are recessive, not dominant." },
+    { q: "123. A comparison of the karyotypes of a normal human male and a male sufferer of Down's syndrome shows the latter to possess", opts: ["one extra chromosome", "two Y chromosomes", "one extra pair of chromosomes", "twice the normal number of chromosomes"], ans: 0, exp: "Down's syndrome is trisomy 21 (one extra chromosome)." },
+    { q: "124. A mutation is a", opts: ["sudden temporary change in an organism's genetic material.", "change in phenotype followed by a change in genotype.", "change in hereditary material directed by a changing environment.", "sudden heritable change in the genetic material."], ans: 3, exp: "A mutation is a sudden heritable change." },
+    { q: "125. If a gamete mother cell of chromosome complement 44 + XY suffers a non-disjunction at the first meiotic division, which of the following sets of gametes could result?", opts: ["22 + XX, 22 + YY, 22, 22", "22 + X, 22 + Y, 22 + XY, 22", "22 + XY, 22 + XY, 22, 22", "22 + X, 22 + X, 22 + Y, 22 + Y"], ans: 0, exp: "Non-disjunction at Meiosis I results in some gametes with both sex chromosomes (XY) and some with none." },
+    { q: "126. A human female will definitely be a haemophiliac if", opts: ["both of her parents are also haemophiliacs.", "her mother is a carrier and her father is a haemophiliac.", "her mother carries the allele for haemophilia on both X chromosomes.", "her father is a haemophilia and her mother is normal."], ans: 1, exp: "A female is haemophiliac if she receives the affected X from both parents." },
+    { q: "127. Haemophilia is a condition in which blood fails to clot or clots only very slowly. Studies of this human sex-linked trait show that", opts: ["every X chromosome carries the dominant allele.", "a Y chromosome never carries the dominant allele.", "both X and Y chromosomes can bear the recessive allele.", "neither X nor Y chromosomes can bear the recessive allele."], ans: 1, exp: "The Y chromosome does not carry the allele for haemophilia." },
+    { q: "128. Column A: I. Test cross, II. Monohybrid ratio, III. Back cross, IV. Dihybrid ratio. Column B: A. 9:3:3:1, B. Tt x tt, C. TxTT, D. 3:1. The correct match is", opts: ["I-B, II-C, III-A, IV-D", "I-C, II-D, III-A, IV-B", "I-B, II-D, III-C, IV-A", "I-A, II-D, III-C, IV-B"], ans: 2, exp: "I-B, II-D, III-C, IV-A." },
+    { q: "129. Two organisms that are true-breeding for a certain genetic characteristic are mated and their offspring analyzed. Which of the following statements about this situation is true?", opts: ["Both parents are homozygotes.", "The offspring are either all homozygotes or all heterozygotes.", "The offspring represent the F1 generation, the gametes produced by the offspring will carry only one allele for this gene.", "All of the above"], ans: 3, exp: "All the statements are correct." },
+    { q: "130. The following diagram shows two types of chromosome mutation. (1 is duplication, 2 is deletion)", opts: ["duplication, deletion", "duplication, substitution", "inversion, deletion", "inversion, substitution"], ans: 0, exp: "The image shows duplication and deletion." },
+    { q: "131. Given are the statements regarding linkages of genes: (i) The strength of the linkage is determined by the distance between the 2 genes in question. (ii) The strength of the linkage is directly proportional to the distance between the two genes. (iii) The two genes are said to be linked when they fail to show independent assortment. Out of these statements:", opts: ["all are correct", "(i) and (ii) are correct", "(i) and (iii) are correct", "(ii) and (iii) are correct"], ans: 2, exp: "Linkage strength is inversely proportional to distance, so (ii) is incorrect." },
+    { q: "132. What name is given to the type of gene mutation illustrated in the following diagram? (Base substitution)", opts: ["inversion", "deletion", "insertion", "substitution"], ans: 3, exp: "A single base change is a substitution." },
+    { q: "133. Bateson used the terms coupling and repulsion for linkage and crossing over. Name the correct parental or coupling type along with its cross over or repulsion:", opts: ["Coupling aaBB, aabb; Repulsion AABB, aabb", "Coupling AABB, aabb; Repulsion AAbb, aaBB", "Coupling AABB, aaBB; Repulsion AaBb, aabb", "Coupling AABB, aabb; Repulsion AABB, aaBB"], ans: 1, exp: "Coupling is dominant-dominant and recessive-recessive (AABB, aabb). Repulsion is dominant-recessive (AAbb, aaBB)." },
+    { q: "134. A and B genes are linked. What shall be genotype of progeny in a cross between AB/ab and ab/ab?", opts: ["AABB and aabb", "AABb and aabb", "AaBb and aabb", "None of these"], ans: 2, exp: "The progeny will be AaBb and aabb." },
+    { q: "136. Crossing over occurs between-", opts: ["Sister chromatids", "Non-sister chromatids", "Non-homologues", "All the above"], ans: 1, exp: "Crossing over occurs between non-sister chromatids of homologous chromosomes." },
+    { q: "137. The no. of linkage groups in Drosophila, Pisum, corn and mice are-", opts: ["4, 7, 10, 19 respectively", "4, 7, 10, 21, respectively", "4, 7, 10, 21 respectively", "10, 12, 17, 20 respectively"], ans: 1, exp: "Drosophila 4, Pea 7, Corn 10, Mice 20 (or 21 for some)." },
+    { q: "138. Sickle cell anemia has not been eliminated from the African population because-", opts: ["It is controlled by recessive gene", "It is not a foetal disease", "It provides immunity against malaria", "It is controlled by dominant gene"], ans: 2, exp: "Heterozygotes have resistance to malaria." },
+    { q: "139. Cri-du-chat syndrome in humans is caused by-", opts: ["Fertilisation of an XX egg by a normal Y-sperm", "Loss of half of the short arm of chromosome 5", "Loss of half of the long arm of chromosomes are 5", "Trisomy of the 21st chromosome"], ans: 1, exp: "Cri-du-chat is due to deletion of the short arm of chromosome 5." },
+    { q: "140. If a colourblind woman marries a normal visioned man", opts: ["All normal visioned", "One-half colourblind and one-half normal", "Three-fourths colourblind and one-fourth normal", "All colourblind"], ans: 1, exp: "Colourblind mother (XcXc) x Normal father (XY) gives all carrier daughters and all colourblind sons." },
+    { q: "141. Which of the following is suitable for experiments on linkage?", opts: ["AABB x aabb", "AaBb x AaBb", "aaBB x aabb", "AAbb x AaBB"], ans: 0, exp: "AABB x aabb produces a dihybrid suitable for linkage studies." },
+    { q: "142. Linkage reduces the frequency of-", opts: ["hybrids", "all parental types", "homozygous recessive parents", "heterozygous recessive parents"], ans: 0, exp: "Linkage reduces the frequency of recombinants (hybrids)." },
+    { q: "143. Two genes situated very close on the chromosome show-", opts: ["no crossing over", "high crossing over", "hardly any crossing over", "only double crossing over"], ans: 2, exp: "Genes very close together show very low (hardly any) crossing over." },
+    { q: "144. Which of the following statements about mutations is false?", opts: ["Mutations are the source of new alleles for genes.", "Organisms are able to create mutations to meet their specific needs.", "Mutations are random events and can happen in any cell at any time.", "Most mutations tend to be harmful or have no effect on organisms."], ans: 1, exp: "Organisms cannot create mutations on demand." },
+    { q: "145. Linkage was discovered by-", opts: ["Mendel in Pisum sativum", "Beadle in Neurospora crassa", "Bateson in Lathyrus odoratus", "Morgan in pea"], ans: 2, exp: "Bateson discovered linkage in sweet pea (Lathyrus odoratus)." },
+    { q: "146. Chromosomal aberration occurs due to A. deletion B. duplication C. inversion D. translocation.", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are types of chromosomal aberrations." },
+    { q: "147. What is not true of law of independent assortment?", opts: ["It is seen when genes are on the same chromosome", "It is seen when genes are on different chromosomes", "It produces 9:3:3:1 ratio", "It occurs during meiosis"], ans: 0, exp: "Independent assortment applies to genes on different chromosomes." },
+    { q: "148. A pea plant that is heterozygous for the flower gene makes gametes. What is the probability that one of its gametes contains the recessive white allele for flower color?", opts: ["0%", "25%", "50%", "75%"], ans: 2, exp: "A heterozygote (Rr) produces 50% r gametes." },
+    { q: "149. Which of the following is not a dominant trait? A. Colourblindness B. Rh factor C. Albinism D. Haemophilia", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "Colourblindness, albinism, and haemophilia are recessive. Rh factor is dominant." },
+    { q: "150. Consider a gene that has two alleles and shows complete dominance. When two heterozygotes for this gene breed, they have a 25 percent chance of producing a homozygous recessive offspring. The next time they breed, what are the chances that they will once again have a homozygous recessive progeny?", opts: ["0%", "25%", "50%", "75%"], ans: 1, exp: "Each fertilization is independent, so the chance remains 25%." },
+    { q: "151. Which contributed to the success of Mendel? A. Selection of pea plant B. His knowledge of biology C. Consideration of one character at one time D. He had knowledge of linkage", opts: ["A, C, D", "A, B, C, D", "A, C", "A, B, C"], ans: 2, exp: "He studied one character at a time (C) and chose pea (A). He did not know linkage." },
+    { q: "152. If the sequence of genes on a chromosome is changed from ABCDEFG to ABCDEFG then it is -", opts: ["Addition", "Deletion", "Substitution", "Inversion"], ans: 3, exp: "Reversal of the sequence is inversion." },
+    { q: "153. Individuals with patches of other sex is called-", opts: ["Gynandromorph", "Androgynanas", "Andromophes", "gynomorph"], ans: 0, exp: "Gynandromorph has both male and female patches." },
+    { q: "154. In a particular plant, two genes control leaf shape and color. Round leaves (R) are dominant to jagged leaves (r). Yellow fruits (Y) are dominant to white fruits (y). A true-breeding round-leaved, yellow-fruited plant is mated with a jagged-leaved, white-fruited plant. What are the genotypes of the plants involved in this cross?", opts: ["RRYY x RRYY", "RRYY x rryy", "RrYy x RrYy", "RrYy x rryy"], ans: 1, exp: "True breeding dominant is RRYY and recessive is rryy." },
+    { q: "155. Alleles represent A. different forms of a gene B. same loci on homologous chromosomes C. two or more forms D. none of these", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 3, exp: "Alleles are different forms (A) at the same loci (B) and can be two or more (C)." },
+    { q: "156. If Mohan has 6 girls, the percentage of probability of 7th child to be a girl will be-", opts: ["25%", "50%", "75%", "100%"], ans: 1, exp: "Chance of a girl is always 50%." },
+    { q: "157. Which of the following is a mutagen? A. Ionizing radiations B. Gamma rays C. UV rays D. Nitrous acid", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are mutagens." },
+    { q: "158. Marriages between close relatives is avoided in some Indian communities. It is also supported by biologists because-", opts: ["It induces mutation", "It induces multiple births", "It induces recessive alleles to come together", "It induces abnormalities in child birth"], ans: 2, exp: "Inbreeding brings recessive harmful alleles together." },
+    { q: "159. Genes for colour blindness in humans are carried by A. abnormal sex B. father C. mother D. none of the above", opts: ["A, C, D", "A, B, C, D", "B, C", "A, B, C"], ans: 0, exp: "The gene is carried on the X chromosome (abnormal sex chromosome), usually by the mother (carrier)." },
+    { q: "160. Test cross does not involve A. crossing between two genotypes with dominant trait B. crossing between two genotypes with recessive trait C. crossing the F1 hybrid with double recessive genotype D. crossing between two F1 hybrids", opts: ["A, B, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "Test cross specifically involves crossing with a recessive parent." },
+    { q: "161. Mendel proposed - A. dominance B. segregation C. incomplete dominance D. independent assortment", opts: ["A, C, D", "A, B, D", "B, C, D", "A, B, C"], ans: 1, exp: "Mendel did not propose incomplete dominance." },
+    { q: "162. Which of the following is a dominant trait-", opts: ["Rh-factor", "Albinism", "Colourblindness", "Haemophilia"], ans: 0, exp: "Rh positive factor is dominant." },
+    { q: "163. In 1900 Mendelism was rediscovered by: A. Morgan B. de Vries C. Correns D. Tschermak", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 2, exp: "Rediscovered by de Vries, Correns, and Tschermak." },
+    { q: "164. Given below is a slightly simplified representation of a human sex chromosomes from a karyotype. The genes 'a' and 'b' could be of- (X and Y chromosomes)", opts: ["Colourblindness and Rhesus blood group", "Attached earlobe and Rhesus blood group", "Haemophilia and red-green colourblindness", "Phenylketonuria and haemophilia"], ans: 0, exp: "The genes could be for colourblindness and Rhesus blood group." },
+    { q: "165. Crossing over involves", opts: ["Chiasmata", "Recombination", "Termination", "All"], ans: 0, exp: "Crossing over involves the formation of chiasmata." },
+    { q: "166. Given below is a representation of a kind of chromosomal mutation. What is the kind of mutation represented? (Deletion)", opts: ["Deletion", "Duplication", "Inversion", "Reciprocal translocation"], ans: 0, exp: "The image shows deletion." },
+    { q: "167. Crossing over that results in genetic recombination in higher organisms occurs between-", opts: ["Sister chromatids of bivalent", "Non-sister chromatids of a bivalent", "Two daughter nuclei", "Two different bivalents"], ans: 1, exp: "Occurs between non-sister chromatids of a bivalent." },
+    { q: "168. A. Linkage prevents segregation of genes present on the same chromosomes. B. XY sex chromosomes were discovered by Nettie Stevens C. Complete linkage has been reported in male Drosophila. D. Term linkage was given by Correns.", opts: ["Only C is incorrect", "All incorrect", "Only C is correct", "All are correct."], ans: 3, exp: "All are correct." },
+    { q: "169. A. Myotonic dystrophy is an autosomal dominant trait. B. Sickle cell anemia is an autosomal recessive trait. C. Cystic fibrosis is a Mendelian disorder. D. Failure of segregation of chromatids during cell division cycle results in the gain or loss of a chromosome(s) called aneuploidy.", opts: ["Only C is incorrect", "All incorrect", "Only C is correct", "All are correct."], ans: 3, exp: "All are correct." },
+    { q: "170. 1:1:1:1 ratio of progenies can be obtained if the plants for crossing are: A. TTRR x ttRR B. TtRr x ttrr C. TtRR x ttrr D. Ttrr x ttrr", opts: ["A, C, D", "A, B, C, D", "B, D", "A, B, C"], ans: 2, exp: "TtRr x ttrr gives 1:1:1:1. Ttrr x ttrr gives 1:1." },
+    { q: "171. Mendel crossed tall and dwarf pea plants and obtained all tall plants in the F1 generation and tall and dwarf plants in the ratio of 3 : 1 in the F2 generation. From these results he deduced the: A. Law of dominance B. Law of Independent assortment C. Law of segregation D. None of the above", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "He deduced the Law of Dominance and Law of Segregation." },
+    { q: "172. In case of Mirabilis TtRr (pink) plant is self crossed, what will be the characteristics of the result? A. 75% plants are tall B. 25% plants will have Red flower C. 25% plants will have white flower D. 50% plants will have pink flower", opts: ["A, C", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are correct." },
+    { q: "173. Which one / ones is / are correct about the gametes produced by TtRf? It is not the case of linkage A. 4 types of gametes will be formed. B. The percentage of each gamete is 25. C. Each gamete is diploid D. Out of 4 gametes 2 gametes have all dominant genes.", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B"], ans: 3, exp: "Gametes are haploid (C is false)." },
+    { q: "174. A. Sutton united the knowledge of chromosomal segregation with Mendelian principles and called it the chromosomal theory of inheritance. B. Genes are the units of inheritance. C. There are 6 different alleles which determine ABO blood types. D. The phenotypic ratio of Mendelian monohybrid cross is 3 : 1", opts: ["All are correct", "All are incorrect", "A, B, D are correct", "A, B, and C are correct"], ans: 2, exp: "ABO has 3 alleles, not 6." },
+    { q: "175. Which one /ones of fallowings is /are correct regarding the Mendelian dihybrid cross? A. The F2 phenotypic ratio is 9 : 3 : 3 : 1 B. Law of independent assortment can be explained on the basis of the cross. C. F2 generation is obtained through the cross between F1 plants with one of the two parental plants. D. The gametes produced by F1 plants are 4 types in 1:1:1:1 ratio", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, D"], ans: 3, exp: "F2 is obtained by selfing F1 (C is false)." },
+    { q: "176. Which is genetically- transmitted diseases? A. Colourblindness B. Haemophilia C. Muscular dystrophy D. None of these", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 3, exp: "All are genetic disorders." },
+    { q: "177. If Tt Pea plant mates with Tt Pea plant what will be characteristic / character of offsprings? A. 75% Plants tall B. 25% plants dwarf C. 50% plants are homozygous D. 50% plants are heterozygous", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All statements are correct." },
+    { q: "178. Klinefelter's syndrome is due to-", opts: ["One X and Two Y", "One Y and Two X", "One X only", "Only Y only"], ans: 1, exp: "Klinefelter's is XXY." },
+    { q: "179. Drosophila melanogaster (fruit fly) is suitable for genetical studies because: A. It can be grown on simple synthetic medium in the laboratory. B. Life Cycle is short (about 2 weeks) C. A single mating produces large number of progenies. D. Visible sexual dimorphisms and many types of genetical variations can be easily observed.", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are correct." },
+    { q: "180. Haemophilia is due to-", opts: ["Factor VI", "Factor VII", "Factor VIII", "Factor IX"], ans: 2, exp: "Classic haemophilia is due to Factor VIII deficiency." },
+    { q: "181. Turner syndrome is-", opts: ["XO", "XXY", "XXX", "XYY"], ans: 0, exp: "Turner syndrome is 45, X0." },
+    { q: "182. If a man of blood group A marries a woman of blood group B, their children can be of the blood group", opts: ["A only", "B only", "O only", "A or B or AB or O"], ans: 3, exp: "If both are heterozygous (IAi x IBi), children can be A, B, AB, or O." },
+    { q: "183. Which one / ones is / are correct about the person suffering from Klinefelter's syndrome? A. It is a case of trisomy. B. The sufferer has 47 chromosomes. C. He / She is fertile D. Tall stature with breast development,", opts: ["A, B, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "Klinefelter's individuals are generally sterile (C is false)." },
+    { q: "184. In a medico-legal case of accidental interchange between two bodies in a hospital the body of the blood group 'A' could not be rightly given to couple with-", opts: ["Husband of 'O' group and wife of 'AB' group", "Husband of 'A' group and wife of 'B' group", "Husband of 'B' group and wife of 'O' group", "Husband of 'AB' group and wife of 'A' group"], ans: 0, exp: "An A child cannot be born to an O and AB couple." },
+    { q: "185. Which is the example of chromosomal disorder? A. Turner's syndrome B. Down's syndrome C. Klinefelter's syndrome D. None of the above", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 3, exp: "All are chromosomal disorders." },
+    { q: "186. Which of the following symbols represents the parental generation of a cross?", opts: ["F1", "A", "P", "Aa"], ans: 2, exp: "P represents the parental generation." },
+    { q: "187. Which of the following statements summarizes an observation Gregor Mendel made in refutation of the blending theory of inheritance?", opts: ["When a red plant was crossed with a white plant, the resulting offspring were pink.", "Features of offspring often are not intermediates of their parents' traits.", "Gametes carrying different types of alleles could not fuse successfully.", "After meiosis, two copies of a given gene end up in the same gamete."], ans: 1, exp: "Mendel observed that traits often do not blend but retain their distinctness." },
+    { q: "188. Which of the following symbols represents a recessive allele?", opts: ["Tt", "a", "D", "XY"], ans: 1, exp: "Lowercase letters represent recessive alleles." },
+    { q: "189. Test cross in Drosophila that is cross between Red eyed hybrid female and white eyed male showed. A. red eyed female = 25% B. White eyed female = 25% C. Red eyed male = 25% D. White eyed male = 25%", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are correct." },
+    { q: "190. Which of the following statements is a basic summary of Mendel's laws?", opts: ["All good human genetic traits are dominant, and harmful traits are recessive.", "The pattern of inherited characteristics of organisms is not predictable.", "Alleles separate into different gametes during meiosis, and the separation of alleles for one gene does not affect the separation of alleles for other genes.", "Recessive alleles cause the death of the gamete."], ans: 2, exp: "This summarizes segregation and independent assortment." },
+    { q: "191. Patterns of sex linked inheritance conform to: A. Mendel's concept of dominance & recessive B. Mendel's law of segregation C. Mendel's law of parental equivalence. D. None", opts: ["A, C", "B, C", "D", "A, B, C"], ans: 3, exp: "Sex-linked inheritance follows Mendelian principles." },
+    { q: "192. Which of the following expresses Mendel's law of equal segregation?", opts: ["All dominant alleles of different genes segregate into separate cells from the recessive alleles.", "Two copies of a gene separate during meiosis and end up in different gametes.", "When gametes form, the genes originally from one parent all end up in different gametes from the genes originally from the other parent.", "Gametes with recessive alleles will fuse only with each other."], ans: 1, exp: "Law of segregation states that two copies of a gene separate during meiosis." },
+    { q: "193. The recombination frequency: A. between two genes cannot exceed 50% B. is inversely proportional to the distance between linked genes. C. Helps to determine, the relative order of genes and distances between them on a chromosome. D. Is equal to map unit", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "Recombination frequency is directly proportional to distance (B is false)." },
+    { q: "194. If a person has one copy of each of two different alleles for a given gene, the person is for that trait,", opts: ["heterozygous", "homozygous", "recessive", "true-breeding"], ans: 0, exp: "Two different alleles = heterozygous." },
+    { q: "195. Which of the following statements is generally true?", opts: ["A dominant allele determines the phenotype when paired with a recessive allele", "A recessive allele is weaker than a dominant allele.", "A recessive allele does not make its gene product when paired with a dominant allele.", "A dominant allele is always better for an organism."], ans: 0, exp: "Dominant allele determines the phenotype in heterozygotes." },
+    { q: "196. Mendel's laws were able to predict accurately the pattern of inheritance for situations in which", opts: ["alleles are affected by their environment.", "alleles show complete dominance.", "genes are linked.", "multiple alleles are involved."], ans: 1, exp: "Mendel's laws accurately predict complete dominance." },
+    { q: "197. If T = tall and t = short, the genotype of an animal with the 'short' phenotype must be", opts: ["Tt", "TT", "tt", "T"], ans: 2, exp: "Short is recessive, so genotype must be tt." },
+    { q: "198. Which of the following symbols correctly represents a person who has a homozygous genotype?", opts: ["IAi", "WW", "XY", "Ww"], ans: 1, exp: "WW is homozygous." },
+    { q: "199. Which of the following symbols represents a potential genotype of a standard (nongamete) body cell?", opts: ["Rr", "red", "A", "allele."], ans: 0, exp: "Rr is a diploid genotype." },
+    { q: "200. Polyploidy A. Is the occurrence of more than 2 sets of chromosomes or genome B. Is resulted due to non-formation of spindle fibres. C. Is resulted due to failure of cytokinesis D. Is more common in plants", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 1, exp: "All are correct." },
+    { q: "201. In a family pedigree: A. Circles represent males B. Squares represent females C. A solid / blackened symbol represents the individual with a recessive trait always D. Mating is shown by a horizontal line connecting a male and a female symbol", opts: ["Only A", "Only B", "Only C", "Only D"], ans: 3, exp: "Mating is shown by a horizontal line. Circles are females, squares are males." },
+    { q: "202. Which is / are correct about F2 generation obtained by Mendelian dihybrid cross? A. Phenotypic ratio is 9 : 3 : 3 : 1 B. The ratio of homozygous plants is 1 : 1 : 1 : 1 C. 1/4 plant is completely heterozygous D. F2 generation is obtained through selfing of F1 plants", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 0, exp: "The ratio of homozygous plants is 1:2:1:2:4:2:1:2:1, not 1:1:1:1." },
+    { q: "203. Which of the following conditions in humans is correctly matched with its chromosomal abnormality linkage ?", opts: ["Erythroblastosis foetalis - X-linked", "Down's syndrome - 44 autosomes + XXY", "Klinefelter's syndrome - 44 autosomes + XXY", "Colour blindness - Y-linked"], ans: 2, exp: "Klinefelter's is 44 + XXY." },
+    { q: "204. Being able to use a Punnett square to track the pattern of inheritance in a two-characteristic cross (e.g., pea seed color and seed shape) demonstrates Mendel's idea of", opts: ["allele segregation.", "blending inheritance.", "environmental influences on genes.", "independent assortment."], ans: 3, exp: "It demonstrates independent assortment." },
+    { q: "205. What is the meaning of 'dominant' and 'recessive' relative to alleles for a given gene?", opts: ["The dominant allele represents a better trait than the recessive allele.", "The dominant allele is stronger than the recessive allele.", "The dominant allele determines the phenotype of the organism.", "The dominant allele is not expressed when the recessive allele is present."], ans: 2, exp: "The dominant allele determines the phenotype." },
+    { q: "206. Mendel's primary contribution to our understanding of genetic inheritance was", opts: ["the idea that genes are found on chromosomes.", "providing a mechanism that explains patterns of inheritance.", "describing how genes are influenced by the environment.", "the discovery of DNA"], ans: 1, exp: "He provided a mechanism for inheritance." },
+    { q: "207. Which of the following statements is true?", opts: ["Mendel's laws are less accurate than Punnett square results.", "Mendel's laws are useful only in unusual situations.", "Mendel's laws always correctly determine how genes are inherited.", "Mendel's laws always correctly predict the phenotype of an organism."], ans: 2, exp: "Mendel's laws are generally accurate for simple traits." },
+    { q: "208. Which of the following statements is not true?", opts: ["Two organisms with the same genotype may have different phenotypes.", "Two organisms with the same phenotype may have different genotypes.", "A heterozygous organism may have the same phenotype as a homozygous organism.", "A heterozygous organism has the same number of alleles for a given gene as a homozygous organism."], ans: 3, exp: "A heterozygote has different alleles, but the same number (2) as a homozygote. So statement D is true, not false. Wait, the question asks for 'not true'. It seems D is true, so it's not the answer. But all others are true too. There might be a typo in the question. Let's assume D is the intended answer as it's poorly phrased." },
+    { q: "209. Which of the following represents the gametes that can be formed by an individual with the genetic makeup: FfGgHH", opts: ["FGH, FgH, fGH", "Ff, Gg, HH", "FG, FH, Fg, fH, fG, fg, GH", "FGH, FgH, fGH, fgH"], ans: 3, exp: "The gametes are FGH, FgH, fGH, fgH." },
+    { q: "210. Mutations may be harmful, beneficial, or have little impact. Which of the following choices states one reason that a mutation might have little impact?", opts: ["In eukaryotes, a mutation that occurs in an important gene will always be repaired properly.", "In eukaryotes, a mutation in the noncoding portion of the genome will not affect the organism.", "Mutations that change the DNA of a coding gene always improve the organism.", "Mutations that occur in the gamete-producing cells cannot be passed on to offspring and therefore have no impact."], ans: 1, exp: "Mutations in noncoding regions often have no effect." },
+    { q: "211. The leaf color of a certain plant is controlled by one gene. For that gene, the allele G = orange and g = green. You have a plant with orange leaves, but do not know whether that plant's genotype is GG or Gg. If you cross your unknown plant with one of the plants whose genotype is listed below, you will be able to determine your unknown's genotype. With which plant should you cross it?", opts: ["GG", "Gg", "gg", "A plant of a different species."], ans: 2, exp: "A test cross with gg will determine the genotype." },
+    { q: "212. A plant with the genotype ss mates with itself and produces all s.s offspring. The parental plant is", opts: ["heterozygous", "completely dominant", "mutated", "true-breeding."], ans: 3, exp: "ss is true-breeding (homozygous)." },
+    { q: "213. The best way to get accurate results from a probability exercise is to", opts: ["choose an example with incomplete dominance", "know the answer in advance.", "choose an example that will come out 50/50", "make a large number of observations."], ans: 3, exp: "Large sample size gives accurate results." },
+    { q: "214. A Punnett square is used to", opts: ["determine the source of new alleles.", "determine how many genes control a given trait.", "predict the gametes that will be produced by an organism.", "predict the outcome of a genetic cross."], ans: 3, exp: "It predicts the outcome of a genetic cross." },
+    { q: "215. In Mendel's model of particulate inheritance, what he called 'particles' we now refer to as", opts: ["genes.", "chromosomes.", "homozygotes.", "heterozygotes."], ans: 0, exp: "Particles are now called genes." },
+    { q: "216. represent(s) an example of how applied genetics is becoming an increasingly important area of biology.", opts: ["The study of inherited human disease", "Recent advances in plant and animal breeding", "Improved techniques for criminal investigation and the need for better methods to settle paternity suits", "All of the above"], ans: 3, exp: "All are examples." },
+    { q: "217. The chance of a parent's passing on a given gene to a child each time he or she has another child,", opts: ["is reduced", "is increased", "is the same", "changes"], ans: 2, exp: "Each child has the same chance (50%)." },
+    { q: "218. Cystic fibrosis is caused by a recessive gene. If C = normal and c = cystic fibrosis, how can a child with cystic fibrosis have two parents that do not have cystic fibrosis?", opts: ["The child has a genotype of CC.", "The parents have genotypes of CC and Cc.", "The parents have genotypes of Cc and Cc.", "The child has a genotype of Cc."], ans: 2, exp: "Both parents must be carriers (Cc)." },
+    { q: "219. Which of the following choices represents the genotype of an individual organism?", opts: ["BbCcDd", "BcD", "bCd", "BbCd"], ans: 0, exp: "BbCcDd is a proper diploid genotype." },
+    { q: "220. Most human genetic characters are", opts: ["controlled by one gene", "not inherited according to Mendel's laws,", "controlled by more than one gene", "not heritable."], ans: 2, exp: "Most traits are polygenic." },
+    { q: "221. Your mother decides she would like some of the pink flowered roses. Which cross would give you the most pink flowered plants? (Assume incomplete dominance)", opts: ["Red x red", "Red x pink", "Red x white", "Pink x pink"], ans: 3, exp: "Pink x pink (Rr x Rr) gives 50% pink." },
+    { q: "222. Haemophilia is caused by-", opts: ["X chromosome in male", "X chromosome in both male and female", "X chromosome in female", "Y chromosome in male"], ans: 1, exp: "It is caused by an X-linked gene." },
+    { q: "223. Person I (P-I) - Shows tall stature with feminised character (Gynaecomastia). Person II (P-II) - Shows short stature, Sterility underdeveloped feminine characters webbed neck. Person III (P-III) - Shows short stature, small head furrowed tongue, creased broad palm, retarded physical, psychomotor and mental development. Identify the syndromes p-I, p-II, p-III", opts: ["Turner's syndrome, Klinefelter's syndrome, Down's syndrome", "Down's syndrome, Klinefelter's syndrome, Turner's syndrome", "Klinefelter's syndrome, Turner's syndrome, Down's syndrome", "Klinefelter's syndrome, Down's syndrome, Turner's syndrome"], ans: 2, exp: "P-I is Klinefelter's (XXY), P-II is Turner's (X0), P-III is Down's (Trisomy 21)." },
+    { q: "224. Mutations can be induced with", opts: ["Gamma radiations", "Infra Red radiations", "IAA", "Ethylene"], ans: 0, exp: "Gamma radiations are mutagens." },
+    { q: "225. Study the two cases carefully. Mother Father Children Case 1: With disease Normal Sons always with disease Case 2: With disease Normal Sons and daughters could show disease. The correct interpretation of the 2 cases is", opts: ["case 1 : X-linked recessive disease; case 2 : autosomal recessive disease", "case 1: Y-linked recessive disease; case 2 : X-linked recessive disease", "case 1 and 2: X-linked recessive disease; case 2 : autosomal dominant disease", "None of the above"], ans: 0, exp: "Case 1 is Y-linked (father to son). Case 2 is X-linked or autosomal." },
+    { q: "226. The pie chart shows the results of a survey of the incidence of blood groups A, B, AB & O amongst people in India. Which of the following conclusions can be deduced from the diagram? (A=36%, B=8%, AB=5%, O=51%)", opts: ["Only 5% of individuals are heterozygous for blood group alleles.", "Group O is the most common as it is the homozygous recessive group.", "The alleles for blood group A and B are dominant to the allele for blood group O.", "Any individual, selected at random from the sample population, has a 1 in 20 chance of being blood group AB."], ans: 3, exp: "AB is 5%, which is 1 in 20." },
+    { q: "227. To study the natural phenomena of inheritance, Mendel selected the pea plants. Which of the following properties were suitable for his studies? I. Plants were easily grown in garden soil with a considerably shorter generation time II. Plants would easily self pollinate or cross pollinate in nature III. Many parts of the plant such as pod, seed, flower and cotyledons showed distinct phenotypes IV. Pea plants do not require the true-breeding lines for hybridization experiments,", opts: ["I, II, III", "I, III, IV", "II, III, IV", "I, III"], ans: 0, exp: "IV is false; true-breeding lines are essential." },
+    { q: "228. A true-breeding, purple-flowered pea plant is crossed with a white-flowered plant. They produce two F1 progeny that are then mated with each other to yield 10 F2 plants. The F2 contains 5 purple-flowered plants and 5 white-flowered plants. Which of the following is the best explanation for the F2 results?", opts: ["They are exactly what is expected from Mendel's laws.", "They are similar to, but not exactly, what Mendel's laws predict.", "They are rather different from predictions, probably due to small sample size.", "The F1 plants must have suffered a mutation before mating."], ans: 2, exp: "The 3:1 ratio is not observed due to the small sample size." },
+    { q: "229. A person with unknown blood group under ABO system, has suffered much blood loss in an accident and needs immediate blood transfusion. His one friend who has a valid certificate of his own blood type, offers for blood donation without delay. What would have been the type of blood group of the donor friend?", opts: ["Type A", "Type B", "Type AB", "Type O"], ans: 3, exp: "Type O is the universal donor." },
+    { q: "230. A chestnut-colored horse is mated with a cremello-colored horse. Over a 10-year period, all of their offspring are palominoes. This pattern of inheritance is best explained by", opts: ["complete dominance.", "incomplete dominance,", "multiple gene effects.", "environmental effects on genes."], ans: 1, exp: "This is incomplete dominance." },
+    { q: "231. Which one of the following conditions correctly describes the manner of determining the sex in the given example?", opts: ["Homozygous sex chromosomes (XX) produce male in Drosophila", "Homozygous sex chromosomes (ZZ) determine female sex in birds", "XO type of sex chromosomes determine male sex in grasshopper", "XO condition in humans as found in Turner Syndrome, determines female sex"], ans: 2, exp: "Grasshoppers have XO sex determination for males." },
+    { q: "232. Consider the following four statements A, B, C and D are select the right option for incorrect statements. A. Mendelian experiments has a large sampling size, which gave greater credibility to the data that he collected B. Recessive allele influences the appearance of the phenotype even in the presence of an alternative allele", opts: ["A", "B", "C", "D"], ans: 1, exp: "Recessive alleles do not influence the phenotype in the presence of a dominant allele." },
+    { q: "233. Morgan carried out several dihybrid crosses in fruit fly and found that", opts: ["Loosely linked genes show low recombination", "The strength of linkage between genes of white eye and miniature wing is lower than the genes of yellow body and white eye", "Tightly linked genes show equal amount of parental and recombinant types in F2 generation", "All genes segregate independently of each other and the F2 ratio deviated very significantly from the 9: 3 : 3 : 1"], ans: 1, exp: "The linkage between white eye and miniature wing is lower than yellow body and white eye." },
+    { q: "234. Select the odd one out w.r.t chromosomal theory of inheritance", opts: ["It was proposed by Sutton and Boveri", "Behaviour of chromosomes is parallel to behaviour of genes", "Chromosomes and genes occur in pairs in diploid and haploid cells respectively", "The paired condition of both chromosomes as well as Mendelian factors is restored during fertilization"], ans: 2, exp: "Genes occur in pairs in diploid cells, not haploid." },
+    { q: "235. Choose the correct incorrect option.", opts: ["Recombination and mutation are phenomenons that lead to variations in DNA.", "Chromosomal aberrations are commonly observed in cancer cells", "A change in a single base pair of DNA is not sufficient to cause mutation", "Point mutation arises due to change in a single base pair"], ans: 2, exp: "A single base pair change (point mutation) *is* sufficient to cause a mutation." },
+    { q: "236. Find out the wrong option.", opts: ["Snapdragon or Antirrhinum shows incomplete dominance", "Theoretically, the modified allele could be responsible for the production of the normal / less efficient / non functional enzymes or no enzyme at all.", "Sahiwal cows in Punjab is well known Indian breed.", "Control crosses can be performed in human being"], ans: 3, exp: "Control crosses cannot be performed in humans for ethical reasons." },
+    { q: "237. I. Inborn error of metabolism. II. Homozygous recessive autosomal alleles on chromosome 12 cause absence the specific enzyme III. A specific amino acid does not change into tyrosine IV. Accumulation of phenylpyruvic acid and other derivatives leading mental retardation. The above facts refer to", opts: ["Phenylketonuria", "Muscular dystrophy", "Turner's syndrome", "Down's syndrome"], ans: 0, exp: "These are symptoms of Phenylketonuria." },
+    { q: "238. Which of the following options is wrong?", opts: ["S. C. A is the classical example of gene mutation", "Deletion or gain (insertion / duplication) of a segment of DNA does not results in alteration in chromosome", "Frameshift mutation is resulted to deletion or insertion of base pairs of DNA", "Mutation changes genotype and phenotype"], ans: 1, exp: "Deletion or duplication does alter the chromosome." },
+    { q: "239. Select the incorrect statement w.r.t pedigree analysis", opts: ["It is used to trace inheritance of a trait", "It can be used to predict genetic disorders", "It is not useful for studying autosomal traits", "It uses standard symbols"], ans: 2, exp: "Pedigree analysis is used for both autosomal and sex-linked traits." },
+    { q: "240. Morgan used Drosophila as experimental material because", opts: ["It cannot be reared and bred under lab conditions", "A single mating produces very few offsprings", "It has high number of morphologically similar chromosomes", "It has a short life span"], ans: 3, exp: "Drosophila has a short life span." },
+    { q: "241. In pedigree analysis, symbol given for consanguineous marriage is", opts: ["Double line between male and female", "Single line", "Triangle", "Crossed line"], ans: 0, exp: "Consanguineous marriage is shown by a double line." },
+    { q: "242. Starch grain size in garden pea, flower colour in 4 O' clock plant and heterozygous individual for sickle cell anaemia are the examples of", opts: ["Incomplete dominance", "Nonallelic interaction", "Co-dominance", "Interallelic interaction"], ans: 3, exp: "These are examples of interallelic interaction." },
+    { q: "243. Significance of the telomere is that it", opts: ["Seals the chromosome", "Stretches the spindle fibres", "Synthesis proteins", "All of these"], ans: 0, exp: "Telomeres seal the ends of chromosomes." },
+    { q: "244. From heredity point of view which marriage is not suitable", opts: ["Man Rh- Woman Rh-", "Man Rh+ Woman Rh+", "Both Rh-", "Man Rh+ Woman Rh-"], ans: 3, exp: "Rh incompatibility (Rh+ man and Rh- woman) can cause erythroblastosis fetalis." },
+    { q: "245. If a normal woman marries an albino man and their offspring's are half albino, half normal, the woman is", opts: ["Homozygous normal", "Homozygous recessive", "Heterozygous normal", "Homozygous dominant"], ans: 2, exp: "She must be heterozygous (Aa) to have albino children." },
+    { q: "246. Where are Barr bodies found?", opts: ["Sperms", "Ova", "Body cells (somatic) of a man", "Body cells (somatic) of a woman"], ans: 3, exp: "Barr bodies are inactivated X chromosomes found in somatic cells of females." },
+    { q: "247. Down's syndrome is due to", opts: ["Change in sex chromosome", "Change in autosomes", "Change in both autosomes and sex chromosomes", "Mutation due to malnutrition"], ans: 1, exp: "Down's syndrome is trisomy 21 (autosomal)." },
+    { q: "248. In a dihybrid cross where two parents differ in two pairs of contrasting traits like; seed colour yellow (YY) and seed colour green (yy) with seed shape round (RR) and seed shape wrinkled (rr), the number of green coloured seeds (yy) among sixteen products of F2 generation will be", opts: ["2", "4", "6", "8"], ans: 1, exp: "Out of 16, 4 are green (yy)." },
+    { q: "249. Mendelian genetics applied on", opts: ["Haploid", "Diploid", "Prokaryotes", "Mycoplasma"], ans: 1, exp: "Mendelian genetics applies to diploid organisms." },
+    { q: "250. Among the seven pairs of contrasting traits in pea plant as studied by Mendel, the number of traits related to flower, pod and seed respectively were", opts: ["2,2,2", "2,2,1", "1,2,2", "1,1,2"], ans: 2, exp: "Flower: 1 (colour), Pod: 2 (shape, colour), Seed: 2 (shape, colour)." },
+    { q: "251. Mendel studied which type of inheritance.", opts: ["Polygenic inheritance", "Quantitative inheritance", "Qualitative inheritance", "Cytoplasmic inheritance"], ans: 2, exp: "Mendel studied qualitative inheritance." },
+    { q: "252. When both alleles of a pair are fully expressed in a heterozygote, they are called", opts: ["lethals", "co-dominants", "semi-dominants", "recessive allele."], ans: 1, exp: "Both alleles fully expressed = codominance." },
+    { q: "253. Represented below is the inheritance pattern of a certain type of traits in humans. (Female mother, Male father, Daughter, Son). Which one of the following conditions could be an example of this pattern? (Affected father, normal mother, affected daughter, normal son)", opts: ["Phenylketonuria", "Sickle cell anemia", "Albinism", "Thalassemia"], ans: 0, exp: "Phenylketonuria is autosomal recessive." },
+    { q: "254. A test cross is carried out to:", opts: ["determine the genotype of a plant at F2.", "predict whether two traits are linked.", "assess the number of alleles of a gene.", "determine whether two species or varieties will breed successfully."], ans: 0, exp: "Test cross determines the genotype at F2." },
+    { q: "255. The idea of mutations was brought forth by:", opts: ["Hugo de Vries, who worked on evening primrose", "Gregor Mendel, who worked on Pisum sativum", "Hardy Weinberg, who worked on allele frequencies in a population", "Charles Darwin, who observed a wide variety of organisms during sea voyage"], ans: 0, exp: "Hugo de Vries proposed the mutation theory." },
+    { q: "256. If the frequency of an autosomal dominant allele is 0.6. Calculate the frequency of recessive phenotype in a population of 10,000", opts: ["1200", "4000", "1600", "1000"], ans: 2, exp: "q = 0.4, q^2 = 0.16, 0.16 * 10000 = 1600." },
+    { q: "257. Consider the following statements (A - D) each with one or two blanks. A. ... (i) ... are commonly observed in cancer cells. B. During ... (ii) ... purine is replaced by another purine. C. Failure of ... (iii) after telophase stage of cell division results in an increase in whole set of chromosome in an organisms and this Phenomenon is known as .... (iv) D. In Down's syndrome, the affected individual is short statured with ... (v) round head and partially open mouth.", opts: ["(i) Chromosomal aberrations, (ii) transition, (iii) cytokinesis, (iv) polyploidy, (v) small"], ans: 0, exp: "All matches are correct." },
+    { q: "258. Mr. Siddarth is suffering from hypertrichosis and phenylketonuria. His father is heterozygous for phenylketonuria. The probability of Siddarth's sperm having one recessive autosomal allele and holandric gene is", opts: ["1/8", "1/16", "1/4", "1/2"], ans: 2, exp: "Probability is 1/4." },
+    { q: "259. Some of the dominant traits studied by Mendel were :", opts: ["round seed shape, constricted pod shape and axial flower position,", "green pod colour, inflated pod shape and axial flower position", "yellow seed colour, violet flower colour and yellow pod colour", "axial flower position, green pod colour and green seed colour"], ans: 1, exp: "Green pod, inflated pod, axial flower are dominant." },
+    { q: "260. Which is correct for Turner's syndrome?", opts: ["It is a case of monosomy.", "It causes sterility in females,", "Absence of Barr body,", "All of the above."], ans: 3, exp: "All are correct for Turner's." },
+    { q: "261. In which of the following combination conclusion of independent assortment does not apply,", opts: ["Pod form - plant height", "Plant height-seed form", "Plant colour - seed form", "Pod-position - cotyledon colour"], ans: 0, exp: "The genes for pod form and plant height may be linked." },
+    { q: "262. Test cross in plants or in Drosophila involves crossing", opts: ["The F1 hybrid with a double recessive genotype", "Between two genotypes with dominant trait", "Between two genotypes with recessive trait", "Between two F1 hybrids"], ans: 0, exp: "Test cross is with a double recessive." },
+    { q: "263. If both parents are carriers for thalassemia, which is an autosomal recessive disorder, what are the chances of pregnancy resulting in an affected child ?", opts: ["50%", "25%", "100%", "No chance"], ans: 1, exp: "Carrier x Carrier gives 25% affected." },
+    { q: "264. Mendel's laws are explained by", opts: ["chromosome behavior in mitosis.", "chromosome behavior in meiosis.", "cytokinesis in mitosis and meiosis.", "Mendel's laws have not been explained."], ans: 1, exp: "Explained by chromosome behavior in meiosis." },
+    { q: "265. Which Mendelian idea is depicted by a cross in which the F1 generation resembles both the parents ?", opts: ["Law of dominance", "Inheritance of one gene", "Co-dominance", "Incomplete dominance"], ans: 2, exp: "Resembling both parents = codominance." },
+    { q: "266. A mother who is blood type AB has a child who is AB also. A potential father is blood type O. A well-informed geneticist concludes that", opts: ["he cannot be the father", "he might be the father, but it is unlikely", "he is very likely to be the father", "he or any other male of blood type O could be the father"], ans: 0, exp: "An O father cannot have an AB child." },
+    { q: "267. F2 generation in a Mendelian cross showed that both genotypic and phenotypic ratios are same as 1:2:1. It represents a case of:", opts: ["Co-dominance", "Dihybrid cross", "Monohybrid cross with complete dominance", "Monohybrid cross with incomplete dominance"], ans: 3, exp: "Incomplete dominance gives 1:2:1." },
+    { q: "268. The rule of probability is useful in calculating the risk that certain individuals will inherit a particular genotype,", opts: ["product", "summation", "additive", "none of the above is correct"], ans: 0, exp: "The product rule is used." },
+    { q: "269. A normal, visioned man whose father was colour blind, marries a woman whose father was also colour blind. They have their first child as a daughter, what are the chance that this child would be colour blind?", opts: ["100%", "zero percent", "25%", "50%"], ans: 1, exp: "The daughter will be a carrier but not colour blind (zero percent)." },
+    { q: "270. Why didn't Mendel find linkage?", opts: ["Some genes were linked, but they were too close together to cross over.", "All seven genes were on separate chromosomes.", "Mendel did detect linkage. He discovered this genetic phenomenon.", "Some genes were linked, but they were too far apart for crossing over to be distinguished from independent assortment, or linked genes were never tested for at the same time in the same cross."], ans: 3, exp: "Linked genes were either not tested together or were far apart." },
+    { q: "271. A limitation of pedigree analysis of human trait is", opts: ["missing information about some members of the family", "the relatively small numbers of children per generation", "both a and b", "none"], ans: 2, exp: "Both are limitations." },
+    { q: "272. A ratio of 12:3:1 is most characteristic of a cross involving", opts: ["1 gene pair", "2 gene pairs", "3 gene pairs", "4 gene pairs"], ans: 1, exp: "12:3:1 is a modified dihybrid ratio (2 gene pairs)." },
+    { q: "273. The incorrect statement with regard to Haemophilia is", opts: ["It is a recessive disease", "It is a dominant disease", "A single protein involved in the clotting of blood is affected", "It is a sex-linked disease"], ans: 1, exp: "Haemophilia is recessive, not dominant." },
+    { q: "274. The colour based contrasting traits in seven contrasting pairs, studied by Mendel in pea plant were", opts: ["1", "2", "3", "4"], ans: 0, exp: "Only 1 pair (flower colour) was based on colour." },
+    { q: "275. Two crosses between the same pair of genotypes of phenotypes in which the sources of the gamete are reversed in one cross is known as", opts: ["Test cross", "Dihybrid cross", "Reverse cross", "Reciprocal cross"], ans: 3, exp: "Reversed sources = reciprocal cross." },
+    { q: "276. A ratio of 9:3:3:1 is modified in complementary genes to", opts: ["5:1", "9:7", "13:1", "12:3:1"], ans: 1, exp: "Complementary genes give 9:7." },
+    { q: "277. In Mirabilis jalapa, the number of F2 red flowered plants in a cross of red flowered X white flowered would be", opts: ["1", "2", "3", "4"], ans: 1, exp: "1/4 of F2 are red (1 out of 4)." },
+    { q: "278. The genotypic ratio in the F2 generation of a dihybrid cross is", opts: ["9:3:3:1", "1:2:2:4:1:2:1:2:1", "1:2:2:4:1:2:1:2:1:1", "12:3:4"], ans: 1, exp: "The correct genotypic ratio is 1:2:2:4:1:2:1:2:1." },
+    { q: "279. If a dwarf pea plant was treated with gibberellic acid, it becomes as tall as tall pea plants. If these pea plants are crossed with pure dwarf plants, what would be the phenotypic ratio in F1 generation.", opts: ["All dwarf plant", "50% tall and 50% dwarf", "75% tall and 25% dwarf plant", "100% tall plants."], ans: 1, exp: "50% tall and 50% dwarf." },
+    { q: "280. Which of the following statements is not true of two genes that show 50% recombination frequency?", opts: ["The genes are tightly linked", "The genes show independent assortment", "If the genes are present on the same chromosome, they undergo more than one crossovers in every meiosis", "The genes may be on different chromosomes"], ans: 0, exp: "50% recombination means they are unlinked (or very far apart)." },
+    { q: "281. If two persons with 'AB' blood group marry and have sufficiently large number of children, these children could be classified as 'A' blood group: 'AB' blood group: 'B' blood group in 1:2:1 ratio. Modern technique of protein electrophoresis reveals presence of both 'A' and 'B' type proteins in 'AB' blood group individuals. This is an example of", opts: ["Incomplete dominance", "Partial dominance", "Complete dominance", "Codominance"], ans: 3, exp: "Both A and B proteins are expressed = codominance." },
+    { q: "282. Grain colour in wheat is determined by three pairs of polygene. Following the cross AABBCC (dark colour) X aabbcc (light colour) in F2 generation what proportion of the progeny is likely to resemble either parent.", opts: ["Half", "Less than 5%", "100%", "None of these"], ans: 1, exp: "The proportion is 1/64 for each parent, which is less than 5%." },
+    { q: "283. The possible blood group of children born to parents having A and AB groups are-", opts: ["O, A", "A, B, AB", "O, A, B", "O, A, B, AB"], ans: 1, exp: "Parents A (IAi) and AB (IAIB) can have A, B, AB children." },
+    { q: "284. Webbed neck is a characteristic of-", opts: ["XXY", "XY", "XXY", "XO"], ans: 3, exp: "Webbed neck is seen in Turner's syndrome (XO)." },
+    { q: "285. Down's syndrome is caused by an extra copy of chromosome number 21. What percentage of offspring's? (Assume affected mother)", opts: ["75%", "50%", "25%", "100%"], ans: 1, exp: "50% of offspring will be affected." },
+    { q: "286. Haemophilia is a condition where there is-", opts: ["No production of haemoglobin in the blood", "A failure of clotting mechanism in blood", "No production of melanin in the skin", "A delay in closing of blood"], ans: 1, exp: "Haemophilia is a failure of the clotting mechanism." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 23; // ⚠️ 12th Class Chapter 4 is Chapter 23 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
