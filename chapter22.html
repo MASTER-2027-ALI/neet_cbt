@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 22: Reproductive Health - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 22: Reproductive Health</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. What is amniocentesis? I. A prenatal, foetal determination test. II. A postnatal foetal determination test III. It is based on the chromosomal pattern of the amniotic fluid. IV. It is based on the chromosomal pattern of the chorionic fluid. V. It is based on the chromosomal pattern of the amniotic fluid and the seminal fluid", opts: ["I, III", "I, IV", "II, V", "I, V"], ans: 0, exp: "Amniocentesis is a prenatal test based on the chromosomal pattern of the amniotic fluid." },
+    { q: "2. Reproductive health in society can be improved by- I. Introduction of sex education in schools. II. Increased medical assistance. III. Awareness about contraception and STDs IV. Equal opportunities to male and female child. V. Ban on amniocentesis VI. Encouraging myths and misconceptions", opts: ["All", "I, II, IV, V", "I, II, III, IV, V", "II, V"], ans: 2, exp: "All these steps except VI (encouraging myths) help improve reproductive health." },
+    { q: "3. When were family planning programmes initiated in India?", opts: ["1948", "1962", "1959", "1951"], ans: 3, exp: "Family planning programmes were initiated in India in 1951." },
+    { q: "4. What is the full form of RCH?", opts: ["Reproductive and Child Health Care", "Reproduction, Contraception and Health", "Reproduction and Child Health", "None"], ans: 0, exp: "RCH stands for Reproductive and Child Health Care." },
+    { q: "5. Select the statement(s) that relate to reproductive health-", opts: ["Healthy reproductive organs with normal functions", "Emotional aspects of reproduction", "Social aspects of reproduction", "All"], ans: 3, exp: "Reproductive health includes physical, emotional, and social aspects." },
+    { q: "6. Choose the correct statements - I. According to the WHO, reproductive health is total well being in the physical, social, emotional, behavioural aspects of reproduction II. According to the WHO, reproductive health is total well being in the physical, social and emotional aspects of reproduction III. A reproductively healthy society has people with physically and functionally normal reproductive organs. IV. Reproductive health societies have abnormal sexual and behavioural interactions", opts: ["I, II, III", "II, IV", "I, III", "I"], ans: 2, exp: "WHO defines reproductive health as total well-being in physical, social, and emotional aspects (Statement II). Statement III is also correct. So I and III are correct." },
+    { q: "7. Where was 'Saheli' developed?", opts: ["Indian Council of Medical Research, New Delhi", "Central Drug Research Institute, Lucknow", "All India Institute of Medical Sciences, New Delhi", "None"], ans: 1, exp: "Saheli was developed at CDRI, Lucknow." },
+    { q: "8. What is true for IUDs? I. They are self-inserted II. They are inserted by expert nurses III. They may be non-medicated IUDs, copper releasing IUDs or hormone releasing IUDs. IV. They are the one of the most widely accepted contraceptives in India. V. They are inter-uterine devices", opts: ["All", "II, III, IV", "I, II, III", "I, II, III, IV"], ans: 0, exp: "IUDs are inserted by experts, can be non-medicated/copper/hormone releasing, are widely accepted, and stand for Intra-Uterine Devices." },
+    { q: "9. What is true for 'Lactational amenorrhoea'? I. It means absence of menstruation II. Ovulation does not occur during the lactational period III. Chances of failure of contraception are almost nil upto six months following parturition IV. Side effects are almost nil V. Contraceptive efficiency reduces after the period of intense lactation VI. It is a natural method of contraception VII. It increases phagocytosis of sperms", opts: ["II, III, IV, V, VI", "All except VII", "II, III, IV, V", "All"], ans: 1, exp: "Lactational amenorrhea is a natural method (VI), has no side effects (IV), prevents ovulation (II), has high success up to 6 months (III), and efficiency reduces after intense lactation (V). It does not increase phagocytosis of sperms (that's IUDs)." },
+    { q: "10. What is the full form of IUDs?", opts: ["Inter Uterine Devices", "Intra Uterine Diseases", "Intra Uterine Devices", "Inter Uterine Diseases"], ans: 2, exp: "IUD stands for Intra Uterine Devices." },
+    { q: "11. What is the method called where the male withdraws his penis just before ejaculation?", opts: ["Coitus interruptus", "Lactational amenorrhoea", "Withdrawal", "Both a and c"], ans: 3, exp: "This method is called coitus interruptus or withdrawal." },
+    { q: "12. Diaphragms, cervical caps and vaults are -", opts: ["Reusable", "Non-reusable", "Reusable for males only", "None"], ans: 0, exp: "Diaphragms, cervical caps, and vaults are reusable barrier contraceptives." },
+    { q: "13. On which days of the menstrual cycle is ovulation expected?", opts: ["10th - 30th", "1st - 10th", "10th - 17th", "18th - 25th"], ans: 2, exp: "Ovulation typically occurs around day 14, so the fertile window is roughly 10th-17th day." },
+    { q: "14. Diaphragms, cervical caps and vaults are-", opts: ["For females only", "For males only", "For males and females", "None"], ans: 0, exp: "These are female barrier methods." },
+    { q: "15. I. Male condoms are disposable, female condoms are not. II. Male and female condoms, both, are disposable. III. Condoms are not disposable in general IV. Condoms cannot be self-inserted. What is true from the above statements?", opts: ["I, IV", "III, IV", "Only II", "All"], ans: 2, exp: "Both male and female condoms are disposable (Statement II is true)." },
+    { q: "16. Nirodh is a popular brand of-", opts: ["Contraceptive pill", "Condom", "IUD", "Diaphragm"], ans: 1, exp: "Nirodh is a government-branded male condom." },
+    { q: "17. Condoms are barriers that cover-", opts: ["Penis in male and ovary in female", "Penis in male and cervix and vagina in female", "Scrotum in male and cervix and vagina in female", "Cervix in male and vagina in female"], ans: 1, exp: "Male condoms cover the penis; female condoms cover the cervix and vagina." },
+    { q: "18. Condoms-", opts: ["Increase sperm phagocytosis", "Decrease sperm motility", "Prevent the ejaculated semen from entering the female reproductive tract", "Inhibit ovulation"], ans: 2, exp: "Condoms act as a physical barrier, preventing semen from entering the female tract." },
+    { q: "19. Barrier methods are available for -", opts: ["Only males", "Only females", "Both", "None"], ans: 2, exp: "Barrier methods are available for both males (condoms) and females (diaphragms, etc.)." },
+    { q: "20. What is true of natural methods of contraception?", opts: ["They increase phagocytosis of sperms", "They employ barriers to prevent fertilisation", "They are natural ways of avoiding chances of fertilisation", "They are surgical methods and are terminal methods"], ans: 2, exp: "Natural methods are ways to avoid fertilization without drugs or devices." },
+    { q: "21. What is true for an ideal contraceptive? I. It should be user-friendly II. It should be easily available III. It should be ineffective and reversible with least side effects IV It should be effective and reversible with least side effects. V. It should interfere with the sexual act of the user", opts: ["All", "I, II, III", "I, II, IV", "I, II, IV, V"], ans: 2, exp: "An ideal contraceptive should be user-friendly, easily available, effective, reversible, with least side effects, and should not interfere with the sexual act." },
+    { q: "22. What is the marriageable age for the females and males in India?", opts: ["18, 18", "18, 25", "21, 18", "18, 21"], ans: 3, exp: "The legal marriageable age is 18 for females and 21 for males." },
+    { q: "23. What does the slogan 'Hum Do Hamare Do' aim at?", opts: ["Raising of the marriageable age", "Family Planning", "Immunisation", "Economic growth"], ans: 1, exp: "The slogan promotes family planning (having only two children)." },
+    { q: "24. What was the growth rate according to the 2001 census report?", opts: ["1.7%", "3.6%", "5.2%", "0.5%"], ans: 0, exp: "The 2001 census reported a growth rate of 1.7%." },
+    { q: "25. I. Rapid decline in death rate. II. Rapid increase in MMR and IMR III. Rapid decline in MMR and IMR IV. Increase in number of people in the reproductive age group V. Rapid increase in the death rate. What are the causes of higher population growth?", opts: ["All", "I, II, IV", "I, III, IV", "III, IV, V"], ans: 2, exp: "Population growth is caused by a rapid decline in death rate (I), decline in MMR/IMR (III), and an increase in the reproductive age group (IV)." },
+    { q: "26. What is the approximate Indian population according to the recent census (May 2000)?", opts: ["About 1 billion", "About 1 million", "About 10 billion", "About 15 million"], ans: 0, exp: "India's population crossed 1 billion around May 2000." },
+    { q: "27. What is the approximate world population according to the recent census? (May 2000)", opts: ["About 6 billion", "About 60 billion", "About 16 billion", "About 6 million"], ans: 0, exp: "World population was about 6 billion in 2000." },
+    { q: "28. STDs lead to-", opts: ["Itching, fluid discharge, slight pain, swellings, etc.", "Pelvic Inflammatory Diseases (PID), ectopic pregnancies, still births, infertility, abortions, etc.", "Both a and b", "None"], ans: 2, exp: "STDs cause both immediate symptoms (itching, discharge) and long-term complications (PID, infertility)." },
+    { q: "29. Which of the sets of diseases are completely curable if detected early?", opts: ["Hepatitis - B, Gonorrhoea, Syphilis", "Genital herpes, Chlamydiasis, Syphilis", "HIV Infections, Chlamydiasis, Gonorrhoea", "Chlamydiasis, Genital warts, Syphilis"], ans: 0, exp: "Hepatitis B, Gonorrhoea, and Syphilis can be cured if detected early. (Note: Hepatitis B is viral but manageable/curable in early stages; Genital herpes and HIV are not completely curable)." },
+    { q: "30. Choose the correct option - I. RTI - Reproductive Tract Infections II. VD-Venereal Diseases III. STD - Sexually Transmitted Diseases IV. IVF - Intra Vaginal Transfer", opts: ["All", "I, II, III", "II, III", "I, II"], ans: 1, exp: "IVF stands for In Vitro Fertilization, not Intra Vaginal Transfer. So I, II, III are correct." },
+    { q: "31. MTP is practised mainly to -", opts: ["Get rid of unwanted female child legally", "Get rid of unwanted pregnancies due to failure of contraception or rapes", "Both a and b", "Decrease population size"], ans: 1, exp: "MTP is mainly for unwanted pregnancies due to contraceptive failure or rape." },
+    { q: "32. MTPs are considered relatively safe during the ____ trimester; ____ trimester abortions are much riskier.", opts: ["First, second", "Second, first", "Third, first", "Third, second"], ans: 0, exp: "First-trimester abortions are safer than second-trimester ones." },
+    { q: "33. MTP was legalised in India in -", opts: ["1971", "1951", "1981", "1923"], ans: 0, exp: "MTP was legalized in India in 1971." },
+    { q: "34. MTP is -", opts: ["Medical Termination of Pregnancy", "Also called induced abortion", "Both a and b", "Aimed at decreasing population size"], ans: 2, exp: "MTP stands for Medical Termination of Pregnancy and is also called induced abortion." },
+    { q: "35. Sterilisation in males is ____ and in females is ____ -", opts: ["Vasectomy, Tubectomy", "Tubectomy, Vasectomy", "Vasectomy, Vasectomy", "Tubectomy, Tubectomy"], ans: 0, exp: "Male sterilization is vasectomy; female is tubectomy." },
+    { q: "36. What is true for surgical methods? I. Also called sterilisation II. Terminal method of contraception III. Block gamete transport IV. Called vasectomy in females and tubectomy in males V. High reversibility and contraceptive efficiency VI. High contraceptive efficiency", opts: ["I, II, III, VI", "I, II, III, V", "I, II, III, IV, VI", "I, II, III, VI"], ans: 0, exp: "Surgical methods are sterilisation, terminal, block gamete transport, and have high efficiency (but low reversibility)." },
+    { q: "37. Pills, implants and IUDs are very effective if taken within -", opts: ["5 days", "72 hours", "30 days", "15 days"], ans: 1, exp: "Emergency contraceptives (pills, IUDs) are effective if taken within 72 hours of unprotected sex." },
+    { q: "38. What is true about 'Saheli'? I. Developed at the CDRI, Lucknow II. Contains a steroidal preparation III. 'Once-a-week' pill IV. Many side effects V. High contraceptive value VI. Very few side effects VII. Low contraceptive value", opts: ["I, II, III, V, VI", "I, III, V, VI", "I, II, III, IV, V", "I, III, IV, V"], ans: 1, exp: "Saheli is a non-steroidal once-a-week pill developed at CDRI, with high contraceptive value and few side effects." },
+    { q: "39. Pills I. Inhibit ovulation and implantation II. Alter the quality of cervical mucus to prevent or retard the entry of sperms III. Prevent the ejaculated semen from entering the female vagina IV Inhibit spermatogenesis", opts: ["All", "I, II, III", "I, II", "I, III, IV"], ans: 2, exp: "Pills inhibit ovulation/implantation and alter cervical mucus. They don't block semen or inhibit spermatogenesis." },
+    { q: "40. Oral contraceptive pills are composed of", opts: ["Progestogens only", "Progestogen - estrogen combinations", "Progestogens - testosterone combinations", "a or b"], ans: 3, exp: "Pills contain either progestogen alone or a combination of progestogen and estrogen." },
+    { q: "41. Column I: 1. Non-medicated IUDs, 2. Hormone releasing IUDs, 3. Copper releasing IUDs. Column II: A. Lippes loop, B. LNG-20, C. CuT, D. Multiload 375, E. Progestasert, F. Cu7. The correct match is -", opts: ["I-A; II-B, E; III-C, D, F", "I-A; II-E, F; III-B, C, D", "I-B; II-E, F; III-A, C, D", "I-B; II-A, F; III-C, D, E"], ans: 0, exp: "Non-medicated: Lippes loop. Hormone releasing: LNG-20, Progestasert. Copper releasing: CuT, Multiload 375, Cu7." },
+    { q: "42. Birth rate = B, Death Rate = D, Emigration = E, Immigration = I. Column I: A. Population is stable, B. Population is increasing, C. Population is decreasing. Column II: I. B + I > D + E, II. B + I = D + E, III. B + I < D + E. The correct match is -", opts: ["A-II, B-I, C-III", "A-II, B-IV, C-III", "A-I, B-II, C-IV", "A-I, B-II, C-III"], ans: 0, exp: "Stable: B+I = D+E (II). Increasing: B+I > D+E (I). Decreasing: B+I < D+E (III)." },
+    { q: "43. Column I: I. Natural methods, II. IUDs, III. Barrier methods, IV. Surgical methods, V. Oral contraceptives. Column II: A. Coitus Interruptus, B. LNG-20, C. Diaphragms, D. Multiload 375, E. Saheli, F. Nirodh, G. Sterilization, H. Vasectomy, I. CuT", opts: ["I-A; II-D, I; III-C, F; IV-G, H; V-E, B", "I-A; II-B, D, I; III-C, F; IV-G, H; V-E", "I-A; II-B, E, I; III-C, F; IV-G, H; V-D", "I-A; II-I; III-C, F; IV-G, H; V-B, D, E"], ans: 0, exp: "Natural: A, IUDs: D, I, Barrier: C, F, Surgical: G, H, Oral: E, B." },
+    { q: "44. Surgical methods of contraception prevent", opts: ["Gamete formation", "Gamete motility", "Both a and b", "Spermatogenesis only"], ans: 1, exp: "Surgical methods block the transport of gametes, preventing them from reaching the site of fertilization (motility/transport)." },
+    { q: "45. State which is true - I. Abortions could happen spontaneously too. II. Infertility is the inability to produce viable offsprings due to defects in the female partner only III. Complete lactation could help in contraception IV. Creating awareness can help create a reproductively healthy society", opts: ["I, III, IV", "I, II, III", "II, III", "III, IV"], ans: 0, exp: "Spontaneous abortions (miscarriages) occur (I), lactation helps in contraception (III), and awareness helps (IV). Infertility can be due to either partner." },
+    { q: "46. I. Tubectomy II. Vasectomy III. Implants IV. Condoms V. Copper T VI. Cervical caps. (Match with diagram)", opts: ["A-VI, B-V, C-III, D-II, E-I", "A-III, B-V, C-IV, D-I, E-II", "A-IV, B-V, C-III, D-II, E-I", "A-VI, B-V, C-IV, D-I, E-II"], ans: 2, exp: "Based on standard diagrams: A is Condoms (IV), B is Copper T (V), C is Implants (III), D is Vasectomy (II), E is Tubectomy (I)." },
+    { q: "47. Match the ARTs with their description - I. Collected gametes are made to form the zygote in the laboratory. II. Zygote or early embryo with upto 8 blastomeres is transferred into the oviduct. III. Zygote with more than 8 blastomeres is transferred into the uterus. IV Fusion of gametes within the female. V Transfer of ovum from a donor to the oviduct of the recipient. VI. Sperm is injected into the ovum in-vitro. A. GIFT B.ZIFT C.AI G.IUI D.ICSI E.IUT F.IVF H.In- vivo fertilisation", opts: ["I-G, II-B, III-F, IV-H, V-A, VI-D", "I-F, II-B, III-A, IV-H, V-A, VI-G", "I-F, II-B, III-E, IV-H, V-A, VI-D", "I-G, II-B, III-F, IV-H, V-C, VI-E"], ans: 2, exp: "IVF (I-F), ZIFT (II-B), IUT (III-E), In-vivo (IV-H), GIFT (V-A), ICSI (VI-D)." },
+    { q: "48. Column I: A. ZIFT, B. ICSI, C. GIFT. Column II: I. Zygote Intra Fallopian Transfer, II. Gamete Intra Fallopian Transfer, III. Zygote Intra Fallopian Transfer, IV Inter Cytoplasmic Sperm Injection, V. Intra Cytoplasmic Sperm Injection", opts: ["I-A, II-C, V-B", "II-C, III-A, V-B", "I-A, II-C, IV-B", "II-C, III-A, IV-B"], ans: 2, exp: "ZIFT = I, GIFT = II, ICSI = IV (Intra Cytoplasmic Sperm Injection)." },
+    { q: "49. To avoid transmission of STDs - I. Avoid sex with multiple partners. II. Always have unprotected sex. III. Use condoms during coitus. IV. Avoid sex with unknown partners V. Avoid sharing of needles", opts: ["All", "I, III, IV, V", "I, II, III", "I, II, IV"], ans: 1, exp: "Unprotected sex (II) increases STD risk. Others reduce risk." },
+    { q: "50. People especially vulnerable to STDs are in the age group -", opts: ["15-24", "25-40", "5-12", "40-60"], ans: 0, exp: "The 15-24 age group is most vulnerable to STDs." },
+    { q: "51. Natural methods of birth control include?", opts: ["Abstinence", "Coitus interruptus", "Lactational amenorrhea", "All of these"], ans: 3, exp: "All are natural methods." },
+    { q: "52. Using which contraceptive also provides protection from contracting STDs and AIDs?", opts: ["Diaphragms", "Spermicidal foams", "Condoms", "Lactational amenorrhea"], ans: 2, exp: "Condoms provide protection against STDs including HIV." },
+    { q: "53. Birth control pills check ovulation in female by inhibiting the secretion of -", opts: ["Follicle stimulating hormone", "Luteinizing hormone", "Both", "None"], ans: 2, exp: "Pills inhibit the secretion of both FSH and LH, preventing ovulation." },
+    { q: "54. Which of the following is/are related to STDs?", opts: ["Infertility", "Still birth", "Pelvic inflammatory disease", "All of the above"], ans: 3, exp: "All these complications can result from STDs." },
+    { q: "55. What is false for ZIFT?", opts: ["ZIFT - Zygote Intra Fallopian Transfer", "It follows IVF", "Zygote or early embryo", "Embryos with more than 8 blastomeres are transferred to the uterus"], ans: 3, exp: "In ZIFT, embryos up to 8 blastomeres are transferred to the fallopian tube, not the uterus." },
+    { q: "56. Gamete Intra- fallopian transfer is -", opts: ["Injecting embryo into oviduct", "An ART", "Injecting egg and sperm into oviduct in case of infertility", "Both b and c"], ans: 3, exp: "GIFT is an ART where egg and sperm are injected into the oviduct." },
+    { q: "57. Which of the following diseases is/are not completely curable?", opts: ["Genital herpes", "HIV infection", "Both a and b", "Syphilis"], ans: 2, exp: "Genital herpes and HIV are not completely curable." },
+    { q: "58. Which of the following is/are correct?", opts: ["Pill prevents ovulation", "Vasectomy causes semen having no sperms", "Copper-T prevents implantation", "All of the above"], ans: 3, exp: "All statements are correct." },
+    { q: "59. What is false for GIFT?", opts: ["It is Gamete Intra- Fallopian Transfer", "Ovum from a donor is transferred into the oviduct of the recipient", "Zygote from a donor is transferred into the oviduct of the recipient", "The recipient cannot produce ovum"], ans: 2, exp: "GIFT involves transfer of gametes, not zygotes. Zygote transfer is ZIFT." },
+    { q: "60. Cu released by CuTs plays a role in -", opts: ["Increasing phagocytosis of sperms", "Suppressing sperm motility", "Suppressing fertilising capacity of sperms", "Both b and c"], ans: 3, exp: "Copper ions suppress sperm motility and fertilizing capacity." },
+    { q: "61. 'Test tube' baby refers to -", opts: ["A baby born in test tube", "An ovum made to fertilise in-vitro and then implanted in the uterus", "A method of tissue culture", "None"], ans: 1, exp: "A test-tube baby is fertilized in vitro and implanted in the uterus." },
+    { q: "62. Which is true? I. Generally MTP is safe during the first trimester II. Chances of contraception are nil until the mother breast-feeds the infant upto 2 years III. IUDs are very effective contraceptives IV. Pills may be taken upto one week after coitus to prevent conception", opts: ["I, II", "II, III", "III, IV", "I, III"], ans: 3, exp: "MTP is safe in first trimester (I). IUDs are effective (III). Lactational amenorrhea is only reliable for 6 months (II is false). Pills are taken within 72 hours (IV is false)." },
+    { q: "63. Column I Column II I. Pill A. Prevents implantation II. Condom B. Prevents ovulation III. Vasectomy C. Prevents sperms from reaching cervix IV. CuT D. Semen contains no sperms", opts: ["I-B, II-C, III-D, IV-A", "I-A, II-B, III-D, IV-A", "I-D, II-C, III-B, IV-A", "I-C, II-D, III-A, IV-B"], ans: 0, exp: "Pill (B), Condom (C), Vasectomy (D), CuT (A)." },
+    { q: "64. Which one of the following is the most widely accepted method of contraception in India, as at present?", opts: ["IUDs (Intra uterine devices)", "Cervical caps", "Tubectomy", "Diaphragms"], ans: 0, exp: "IUDs are the most widely accepted method in India." },
+    { q: "65. The accompanying diagram shows the uterine tubes of four women (P, Q, R and S). In which two women is fertilization impossible at present? (Based on tubal ligation/blockage)", opts: ["P and Q", "Q and R", "R and S", "S and P"], ans: 2, exp: "Based on standard diagrams, R and S show blocked tubes (tubectomy), making fertilization impossible." },
+    { q: "66. Select the option which correctly fills up the blanks in the following statements. Statements: A Baby produced by conceiving in a culture dish and nursing in the uterus is called a _______. B. Family planning programmes were initiated in _______. C. Permanent methods of birth control are _______ in male and _______ in females. D. Embryo transplants are more useful in _______ than in _______.", opts: ["A-test tube baby; B-1951; C-Vasectomy, tubectomy; D-Animals, humans", "A-test tube baby; B-1951; C-Tubectomy, Vasectomy; D-Animals, humans", "A-test tube baby; B-1951; C-Vasectomy, tubectomy; D-Humans, animals", "A-test tube baby; B-1951; C-Tubectomy, Vasectomy; D-Humans, animals"], ans: 0, exp: "A: test tube baby. B: 1951. C: Vasectomy, Tubectomy. D: Animals, humans." },
+    { q: "67. Identify the true statements from the below statements - I. There are many side effects of tubectomy and vasectomy. II. Purpose of tubectomy is to prevent egg formation. III. The most important component of the oral contraceptive pills is progesterone. IV. Contraceptive oral pills help in birth control by preventing ovulation. V. Genital warts is a sexually transmitted disease caused by herpes virus. VI. In India, there is rapid decline in infant mortality rate and MMR.", opts: ["I, II and III", "I, II and V", "III, IV and VI", "IV, V and VI"], ans: 2, exp: "Pills contain progesterone (III) and prevent ovulation (IV). MMR and IMR have declined (VI). (Genital warts are HPV, not herpes)." },
+    { q: "68. Match the Column A with the Column B - Column A: I. IIT (ART), II. Birth control, III. Spermicides, IV. STD. Column B: A. Copper-T, B. Agent to kill spermatozoa, C. VDRL, D. To help infertile couple", opts: ["I-D, II-C, III-A, IV-B", "I-D, II-C, III-B, IV-A", "I-B, II-D, III-A, IV-C", "I-D, II-A, III-B, IV-C"], ans: 3, exp: "IIT/ART (D), Birth control (A), Spermicides (B), STD (C - VDRL test)." },
+    { q: "69. Identify the false statements from the statements - I. Birth control pills are likely to cause cardiovascular problems. II. A woman who substitutes or takes the place of the real mother to nurse the embryo is called surrogate mother. III. Numerous children have been produced by invitro fertilization but with some abnormalities. IV. Woman plays a key role in the continuity of the family and human species. V. Foetal sex determination test should not be banned.", opts: ["I and II", "II and IV", "III and V", "None"], ans: 2, exp: "IVF children are generally healthy (III is false). Sex determination should be banned to prevent female foeticide (V is false)." },
+    { q: "70. Select the option which correctly fills up the blanks in the following statements. Statements: A. Destruction of embryo or foetus in the uterus is called B. Government of India legalised MTP in the year C. Natural family planning method is also called D. is a method in which the male partner withdraws his penis from vagina just before ejaculation. E. is the copper releasing and is a hormone releasing intra uterine devices.", opts: ["A-Foeticide, B-1961, C-Rhythm method, D-Coitus interrupts, E-Multiload 375, LNG-20", "A-Foeticide, B-1971, C-Rhythm method, D-Coitus interrupts, E-Multiload 375, LNG-20", "A-Foeticide, B-1965, C-Rhythm method, D-Coitus interrupts, E-Multiload 375, LNG-20", "A-Foeticide, B-1982, C-Rhythm method, D-Coitus interrupts, E-Multiload 375, LNG-20"], ans: 1, exp: "MTP was legalized in 1971 (B)." },
+    { q: "71. Artificial insemination means", opts: ["Transfer of sperms of husband to a test tube containing ova", "Artificial introduction of sperms of a healthy donor into the vagina", "Introduction of sperms of healthy donor directly into the ovary", "Transfer of sperms of a healthy donor to a test tube containing ova"], ans: 1, exp: "Artificial insemination (AI) involves introducing donor sperm into the vagina/uterus." },
+    { q: "72. Which of the following cannot be detected in a developing foetus by amniocentesis?", opts: ["Sex of the foetus", "Down syndrome", "Jaundice", "Klinefelter syndrome"], ans: 2, exp: "Amniocentesis detects chromosomal abnormalities, not jaundice." },
+    { q: "73. One of the legal methods of birth control is-", opts: ["By abstaining from coitus from day 10 to 17 of the menstrual cycle", "By having coitus at the time of day break", "By a premature ejaculation during coitus", "Abortion by taking an appropriate medicine"], ans: 0, exp: "Abstaining during the fertile window (days 10-17) is a legal natural method." },
+    { q: "74. The test-tube Baby Programme employs which one of the following techniques", opts: ["Intra cytoplasmic sperm injection (ICSI)", "Intra uterine insemination (IUI)", "Gamete intra fallopian transfer (GIFT)", "Zygote intra fallopian transfer (ZIFT)"], ans: 3, exp: "Test-tube baby typically uses IVF followed by ZIFT or IUT." },
+    { q: "75. What is the figure given below showing in particular? (Uterus with blocked tubes)", opts: ["Ovarian cancer", "Uterine cancer", "Tubectomy", "Vasectomy"], ans: 2, exp: "The figure shows tubectomy (blocked fallopian tubes)." },
+    { q: "76. It is a disease which mainly affects mucous membrane of urogenital tract. In males, burning feeling on passing urine, after a yellow discharge occurs, that is accompanied by fever, headache and feeling of illness. Its name is", opts: ["Syphilis", "Gonorrhoea", "AIDS", "None of these"], ans: 1, exp: "These symptoms describe gonorrhoea." },
+    { q: "77. Which of the following is the method of traditional contraception?", opts: ["Implantation", "Lactational amenorrhoea", "Condoms", "Sterilization"], ans: 1, exp: "Lactational amenorrhea is a traditional/natural method." },
+    { q: "78. For delaying pregnancy or spacing children the ideal contraceptive is", opts: ["Vasectomy", "Tubectomy", "IUD", "Oral contraceptive"], ans: 2, exp: "IUDs are ideal for spacing children." },
+    { q: "79. The diaphragm, cervical cap and vaults are", opts: ["Disposable contraceptive devices", "Reusable contraceptives", "IUDs", "Implants"], ans: 1, exp: "These are reusable barrier contraceptives." },
+    { q: "80. Mark the incorrect statement", opts: ["According to 2001 census our population growth rate was 1.7%", "Marriageable age for male and female is respectively 18 and 21 years", "An ideal contraceptive should be reversible", "The problem of infertility in India lies most often in female partner"], ans: 1, exp: "Male marriageable age is 21, female is 18. Statement B is reversed." },
+    { q: "81. India's population crossed 1 billion in", opts: ["May 2001", "Dec. 1999", "May 2000", "Dec. 1991"], ans: 2, exp: "India crossed 1 billion in May 2000." },
+    { q: "82. Following is a weekly oral contraceptive", opts: ["Mala D", "i pill", "Saheli", "All of these"], ans: 2, exp: "Saheli is a weekly pill." },
+    { q: "83. The family planning programme in India were initiated in", opts: ["1951", "1961", "1971", "1981"], ans: 0, exp: "Initiated in 1951." },
+    { q: "84. Read the following 4-statements and mark the option that has both correct statements A. MTP was legalised in 1971 B. Inability to conceive or produce children even after 2 years of unprotected sexual cohabitation is called infertility C. Surgical method of contraception prevents gamete formation D. MTPs are relatively safe up to 12 weeks of pregnancy", opts: ["A, B and D", "B, C and D", "C and D", "A and C"], ans: 0, exp: "Surgical methods prevent gamete transport, not formation (C is false). A, B, and D are true." },
+    { q: "85. Tying up or removing a small part of fallopian duct is called", opts: ["Vasectomy", "Ductus arteriosus", "Archidectomy", "Tubectomy"], ans: 3, exp: "Tubectomy is the blocking of fallopian tubes." },
+    { q: "86. Progestasert and LNG-20 are", opts: ["Implants", "Copper releasing IUDs", "Non-medicated IUDs", "Hormone releasing IUDs"], ans: 3, exp: "They are hormone-releasing IUDs." },
+    { q: "87. The copper ions of IUDs", opts: ["Suppress the motility and fertilization capacity of sperms", "Make the uterus unsuitable for implantation", "Increase phagocytosis of sperms", "Make cervix hostile to sperms"], ans: 0, exp: "Copper ions suppress sperm motility and fertilizing capacity." },
+    { q: "88. Present increase in India's population has not been due to decline in", opts: ["Infant mortality rate", "Number of people reaching reproductive age", "Death rate", "Maternal mortality rate"], ans: 1, exp: "The increase is not due to a decline in the number of people reaching reproductive age (that number is increasing)." },
+    { q: "89. For imposing a check on increasing female foeticides", opts: ["MTP has been legalised", "Tubectomy is being practiced", "Amniocentesis has been banned", "All of these"], ans: 2, exp: "Amniocentesis is banned in India for sex determination to check female foeticide." },
+    { q: "90. RCH stands for", opts: ["Routine check-up of health", "Reproduction cum hygiene", "Reversible contraceptive hazards", "Reproduction and child health care"], ans: 3, exp: "RCH = Reproductive and Child Health Care." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 22; // ⚠️ 12th Class Chapter 3 is Chapter 22 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
