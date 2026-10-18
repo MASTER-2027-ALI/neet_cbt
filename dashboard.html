@@ -6,7 +6,6 @@
 <title>Dashboard - NEET 2027 CBT</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  /* Class 11 & 12 ke liye thoda extra style */
   .class-heading {
     font-size: 20px;
     color: #2b6cb0;
@@ -52,21 +51,20 @@
     </div>
   </div>
 
-  <!-- Class 11 Heading -->
   <h2 class="class-heading">📚 Class 11 Biology <span>19 Chapters</span></h2>
   <div class="chapters-grid" id="class11Grid"></div>
 
-  <!-- Class 12 Heading -->
   <h2 class="class-heading">📚 Class 12 Biology <span>13 Chapters</span></h2>
   <div class="chapters-grid" id="class12Grid"></div>
-
 </div>
 
 <script src="keys.js"></script>
-<script>
-// ========================================
-// NEET CBT Dashboard - Firebase Version
-// ========================================
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 // Check login
 const userData = localStorage.getItem('cbt_user');
@@ -76,12 +74,35 @@ if (!userData) {
 const user = JSON.parse(userData);
 document.getElementById('userBadge').textContent = '👤 ' + user.name;
 
-// Show Admin button for master
 if (user.role === 'master') {
   document.getElementById('adminBtn').style.display = 'inline-block';
 }
 
-// Chapter Lists
+// ========================================
+// SESSION LISTENER (Auto Logout)
+// ========================================
+async function listenForSession() {
+  if (!user.uid) return;
+  const sessionRef = doc(db, "sessions", user.uid);
+  
+  onSnapshot(sessionRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const remoteSessionId = docSnap.data().sessionId;
+      // If remote session is different from mine
+      if (remoteSessionId !== user.sessionId) {
+        alert('⚠️ आपकी पासकी से किसी और ने लॉगिन कर लिया है।\n\nआपको लॉगआउट किया जा रहा है।');
+        localStorage.removeItem('cbt_user');
+        localStorage.removeItem('cbt_login_time');
+        window.location.href = 'index.html';
+      }
+    }
+  });
+}
+listenForSession();
+
+// ========================================
+// CHAPTER LISTS
+// ========================================
 const class11Chapters = [
   { num: 1, name: "The Living World", file: "chapter1.html" },
   { num: 2, name: "Biological Classification", file: "chapter2.html" },
@@ -125,17 +146,9 @@ const class12Chapters = [
 // ========================================
 async function loadResults() {
   try {
-    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    const { getFirestore, collection, query, where, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    
-    // Get current user's results only
     const q = query(collection(db, "results"), where("userName", "==", user.name));
     const snapshot = await getDocs(q);
     
-    // Group by chapter
     const userResults = {};
     snapshot.forEach(doc => {
       const data = doc.data();
@@ -146,11 +159,8 @@ async function loadResults() {
       userResults[chNum].attempts.push(data);
     });
     
-    // Sort attempts by timestamp
     for (const chNum in userResults) {
-      userResults[chNum].attempts.sort((a, b) => 
-        new Date(a.timestamp) - new Date(b.timestamp)
-      );
+      userResults[chNum].attempts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
       const attempts = userResults[chNum].attempts;
       const bestPercent = Math.max(...attempts.map(a => a.percent));
       userResults[chNum].best = attempts.find(a => a.percent === bestPercent);
@@ -160,20 +170,15 @@ async function loadResults() {
     
   } catch (e) {
     console.error('Firebase load error:', e);
-    document.getElementById('class11Grid').innerHTML = 
-      '<div style="padding:20px;color:#f87171;">⚠️ Firebase se data load nahi hua. Internet check karein.</div>';
+    document.getElementById('class11Grid').innerHTML = '<div style="padding:20px;color:#f87171;">⚠️ Firebase se data load nahi hua. Internet check karein.</div>';
     document.getElementById('class12Grid').innerHTML = '';
   }
 }
 
-// ========================================
-// RENDER CHAPTERS (Separate for Class 11 & 12)
-// ========================================
 function renderChapters(userResults) {
   renderGrid(class11Chapters, 'class11Grid', userResults);
   renderGrid(class12Chapters, 'class12Grid', userResults);
   
-  // Calculate overall stats
   let totalAttempted = 0;
   let totalPercent = 0;
   const allChapters = [...class11Chapters, ...class12Chapters];
@@ -210,11 +215,13 @@ function renderGrid(chapters, gridId, userResults) {
       const bestAttempt = result.best || lastAttempt;
       
       const bestClass = bestAttempt.percent >= 50 ? 'done' : '';
+      const displayBestPercent = Math.max(0, bestAttempt.percent);
+      const displayLastPercent = Math.max(0, lastAttempt.percent);
       
       statusHTML = `
-        <div class="chapter-status ${bestClass}">🏆 Best: <strong>${bestAttempt.percent}%</strong> (${bestAttempt.correct}/${bestAttempt.total})</div>
+        <div class="chapter-status ${bestClass}">🏆 Best: <strong>${displayBestPercent}%</strong> (${bestAttempt.correct}/${bestAttempt.total})</div>
         <div class="chapter-status" style="color:#94a3b8; font-size:12px; margin-top:4px;">
-          📊 Last: ${lastAttempt.percent}% &nbsp;|&nbsp; 🔁 Attempts: <strong>${attemptsCount}</strong>
+          📊 Last: ${displayLastPercent}% &nbsp;|&nbsp; 🔁 Attempts: <strong>${attemptsCount}</strong>
         </div>
       `;
     } else {
@@ -230,18 +237,12 @@ function renderGrid(chapters, gridId, userResults) {
   });
 }
 
-// ========================================
-// LOGOUT
-// ========================================
-function logout() {
+window.logout = function() {
   localStorage.removeItem('cbt_user');
   localStorage.removeItem('cbt_login_time');
   window.location.href = 'index.html';
-}
+};
 
-// ========================================
-// INIT
-// ========================================
 loadResults();
 </script>
 </body>
