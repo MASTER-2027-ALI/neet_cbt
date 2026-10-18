@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 28: Biotechnology - Principles and Processes - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 28: Biotechnology - Principles and Processes</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. The construction of the first recombinant DNA was done by using the native plasmid of-", opts: ["E. Coli", "Salmonella typhimurium", "B. thuringiensis", "Yeast"], ans: 1, exp: "The first recombinant DNA was constructed using the native plasmid of Salmonella typhimurium." },
+    { q: "2. Restriction endonucleases:", opts: ["Cleave DNA at highly specific recognition sequences", "Are inserted into bacteria by bacteriophages", "Are made only by eukaryotic cells", "Add methyl groups to specific DNA sequences."], ans: 0, exp: "Restriction endonucleases cleave DNA at highly specific recognition sequences." },
+    { q: "3. Plasmids :", opts: ["Are circular protein molecules", "Are required by bacteria", "Are tiny bacteria", "Confer resistance to antibiotics"], ans: 3, exp: "Plasmids confer resistance to antibiotics." },
+    { q: "4. Restriction enzymes are used in genetic engineering because:", opts: ["They can cut DNA at specific base sequence", "They are nuclease that can cut DNA at variable sites", "They can join different DNA fragments", "They are proteolytic enzymes which can degrade harmful proteins."], ans: 0, exp: "They cut DNA at specific base sequences." },
+    { q: "5. Polyethylene glycol method is used for-", opts: ["Biodiesel production", "Seedless fruit production", "Energy production from sewage", "Gene transfer without a vector."], ans: 3, exp: "Polyethylene glycol is used for gene transfer without a vector." },
+    { q: "6. Cry endo toxins obtained from Bacillus thuringiensis are effective against", opts: ["Nematodes", "Boll worms", "Mosquitoes", "Flies"], ans: 1, exp: "Cry toxins are effective against boll worms." },
+    { q: "7. Which are among the following is first a cloning plasmid and not an expression plasmid ?", opts: ["pBAD-18Cam", "pBCSK", "pUC18", "pET"], ans: 2, exp: "pUC18 is a cloning plasmid." },
+    { q: "8. Molecular scissors which cut DNA at specific site is-", opts: ["Pectinase", "Polymerase", "Restriction Endonuclease", "Ligase"], ans: 2, exp: "Restriction Endonuclease." },
+    { q: "9. Plasmids are-", opts: ["DNA", "Mitochondrial DNA", "Circular extra chromosomal DNA bacteria", "viral RNA"], ans: 2, exp: "Circular extra chromosomal DNA in bacteria." },
+    { q: "10. Identify the plasmid-", opts: ["Eco RI", "pBR322", "AluI", "Hind II"], ans: 1, exp: "pBR322 is a plasmid." },
+    { q: "11. The structure involved in genetic engineering is:", opts: ["Plasmid", "Plastid", "Codon", "Anticodon."], ans: 0, exp: "Plasmid." },
+    { q: "12. Process by which we can add or delete certain gene is :", opts: ["Gene therapy", "Biotechnology", "Genetic engineering", "Cytogenetics."], ans: 2, exp: "Genetic engineering." },
+    { q: "13. Plasmid present in bacterial cells are :", opts: ["Circular double helical DNA molecules", "Linear double helical DNA molecules", "Circular double helical RNA molecules", "Linear double helical RNA molecules."], ans: 0, exp: "Circular double helical DNA molecules." },
+    { q: "14. Since DNA has a _______ charge, it moves towards the ______ electrode of the electrophoretic chamber", opts: ["positive", "positive, negative", "negative, positive", "natural, neutral"], ans: 2, exp: "DNA is negatively charged and moves towards the positive electrode." },
+    { q: "15. Which is being synthesized by genetic engineering :", opts: ["Insulin", "Renin", "Thyroxine", "Progesterone."], ans: 0, exp: "Insulin." },
+    { q: "16. DNA finger printing is based on :", opts: ["Clones of DNA", "DNA segments formed by RE enzymes", "Human efforts", "Gene library."], ans: 1, exp: "DNA segments formed by RE enzymes." },
+    { q: "17. What must be done before placing DNA into the electrophoretic chamber?", opts: ["It must be ground up with mortar and pestle", "It must be cut by restriction endonucleases", "It must be treated with RNAase", "None"], ans: 1, exp: "It must be cut by restriction endonucleases." },
+    { q: "18. In DNA fingerprinting:", opts: ["The variability of repeated sequences between two restriction sites is evaluated.", "Exonuclease enzyme digests/generate unique fragments", "Amplifies fewer DNA", "Protein is identified."], ans: 0, exp: "The variability of repeated sequences between two restriction sites is evaluated." },
+    { q: "19. One of the key factors, which makes the plasmid the vector in genetic engineering in that-", opts: ["It is resistant to antibiotics", "It is resistant to restriction enzymes", "Its ability to carry a foreign gene", "Its ability to cause infection in the host"], ans: 2, exp: "Its ability to carry a foreign gene." },
+    { q: "20. Transgenic plants are developed by-", opts: ["Clone and genetically modified genes", "Introduction of foreign genes", "Genetic engineering", "Purified genes"], ans: 1, exp: "Introduction of foreign genes." },
+    { q: "21. Fill up the blanks - A. The construction of the first recombinant DNA emerged from the possibility of linking a gene encoding antibiotic resistance with a native _____ of _____. B. Hind II always cut DNA molecules at a particular point by recognising a specific sequence of ______ base pairs. This specific sequence is known as ______for Hind II. C. The ______ in DNA is a sequence of base that reads same on the two strands when orientation of reading is kept the same. D. ______, a pathogen of several dicot plants is able to deliver a piece of DNA known as ______to transform normal plant cells into tumor cells.", opts: ["A - Plasmid, Salmonella typhimurium; B - Six, Recognition sequence, C - Palindrome, D - Agrobacterium tumifaciens, T-DNA", "A- Plasmid, Salmonella typhimurium; B - Seven, Recognition sequence, C - Palindrome, D - Agrobacterium tumifaciens, T-DNA", "A- Chromosome, Salmonella typhimurium; B - Six, Recognition sequence, C - Palindrome, D - Agrobacterium tumifaciens, T-DNA", "A - Plasmid, Salmonella typhimurium; B - Six, Recognition sequence, C - Palindrome, D - Agrobacterium tumifaciens, Z-DNA"], ans: 0, exp: "A - Plasmid, Salmonella typhimurium; B - Six, Recognition sequence, C - Palindrome, D - Agrobacterium tumifaciens, T-DNA." },
+    { q: "22. Fill up the blanks- A. When cut by the same restriction enzyme, the resultant DNA fragments have the same kind of ______ and these can be joined together end-to-end using B. Disruption of the cell membranes can be achieved by treating the bacterial cells plant or animal tissue with enzymes such as _____ (bacteria), _____ (plant cells) and _____ (fungus). C. If any protein encoding gene is expressed in a heterologous host, it is called a _____. D. In gel electrophoresis, the separated DNA fragments can be seen only after staining the DNA with a compound known as ______ followed by exposure to UV radiation.", opts: ["A- sticky ends, recombinase; B - lysozyme, cellulase, chitinase; C - recombinant protein; D - ethidium bromide", "A- sticky ends, DNA ligases; B - exonuclease, cellulase, chitinase; C - recombinant protein; D - ethidium bromide", "A- sticky ends, DNA ligases; B - lysozyme, cellulase, chitinase; C - native protein; D - cesium chloride", "A- sticky ends, DNA ligases; B - lysozyme, cellulase, chitinase; C - recombinant protein; D - ethidium bromide"], ans: 3, exp: "A- sticky ends, DNA ligases; B - lysozyme, cellulase, chitinase; C - recombinant protein; D - ethidium bromide." },
+    { q: "23. Which of the following method can be used for making the bacterial cell 'competent'?", opts: ["Treating with specific cone. of divalent cation (Ca2+)", "Treating with specific cone, of monovalent cation (K+)", "Heat shock", "Both (a) & (c)"], ans: 3, exp: "Both (a) & (c)." },
+    { q: "24. Insertional inactivation is related to", opts: ["Microinjection", "Gene gun", "Gel electrophoresis", "Selection of recombinants"], ans: 3, exp: "Selection of recombinants." },
+    { q: "25. During gel electrophoresis for separation of DNA fragment", opts: ["Smallest fragment will move to the farthest point towards cathode", "Smallest fragment will move to the farthest point towards anode", "Largest fragment will move to the farthest point towards cathode", "Largest fragment will move to the farthest point towards anode"], ans: 1, exp: "Smallest fragment will move to the farthest point towards anode." },
+    { q: "26. After completing the transformation experiment involving the coding sequence of enzyme a-galactosidase, the recombinant colonies should", opts: ["Give blue colour", "Not give blue colour", "Have active a -galactosidase", "Both (b) & (c)"], ans: 1, exp: "Not give blue colour." },
+    { q: "27. Which of the following is the correct sequence of PCR or polymerase chain reaction?", opts: ["Denaturation -> Annealing -> Extension", "Extension -> Denaturation -> Annealing", "Annealing -> Extension -> Denaturation", "Denaturation -> Extension -> Annealing"], ans: 0, exp: "Denaturation -> Annealing -> Extension." },
+    { q: "28. Which of the following enzyme is used in case of fungus to cause release of DNA along with other macromolecules?", opts: ["Lysozyme", "Cellulase", "Chitinase", "Amylase"], ans: 2, exp: "Chitinase." },
+    { q: "29. DNA fingerprinting is done by a technique called:", opts: ["ELISA", "Northern blotting", "Southern blotting", "RIA."], ans: 2, exp: "Southern blotting." },
+    { q: "30. X technique is now routinely used to detect HIV in suspected AIDS patients. It is being used to detect mutations in genes in suspected cancer patients too. It is a powerful technique to identify many other genetic disorders. Identify X-", opts: ["X = PCR", "X = DNA fingerprinting", "X = Bioinformatic", "X = X-ray defraction"], ans: 0, exp: "X = PCR." },
+    { q: "31. One of the following is transgenic organisms-", opts: ["Holly sheep and cotton Bt", "Dolly sheep and cotton Bt", "Flavr savr tomato and cotton Bt", "Holly sheep and flavr savr tomato"], ans: 2, exp: "Flavr savr tomato and cotton Bt." },
+    { q: "32. When genotype of an organism is improved by the addition of foreign genes the process is called-", opts: ["Biotechnology", "Tissue culture", "Genetic engineering", "Genetic diversity"], ans: 2, exp: "Genetic engineering." },
+    { q: "33. Ligase is used for-", opts: ["Separating DNA", "Joining two DNA fragments", "DNA polymerase reaction", "All of these"], ans: 1, exp: "Joining two DNA fragments." },
+    { q: "34. Which of the following palindromic sequence is recognised by EcoRI?", opts: ["GAATTC", "CTTAAG", "Both", "None"], ans: 0, exp: "GAATTC." },
+    { q: "35. The most commonly used bioreactor is of stirring type. The stirrer facilitates", opts: ["Temperature control", "pH control", "Oxygen availability", "Product removal"], ans: 2, exp: "Oxygen availability." },
+    { q: "36. During isolation of DNA, addition of which of the following causes precipitation of purified DNA?", opts: ["Chilled ethanol", "Ribonuclease enzyme", "DNA polymerase", "Proteases"], ans: 0, exp: "Chilled ethanol." },
+    { q: "37. During heat shock to the bacterium, the temperature used for giving thermal shock is", opts: ["82°C", "100°C", "Liquid nitrogen", "42°C"], ans: 3, exp: "42°C." },
+    { q: "38. Which of the following techniques can be used to introduce foreign DNA into cell?", opts: ["Using disarmed pathogen", "Microinjection", "Gene gun", "All of these"], ans: 3, exp: "All of these." },
+    { q: "39. For transformation with recombinant DNA, the bacterial cells must first be made 'competent' which means", opts: ["Should increase their metabolic reactions", "Should decrease their metabolic reactions", "Increase efficiency with which DNA enters the bacterium", "Ability to divide fast"], ans: 2, exp: "Increase efficiency with which DNA enters the bacterium." },
+    { q: "40. Which of the following is not applicable to Agrobacterium tumifaciens?", opts: ["Pathogen of several dicot plants", "Has ability to transform normal plant cells", "Delivers gene of our interest", "Ti plasmid of it is always pathogenic to plants without any exception"], ans: 3, exp: "Ti plasmid of it is always pathogenic to plants without any exception." },
+    { q: "41. Which of the following has the ability to transform normal cells into cancerous cells in animals?", opts: ["Agrobacterium tumefaciens", "Retroviruses", "DNA-viruses", "Plasmids"], ans: 1, exp: "Retroviruses." },
+    { q: "42. The procedure through which a piece of DNA is introduced in a host bacterium is called", opts: ["Cloning", "Transformation", "PCR", "Clonal selection"], ans: 1, exp: "Transformation." },
+    { q: "43. The term humulin is associated with :", opts: ["Insulin hormone produced by transgenic E.coli", "Lysosomal enzyme", "Isoenzymes of LDH", "Antibiotic produced by transgenic Penicillium."], ans: 0, exp: "Insulin hormone produced by transgenic E.coli." },
+    { q: "44. EcoRI cleaves DNA at-", opts: ["G A A T T C", "T A T A G C", "A A G G T T", "G A T A T C"], ans: 0, exp: "G A A T T C." },
+    { q: "45. Which enzymes are used to break the cell to release DNA?", opts: ["Lysozyme", "Cellulase", "Chitinase", "All of these"], ans: 3, exp: "All of these." },
+    { q: "46. T-DNA is found in", opts: ["Saccharomyces", "Agrobacterium", "Penicillium", "Puccinia"], ans: 1, exp: "Agrobacterium." },
+    { q: "47. The first restriction endonuclease reported was", opts: ["Hind II", "EcoRI", "Hind III", "BamHI"], ans: 0, exp: "Hind II." },
+    { q: "48. Pairing of fragments derived from DNA is a process called", opts: ["Staggering", "Annealing", "Augmenting", "Fragmenting"], ans: 1, exp: "Annealing." },
+    { q: "49. Identify the true statements - A. The first recombinant DNA was constructed by using a piece of DNA from a plasmid carrying antibiotic resistance gene in the bacterium Salmonella typhimurium and linked it to the plasmid of E. coli. B. Cohen and Boyer are known as father of genetic engineering. C. When cut by the same restriction enzyme, the resultant DNA fragments have the same kind of sticky ends and these can be joined together using DNA ligases. D. Endonucleases remove nucleotides from the ends of the DNA whereas exonucleases make cuts at specific positions within the DNA. E. Presence of more than one recognition sites within the vector will generate several fragments, which will complicate the gene cloning. F. Humulin was the first recombinant DNA, based product, produced and marketed in India. G. YAC vectors contain the telomeric sequence, the centromere and autonomously replicating sequence from yeast chromosomes. H. Alkaline phosphatase, is used to prevent unwanted self ligation of the vector DNA molecules in procedures of r DNA technology. I. pBR322 vector was the first artificial ideal vector constructed by Boliver and Rodriguez. J. Plasmid DNA is coated with histone proteins and can act as genetic factor.", opts: ["B, D, F, J", "B, D, E, J", "A, C, E, G, H, I", "A, B, D, F, J"], ans: 2, exp: "A, C, E, G, H, I are correct." },
+    { q: "50. The controlled use of biological agents, such as microorganisms or cellular components, for beneficial use is called", opts: ["plant biology", "biochemistry", "biotechnology", "molecular biology"], ans: 2, exp: "Biotechnology." },
+    { q: "51. Which one of the following restriction endonuclease is obtained from Escherichia coli?", opts: ["BamHI", "Sau3AI", "Hind III", "EcoRI"], ans: 3, exp: "EcoRI." },
+    { q: "52. Autonomously replicating circular extrachromosomal DNA is called", opts: ["B-chromosome", "jumping gene", "plasmid", "recombinant DNA"], ans: 2, exp: "Plasmid." },
+    { q: "53. The tumour-inducing capacity of Agrobacterium tumifaciens is located in large extrachromosomal plasmids called", opts: ["Ri plasmids", "plasmid pBR 322", "lambda phage", "Ti plasmid"], ans: 3, exp: "Ti plasmid." },
+    { q: "54. The experimental manipulation of DNA of different species, producing recombinant DNA is known as", opts: ["electrophoresis", "recombinant DNA technology", "transformation", "somatic hybridization"], ans: 1, exp: "Recombinant DNA technology." },
+    { q: "55. Which of the following is used as cloning vehicle?", opts: ["Bacteriophage", "Ti plasmid", "Plasmid pBR 322", "All of these"], ans: 3, exp: "All of these." },
+    { q: "56. Which enzyme is used as gum to join ends of DNA?", opts: ["EcoRI", "Ligase", "Cellulose", "Pectinase"], ans: 1, exp: "Ligase." },
+    { q: "57. A bioreactor (fermenter) refers to", opts: ["a device in which substances are treated to stimulate biochemical transformation by living cells", "a nuclear reactor for biological studies", "a tank for biochemical reactions", "organisms reacting to a stimulus"], ans: 0, exp: "A device in which substances are treated to stimulate biochemical transformation by living cells." },
+    { q: "58. DNA fragments can be separated by a technique known as", opts: ["gel electrophoresis", "gel digestion", "transformation", "microinjection"], ans: 0, exp: "Gel electrophoresis." },
+    { q: "59. Column I: I. Ti plasmid, II. Sal I, III. Retroviruses, IV. Ligase. Column II: A. Agrobacterium tumifaciens, B. Cancerous cells, C. Recombinant DNA, D. Restriction enzyme. The correct match is", opts: ["I-D, II-A, III-B, IV-C", "I-B, II-A, III-D, IV-C", "I-D, II-A, III-C, IV-B", "I-B, II-A, III-D, IV-C"], ans: 1, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "60. One bacterium which has found extensive use in genetic engineering work in plants is-", opts: ["Xanthomonas citri", "Bacillus coagulans", "Clostridium septicum", "Agrobacterium tumefaciens"], ans: 3, exp: "Agrobacterium tumefaciens." },
+    { q: "61. Column I: I. Band, II. Positive pole, III. Taq polymerase, IV. Recognition. Column II: A. Restriction fragments are attached to this, B. Where specific restriction fragment collects in gel, C. Piece of DNA cut up by restriction enzymes, D. PCR. The correct match is", opts: ["I-D, II-A, III-B, IV-C", "I-A, II-D, III-B, IV-C", "I-D, II-A, III-C, IV-B", "I-B, II-A, III-D, IV-C"], ans: 3, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "62. During DNA purification, which enzyme is used to treat plant cells?", opts: ["Lysozyme", "Cellulase", "Chitinase", "Cutinase"], ans: 1, exp: "Cellulase." },
+    { q: "63. In which country first artificial cultivation of mushroom started?", opts: ["France", "Italy", "Australia", "Germany"], ans: 0, exp: "France." },
+    { q: "64. Which of the following has been used as cloning vector?", opts: ["Agrobacterium tumifaciens", "Bacillus polymyxa", "Aspergillus niger", "Saccharomyces cerevisiae"], ans: 0, exp: "Agrobacterium tumifaciens." },
+    { q: "65. Which of the following are required to facilitate cloning into a vector?", opts: ["Origin of replication", "Selectable marker", "Cloning sites", "All of these"], ans: 3, exp: "All of these." },
+    { q: "66. Taq DNA polymerase enzyme is obtained from", opts: ["Thermus aquaticus", "Agrobacterium tumifaciens", "Aspergillus flavus", "Escherichia coli"], ans: 0, exp: "Thermus aquaticus." },
+    { q: "67. PCR stands for", opts: ["polymerase chemical reaction", "polymerase chain reaction", "primary chain reaction", "polymerase chain restriction"], ans: 1, exp: "Polymerase chain reaction." },
+    { q: "68. Which is incorrect?", opts: ["In PCR two primers are used", "Taq DNA polymerase is needed for PCR", "Taq DNA polymerase is not thermostable", "Multiple copies of gene can be synthesized in PCR"], ans: 2, exp: "Taq DNA polymerase is not thermostable." },
+    { q: "69. Column I: I. Recombinant DNA technology, II. Cloning vehicles, III. Macromolecular separation, IV. DNA ligase. Column II: A. Vector, B. Sealing enzyme, C. Electrophoresis, D. Genetic engineering. The correct match is", opts: ["I-D, II-A, III-B, IV-C", "I-A, II-D, III-B, IV-C", "I-D, II-A, III-C, IV-B", "I-B, II-A, III-D, IV-C"], ans: 2, exp: "I-D, II-A, III-C, IV-B." },
+    { q: "70. If a protein encoding gene is expressed in a heterologous host it is called", opts: ["recombinant protein", "primary protein", "secondary protein", "tertiary protein"], ans: 0, exp: "Recombinant protein." },
+    { q: "71. Column I: I. PCR, II. Bioreactor, III. Gene gun, IV. Eco R1. Column II: A. Large scale culture, B. To introduce DNA in host cell, C. Restriction endonuclease, D. Amplification of gene. The correct match is", opts: ["I-D, II-A, III-B, IV-C", "I-B, II-A, III-D, IV-C", "I-D, II-A, III-C, IV-B", "I-A, II-D, III-B, IV-C"], ans: 0, exp: "I-D, II-A, III-B, IV-C." },
+    { q: "72. Which is incorrect?", opts: ["EcoRI cuts the DNA between bases G and A.", "Each restriction endonuclease recognizes a specific palindromic nucleotide sequences in DNA.", "When cut by same restriction enzyme, the resultant DNA fragments do not have the same kind of 'sticky-ends'.", "Making multiple identical copies of any template DNA is called cloning."], ans: 2, exp: "When cut by same restriction enzyme, the resultant DNA fragments do not have the same kind of 'sticky-ends'." },
+    { q: "73. Column I: I. Plasmid, II. ampr, III. Ti-plasmid, IV. Chitinase. Column II: A. Selectable marker, B. Extrachromosomal DNA, C. Enzyme, D. Agrobacterium tumifaciens. The correct match is", opts: ["I-D, II-A, III-B, IV-C", "I-B, II-A, III-D, IV-C", "I-D, II-A, III-C, IV-B", "I-A, II-D, III-B, IV-C"], ans: 1, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "74. Which statement is incorrect?", opts: ["T-DNA is present in Ti plasmid.", "Retroviruses convert common cells to cancerous cells,", "pBR 322 is a natural plasmid-", "Agrobacterium tumifaciens is a natural genetic engineer"], ans: 2, exp: "pBR 322 is a natural plasmid." },
+    { q: "75. Which of the following has helped in development of biotechnology?", opts: ["Genetic engineering", "Microbiology", "Tissue culture", "All of these"], ans: 3, exp: "All of these." },
+    { q: "76. A device in which substances are treated to stimulate transformation by living cells is called", opts: ["assimilator", "digester", "bioreactor", "agitator"], ans: 2, exp: "Bioreactor." },
+    { q: "77. The areas of application of PCR include A. production of monoclonal antibodies B. insertion of recombinant DNA into organism C. diagnosis of specific mutation D. detection of plant pathogens.", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 2, exp: "C, D." },
+    { q: "78. What are the properties of a good vector? A. it should be ideally more than 10 kb in size B. it should be able to replicate autonomously C. it should have suitable marker genes D. it should not be easy to isolate and purify,", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 1, exp: "B, C." },
+    { q: "79. The technique in which a foreign DNA is precipitated on the surface of tungsten or gold particle and shot into the targets cells is known as-", opts: ["Microinjection", "Chemical mediated gene transfer", "Electroporation", "Particle gun"], ans: 3, exp: "Particle gun." },
+    { q: "80. Genetic engineering is possible because-", opts: ["The phenomenon of transduction in bacteria is well understood.", "We can see DNA by electron microscope", "We can cut DNA at specific sites by endonuclease like DNAase", "Restriction endonuclease purified from bacteria can be used in vitro."], ans: 3, exp: "Restriction endonuclease purified from bacteria can be used in vitro." },
+    { q: "81. Viral genome incorporated into host DNA is called-", opts: ["Prophase", "Prophase", "Bacteriophage", "None of these"], ans: 3, exp: "None of these (Prophage is the correct term)." },
+    { q: "82. Column I: I. Southern blotting, II. Gel electrophoresis, III. Cleavage, IV. DNA probing. Column II: A. Running of DNA fragments on gel, B. Cutting of DNA into fragments, C. Transfer of DNA fragment from gel to nitrocellulose disc, D. Searching for desired DNA fragments. The correct match is", opts: ["I-D, II-A, III-B, IV-C", "I-C, II-A, III-B, IV-D", "I-D, II-A, III-C, IV-B", "I-A, II-D, III-B, IV-C"], ans: 1, exp: "I-C, II-A, III-B, IV-D." },
+    { q: "83. Gene gun or particle bombardment gun method of gene transfer utilises", opts: ["microneedles", "micropipettes", "microprojectiles", "electrical impulses."], ans: 2, exp: "Microprojectiles." },
+    { q: "84. Due to ampicillin resistance gene, one is able to select a transformed cell in the presence of ampicillin. The ampicillin resistance gene in this case is called", opts: ["recombinant gene", "selectable marker", "origin of replication", "recognition site"], ans: 1, exp: "Selectable marker." },
+    { q: "85. Column I: I. Agarose, II. Opines, III. Biolistic, IV. Thermal cycler. Column II: A. PCR, B. Gene gun, C. Ti plasmid, D. Sea weeds. The correct match is", opts: ["I-D, II-A, III-B, IV-C", "I-D, II-C, III-B, IV-A", "I-D, II-A, III-C, IV-B", "I-A, II-D, III-B, IV-C"], ans: 1, exp: "I-D, II-C, III-B, IV-A." },
+    { q: "86. Which of the following method(s) is/are used to introduce foreign DNA into host cells?", opts: ["biolistics", "electrophoresis", "elution", "DNA ligation"], ans: 0, exp: "Biolistics." },
+    { q: "87. Which of the following vectors are used to deliver a desirable gene into animal and plant cells, respectively?", opts: ["Ti plasmid and retroviruses", "retroviruses and Ti plasmid", "bacteriophage and pBR322", "pBR322 and bacteriophage"], ans: 1, exp: "Retroviruses and Ti plasmid." },
+    { q: "88. Which of the following is/are used in recombinant DNA technology? A. agarose gel B. ethidium bromide C. plasmid vector D. restriction endonuclease", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "89. Column I: I. Cloning, II. Molecular scissor, III. Restriction endonuclease, IV. T-DNA. Column II: A. Making multiple identical copies, B. Tumour, C. Restriction enzymes, D. Enzyme. The correct match is", opts: ["I-D, II-A, III-B, IV-C", "I-B, II-A, III-D, IV-C", "I-A, II-C, III-D, IV-B", "I-A, II-D, III-B, IV-C"], ans: 2, exp: "I-A, II-C, III-D, IV-B." },
+    { q: "90. Which statement is true about bioreactor? A. Bioreactor provides the optimal conditions for obtaining the desired product. B. Raw materials are biologically converted into specific products. C. A stirred-tank reactor is horizontal in shape. D. Large volume of cultures cannot be processed.", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 0, exp: "A, B." },
+    { q: "91. A. In elution the separated bands of DNA are cut out from agarose gel and extracted from the gel piece. B. E. coli cloning vector pBR 322 shows several restriction, ori, antibiotic resistance genes and Rop. C. The down stream processing and quality control testing vary from product to product. D. Competent bacterial cell cannot take up the plasmid.", opts: ["All are correct", "All are incorrect", "Except D all are correct", "Only D is correct"], ans: 2, exp: "Except D all are correct." },
+    { q: "92. Which steps are involved in genetically modifying an organism? A. Identification of desirable DNA B. Insertion of DNA into the host C. Maintenance of introduced DNA in the host D. Isolation of recombinant protein", opts: ["A, B", "B, C", "A, B, C", "A, B, C, D"], ans: 2, exp: "A, B, C." },
+    { q: "93. A. Large scale production involves use of bioreactors. B. Genetic engineering involves the use of restriction endonuclease, DNA ligase appropriate plasmid or viral vectors. C. Modern biotechnology uses genetically modified organisms. D. Bacterial cell wall is digested by lysozyme", opts: ["All are correct", "All are incorrect", "Only D is correct", "A and B are correct"], ans: 0, exp: "All are correct." },
+    { q: "94. Which one is associated with Agrobacterium tumifaciens? A. Tumor B. Ti plasmid C. T-DNA D. Cancerous cells", opts: ["A, B", "B, C", "A, B, C", "A, B, C, D"], ans: 2, exp: "A, B, C." },
+    { q: "95. Column I: I. PCR, II. Taq DNA polymerase, III. Extrachromosomal DNA, IV. Ethidium bromide. Column II: A. Thermus aquaticus, B. Plasmid, C. Amplification, D. DNA staining. The correct match is", opts: ["I-C, II-A, III-B, IV-D", "I-B, II-A, III-D, IV-C", "I-D, II-A, III-C, IV-B", "I-A, II-D, III-B, IV-C"], ans: 0, exp: "I-C, II-A, III-B, IV-D." },
+    { q: "96. Which of the following is/are part(s) of biotechnology? A. in vitro fertilisation B. synthesis of a gene C. correcting a defective gene D. developing a DNA vaccine", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "97. Which statement is incorrect? A. Genetic engineering is also called recombinant DNA technology B. Bacteriophage is not used as vector C. MALAYALAM is a palindrome D. Ethidium bromide cannot be used for staining DNA", opts: ["A, B", "B, D", "C, D", "A, B, C, D"], ans: 1, exp: "B, D." },
+    { q: "98. PCR needs-", opts: ["2 sets of primers", "Taq polymerase", "Nucleotide as raw materials", "All"], ans: 3, exp: "All." },
+    { q: "99. Genetic engineering is-", opts: ["Study of extranuclear genes", "Plastic surgery", "Addition or removal of genes", "Reconstruction surgery"], ans: 2, exp: "Addition or removal of genes." },
+    { q: "100. Which of the following is not a tool used to perform genetic engineering -", opts: ["plasmid", "protein", "gene gun", "virus"], ans: 1, exp: "Protein." },
+    { q: "101. After the formation of the product in the bioreactors, it undergoes through separation and purification process before a finished product is ready for marketing. These processes are collectively referred to as", opts: ["upstream processing", "downstream processing", "elution", "transformation"], ans: 1, exp: "Downstream processing." },
+    { q: "102. Molecular probes used for identification of recombinant clone carrying the desired DNA insert can be A. denatured double stranded DNA probes B. double stranded RNA probes C. protein probes D. single stranded DNA probes,", opts: ["A, B", "B, C", "A, D", "A, B, C, D"], ans: 2, exp: "A, D." },
+    { q: "103. Which of the followings is / are concerned with biotechnology?", opts: ["Biogas production", "Sewage treatment", "Biofertilizer", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "104. Restriction endonucleases- A. are found in bacteria B. are very useful in genetic engineering C. cut the DNA at particular sites D. are used naturally in a bacterial cell to defend against foreign DNA", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "105. DNA recombinant technology uses - A. Restriction endonucleases B. DNA ligase C. Cloning vector D. Electrophoresis", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "106. Column I: I. Restriction enzyme, II. Transposons, III. Bacteriophage, IV. Palindromes. Column II: A. Jumping gene, B. Cloning vehicle, C. Hind III, D. MALYALAM. The correct match is", opts: ["I-C, II-A, III-B, IV-D", "I-B, II-A, III-D, IV-C", "I-D, II-A, III-C, IV-B", "I-A, II-D, III-B, IV-C"], ans: 0, exp: "I-C, II-A, III-B, IV-D." },
+    { q: "107. Column I: I. EcoRI, II. Bam HI, III. Hind III, IV. pBR 322. Column II: A. Bacillus amyloliquefaciens, B. Haemophilus influenza, C. Escherichia coli, D. Artificial plasmid. The correct match is", opts: ["I-C, II-A, III-B, IV-D", "I-B, II-A, III-D, IV-C", "I-D, II-A, III-C, IV-B", "I-A, II-D, III-B, IV-C"], ans: 0, exp: "I-C, II-A, III-B, IV-D." },
+    { q: "108. First step in genetic engineering is-", opts: ["Isolation of RNA", "Isolation of protein", "Purification of protein", "Isolation of genetic material"], ans: 3, exp: "Isolation of genetic material." },
+    { q: "109. The process of separation and purification of a biosynthetic product is called-", opts: ["Downstream process", "Biosynthetic process", "Annealing process", "Transformation process"], ans: 0, exp: "Downstream process." },
+    { q: "110. The process of making many copies of a gene is called-", opts: ["gene amplification", "gene synthesis", "gene cloning", "All of these"], ans: 3, exp: "All of these." },
+    { q: "111. In EcoRI ECO stands for-", opts: ["Eco friendly", "E.Coli", "Economic", "Extra coenzyme"], ans: 1, exp: "E.Coli." },
+    { q: "112. The first Transposons were discovered in -", opts: ["Yeast", "Rice", "Wheat", "Corn"], ans: 3, exp: "Corn." },
+    { q: "113. Which of the following is used as best genetic vector in plants-", opts: ["Bacillus thuringiensis", "Agrobacterium tumifaciens", "Pseudomonas putida", "All of these"], ans: 1, exp: "Agrobacterium tumifaciens." },
+    { q: "114. Eukaryotic genes may not function properly when cloned into bacteria because of", opts: ["inability to excise introns", "destruction by native endonucleases", "failure of promoter to be recognized by bacterial RNA polymerase", "all of the above."], ans: 3, exp: "All of the above." },
+    { q: "115. Which of the following tools of recombinant DNA technology is incorrectly paired with its use?", opts: ["restriction enzyme-production of RFLPs", "DNA ligase-enzyme that cuts DNA, creating the sticky ends of restriction fragments", "DNA polymerase-used in a polymerase chain reaction to amplify sections of DNA", "reverse transcriptase-production of cDNA from mRNA"], ans: 1, exp: "DNA ligase-enzyme that cuts DNA, creating the sticky ends of restriction fragments." },
+    { q: "116. Which of the following is a desirable characteristic for a cloning plasmid?", opts: ["a site at which replication can be initiated", "one or more unique restriction endonuclease sites", "one or more antibiotic-resistance or drug resistance genes", "all of the above"], ans: 3, exp: "All of the above." },
+    { q: "117. A mouse in which one particular gene has been replaced by its inactivated form generated in vitro is called -", opts: ["transgenic mouse", "knockout mouse", "nude mouse", "mutant mouse"], ans: 1, exp: "Knockout mouse." },
+    { q: "118. Restriction-modification systems of bacteria exists to", opts: ["protect bacteria from invading foreign DNA", "promote conjugation", "help the bacterial chromosome to replicate", "encourage recombination of new genetic material"], ans: 0, exp: "Protect bacteria from invading foreign DNA." },
+    { q: "119. Restriction fragment length polymorphism (RFLP) is", opts: ["the technique used to fingerprint patterns of inheritance", "the difference in the restriction maps between the two alleles in a diploid cell", "the difference in the restriction maps between two individuals of one species", "the difference in the restriction maps between two individuals of two species"], ans: 2, exp: "The difference in the restriction maps between two individuals of one species." },
+    { q: "120. Which statement about restriction enzymes are false?", opts: ["restriction enzymes cut DNA at specific sequence called recognition sites", "a restriction enzyme always cut DNA to leave the same sequence at the ends", "some restriction enzymes cut the two DNA strands at slightly different points within their recognition site to make a 'sticky' end", "restriction enzymes are exonucleases rather than endonucleases"], ans: 3, exp: "Restriction enzymes are exonucleases rather than endonucleases." },
+    { q: "121. Terminal transferase is used", opts: ["to add base at the 3' end of the DNA", "to add base at the 5' end of the DNA", "to carry out nick translation", "to transfer phosphate at the 3' end of the DNA"], ans: 0, exp: "To add base at the 3' end of the DNA." },
+    { q: "122. A plant genetic engineer wishes to transfer and express a gene from sunflower into beans. Which of the following would be the vector of choice?", opts: ["lambda phage", "pBR322 plasmid", "Ti plasmid", "maize streak virus"], ans: 2, exp: "Ti plasmid." },
+    { q: "123. Agrobacterium tumefaciens is an effective vector for use with", opts: ["corn", "rice", "wheat", "soyabean"], ans: 3, exp: "Soyabean (dicot)." },
+    { q: "124. Elution is a method applied for", opts: ["Making the matrix during gel electrophoresis", "Staining the bands of DNA after electrophoresis", "Cutting out the pieces of agarose gel and extraction of DNA from gel pieces", "Joining the specific DNA with the cloning vector"], ans: 2, exp: "Cutting out the pieces of agarose gel and extraction of DNA from gel pieces." },
+    { q: "125. Restriction endonucleases are enzymes that - P. cleave the 5' terminal nucleotides from duplex DNA molecules Q. make sequence-specific cuts in both strands of duplex DNA molecules R. promote circularization of the duplex DNA molecule by removal of the 5' terminal nucleotides S. generate 5'-hydroxyl and 5'-phosphate ends in the cut DNA strands", opts: ["P, Q", "P, R", "Q, S", "P, Q, R, S"], ans: 2, exp: "Q, S." },
+    { q: "126. In recombinant DNA methods, the term vector refers to", opts: ["the enzyme that cuts DNA into restriction fragments", "the sticky end of a DNA fragment", "a plasmid used to transfer DNA into a living cell", "a DNA probe used to identify a particular gene"], ans: 2, exp: "A plasmid used to transfer DNA into a living cell." },
+    { q: "127. DNA of a bacterium is not cleaved by its own restriction enzymes because the recognition DNA sequences are", opts: ["methylated", "deleted", "bound by inhibitory proteins", "not accessible to restriction enzymes"], ans: 0, exp: "Methylated." },
+    { q: "128. The first nuclear transplant from an animal cell into an enucleated egg that produced a normal offspring was performed in-", opts: ["sheep", "frog", "cat", "dog"], ans: 1, exp: "Frog." },
+    { q: "129. Which of the following is incorrect about reporter gene", opts: ["gene whose phenotype can be assayed in a transformed organism", "beta-galactosidase gene is an example of reporter gene", "test gene that is fused to the upstream region of the cloned gene", "none"], ans: 3, exp: "None." },
+    { q: "130. For a plasmid to be a cloning vector, the minimum numbers of elements required are", opts: ["origin of replication, multiple cloning site, selection marker", "origin of replication, multiple cloning site, selection marker, promoter", "origin of replication, multiple cloning site, selection marker, translational start site", "origin of replication, multiple cloning site, promoter"], ans: 0, exp: "Origin of replication, multiple cloning site, selection marker." },
+    { q: "131. Most common reporter gene whose product can be directly visualized in transformed cells is", opts: ["NPTII (Neomycin phosphotransferase)", "CAT (chloramphenicol acetyl transferase)", "Beta galactosidase", "GFP (green fluorescent protein)"], ans: 3, exp: "GFP." },
+    { q: "132. Restriction endonucleases hydrolyzes polynucleotide from", opts: ["only the 5' end", "from either terminal", "at an internal phosphodiester bond", "a phosphodiester bond within a specific sequence"], ans: 3, exp: "A phosphodiester bond within a specific sequence." },
+    { q: "134. In agarose gel electrophoresis", opts: ["DNA migrates towards the negative electrode", "supercoiled plamids migrate slower than their nicked counterparts", "larger molecules migrate faster than smaller molecules", "ethidium bromide can be used to visualize the DNA"], ans: 3, exp: "Ethidium bromide can be used to visualize the DNA." },
+    { q: "135. Which of the following processes require energy?", opts: ["ligation", "transformation", "restriction digestion", "hybridization"], ans: 0, exp: "Ligation." },
+    { q: "136. The presence of a plasmid in a bacterial culture is usually determined by", opts: ["blue-white screening", "growth in the presence of an antibiotic", "a restriction enzyme digests", "agarose gel electrophoresis"], ans: 1, exp: "Growth in the presence of an antibiotic." },
+    { q: "137. In order to identify the person who committed a crime. Forensic experts will need to extract DNA from the tissue sample collected at the crime scene, and conduct one of the following procedures for DNA fingerprinting analysis", opts: ["cut the DNA and hybridize with specific micro-satellite probes", "cut the DNA and subclone the fragments", "determine the sequence of the subclones", "b followed by c"], ans: 0, exp: "Cut the DNA and hybridize with specific micro-satellite probes." },
+    { q: "138. Which one of these statements about the applications of gene cloning is false?", opts: ["large amounts of recombinant protein can be produced by gene cloning", "DNA fingerprinting is used to detect proteins bound to DNA", "cloned genes can be used to detect carries of disease-causing genes", "gene therapy attempts to correct a disorder by delivering a good copy of a gene to a patient"], ans: 1, exp: "DNA fingerprinting is used to detect proteins bound to DNA." },
+    { q: "139. The following are useful to introduce genes into crop plants except", opts: ["Ti plasmid", "particle gun", "breeding", "auxin"], ans: 3, exp: "Auxin." },
+    { q: "141. Which statement correctly describes sequential steps in cDNA cloning?", opts: ["reverse transcription of mRNA, second strand synthesis, cDNA end modification, ligation to vector", "mRNA preparation, cDNA synthesis using reverse transcription, second strand synthesis using terminal transferase, ligation to vector", "mRNA synthesis using RNA polymerase, reverse transcription of mRNA, second strand synthesis, ligation to vector", "double stranded cDNA synthesis, restriction enzyme digestion, addition of linkers, ligation to vector"], ans: 0, exp: "Reverse transcription of mRNA, second strand synthesis, cDNA end modification, ligation to vector." },
+    { q: "142. pBR322 which is frequently used as a vector for cloning gene in E.coli is", opts: ["an original bacterial plasmid", "a modified bacterial plasmid", "a viral genome", "a transposon"], ans: 1, exp: "A modified bacterial plasmid." },
+    { q: "143. Shotgun approach is used for the construction of", opts: ["cDNA library", "genomic library", "both", "none"], ans: 1, exp: "Genomic library." },
+    { q: "146. The enzymes responsible for restricting the growth of bacteriophage in Escherichia coli is", opts: ["Added methyl group to protein.", "Cut DNA in a particular fashion", "Added formyl group to DNA.", "Both a and b"], ans: 1, exp: "Cut DNA in a particular fashion." },
+    { q: "147. Which of the following is the part of biotechnology", opts: ["Test-tube' baby", "Developing a DNA vaccine", "Correcting a defective gene", "All of these"], ans: 3, exp: "All of these." },
+    { q: "148. Which of the following statement is not correct.", opts: ["T-DNA transform normal plant cell into a tumor", "Retroviruses in animals have the ability to transform normal cell into cancerous cells", "Ti plasmids of Agrobacterium tumifaciens is modified into cloning vector which is more pathogenic to plants", "Retrovirus have also been disarmed and are now used to deliver desirable genes into animal cells"], ans: 2, exp: "Ti plasmids of Agrobacterium tumifaciens is modified into cloning vector which is more pathogenic to plants." },
+    { q: "150. Purified DNA ultimately precipitates out after the addition of chilled ethanol. This can be seen as collection of fine threads in the suspension as seen in the figure. It refers to -", opts: ["DNA Spooling", "DNA digestion", "DNA recognition", "DNA bands"], ans: 0, exp: "DNA Spooling." },
+    { q: "155. There is a restriction endonuclease called EcoRI. What does 'co' part in it stand for?", opts: ["coli", "colon", "coelom", "coenzyme"], ans: 0, exp: "coli." },
+    { q: "156. Which of the following features cannot be associated with Ti plasmid of Agrobacterium tumifaciens which is modified into a cloning vector?", opts: ["Able to deliver genes of our interest into a variety of plants", "Modified into cloning vector as it can transfer a piece of T-DNA into the plant cells", "Pathogenic, to the plants", "Ti plasmid of Agrobacterium is a natural genetic engineer"], ans: 2, exp: "Pathogenic, to the plants." },
+    { q: "158. Agarose extracted from sea weeds finds use in", opts: ["Gel electrophoresis", "Spectrophotometry", "Tissue culture", "PCR"], ans: 0, exp: "Gel electrophoresis." },
+    { q: "159. Which of the following vectors is/are used for cloning in eukaryotic organisms? A. Plasmids B. Bacteriophages C. Ti plasmid of Agrobacterium tumifaciens D. Disarmed retroviruses", opts: ["A, B, C and D", "A and B only", "C and D only", "D only"], ans: 2, exp: "C and D only." },
+    { q: "160. Agrobacterium tumifaciens A. Acts as natural genetic engineer B. Carries Vir region which is essential for insertion of T-DNA into host cells C. Has been used to transfer genes for 'RNA interference' in plants Mark the correct statements", opts: ["A only", "A and B only", "B and C only", "A, B and C"], ans: 3, exp: "A, B and C." },
+    { q: "161. Direct visual selection method for the selection of recombinant host cells on the basis of their inability to produce colour in the presence of chromogenic substrate can be applied if the vector used is a", opts: ["Modified plasmid vector of E. coli", "Modified bacteriophage", "Modified Agrobacterium tumifaciens plasmid", "Disarmed retrovirus"], ans: 0, exp: "Modified plasmid vector of E. coli." },
+    { q: "162. Two enzymes responsible for restricting the growth of bacteriophages in Escherichia coli were isolated. One was methylase and other was restriction endonuclease. What was the significance of methylase?", opts: ["Able to cut the DNA of bacteriophage at specific sites", "Able to remove the methyl group and hence prevent the action of restriction endonuclease on host DNA", "Protection of host DNA from the action of restriction endonuclease by adding methyl group to one or two bases usually within the sequence recognized by restriction enzyme", "Able to ligate the two cohesive ends of DNA molecule"], ans: 2, exp: "Protection of host DNA from the action of restriction endonuclease by adding methyl group to one or two bases usually within the sequence recognized by restriction enzyme." },
+    { q: "163. The bacteria associated with plant genetic engineering are", opts: ["Salmonella and Pseudomonas", "Salmonella typhimurium and Agrobacterium", "Bacillus thuringiensis and Pseudomonas fluorescens", "Both b and c"], ans: 1, exp: "Salmonella typhimurium and Agrobacterium." },
+    { q: "164. After completion of biosynthetic stage, the product has to be subjected through a series of processes before it is ready for marketing as a finished product. This series of processes is called", opts: ["Upstream processing", "Downstream processing", "Elution", "Insertional inactivation"], ans: 1, exp: "Downstream processing." },
+    { q: "165. In E. coli cloning vector PBR 322. ROP codes for -", opts: ["The proteins involved in the replication of the plasmid", "The proteins involved in the antibiotic resistance", "The proteins involved in the synthesis of antibiotic", "All of these"], ans: 0, exp: "The proteins involved in the replication of the plasmid." },
+    { q: "166. In case of pBR-322, which of the following act as selectable markers?", opts: ["ampR", "ori site", "tetR", "Both a and c"], ans: 3, exp: "Both a and c." },
+    { q: "167. When a recombinant DNA is inserted within the coding sequence of an enzyme, B-galactosidase", opts: ["This results into inactivation of the enzyme", "This is called insertional inactivation", "In the presence of insertion, the colonies do not produce any colour", "All of these"], ans: 3, exp: "All of these." },
+    { q: "168. Following enzymes /techniques are used in the process of recombinant DNA technology A. EcoRI to cut the isolated genome B. DNA ligase C. Protease and ribonuclease for removal of proteins and RNA from DNA D. Production of recombinant hosts E. Lysozyme for isolation of the genetic material (DNA) F. Gel electrophoresis for separation and isolation of DNA fragments Mark the correct sequence of their use", opts: ["C, E, B, F, A, D", "E, C, A, B, F, D", "E, C, A, F, B, D", "A, E, C, B, D, F"], ans: 1, exp: "E, C, A, B, F, D." },
+    { q: "169. Selection of recombinants due to inactivation of antibiotics is a cumbersome procedure because", opts: ["It requires plating of one plate having certain antibiotics", "It requires plating of two plates having same antibiotics", "It requires simultaneous plating on two plates having different antibiotics", "None of these"], ans: 2, exp: "It requires simultaneous plating on two plates having different antibiotics." },
+    { q: "170. If recombinant DNA is inserted within the coding sequence of enzyme galactosidase, which of the following will occur in case of non-recombinants?", opts: ["Insertional inactivation.", "Colonies do not produce any colour", "Chromogenic substrate gives blue colour", "Inactivation of enzyme galactosidase"], ans: 2, exp: "Chromogenic substrate gives blue colour." },
+    { q: "171. Antibiotic resistance gene present of Bam HI site of a E. coli cloning vector is", opts: ["Ampicillin resistance", "Tetracycline resistance", "Chloramphenicol resistance", "Kanamycin resistance"], ans: 1, exp: "Tetracycline resistance." },
+    { q: "172. The most common tool of genetic engineering", opts: ["PBR 366 plasmid of Escherichia coli", "M 13 plasmid of haemophilus aegyptius", "PBR 322 plasmid of Escherichia coli", "PCR 238 plasmid of bacillus globigii"], ans: 2, exp: "PBR 322 plasmid of Escherichia coli." },
+    { q: "173. Which of the following statement is not true.", opts: ["Hind - II always cut DNA molecules at a particular point by recognising a specific sequence of 4 base pairs.", "Besides Hind - II, today we know more than 900 restriction enzymes.", "The name ECO-RI comes from Escherichia coli -13.", "Type - II restriction endonuclease is most useful in genetic engineering"], ans: 0, exp: "Hind - II always cut DNA molecules at a particular point by recognising a specific sequence of 4 base pairs." },
+    { q: "174. Which of the following is not correctly matched for the organism and its cell wall degrading enzyme ?", opts: ["Plant cells-Cellulase", "Algae-Methylase", "Fungi-Chitinase", "Bacteria-Lysozyme"], ans: 1, exp: "Algae-Methylase." },
+    { q: "175. Amplification of gene of interest by using DNA polymerase may go upto", opts: ["0.1 million times", "1.0 million times", "1.0 billion times", "1.0 trillion times."], ans: 2, exp: "1.0 billion times." },
+    { q: "176. DNA fragments generated by the restriction endonucleases in a chemical reaction can be separated by-", opts: ["Polymerase chain reaction", "Electrophoresis", "Restriction mapping", "Centrifugation"], ans: 1, exp: "Electrophoresis." },
+    { q: "177. For transformation, micro-particles coated with DNA to be bombarded with gene gun are made up of", opts: ["Silver or Platinum", "Platinum or Zinc", "Silicon or Platinum", "Gold or Tungsten"], ans: 3, exp: "Gold or Tungsten." },
+    { q: "178. Which one is a true statement regarding DNA polymerase used in PCR", opts: ["It is used to ligate introduced DNA in recipient cell", "It serves as a selectable marker", "It is isolated from a virus", "It remains active at high temperature"], ans: 3, exp: "It remains active at high temperature." },
+    { q: "179. If haemoglobin (Hb) of a normal individual and a sickle-cell patient are run in electrophoretic field they would show", opts: ["same mobilities", "different mobilities", "Hb of patient will not move at all", "Hbs are immobile."], ans: 1, exp: "Different mobilities." },
+    { q: "180. A single strand of nucleic acid tagged with a radioactive molecule is called :", opts: ["Vector", "Selectable marker", "Plasmid", "Probe"], ans: 3, exp: "Probe." },
+    { q: "181. PCR and Restriction Fragment Length Polymorphism are the methods for:", opts: ["Study of enzymes", "Genetic transformation", "DNA sequencing", "Genetic Fingerprinting"], ans: 3, exp: "Genetic Fingerprinting." },
+    { q: "183. In genetic engineering, the antibiotics are used :", opts: ["as selectable markers", "to select healthy vectors", "as sequences from where replication starts", "to keep the cultures free of infection"], ans: 0, exp: "As selectable markers." },
+    { q: "184. Biolistics (gene-gun) is suitable for:", opts: ["Disarming pathogen vectors", "Transformation of plant cells", "Constructing recombinant DNA by joining with vectors", "DNA finger printing"], ans: 1, exp: "Transformation of plant cells." },
+    { q: "185. Two microbes found to be very useful in genetic engineering are-", opts: ["Crown gall bacterium and Coeroshabdites", "Escherichia coli and Agrobacterium", "Vibrio cholerae and a tailed bacteriophage", "Diplococcus sp and Pseudomonas sp"], ans: 1, exp: "Escherichia coli and Agrobacterium." },
+    { q: "186. Ligase catalyses the formation of bonds between-", opts: ["C = O", "C = C", "C - H", "H - H"], ans: 0, exp: "C = O." },
+    { q: "187. In PAGE ______ gel is used-", opts: ["Polyacrylamide", "Agar", "Agarose", "All of these"], ans: 0, exp: "Polyacrylamide." },
+    { q: "188. Expand PAGE-", opts: ["Polyacrylamide gel Electrophoresis", "Polyacrylamide glycol Ethylene", "Polyethylene", "Glycol Electrophoresis"], ans: 0, exp: "Polyacrylamide gel Electrophoresis." },
+    { q: "189. Expand AGE-", opts: ["Agarose gel electrophoresis", "Agarose germplasm electrophoresis", "Adenine Guanine Electrophoresis", "None of these"], ans: 0, exp: "Agarose gel electrophoresis." },
+    { q: "190. Expand EFB_____", opts: ["European Federation of Biotechnology", "European Funds of Biotechnology", "Ecology feed back", "None of these"], ans: 0, exp: "European Federation of Biotechnology." },
+    { q: "191. HPa I is obtained from", opts: ["Bacillus amyloliquefaciens H", "Haemophilus influenzae Rd", "Haemophilus parainfluenzae", "Moraxella spp."], ans: 2, exp: "Haemophilus parainfluenzae." },
+    { q: "192. Genetic engineering-", opts: ["Involves introduction and multiplication of undesirable genes along with the desirable genes", "Preserves Hereditary characters", "Introduce only desired gene into the target Organism", "It is time consuming"], ans: 2, exp: "Introduce only desired gene into the target Organism." },
+    { q: "193. Disadvantages of traditional hybridization as-", opts: ["It involves multiplication of only undesired genes and not of desired gene", "It is time consuming", "It involves introduction and multiplication of undesirable gene along with the desirable genes", "Both (a) and (c)"], ans: 2, exp: "It involves introduction and multiplication of undesirable gene along with the desirable genes." },
+    { q: "194. Berg introduced a gene of_____into a bacterium with the help of Lambda phage-", opts: ["SV-40", "SS-20", "ST-50", "SV-40"], ans: 0, exp: "SV-40." },
+    { q: "195. _______is known as 'Father of genetic Engineering'-", opts: ["Paul Berg", "W. Arber", "S. Linn", "Herbert Boyer"], ans: 0, exp: "Paul Berg." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 28; // ⚠️ 12th Class Chapter 9 is Chapter 28 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
