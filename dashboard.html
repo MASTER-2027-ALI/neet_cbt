@@ -77,28 +77,42 @@ document.getElementById('userBadge').textContent = '👤 ' + user.name;
 if (user.role === 'master') {
   document.getElementById('adminBtn').style.display = 'inline-block';
 }
-
 // ========================================
 // SESSION LISTENER (Auto Logout)
 // ========================================
-async function listenForSession() {
+function listenForSession() {
   if (!user.uid) return;
+  
+  // Passkey (user.uid) ko hi document ID bana diya hai
   const sessionRef = doc(db, "sessions", user.uid);
   
   onSnapshot(sessionRef, (docSnap) => {
     if (docSnap.exists()) {
       const remoteSessionId = docSnap.data().sessionId;
-      // If remote session is different from mine
+      
+      // Agar Firebase mein naya session ID aa gaya hai (matlab kisi aur ne login kiya)
       if (remoteSessionId !== user.sessionId) {
+        
+        // Popup dikhayein
         alert('⚠️ आपकी पासकी से किसी और ने लॉगिन कर लिया है।\n\nआपको लॉगआउट किया जा रहा है।');
+        
+        // Local storage saaf karein
         localStorage.removeItem('cbt_user');
         localStorage.removeItem('cbt_login_time');
+        
+        // Redirect to login page
         window.location.href = 'index.html';
       }
+    } else {
+      // Agar document hi delete ho gaya (logout button dabane par)
+      localStorage.removeItem('cbt_user');
+      localStorage.removeItem('cbt_login_time');
+      window.location.href = 'index.html';
     }
   });
 }
 listenForSession();
+
 
 // ========================================
 // CHAPTER LISTS
