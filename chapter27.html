@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 27: Microbes in Human Welfare - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 27: Microbes in Human Welfare</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. Which of the following fixes atmospheric nitrogen-", opts: ["Nostoc", "Algae", "Methanogens", "None"], ans: 0, exp: "Nostoc is a nitrogen-fixing cyanobacterium." },
+    { q: "2. Pasteurization takes place at-", opts: ["30°C for 60 minutes", "40°C for 30 minutes", "62°C for 30 minutes", "30°C for 20 minutes"], ans: 2, exp: "Pasteurization is done at 62°C for 30 minutes." },
+    { q: "3. Ethyl alcohol is commercially manufactured from-", opts: ["Bajra", "Grapes", "Maize", "Sugarcane"], ans: 3, exp: "Ethyl alcohol is commercially manufactured from sugarcane." },
+    { q: "4. Symbiotic association is exhibited by A. mycorrhiza. B. Rhizobium C. heterocyst D. Yeast", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B"], ans: 3, exp: "Mycorrhiza and Rhizobium show symbiotic association." },
+    { q: "5. The technology of biogas production in India has been developed by the efforts of A. Khadi and Village Industries Commission (KVIC) B. Indian Council of Agricultural Research (IARI) C. Indian Agricultural Research Institute (IARI) D. Indian Council of Medical Research (ICMR)", opts: ["A, C, D", "C, D", "A, C", "A, B"], ans: 2, exp: "KVIC and IARI developed biogas technology." },
+    { q: "6. Microbes are diverse which include A. Bacteria B. Mosses C. Protozoans D. Fungi", opts: ["A, C, D", "A, D", "A, B", "C, D"], ans: 0, exp: "Bacteria, protozoans, and fungi are microbes." },
+    { q: "7. Name the blank spaces a, b, c and d from the table given below: Type of Microbe: (i) Fungus (ii) C. Scientific Name: A, Monascus purpureus. Product: Cyclosporin, Statin. Medical Application: B, D.", opts: ["A- Trichoderma polysporum, B - Organ transplant patients, C - Yeast (Fungus), D - Lowering of blood cholesterol", "A- Lowering of blood cholesterol, B - Trichoderma polysporum, C - Organ transplant patients, D - Yeast (Fungus)", "A- Yeast (Fungus), B - Lowering of blood cholesterol, C - Trichoderma polysporum, D - Organ transplant patients", "A - Organ transplant patients, B - Yeast (Fungus), C - Lowering of blood cholesterol, D - Trichoderma polysporum"], ans: 0, exp: "A- Trichoderma polysporum, B - Organ transplant patients, C - Yeast (Fungus), D - Lowering of blood cholesterol." },
+    { q: "8. Which of the following food items is produced by fermentation by the microbes? A. Idli B. Dosa C. Toddy D. Cheese", opts: ["A, B, C, D", "C, D", "A, C", "A, B, C"], ans: 0, exp: "All are produced by fermentation." },
+    { q: "9. The distillation of the fermented broth is required in the formation of A. rum B. beer C. brandy D. whisky", opts: ["A, B, C", "A, C, D", "B, C, D", "A, B, D"], ans: 1, exp: "Rum, brandy, and whisky require distillation." },
+    { q: "10. Microbes are used in A. primary treatment of sewage B. secondary treatment of sewage C. anaerobic sludge digester D. production of bioactive molecules", opts: ["A, C, D", "A, B, C, D", "B, C, D", "C, D"], ans: 2, exp: "Microbes are used in secondary treatment, anaerobic sludge digester, and production of bioactive molecules." },
+    { q: "11. Name the blank spaces a, b, c and d given in the following table: Scientific Name: A, Aspergillus niger, Trichoderma polysporum, D. Commercial Product: Clot buster enzyme, Citric acid, C, Butyric acid.", opts: ["A- Streptococcus, B - Fungus, C - Cyclosporin-A, D - Clostridium butylicum.", "A- Clostridium butylicum, B - Streptococcus, C - Fungus, D - Cyclosporin-A", "A - Cyclosporin-A, B - Clostridium butylicum, C - Streptococcus, D - Fungus", "A- Fungus, B - Cyclosporin-A, C - Clostridium butylicum, D - Streptococcus"], ans: 0, exp: "A- Streptococcus, B - Fungus, C - Cyclosporin-A, D - Clostridium butylicum." },
+    { q: "12. Microbes are present in - A. Soil B. Air C. Water D. Thermal springs", opts: ["A, C, D", "A, B, C, D", "A, B", "C, D"], ans: 1, exp: "Microbes are present everywhere." },
+    { q: "13. Which industrial products are synthesized from microbes? A. Antibiotics B. Fermented beverages C. Enzymes and chemicals D. Bioactive molecules", opts: ["A, C, D", "A, B, C, D", "A, C", "A, B, C"], ans: 1, exp: "All are synthesized from microbes." },
+    { q: "14. Which of the following is used as biofertilizer? A. Cyanobacteria B. Yeast C. Symbiotic bacteria D. Free living bacteria", opts: ["A, B, C", "A, B, D", "A, C, D", "A, B, D"], ans: 2, exp: "Cyanobacteria, symbiotic bacteria, and free-living bacteria are biofertilizers." },
+    { q: "15. Name the blank spaces A, B, C and D given in the following table: Type of Microbe: Bacterium, Fungus, C, Fungus. Scientific Name: A, B, Monascus purpureus, Penicillium notatum. Commercial Product: Lactic acid, Cyclosporin A, statins, D.", opts: ["A- Lactobacillus, B - Trichoderma polysporum, C -Yeast (Fungus), D - Penicillin.", "A- Lactobacillus, B - Trichoderma polysporum, C - Yeast (Algae), D - Penicillin.", "A - Lactobacillus, B - Trichoderma polysporum, C - Yeast (Prokaryote), D - Penicillin.", "A - Lactobacillus, B - Trichoderma polysporum, C - Agaricus (Fungus), D - Penicillin."], ans: 0, exp: "A- Lactobacillus, B - Trichoderma polysporum, C - Yeast (Fungus), D - Penicillin." },
+    { q: "16. Yeasts have been used for the commercial production of A. wine B. whisky C. ethanol D. curd", opts: ["A, B, C", "A, B, C, D", "B, C, D", "A, B, D"], ans: 0, exp: "Yeasts are used for wine, whisky, and ethanol." },
+    { q: "17. Which of the following cyanobacteria can fix atmospheric nitrogen? A. Nostoc B. Anabaena C. Oscillatoria D. Yeast", opts: ["A, C, D", "C, D", "A, C", "A, B"], ans: 3, exp: "Nostoc and Anabaena fix nitrogen." },
+    { q: "18. Which of the following bacteria help in nitrogen fixation from atmosphere? A. Azotobacter B. Rhizobium C. Azospirillum D. Lactobacillus", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B, C"], ans: 3, exp: "Azotobacter, Rhizobium, and Azospirillum fix nitrogen." },
+    { q: "19. Methanogens grow anaerobically on cellulosic material and produce A. methane B. oxygen C. carbon dioxide D. hydrogen", opts: ["A, C, D", "A, B, C, D", "B, C, D", "A, B"], ans: 0, exp: "They produce methane, carbon dioxide, and hydrogen." },
+    { q: "20. First hormone produced artificially by culturing bacteria is-", opts: ["Insulin", "Thyroxine", "Testosterone", "Adrenaline"], ans: 0, exp: "Insulin was the first hormone produced artificially." },
+    { q: "21. Methanogens are found in A. ethanol B. organic acids C. anaerobic sludge D. rumen of cattle", opts: ["A, C, D", "C, D", "B, C, D", "A, B"], ans: 1, exp: "They are found in anaerobic sludge and rumen of cattle." },
+    { q: "22. Streptomyces ramosus is the source of the antibiotic -", opts: ["erythromycin", "chloromycetin", "aureomycin", "terramycin"], ans: 3, exp: "Terramycin is from Streptomyces ramosus." },
+    { q: "23. Statins used for lowering blood-cholesterol level are extracted from -", opts: ["algae", "bacteria", "virus", "Yeast"], ans: 3, exp: "Statins are from yeast (Monascus purpureus)." },
+    { q: "24. The solids which settle after primary treatment of sewage are called", opts: ["primary sludge", "activated sludge", "flocs", "total solids"], ans: 0, exp: "They are called primary sludge." },
+    { q: "25. Cyclosporin A is produced from -", opts: ["Trichoderma polysporum (a fungus)", "Bacillus (a bacterium)", "Aspergillus (a fungus)", "all of these"], ans: 0, exp: "Cyclosporin A is from Trichoderma polysporum." },
+    { q: "26. Which of the following is used in preparing cheese?", opts: ["algae", "viruses", "microbes", "prions"], ans: 2, exp: "Microbes are used in cheese making." },
+    { q: "27. Which of the following organisms is used in the production of beverages?", opts: ["Penicillium notatum", "Saccharomyces cerevisiae", "Aspergillus niger", "Clostridium butylicum"], ans: 1, exp: "Saccharomyces cerevisiae is used." },
+    { q: "28. Acetic acid is produced by a", opts: ["fungus", "bacterium", "Yeast", "virus"], ans: 1, exp: "Acetobacter (bacterium) produces acetic acid." },
+    { q: "29. Which of the following bacteria convert milk into curd?", opts: ["Propionibacterium", "Lactobacillus", "Streptococcus", "Bacillus"], ans: 1, exp: "Lactobacillus converts milk to curd." },
+    { q: "30. Biogas contains -", opts: ["CO2", "H2S", "CH4", "all of these"], ans: 3, exp: "Biogas contains CO2, H2S, and CH4." },
+    { q: "31. Streptomycin is produced from -", opts: ["Streptomyces scoleus", "Streptomyces griseus", "Streptomyces fradiae", "Streptomyces venezuelae"], ans: 1, exp: "Streptomycin is from Streptomyces griseus." },
+    { q: "32. The primary treatment of sewage involves -", opts: ["digestion", "decomposition", "sedimentation and filtration", "none of these"], ans: 2, exp: "Primary treatment involves sedimentation and filtration." },
+    { q: "33. The chemical substances produced by some microbes which can kill or retard the growth of other microbes are called -", opts: ["toddy", "lactic acid", "antibiotics", "ethanol"], ans: 2, exp: "They are called antibiotics." },
+    { q: "34. Which of the following serve as biofertilizer in paddy fields?", opts: ["Bacteria", "Yeast", "Cyanobacteria (blue-green algae)", "Fungi"], ans: 2, exp: "Cyanobacteria are biofertilizers in paddy fields." },
+    { q: "35. Which of the following bacteria has a role in removing clots from our blood vessels?", opts: ["Bacillus thuringiensis", "Clostridium butylicum", "Streptococcus", "Lactobacillus"], ans: 2, exp: "Streptococcus produces streptokinase." },
+    { q: "36. The dough used for making bread is fermented by", opts: ["bacteria", "Yeast", "fungi", "algae"], ans: 1, exp: "Yeast ferments bread dough." },
+    { q: "37. Microbes are found -", opts: ["in soil", "in air", "in water", "everywhere"], ans: 3, exp: "Microbes are found everywhere." },
+    { q: "39. Given below are three statements (A-B) each with one or more blanks. Select the option which correctly fills the blanks in the statements - Statements: A Microbes consume the major part of the organic matter in the effluent and reduce _______ of sewage. B. Certain bacteria which grow anaerobically on cellulosic material, produce large amount of methane along with CO2 and H2. The bacteria are commonly called as _______ and one such common bacterium is _______.", opts: ["A - CO2 demand; B - methanogens, Methanobacterium", "A- Carbon; B -methanogens, Methanobacterium", "A - biochemical oxygen demand; B - methanogens, Methanobacterium", "A - biochemical oxygen demand; B - Methylokorus infernorum"], ans: 2, exp: "A - biochemical oxygen demand; B - methanogens, Methanobacterium." },
+    { q: "40. Given below are three statements (A-B) each with one or more blanks. Select the option which correctly fills blanks in the statements - Statements: A. Statins produced by the yeast, _____ B. _______ contains insecticidal crystal proteins thurioside, which is stomach poison and highly insect specific.", opts: ["A - Monascus purpureus; B - Bacillus thuringiensis", "A-Leuconostoc citrovorum; B-Mucor pusillus", "A - Streptococcus thermophilus; B - Lactobacillus bulgaricus", "A - Hordeum vulgare; B - Humulus lupulus"], ans: 0, exp: "A - Monascus purpureus; B - Bacillus thuringiensis." },
+    { q: "41. Column I: I. Statins, II. Ethanol, III. Dung, IV. Bt-cotton. Column II: A. Yeast, B. Blood-cholesterol lowering agent, C. Insect-resistant plant, D. Biogas. Which of the combinations is correct?", opts: ["I-B, II-A, III-D, IV-C", "I-C, II-D, III-A, IV-B", "I-D, II-C, III-A, IV-B", "I-D, II-B, III-A, IV-C"], ans: 0, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "44. Antibiotics are used to treat diseases like -", opts: ["Plague", "Whooping cough, Diphtheria", "Leprosy", "All"], ans: 3, exp: "All are treated with antibiotics." },
+    { q: "45. Consider the following statements (A-D) about organic farming : (A) Utilizes genetically modified crops like Bt cotton (B) Uses only naturally produced inputs like compost (C) Does not use pesticides and urea (D) Produces vegetables rich in vitamins and minerals. Which of the above statements are correct?", opts: ["B, C and D", "C and D only", "B and C only", "A and B only"], ans: 2, exp: "B and C only." },
+    { q: "46. I. All cyanobacteria are N2-fixers II. The main sources of biofertilizers are bacteria, fungi and cyanobacteria' III. Azospirillum and Azotobacter are symbiotic N2-fixers. IV. Microbes like bacteria and many fungi can be grown on nutritive media to form colonies but they cannot be seen with the naked eyes.", opts: ["All are correct", "All are wrong", "Only I, III and IV are wrong", "Only II is wrong"], ans: 2, exp: "Only II is correct. I, III, IV are wrong." },
+    { q: "47. Which of the following statements about mycorrhizae is false? I. In ectomycorrhizae, association between the fungus and plant is less intimate than in endomycorrhizae II. The mycorrhizal association of fungus and the plant may have had importance in the evolution of land plant III. The mycorrhizal association is a mutualistic symbiosis IV. Fungal partner is associated with the only roots of the higher plants (like angiosperms) V. Only advanced modern plants such as angiosperms possess mycorrhizae", opts: ["Only V", "Only IV", "Only I and III", "Only II and V"], ans: 0, exp: "Only V is false." },
+    { q: "48. Which of the following is correct? I. Wine and beer are produced without distillation of fermented broth II. Wine and beer are produced with distillation of fermented broth III. Whisky brand and rum are produced by distillation of fermented broth IV. Whisky brand and rum are produced without distillation of fermented broth", opts: ["I and IV", "I and III", "II and V", "II and III"], ans: 1, exp: "I and III are correct." },
+    { q: "49. Choose the correct sequence of microbes involved in biogas production -", opts: ["Fragmentative microbes, decomposers methanogens", "Decomposers, methanogens, putrefying microbes", "Putrefying microbes, methanogens, saprophytic microbes", "Decomposers, fermentative microbes, methanogens"], ans: 3, exp: "Decomposers, fermentative microbes, methanogens." },
+    { q: "50. The reason that the chemical / synthetic fertilizers should be replaced by biofertilizers is that the former -", opts: ["Are source of environmental pollution", "Are expensive", "Exhaust the valuable energy resources for their manufacture", "All"], ans: 3, exp: "All these are reasons." },
+    { q: "51. Which of the following statements is correct? A. Single cell protein is rich in high quality proteins but poor in fat. B. BOD is the amount of oxygen that would be consumed if all the inorganic matter in one litre of water were oxidised by bacteria. C. Trichoderma sp are free living fungi that are effective biocontrol agents of several pathogens. D. Baculoviruses are pathogens that attack insects and other arthropods. E. Bacillus thuringiensis is first used biopesticide. F. Lactase enzyme is used in alcoholic fermentation. G. Mycorrhiza is a symbiotic association between fungi e.g. Glomus and vascular plant.", opts: ["B, C, F, G", "A, D, F", "A, C, D, E, G", "B, F"], ans: 2, exp: "A, C, D, E, G are correct." },
+    { q: "52. In cheese manufacture, the micro-organisms are used for-", opts: ["the souring of milk only", "the ripening only", "development of resistance to spoilage", "Both a and b"], ans: 3, exp: "Both souring and ripening." },
+    { q: "53. Which one(s) is/are correct about Cyclosporin A?", opts: ["It is produced by the fungus Trichoderma polysporum", "It is used as an immuno suppressive agent during organ transplantation", "It is produced by a type of yeast, Monascus purpureus", "Both a and b"], ans: 3, exp: "Both a and b." },
+    { q: "55. Column I: I. Saccharomyces, II. Trichoderma, III. Lactobacillus, IV. Nostoc. Column II: A. Bacteria, B. Cyanobacteria, C. Fungi, D. Yeast. Which of the combinations is correct?", opts: ["I-D, II-C, III-A, IV-B", "I-C, II-D, III-A, IV-B", "I-D, II-B, III-A, IV-C", "I-B, II-C, III-D, IV-A"], ans: 0, exp: "I-D, II-C, III-A, IV-B." },
+    { q: "56. Given below are three statements (A-C) each with or more blanks. Select the option which correctly fills the blanks in the statements - Statements: A. _________ a traditional drink of some parts of South India is made by fermenting sap from palms. B. Citric acid is obtained through the fermentation carried out by _______ and _______ on sugary syrups. C. In ___________ the fungus forms a mantle on the surface of the roots.", opts: ["A - Toddy; B - Aspergillus niger, Mucor, C - Ectomycorrhiza", "A - Wine; B - Aspergillus niger, Mucor, C - Ectomycorrhiza", "A - Beer; B - Aspergillus niger, Mucor, C - Ectomycorrhiza", "A - Toddy; B - Aspergillus niger, Mucor, C - Endomycorrhiza"], ans: 0, exp: "A - Toddy; B - Aspergillus niger, Mucor, C - Ectomycorrhiza." },
+    { q: "57. Given below are two statements (A-B) each with one or more blanks. Select the option which correctly fills the blanks in the statements- Statements: A. Terramycin is an antibiotic isolated from _____ and interfere with the _____ of disease causing bacteria. B. Microorganisms (e.g., bacteria, yeast, filamentous fungi, algae, etc), that can be cultured on a commercial scale in fermenter and used as a food source or as animal feed are called _______", opts: ["A - Amanita, protein synthesis; B - single cell protein (SCP)", "A - Penicillium, protein synthesis; B - single cell protein (SCP)", "A - Morchella, protein synthesis; B - single cell protein (SCP)", "A- Streptomyces rimosus, protein synthesis; B - single cell protein (SCP)"], ans: 3, exp: "A- Streptomyces rimosus, protein synthesis; B - single cell protein (SCP)." },
+    { q: "58. The organisms which are used to enrich the nutrient quality of the soil are called -", opts: ["mycorrhiza", "biofertilizers", "Yeast", "methanogens"], ans: 1, exp: "Biofertilizers." },
+    { q: "59. Which of the following antibiotics was discovered first?", opts: ["Streptomycin", "Neomycin", "Erythromycin", "Penicillin"], ans: 3, exp: "Penicillin." },
+    { q: "60. Citric acid is produced by -", opts: ["Acetobacter aceti (a bacterium)", "Yeast (a fungus)", "Aspergillus niger (a fungus)", "Streptococcus (a bacterium)"], ans: 2, exp: "Aspergillus niger." },
+    { q: "61. The bioactive molecule cyclosporin A is used in -", opts: ["whooping cough", "diphtheria", "leprosy", "organ-transplant patients"], ans: 3, exp: "Organ-transplant patients." },
+    { q: "62. The nutritive media for growing bacteria and other microorganisms in the laboratory is called-", opts: ["colonies", "culture media", "baking media", "fermentation"], ans: 1, exp: "Culture media." },
+    { q: "63. The mixture of gases released during anaerobic digestion of sludge is called", opts: ["methane", "carbon dioxide", "biogas", "flammable gases"], ans: 2, exp: "Biogas." },
+    { q: "64. Which one of the following sets includes bacterial diseases?", opts: ["Tetanus, tuberculosis, measles", "Diphtheria, leprosy, plague", "Cholera, typhoid, mumps", "Malaria, mumps, poliomyelitis"], ans: 1, exp: "Diphtheria, leprosy, and plague are bacterial." },
+    { q: "65. Given below are three statements (A-B) each with one or more blanks. Select the option which correctly fills the blanks in the statements – Statements: A. The dough which is used to prepare idli and dosa is fermented by _______ and _______. The puffy appearance of dough is due to the release of ________ by these microorganisms. B. Microbes are also used in commercial production of certain organic acids. Butyric acid is produced by ____ and lactic acid is produced by ________.", opts: ["A - Streptococcus faecalis, Pediococcus cerevisiae, CO2; B - Clostridium butylicum, Lactobacillus", "A - Agaricus faecalis, Pediococcus cerevisiae, O2; B - Clostridium butylicum, Lactobacillus", "A - Streptococcus faecalis, Pediococcus cerevisiae, CO2; B - Bacillus, Lactobacillus", "A - Streptococcus faecalis, Spirulina, CO2; B - Clostridium butylicum, Lactobacillus"], ans: 0, exp: "A - Streptococcus faecalis, Pediococcus cerevisiae, CO2; B - Clostridium butylicum, Lactobacillus." },
+    { q: "66. The gas responsible for puffing-up appearance of dough comes from -", opts: ["aerobic respiration", "fermentation", "photosynthesis", "photorespiration"], ans: 1, exp: "Fermentation." },
+    { q: "67. The bacterium that commonly lives in animal and human intestines is -", opts: ["Bacillus anthracis", "Vibrio cholerae", "Escherichia coli", "Corynebacterium"], ans: 2, exp: "Escherichia coli." },
+    { q: "68. The symbiotic association between fungi and roots of higher plants is called -", opts: ["lichen", "mycorrhiza", "biofertilizer", "BOD"], ans: 1, exp: "Mycorrhiza." },
+    { q: "69. During which stage of sewage treatment microbes are used?", opts: ["Primary treatment", "Secondary treatment", "Tertiary treatment", "All of these"], ans: 1, exp: "Secondary treatment." },
+    { q: "70. The microscopic proteinaceous infectious agents are called -", opts: ["protozoa", "fungi", "prions", "bacteria"], ans: 2, exp: "Prions." },
+    { q: "71. Given below are three statements (A-B) each with one or more blanks. Select the option which correctly fills the blanks in the statements- Statements: A. Bioactive molecule, _______ is used as immunosuppressive agent in organ transplant patients, It is produced by the fungus ________. B. Primary treatment of sewage involves physical removal of small and large particles through _______.", opts: ["A -Antibiotic, Trichoderma polysporum; B -filtration and sedimentation", "A - Cyclosporin A, Trichoderma polysporum; B - filtration and sedimentation", "A - Cyclosporin A, Trichoderma polysporum; B - Centrifugation and sedimentation", "A-Antibiotic, Trichoderma polysporum; B - Centrifugation and sedimentation"], ans: 1, exp: "A - Cyclosporin A, Trichoderma polysporum; B - filtration and sedimentation." },
+    { q: "73. Column I: I. Methanogens, II. Organic wastes, III. Bacillus thuringiensis, IV. Penicillium notatum. Column II: A. Microbial biocontrol agent, B. Penicillin, C. Biochemical oxygen demand, D. Methanobacterium. Which of the combinations is correct?", opts: ["I-B, II-A, III-D, IV-C", "I-C, II-D, III-A, IV-B", "I-D, II-C, III-A, IV-B", "I-D, II-B, III-A, IV-C"], ans: 2, exp: "I-D, II-C, III-A, IV-B." },
+    { q: "74. Which one is false? I. Cyanobacteria are autotrophic microbes widely distributed in aquatic and terrestrial environments. II. Anabaena, Nostoc and Oscillatoria are photosynthetic oxygenic N2 fixers III. Tolypothrix (BGA) can increase rice production by about 20%. IV. BGA add organic matter to the soil and increase its fertility. V. In our country biofertilizers are not available commercially in the markets for farmers.", opts: ["Only V", "Only IV", "Only III", "None"], ans: 0, exp: "Only V is false." },
+    { q: "75. Column I: I. Fermentors, II. Bread, III. Aerobic microbes, IV Ganga Action Plan. Column II: A. Baker's yeast, B. Large vessels for growing microbes, C. Ministry of Environment and Forest, D. Flocs. Which of the combinations is correct?", opts: ["I-B, II-A, III-D, IV-C", "I-C, II-D, III-A, IV-B", "I-D, II-C, III-A, IV-B", "I-D, II-B, III-A, IV-C"], ans: 0, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "76. Column 1: I. Aspergillus niger, II. Lactobacillus, III. Clostridium butylicum, IV. Trichoderma polysporum. Column II: A. Lactic acid, B. Butyric acid, C. Citric acid, D. Cyclosporin A. Which of the combinations is correct?", opts: ["I-B, II-A, III-D, IV-C", "I-C, II-A, III-B, IV-D", "I-A, II-B, III-C, IV-D", "I-D, II-B, III-A, IV-C"], ans: 1, exp: "I-C, II-A, III-B, IV-D." },
+    { q: "77. Which one of the following is an example of carrying out biological control of pests/diseases using microbes?", opts: ["Trichoderma sp. against certain plant pathogens", "Nucleopolyhedrovirus against white rust in Brassica", "Bt-cotton to increase cotton yield", "Lady bird beetle against aphids in mustard"], ans: 0, exp: "Trichoderma sp. against certain plant pathogens." },
+    { q: "78. Consider the following four statements (a-d) and select the option which includes all the correct ones only. (A) Single cell Spirulina can produce large quantities of food rich in protein, minerals, vitamins etc. (B) Body weight-wise the microorganism Methylophilus methylotrophus may be able to produce several times more proteins than the cows per day (C) Common button mushrooms are a very rich source of vitamin C (D) A rice variety has been developed which is very rich in calcium.", opts: ["Statements (C), (D)", "Statements (A), (C) and (D)", "Statements (B), (C) and (D)", "Statements (A), (B)"], ans: 3, exp: "Statements (A), (B) are correct." },
+    { q: "79. The pathogen Microsporum responsible for ringworm disease in humans belongs to the same Kingdom of organisms as that of", opts: ["Rhizopus, a mould", "Ascaris, a round worm", "Taenia, a tapeworm", "Wuchereria, a filarial worm"], ans: 0, exp: "Rhizopus, a mould." },
+    { q: "80. The most abundant prokaryotes helpful to humans in making curd from milk and in production of antibiotics are the ones categorised as:", opts: ["Cyanobacteria", "Archaebacteria", "Chemosynthetic autotrophs", "Heterotrophic bacteria"], ans: 3, exp: "Heterotrophic bacteria." },
+    { q: "81. Column I: 1. Streptomyces, II. Rhizobium, III. Nitrosomonas, IV. Acetobacter. Column II: A. Nitrogen fixation, B. Source of antibiotics, C. Vinegar synthesis, D. Nitrification. Which of the combinations is correct?", opts: ["I-B, II-A, III-D, IV-C", "I-C, II-D, III-A, IV-B", "I-A, II-B, III-C, IV-D", "I-D, II-B, III-A, IV-C"], ans: 0, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "82. Yeast is used in the production of", opts: ["Citric acid and lactic acid", "Lipase and pectinase", "Bread and beer", "Cheese and butter"], ans: 2, exp: "Bread and beer." },
+    { q: "83. In gobar gas, the maximum amount is that of:", opts: ["Butane", "Methane", "Propane", "Carbon dioxide"], ans: 1, exp: "Methane." },
+    { q: "84. In paddy field which of the following serves as an important biofertilizer.", opts: ["B.G.A", "Rhizobium", "Glomus", "Azadirachta"], ans: 0, exp: "B.G.A (Blue Green Algae)." },
+    { q: "85. Monascus purpureus is a yeast used commercially in the production of:", opts: ["ethanol", "streptokinase for removing clots from the blood vessels,", "Citric acid", "blood cholesterol lowering statins"], ans: 3, exp: "Blood cholesterol lowering statins." },
+    { q: "86. Ethanol is commercially produced through a particular species of", opts: ["Aspergillus", "Saccharomyces", "Clostridium", "Trichoderma"], ans: 1, exp: "Saccharomyces." },
+    { q: "87. Which one of the following helps in absorption of phosphorus from soil by plants?", opts: ["Anabaena", "Glomus", "Rhizobium", "Frankia"], ans: 1, exp: "Glomus." },
+    { q: "88. Which one single organism or the pair of organisms is correctly assigned to its or their named taxonomic group", opts: ["Paramecium and Plasmodium belong to the same kingdom as that of Penicillium", "Lichen is a composite organism formed form the symbiotic association of an algae and a protozoan", "yeast used in making bread and beer is a fungus", "Nostoc and Anabaena are examples of protista"], ans: 2, exp: "Yeast is a fungus." },
+    { q: "89. An organism used as biofertilizer for raising soyabean crop is", opts: ["Azotobacter", "Azospirillum", "Rhizobium", "Frankia"], ans: 2, exp: "Rhizobium." },
+    { q: "90. Usnic acid is an antibiotic obtained from-", opts: ["Fungi", "Bacteria", "Lichens", "Algal"], ans: 2, exp: "Lichens." },
+    { q: "91. For retting of jute, the fermenting microbe is-", opts: ["Methanophilic bacteria", "Butyric acid bacteria", "Helicobacter pylori", "Streptococcus lactis"], ans: 1, exp: "Butyric acid bacteria." },
+    { q: "92. A nitrogen-fixing microbe associated with Azolla in rice fields is :", opts: ["Spirulina", "Anabaena", "Frankia", "Tolypothrix"], ans: 1, exp: "Anabaena." },
+    { q: "93. Which one of the following microbes forms symbiotic association with plants and helps them in their nutrition", opts: ["Azotobacter", "Aspergillus", "Glomus", "Trichoderma"], ans: 2, exp: "Glomus." },
+    { q: "94. Which of the followings is mainly produced by the activity of anaerobic bacteria on sewage?", opts: ["Marsh gas", "Laughing gas", "Propane", "Mustard gas"], ans: 0, exp: "Marsh gas (methane)." },
+    { q: "95. Which one of the following is not a biofertilizer?", opts: ["Mycorrhiza", "Agrobacterium", "Rhizobium", "Nostoc"], ans: 1, exp: "Agrobacterium." },
+    { q: "96. Nitrogen fixation is-", opts: ["N2 -> NH3", "N2 -> NO3", "N2 -> Amides", "Both (a) and (b)"], ans: 3, exp: "Both (a) and (b)." },
+    { q: "97. Rennin used in cheese industry is-", opts: ["Antibiotic", "Alkaloid", "Enzyme", "Inhibitor"], ans: 2, exp: "Enzyme." },
+    { q: "98. A patient brought to a hospital with myocardial infarction is normally immediately given :", opts: ["Penicillin", "Streptokinase", "Cyclosporin-A", "Statins"], ans: 1, exp: "Streptokinase." },
+    { q: "99. The most common substrate used in distilleries for the production of ethanol is", opts: ["Molasses", "Corn meal", "Soya meal", "Ground gram"], ans: 0, exp: "Molasses." },
+    { q: "100. Select the correct statement -", opts: ["Supply of O2 to the biogas plant will have negative effect", "Starch in cereals as raw material is used in fermentation process of making beer", "Distillation of wine is necessary as it prevents further fermentation and spoiling wine", "All"], ans: 3, exp: "All are correct." },
+    { q: "101. Which of the following enzymes is not used in making detergent?", opts: ["Peptidase", "Cellulase", "Amylase", "Lipase"], ans: 0, exp: "Peptidase." },
+    { q: "102. Which of the following is false?", opts: ["VAM is a biofertilizer", "Azolla and BGA are the best biofertilizers", "Synthetic fertilizers do not cause pollution", "Probiotics are live microbial food supplement"], ans: 2, exp: "Synthetic fertilizers do cause pollution." },
+    { q: "103. Types of alcoholic beverages obtained depend on -", opts: ["Raw materials used for fermentation", "Types of processing", "Both", "Type of storage pattern"], ans: 2, exp: "Both." },
+    { q: "104. Baculoviruses (Nucleopolyhedrovirus) does not show", opts: ["Host specify", "Narrow spectrum applications", "Effects on non-target pathogens", "Utility in IPM programme"], ans: 2, exp: "Effects on non-target pathogens." },
+    { q: "105. The advantage the fungi derive from mycorrhizal association with plants -", opts: ["Shelter + Nutrients", "Water from soil", "Minerals from soil", "Tolerance to salinity"], ans: 0, exp: "Shelter + Nutrients." },
+    { q: "106. Mycorrhiza is found in -", opts: ["Oligotrophic soil deficient in nutrients", "Eutrophic soil rich in nutrients", "Oligotrophic soil rich in humus", "Eutrophic soil deficient in nutrients"], ans: 0, exp: "Oligotrophic soil deficient in nutrients." },
+    { q: "107. Enzyme which has the fibrinolytic effect is -", opts: ["Protease", "Amylase", "Lipase", "Streptokinase"], ans: 3, exp: "Streptokinase." },
+    { q: "108. Which of the following is common to Azospirillum, Azotobacter, Anabaena, Nostoc and Oscillatoria -", opts: ["Prokaryotes", "N2-fixers", "Both", "Eukaryotes"], ans: 2, exp: "Both." },
+    { q: "109. Which antibiotic was extensively used to treat American soldiers wounded in World War II?", opts: ["Terramycin", "Erythromycin", "Chloromycetin", "Penicillin"], ans: 3, exp: "Penicillin." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 27; // ⚠️ 12th Class Chapter 8 is Chapter 27 in Dashboard (Skipped 1)
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
