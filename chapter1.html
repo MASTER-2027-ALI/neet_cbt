@@ -513,7 +513,17 @@ function triggerAutoSave() {
 }
 
 renderPalette();
-loadAutoSave();
+renderPalette();
+// Firebase load hone ka wait karein, phir data load karein
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    if (window.fb) {
+      loadAutoSave();
+    } else {
+      console.log("Firebase load nahi hua, page refresh karein.");
+    }
+  }, 1000); // 1 second ka wait
+});
 
 // Add Back button
 window.addEventListener('load', function() {
