@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 30: Organisms and Populations - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 30: Organisms and Populations</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. Which of the following is the most ecologically relevant environmental factor?", opts: ["Water", "Light", "Temperature", "Soil"], ans: 2, exp: "Temperature is the most ecologically relevant environmental factor." },
+    { q: "2. Which of the following might contribute to determining an organism's habitat?", opts: ["Amount of sunlight", "Temperature of soil", "Humidity and other organisms", "All"], ans: 3, exp: "All of these contribute." },
+    { q: "3. I. Organisms living in oceans, lakes and rivers face water-related problems. II. Euryhaline can tolerate a wide range of salinities III. Stenohaline are restricted to a narrow range of salinities IV. No fresh water animals cannot live for long in sea water but sea animals can live in fresh water for long time because of osmotic balance V. The salt concentration is less than 5% in inland water, 30-35% in sea and >100% in some hypersaline lagoon", opts: ["All are correct", "All are false", "Only IV is wrong", "Only I, III, V are correct"], ans: 2, exp: "Only IV is wrong." },
+    { q: "4. Major biomes of India include -", opts: ["Tropical rain forest", "Deciduous forest", "Desert and sea coast", "All"], ans: 3, exp: "All of these." },
+    { q: "5. Next to temperature, which is the most important factor influencing the life of organisms?", opts: ["Light", "Soil", "Water", "Wind velocity"], ans: 2, exp: "Water." },
+    { q: "6. Which of the following is not a part of an organism's physical environment?", opts: ["Temperature", "Water", "Shade", "Other organisms"], ans: 3, exp: "Other organisms are part of the biotic environment." },
+    { q: "7. Ecology is basically concerned with four levels of biology organizations. These levels are -", opts: ["Organisms, populations, communities and biomes", "Organisms and communities, species and population", "Species, populations, biomes and organisms", "Organisms, populations, biomes and species"], ans: 0, exp: "Organisms, populations, communities, and biomes." },
+    { q: "8. False statement is -", opts: ["habitat includes both biotic and abiotic factors", "Ecology at the organismic level is essential physiological ecology", "Abiotic and biotic components interact constantly with each other", "None of the above"], ans: 3, exp: "None of the above." },
+    { q: "9. The location of terrestrial biomes is strongly influenced by -", opts: ["Which animal species live in the area", "Climate", "Other nearby biomes", "Which plant species live in the area"], ans: 1, exp: "Climate." },
+    { q: "10. A few organisms can tolerate and thrive a wide range of temperature. Such animals are called _______. A vast majority of animals are restricted to a narrow range of temperature. Such animals are called ______.", opts: ["Eurythermal, stenothermal", "Stenothermal, eurythermal", "Thermoscopic, unthermoscopic", "Thermophobic, thermophilic"], ans: 0, exp: "Eurythermal, stenothermal." },
+    { q: "11. Each of the following is an important factor in determining the productivity of fresh water lake except -", opts: ["Nutrients", "Depth", "Proximity to marine coast", "Temperature"], ans: 2, exp: "Proximity to marine coast." },
+    { q: "12. Human can get homeostasis through-", opts: ["Only physiological means", "Only physical means", "Both physiological and physical means", "Neither physiological nor physical means"], ans: 2, exp: "Both physiological and physical means." },
+    { q: "13. Deep (> 500m) in the oceans inhabitants are not aware of existence of a celestial source of energy called -", opts: ["Sun", "ATP", "Photosynthesis", "Chemosynthesis"], ans: 0, exp: "Sun." },
+    { q: "14. The nature of soil in a given area is independent of -", opts: ["Climate", "Weathering process", "Whether soil is transported or sedimentary and how the soil development occurred", "None of the above"], ans: 3, exp: "None of the above." },
+    { q: "15. The two sides of a given mountain have the same latitude and altitude. Are they likely to have the same climate?", opts: ["No, because there is likely to be less water on the side of the mountain that faces away from the prevailing wind", "No, because there is always a desert on one side of a mountain", "Yes, because latitude and altitude are the two most important climate-controlling factors", "Yes, because locations at the same latitude all have the same climate"], ans: 0, exp: "No, because of differences in water availability due to wind patterns." },
+    { q: "16. In regions of hot temperatures and wet climate, you will most likely find _______ biomes, whereas in the regions of hot temperature and dry climate you will find _______.", opts: ["Desert, tropical", "Temperate, arid", "Tropical, desert", "Tundra, chaparral"], ans: 2, exp: "Tropical, desert." },
+    { q: "17. I. Thermoregulation, osmoregulation and excretion are mechanisms that moderate change in the body. II. 99% animals and almost all plants are conformers III. Heat loss or heat gain is a function of surface area. IV. Thermoregulation energetically least expensive process for many organisms like shrews and humming birds. V. 99% animals are thermoregulator VI. Archaebacteria cannot tolerate high temperature", opts: ["I and II are wrong", "IV, V and VI are wrong", "None is wrong", "All are wrong"], ans: 1, exp: "IV, V, and VI are wrong." },
+    { q: "18. Which of the factors dictates the types of animal in a habitat -", opts: ["pH of the soil", "Type of benthic animals", "Types of forests", "Types of vegetation that support them"], ans: 3, exp: "Types of vegetation that support them." },
+    { q: "19. Which of the following term implies the maintenance of relatively constant physical and chemical conditions within organisms?", opts: ["Homeostasis", "Adaptation", "Isometry", "Acclimation"], ans: 0, exp: "Homeostasis." },
+    { q: "20. Find out the false one -", opts: ["Texture of soil depends upon size of mineral particles", "Soil aeration is inversely proportional to water holding capacity", "Waterlogged soil does not suit plants as it creates anaerobic environment", "Availability of minerals in soil is independent of soil pH"], ans: 3, exp: "Availability of minerals in soil is independent of soil pH." },
+    { q: "21. Many animals use the diurnal and seasonal variations in light intensity and photoperiod as cues timing of -", opts: ["Forage only", "Reproductive activities only", "Migration only", "All"], ans: 3, exp: "All." },
+    { q: "22. Animals having a built-in thermostat to maintain constant body temperature are -", opts: ["Biothermic", "Poikilothermic", "Oligothermic", "Homeothermic"], ans: 3, exp: "Homeothermic." },
+    { q: "23. To a large extent, the vegetation of an area is determined by -", opts: ["Physical + chemical properties of soil only", "pH of soil", "Physical + Chemical properties of soil and topography", "Type of minerals in soil"], ans: 2, exp: "Physical + Chemical properties of soil and topography." },
+    { q: "24. Seasons are influenced by-", opts: ["The tilt of earth on its axis", "The amount of solar radiation reaching earth's surface", "Earth's movement around the sun", "All"], ans: 3, exp: "All." },
+    { q: "25. Percolation and water holding capacity of soil is dependent upon -", opts: ["Soil composition, grain size and aggregation", "pH of soil", "Colour of soil", "Holard"], ans: 0, exp: "Soil composition, grain size and aggregation." },
+    { q: "26. The ultimate source of energy for all ecosystems on earth is -", opts: ["Photosynthesis", "Sun", "ATP", "Creatine phosphate"], ans: 1, exp: "Sun." },
+    { q: "27. Which of the following statements is false?", opts: ["Earth's climate has varied in temperature over time", "Natural selection acts on the genetic variability present in the population so that it can adapt", "The physical and biotic environments do not interact", "The productivity and distribution of plants is heavily dependent upon water"], ans: 2, exp: "The physical and biotic environments do not interact." },
+    { q: "28. Life-", opts: ["Originated on earth in water", "Is sustainable with water only", "Is possible without water", "Both a and c are correct"], ans: 0, exp: "Originated on earth in water." },
+    { q: "29. Snow leopards are not found in Kerala forests. Which factor is responsible for it?", opts: ["Temperature", "Soil", "Water", "Light"], ans: 0, exp: "Temperature." },
+    { q: "30. I. Mango trees cannot grow in temperate countries like Canada and Germany II. Snow leopards are not found in Kerala. III. Tuna fish are rarely caught beyond tropical latitude in the ocean. IV. Average temperature exceeds 100°C in thermal springs and hydrothermal vents. V. In polar areas and high altitudes temperature goes to 70°C. VI. Temperature goes to > 50°C in tropical desert in summer. Which of the above statements are false?", opts: ["I only", "II and III only", "V only", "V and VI only"], ans: 2, exp: "V only." },
+    { q: "31. Which of the following accounts for the formation of major biomes?", opts: ["Annual variations in intensity of temperature", "Annual variations in intensity and duration of temperature", "Annual variation in precipitation", "b and c"], ans: 3, exp: "b and c." },
+    { q: "32. What are the key elements that lead to so much variation in the physical and chemical conditions of different habitats?", opts: ["Temperature and light", "Soil and water", "Only soil", "Temperature, light, soil and water"], ans: 3, exp: "Temperature, light, soil and water." },
+    { q: "33. Basic unit of ecological hierarchy is -", opts: ["Ecosystem", "Community", "Population", "Individual"], ans: 3, exp: "Individual." },
+    { q: "34. A regional ecological unit having a specific climate is -", opts: ["Biome", "Landscape", "Ecosystem", "Biotic community"], ans: 0, exp: "Biome." },
+    { q: "35. Select the false statement -", opts: ["Average temperature on land varies seasonally", "Temperature progressively decreases from pole to equator", "Temperature progressively decreases from plains to mountain tops", "Our intestine is a unique habitat for hundreds of species of microbes"], ans: 1, exp: "Temperature progressively decreases from pole to equator." },
+    { q: "36. Which of the following statement is false w.r.t adaptations?", opts: ["Many xerophytic plants have thick cuticle on leaf epidermis, sunken stomata", "Some xerophytic plants have special photosynthetic pathway (CAM) that enables their stomata close during day", "Opuntia has spines (modified leaves), photosynthetic phylloclade (stem)", "All adaptations are genetically fixed in all organisms"], ans: 3, exp: "All adaptations are genetically fixed in all organisms." },
+    { q: "37. Organisms have evolved various mechanisms to maintain homeostasis to perform its physiological and biochemical functions. This can be obtained through -", opts: ["Regulation", "Conformation", "Migration or suspension", "All"], ans: 3, exp: "All." },
+    { q: "38. Kangaroo rats -", opts: ["Have a generalized diet", "Avoid eating fats", "Do not need to drink water", "Are insensitive to heat"], ans: 2, exp: "Do not need to drink water." },
+    { q: "39. Find out false one-", opts: ["Mammals from colder climate generally have shorter ears and limbs to minimise heat loss", "Some organisms have behavioural adaptations that allow them to respond quickly to a stressful situation", "Some organisms possess adaptations that are physiological which allow them to respond quickly to a stressful situation", "A large variety of invertebrates and fish live at great depths in the ocean where the pressure could be > 100 times than the normal atmospheric pressure"], ans: 0, exp: "Mammals from colder climate generally have shorter ears and limbs to minimise heat loss." },
+    { q: "40. Choose the odd one out w.r.t adaptations in the organisms -", opts: ["Biochemical adaptation are seen in organisms living in great depth of the ocean to face crushing pressure", "Bergmann's rule is seen in mammals living in colder climates", "Altitude sickness is caused because of body not getting enough oxygen due to low atmospheric pressure at high altitude", "Desert lizards lack the physiological and behavioural means to manage to their body temperature"], ans: 3, exp: "Desert lizards lack the physiological and behavioural means to manage to their body temperature." },
+    { q: "41. Whales, the world's largest living mammals, live in the ocean, but there are no very small aquatic mammals why?", opts: ["They get eaten by larger animals", "They cannot regulate body temperature effectively in water", "Their kidneys cannot handle life in the marine environment", "They lose too much heat from evaporation"], ans: 1, exp: "They cannot regulate body temperature effectively in water." },
+    { q: "42. Elephants use their ears to dump heat to the environment. What mechanisms might they employ to increase heat loss from ears?", opts: ["Increased convection due to flapping of the ears", "Moving into the sun", "Increased blood flow to the ears", "a and c"], ans: 3, exp: "a and c." },
+    { q: "43. Choose the odd out w.r.t structure formed in the different organisms during suspended phase.", opts: ["Bacteria - Thick walled spores", "Higher plants - Seeds, vegetative propagules", "Zooplankton - Diapause stage", "Ectothermic organisms - Torpid state during favourable season."], ans: 3, exp: "Ectothermic organisms - Torpid state during favourable season." },
+    { q: "44. I. Conformers are the organisms that cannot maintain a constant internal environment. II. 99% animals and nearly all plants cannot maintain their constant internal environments III. During the course of evolution, the cost and benefits of maintaining a constant internal environment are discarded. IV. Conformity is a condition in which an external challenge induces parallel internal changes. V. Regulation is a condition in which external challenge elicits compensatory action to maintain the internal milieu.", opts: ["All are correct", "All are wrong", "Only III is wrong", "Only IV and V are wrong"], ans: 2, exp: "Only III is wrong." },
+    { q: "45. I. Basking by desert lizards in sun II. Hiding in burrows by some animals III. Wearing of woolen clothes IV. Thermal gaping. The above are examples of -", opts: ["Scansorial adaptation", "Behavioural adaptation", "Fossorial adaptation", "Cursorial adaptation"], ans: 1, exp: "Behavioural adaptation." },
+    { q: "46. The Kangaroo rat in North American desert do not drink water. How does it survive in such xeric condition.", opts: ["Capable of meeting all its water requirements through its internal fat oxidation", "Its skin is moist", "Hypertonic urine excretion", "a and c"], ans: 3, exp: "a and c." },
+    { q: "47. Which one is correct? I. In a hot climate reptiles can maintain a constant body temperature in the day by behavioural regulation. II. The body temperature of thermoconformers changes with ambient temperature. III. In aquatic osmoconformers, the osmolarity of body fluids changes with that of ambient water. IV. Small animals have a larger surface area relative their volume, they tend to lose body heat very fast when it is cold outside, then they have to expend much energy to generate body heat through metabolism.", opts: ["All", "None", "Only IV", "I, II, III"], ans: 0, exp: "All." },
+    { q: "48. Acclimatization (compensatory mechanisms) to altitude sickness includes all except -", opts: ["Polycythaemia", "Hyperventilation", "Asphyxia", "Decreasing binding capacity of Mb"], ans: 3, exp: "Decreasing binding capacity of Mb." },
+    { q: "50. Size of population can be decreased by -", opts: ["A higher birth rate", "Immigration", "Emigration", "Increase in food availability"], ans: 2, exp: "Emigration." },
+    { q: "51. If 4 individuals in a laboratory population of 40 fruit flies died during a specific time (a week) interval, the death rate in the population per week is -", opts: ["1", "0.1", "10", "400"], ans: 1, exp: "0.1." },
+    { q: "52. The reproductive value of an individual is greatest -", opts: ["At birth", "Just before first reproduction", "Halfway through the reproductive stage", "Just before death"], ans: 1, exp: "Just before first reproduction." },
+    { q: "53. Birth rate is 100, death rate is 10. Number of individuals in population group is 1000, What is the percentage of natural growth rate?", opts: ["0.09%", "9.0%", "0.9%", "90%"], ans: 1, exp: "9.0%." },
+    { q: "54. Population density of aquatic animals in some waterbody is measured in term of per -", opts: ["m2", "m4", "m", "m3"], ans: 3, exp: "m3." },
+    { q: "55. The age structure of a population is its -", opts: ["Relative number of individuals at each age", "Number of newborns each year", "Number of young reaching puberty each year", "Relative number of deaths at each age"], ans: 0, exp: "Relative number of individuals at each age." },
+    { q: "56. Which of the following is false?", opts: ["In a population birth rate and death rate refer to per capita births and death respectively", "The size of a population for any species is a static parameter", "In nature, we rarely find isolated, single individuals of any species", "Ecological effects of any factors on a population are generally reflected in its size / population density"], ans: 1, exp: "The size of a population for any species is a static parameter." },
+    { q: "57. Which of the following statements is correct?", opts: ["Sometimes population density has more impact than the population size, and sometimes vice versa", "The carrying capacity of a habitat always remains the same", "Under normal conditions, births and deaths are the most important factors influencing population density, the other 2 factors (immigration and emigrations) are important in special condition", "a and c"], ans: 3, exp: "a and c." },
+    { q: "58. Total number of individual of a species in an area is called -", opts: ["Population size", "Population density", "Demography", "Population dynamics"], ans: 0, exp: "Population size." },
+    { q: "59. If in a pond there are 20 lotus last year and through reproduction 8 new plants are added, taking current population to 28. The birth rate per year is -", opts: ["0.4", "0.8", "2.8", "0.28"], ans: 0, exp: "0.4." },
+    { q: "60. What four factors define population growth?", opts: ["Births; deaths, immigration, emigration", "Survivorship, age-specific mortality, fecundity, death rate", "Mark-recapture, census, quadrate sampling, transects", "Age-specific birth rate, metapopulation structure, quadrate, ecotone"], ans: 0, exp: "Births; deaths, immigration, emigration." },
+    { q: "61. Adaptation is an attribute of organisms that enables them to survive and reproduce in their habitats. Adaptation-", opts: ["May be morphological", "may be physiological", "May be behavioural", "All"], ans: 3, exp: "All." },
+    { q: "62. Keoladeo National Park (Bharatpur) hosts thousands of migrating birds from Siberia and other extremely cold northern regions. This park is located in -", opts: ["Gujrat", "West Bengal", "Rajasthan", "Madhya Pradesh"], ans: 2, exp: "Rajasthan." },
+    { q: "63. Symptoms of altitude sickness include all except -", opts: ["Nausea", "Fatigue", "Heart palpitations", "Hyperoxia"], ans: 3, exp: "Hyperoxia." },
+    { q: "64. Which of the following is an important adaptation of animals to cold climate -", opts: ["Thin layer of body fat", "Aestivation", "Increased tendency to shiver", "Reduced surface area to volume ratio"], ans: 3, exp: "Reduced surface area to volume ratio." },
+    { q: "65. Which of the following is not a factor that would limit the growth of a population?", opts: ["Food shortage", "Immigration", "Disease", "Weather"], ans: 1, exp: "Immigration." },
+    { q: "66. Parameters related to age structure include -", opts: ["Fecundity (birth rate)", "Generation time", "Death rate", "All"], ans: 3, exp: "All." },
+    { q: "67. The age distribution of a population is determined by -", opts: ["Timing of birth", "Timing of death", "The rate at which the population is growing", "All"], ans: 3, exp: "All." },
+    { q: "68. Population density of terrestrial organism is measured in terms of per -", opts: ["meter", "meter2", "meter3", "meter4"], ans: 1, exp: "meter2." },
+    { q: "69. If most individuals in a population are young, why is the population likely to grow rapidly in the future?", opts: ["Many individuals will begin to reproduce soon", "Death rates will be low", "Immigration and emigration can be ignored", "The population has a skewed age distribution"], ans: 0, exp: "Many individuals will begin to reproduce soon." },
+    { q: "70. In an area, there are 200 Parthenium and a single huge banyan tree. Which of the following conclusions is correct?", opts: ["Population density of banyan is low relative to that of Parthenium.", "Population cover area of banyan is high relative to Parthenium.", "In the above case % cover or biomass is a more meaningful measure of the population size.", "All the above"], ans: 3, exp: "All the above." },
+    { q: "71. A population of 100 individuals has a doubling time of 25 years. What size will this population be in 100 years?", opts: ["100", "400", "1600", "3200"], ans: 2, exp: "1600." },
+    { q: "73. Which is not related to S-shaped population curve?", opts: ["Environmental resistance suddenly becomes effective", "Exponential phase is followed by decline phase", "Mass mortality and population crash occurs", "a and c"], ans: 0, exp: "Environmental resistance suddenly becomes effective." },
+    { q: "74. Biotic potential refers to -", opts: ["Increase of population under optimum condition", "Increase of population under given condition", "Increase of population under natural condition", "Increase of population under stress condition"], ans: 0, exp: "Increase of population under optimum condition." },
+    { q: "75. Organisms with very high intrinsic growth rates have -", opts: ["Long generation time", "Short generation time", "No carrying capacity", "No courtship behaviours"], ans: 1, exp: "Short generation time." },
+    { q: "77. Which of the following is correct?", opts: ["Natality under actual conditions is called ecological natality", "Ability of an environment to support a population is called carrying capacity", "Plants are killed by frost in winter because of desiccation and mechanical damage", "All"], ans: 3, exp: "All." },
+    { q: "78. Vital index of a population is -", opts: ["(B/D) x 100", "B-D", "(D/B)x 100", "B + D"], ans: 0, exp: "(B/D) x 100." },
+    { q: "79. As the number of individuals approaches the carrying capacity of a population, which of the following is predicted by the sigmoidal growth curve?", opts: ["Population biomass will remain the same", "Population density will increase exponentially", "Population growth rate will decrease", "Population growth rate will increase"], ans: 2, exp: "Population growth rate will decrease." },
+    { q: "80. Assuming that an animal generates heat at a rate proportional to its volume and can radiate heat at a rate proportional to its body surface area. Which of the following would be best at maintaining its body temperature in a cold climate-", opts: ["Mouse", "Rabbit", "Bear", "Fox"], ans: 2, exp: "Bear." },
+    { q: "81. Allen's rule is related to -", opts: ["Hibernation", "Aestivation", "Migration", "Evolution"], ans: 0, exp: "Hibernation." },
+    { q: "82. Logistic growth occurs when there is -", opts: ["Asexual reproduction only", "Sexual reproduction only", "No inhibition from crowding", "A fixed carrying capacity"], ans: 3, exp: "A fixed carrying capacity." },
+    { q: "83. Exponential growth occurs when there is -", opts: ["Asexual reproduction only", "Sexual reproduction only", "No inhibition from crowding", "A fixed carrying capacity"], ans: 2, exp: "No inhibition from crowding." },
+    { q: "84. Which of the following can be a limit on population growth?", opts: ["Food and water", "Space", "Accumulated wastes", "All"], ans: 3, exp: "All." },
+    { q: "85. A behavioural strategy of adaptation is called echolocation is found in -", opts: ["bats", "Butterfly", "Praying mantis", "Arctic tern"], ans: 0, exp: "Bats." },
+    { q: "86. What is the fate of a population that is dominated by younger individuals and lacking older individuals?", opts: ["Growing", "Declining", "Becomes highly dynamic", "Unpredictable"], ans: 0, exp: "Growing." },
+    { q: "87. An 'Urn' shaped population age pyramid represents-", opts: ["Growing population", "Static population", "Declining population", "Threatened population"], ans: 2, exp: "Declining population." },
+    { q: "88. Periodic departure and return is known as -", opts: ["Migration", "Immigration", "Emigration", "Mutation"], ans: 0, exp: "Migration." },
+    { q: "89. A population with a larger proportion of older individuals than younger ones will likely-", opts: ["Grow larger and then decline", "Continue to grow larger indefinitely", "Grow smaller and may stabilize at a smaller population size", "Not experience a change in population size"], ans: 2, exp: "Grow smaller and may stabilize at a smaller population size." },
+    { q: "90. Which of the following is true for the carrying capacity (K)?", opts: ["When N = K, the birth rate in a population is zero", "The rate of population growth in an unlimited environment is proportional to K", "K is always determined by the amount of food in an environment", "In a population at its K the birth rate equals the death rate"], ans: 3, exp: "In a population at its K the birth rate equals the death rate." },
+    { q: "91. In a life table, the number of individuals alive at the beginning of the 1-year to 2-year age interval is 800. During this interval 200 individuals die. The death rate for this interval is -", opts: ["0.25", "200", "800", "0.2"], ans: 0, exp: "0.25." },
+    { q: "92. Go through the population growth formula. Now select the correct option -", opts: ["As population gets larger, its rate of growth increases", "Represents growth as a continuous process", "r is constant and N is variable", "All"], ans: 3, exp: "All." },
+    { q: "93. Which of the following is true concerning exponential growth?", opts: ["No population can grow exponentially for long.", "Exponential growth slows down as the population nears its maximal size", "bacterial colonies have been observed to maintain exponential growth for over a month", "Exponential growth is commonly observed in large, slow-growing species such as humans and elephants"], ans: 0, exp: "No population can grow exponentially for long." },
+    { q: "94. The population growth equation describes a population that-", opts: ["Grows without limits", "Grows rapidly at small population sizes, but whose growth rate slows and eventually stops as the population reaches the number the environment can support", "Rapidly overshoots the number the environment can support and then fluctuates around this number", "Grows very rapidly and then crashes when the environmental resources are used up"], ans: 1, exp: "Grows rapidly at small population sizes, but whose growth rate slows and eventually stops as the population reaches the number the environment can support." },
+    { q: "95. The logistic population growth model describes a population's growth when an upper limit to growth is assumed. This upper limit to growth is known as the population's ________, and as N gets larger, dN/dt _______", opts: ["Biotic potential, increases", "Biotic potential, decreases", "Carrying capacity, increases", "Carrying capacity, decreases"], ans: 3, exp: "Carrying capacity, decreases." },
+    { q: "96. Choose the correct option-", opts: ["Geometric growth produces J-shaped population growth curve", "Logistic growth occurs when resources are limiting", "For exponential growth equation is Nt = N0ert", "All"], ans: 3, exp: "All." },
+    { q: "97. Which of the following is false? I. The human liver fluke, a nematode parasite, depends on two intermediate hosts (snail and fish) to complete its life cycle. II. The malaria parasite needs a vector (mosquito) to spread to other parasite. III. The female mosquito is not considered parasite, however it needs our blood for reproduction. IV. In case of brood parasitism, the eggs of parasitic birds (e.g. cuckoo) are not detected and ejected from the nest because of parasite's eggs resemble the hosts eggs in morphology and colour. V. A population of frogs protected from all predators would increase indefinitely.", opts: ["All", "None", "Only III", "Only V"], ans: 3, exp: "Only V." },
+    { q: "98. Which one of the following is incorrect?", opts: ["Biological control methods adopted in agricultural pest control are based on the ability of the predator to regulate prey population", "Predators also help in maintaining species diversity in a community by increasing the intensity of competition among competing prey species", "In the rocky intertidal communities of the American Pacific Coast the starfish Pisaster is an important predator.", "In a field experiment, when all the starfish were removed from an enclosed intertidal area, more than 10 species of invertebrates became extinct within a year."], ans: 1, exp: "Predators also help in maintaining species diversity in a community by increasing the intensity of competition among competing prey species." },
+    { q: "100. Some organisms reproduce only once in their lifetimes because they -", opts: ["Invest so much in reproduction that they have insufficient reserves for survival", "Produce so many offspring at one time that they do not need to survive longer", "Do not have enough eggs to reproduce again", "Do not have enough sperm to reproduce again"], ans: 0, exp: "Invest so much in reproduction that they have insufficient reserves for survival." },
+    { q: "101. Which one is true?", opts: ["Herbivores and plants appear to be more adversely affected by competition than carnivores", "Vice versa", "Both are equally affected", "No relation can be established"], ans: 0, exp: "Herbivores and plants appear to be more adversely affected by competition than carnivores." },
+    { q: "102. Carrying capacity for a population is estimated at 500; the population size is currently 400; and rmax = 0.01. What is dN/dt?", opts: ["0.01", "0.8", "8", "50"], ans: 1, exp: "0.8." },
+    { q: "103. Choose the odd one out w.r.t parasitism -", opts: ["Parasites show adaptations like loss of digestive system and high reproductive capacity.", "Parasite may reduce the survival, growth and reproduction of host.", "Life cycles of ectoparasites are more complex", "Brood parasitism is seen in birds."], ans: 2, exp: "Life cycles of ectoparasites are more complex." },
+    { q: "104. A population grows rapidly at first and then levels off at carrying capacity if it is -", opts: ["Limited by density dependent factors", "Limited by density independent factors", "An opportunistic species", "Relatively unaffected by limiting factors"], ans: 0, exp: "Limited by density dependent factors." },
+    { q: "105. Which of the following is correct about host-specific parasites?", opts: ["Such parasites can parasitise only a single species of host", "Both host and parasite tend to co-evolve", "If host evolves special mechanisms for rejecting the parasite, the parasite has to evolve mechanism to counteract and neutralize them to succeed with the host species.", "All"], ans: 3, exp: "All." },
+    { q: "106. A country that has a stable population is characterized by an age structure that is _______.", opts: ["Largest among post-reproductive years", "Largest among reproductive years", "About the same among all groups", "Largest among pre-reproductive years"], ans: 2, exp: "About the same among all groups." },
+    { q: "107. Which one is a physiological adaptation to cold climate? I. Small body II. Accumulating glycerol and antifreezing proteins III. Accumulating ice nucleating protein IV. Hibernation", opts: ["Only I", "I, II, III", "II, III", "I, II, III, IV"], ans: 1, exp: "I, II, III." },
+    { q: "108. Cowbirds lay their eggs in the nests of smaller birds. The fast-developing cowbird chicks hatch first, then push the other baby chicks out of the nest as they hatch. The cowbird is classified as a", opts: ["pathogen.", "parasite.", "mutualist.", "victim."], ans: 1, exp: "Parasite." },
+    { q: "109. The evolution of the animal immune system was probably driven by", opts: ["herbivores pushing the animals toward extinction.", "the selective pressures of parasitic and disease organisms.", "competition between the animals and their habitats.", "symbiosis between the animals and their predators."], ans: 1, exp: "The selective pressures of parasitic and disease organisms." },
+    { q: "110. The level of competition between species depends on", opts: ["availability of resources.", "population density,", "group interaction of organisms.", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "111. Which of the following statements about competition is false?", opts: ["It can limit the distribution of a species.", "It can limit the abundance of a species.", "It can increase the differences between species.", "It can make two species become more alike."], ans: 3, exp: "It can make two species become more alike." },
+    { q: "112. Do humans exhibit any mutualistic relationships?", opts: ["No, humans form only parasitic relationships with other organisms.", "No, humans are unable to form mutualistic relationships with other organisms.", "Yes, between ourselves and the bacteria that make us ill.", "Yes, between ourselves and the bacteria that live in our guts."], ans: 3, exp: "Yes, between ourselves and the bacteria that live in our guts." },
+    { q: "113. Plants that produce fruits are part of a ____ mutualism.", opts: ["behavioral", "seed dispersal", "gut inhabitant", "exploitation"], ans: 1, exp: "Seed dispersal." },
+    { q: "114. Consumers can alter which of the following characteristics of victims?", opts: ["Distribution", "Abundance", "Behavior", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "115. Which of the following is not a way a parasite can spend its life?", opts: ["Spend part of their life free-living", "Live entire life within one host", "Live their life within several hosts", "Spend their entire life free-living"], ans: 3, exp: "Spend their entire life free-living." },
+    { q: "116. Human cells contain mitochondria, which are responsible for producing the energy needed by our cells. Remember that the ancestors of mitochondria may once have been free-living prokaryotes. If mitochondria were still considered to be separate organisms within our cells, which of the following would best describe our relationship with them?", opts: ["Parasitic", "Mutualistic", "Competitive", "Pathogenic"], ans: 1, exp: "Mutualistic." },
+    { q: "117. An indirect competition for shared resources, such as a particular nutrient, is known as ____ competition,", opts: ["exploitation", "restrictive", "interference", "advantageous"], ans: 0, exp: "Exploitation." },
+    { q: "118. The evolutionary reason a given organism interacts with another organism is to", opts: ["improve the environment in general.", "make life on Earth easier for humans.", "improve its own chance of survival.", "improve the survival of the organism with which it interacts."], ans: 2, exp: "Improve its own chance of survival." },
+    { q: "119. When two similar species live in the same area, they may evolve to become more different in order to", opts: ["drive the other species to extinction.", "reduce competition,", "use up the other species' resources.", "reduce genetic variation."], ans: 1, exp: "Reduce competition." },
+    { q: "120. Parasitism is an example of a _____ interaction.", opts: ["mutualistic", "consumer-victim", "victim-victim", "pollinator dispersal"], ans: 1, exp: "Consumer-victim." },
+    { q: "121. Pathogens are classified as", opts: ["victims.", "pollinators.", "consumers.", "mutualists."], ans: 2, exp: "Consumers." },
+    { q: "122. Which of the following is not a form of mutualism?", opts: ["Behavioral", "Pollinator", "Competitive", "Seed dispersal"], ans: 2, exp: "Competitive." },
+    { q: "123. Interactions among organisms can have effects at which of the following levels?", opts: ["Individual", "Population and Community", "Ecosystem", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "124. Human interference has caused ecological imbalances by", opts: ["affecting consumer-victim interactions.", "altering competition between species,", "eradicating common parasites.", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "125. In lichens, fungus and blue-green algae live together without causing significant harm to one another. Attempts to grow either the algae or the fungi independently result in the death of the organism. This interaction is an example of", opts: ["parasitism.", "mutualism,", "competition.", "All of the above"], ans: 1, exp: "Mutualism." },
+    { q: "126. If a new predator is introduced to an area with a type of prey that is limited in number, the prey species is likely to", opts: ["decrease, and possibly become extinct.", "increase,", "remain stable.", "initially increase, then decrease."], ans: 0, exp: "Decrease, and possibly become extinct." },
+    { q: "127. In certain shallow lake of South America, the visiting flamingoes and resident fishes compete for_____ as their food,", opts: ["phytoplanktons", "Zooplanktons", "Smaller fishes", "Ulothrix"], ans: 1, exp: "Zooplanktons." },
+    { q: "129. The population explosion that occurred shortly after the prickly pear cactus (opuntia) was introduced to Australia in early 1920's is an example of-", opts: ["Exponential growth", "Emigration", "A native species outcompeting an introduced species", "Immigration"], ans: 0, exp: "Exponential growth." },
+    { q: "130. Which of the following is the example of biological control?", opts: ["Control of mosquitoes by DDT.", "Control of opuntia by a predator (moth), a type of insect.", "Decreasing the carrying capacity of the habitat by poisoning it.", "rescue effect."], ans: 1, exp: "Control of opuntia by a predator (moth), a type of insect." },
+    { q: "131. You never see cattle or goats browsing on weed Calotropis. Why?", opts: ["The plant produces highly poisonous tannins", "The plant produces quinine which is bitter in taste", "The plant produces poisonous cardiac glycosides", "The plants produces a chemical which makes the animals away from plant"], ans: 2, exp: "The plant produces poisonous cardiac glycosides." },
+    { q: "132. What percentage of all insects is known to be phytophagous?", opts: ["Nearly 75%", "Nearly 25%", "Nearly 2%", "Nearly 90%"], ans: 1, exp: "Nearly 25%." },
+    { q: "133. What is the type of ecological relationship that can involve either members of the same species or different species and in-which both participants are harmed?", opts: ["Mutualism", "Parasitism", "Competition", "Amensalism"], ans: 2, exp: "Competition." },
+    { q: "134. Which of the following is not an example of a defence used by plants against herbivores?", opts: ["Production of caffeine, tannin, quinine.", "More production of non-woody tissues", "Productions of hairs, thorns, spines", "Production of hormone-like chemicals that interfere with insect metamorphosis."], ans: 1, exp: "More production of non-woody tissues." },
+    { q: "135. According to Darwin which of the following is a potent force in organic evolution?", opts: ["intraspecific competition", "Interspecific competition", "Mutation", "Gene transfer"], ans: 0, exp: "Intraspecific competition." },
+    { q: "136. Two organisms that use the same resources when those sources are in short supply are said to be -", opts: ["Predators", "Competitors", "Mutualists", "Amensalists"], ans: 1, exp: "Competitors." },
+    { q: "137. I. Some species of insects and frogs are cryptically-coloured (Camouflaged). II. Some animals are poisonous. III. Some animals (e.g. monarch butterfly) are distasteful due to having certain chemical in their bodies. The above adaptations are against -", opts: ["Predation", "Mimicry", "Symbiosis", "Protection"], ans: 0, exp: "Predation." },
+    { q: "138. For the defence against predators, butterflies become highly distasteful due to having certain chemical in their bodies. What is the source of the chemical?", opts: ["The butterflies has genes for synthesis of this chemical in its each and every cell.", "The butterfly acquires this chemical during its caterpillar stage by feeding on a poisonous plant", "This chemical accumulates in the cells of butterfly when it feeds sap of a plant", "The butterfly synthesis secretes the chemical from its corpus allatum."], ans: 1, exp: "The butterfly acquires this chemical during its caterpillar stage by feeding on a poisonous plant." },
+    { q: "139. Predators are important for a natural ecosystems because they- I. Keep prey population under control. II. Helps in maintaining species diversity. III. Are used in biological control method. IV. They reduced intensity of competition among competing prey species.", opts: ["I, III, IV", "I, II, III", "I, II, III, IV", "I, II, IV"], ans: 3, exp: "I, II, IV." },
+    { q: "140. No predator become proficient at acquiring prey because -", opts: ["Predators are too large to be fast enough", "Prey populations evolve more rapidly than predator population", "Predators are not as intelligent as their prey", "Prey populations evolve antipredatory traits"], ans: 3, exp: "Prey populations evolve antipredatory traits." },
+    { q: "141. Match the Column I with Column II - Column I: I. Endothermic animals, II. Ectothermal animals, III. Organisms of benthonic zone. Column II: A. Angler fish, B. Mammals, C. Amphibia, reptiles. The correct match is", opts: ["I-A, II-B, III-C", "I-C, II-B, III-A", "I-B, II-C, III-A", "I-A, II-C, III-B"], ans: 2, exp: "I-B, II-C, III-A." },
+    { q: "142. Community is—", opts: ["Group of independent, interesting populations of same species.", "Group of independent and interacting populations of same species in specific area.", "Group of independent and interacting populations of different species in a specific area.", "Group of independent and interacting populations of different species."], ans: 2, exp: "Group of independent and interacting populations of different species in a specific area." },
+    { q: "143. The fitness of one species (measured in terms of its 'r', the intrinsic rate of increase) is significantly lower in the presence of another species. The above phenomenon refers to -", opts: ["Competition", "Symbiosis", "Commensalism", "Protocooperation"], ans: 0, exp: "Competition." },
+    { q: "144. Competition for light, nutrients and space is most severe between-", opts: ["Closely related organisms growing in different niches", "Closely related organisms growing in the same area / niche", "Distantly related organisms growing in the same habitat", "Distantly related organisms growing in different niches"], ans: 1, exp: "Closely related organisms growing in the same area / niche." },
+    { q: "145. Find out the false one?", opts: ["The barnacle Chthamalus has a larger niche when Balanus is absent.", "The niches of the two barnacles are not the same in intertidal zone", "The presence or absence of each species affect the niche of the other", "None"], ans: 3, exp: "None." },
+    { q: "146. In small isolated tribal population-", opts: ["Wrestlers pass down the trait of strong muscles to the progeny", "There is no change in population size due to large gene pool", "There is decline in population as boys marry girls only of their tribe", "Hereditary diseases like colour blindness do not spread"], ans: 2, exp: "There is decline in population as boys marry girls only of their tribe." },
+    { q: "147. Which ecological unit or relationship is least related to abiotic factors?", opts: ["Community", "Symbiosis", "Population", "Ecosystem"], ans: 1, exp: "Symbiosis." },
+    { q: "148. A bird introduced from another country became a serious pest due to-", opts: ["Better adaptation to new area", "More sexual reproduction", "Better nesting habitats", "Absence of natural competition"], ans: 3, exp: "Absence of natural competition." },
+    { q: "149. When resources are limited, the competitively superior species eventually eliminate the other species. It is relatively-", opts: ["Easy to demonstrate it in natural condition", "Easy to demonstrate it in laboratory experiments", "Easy to demonstrate it in both natural condition and laboratory experiments", "Difficult to demonstrate it in both natural condition and laboratory experiments"], ans: 1, exp: "Easy to demonstrate it in laboratory experiments." },
+    { q: "150. Two species of barnacles vie for space in the intertidal zone. The one that remains is -", opts: ["The better competitor", "Better adapted to the area", "a and b", "The better predator"], ans: 2, exp: "a and b." },
+    { q: "151. Connell's elegant field experiments are related to -", opts: ["Paramecium", "Barnacles", "Viruses", "protozoans"], ans: 1, exp: "Barnacles." },
+    { q: "152. The spread of opuntia was controlled by -", opts: ["Allowing cattle to graze over it", "Allowing sheep and goats to browse over it", "Introducing insect", "Spraying herbicide"], ans: 2, exp: "Introducing insect." },
+    { q: "153. The overall role of an organism in its environment is called a(n) _______.", opts: ["Carrying capacity", "Ecological niche", "Ecological succession", "Ecological destiny"], ans: 1, exp: "Ecological niche." },
+    { q: "154. The interaction between smaller barnacle Chthamalus and larger barnacle Balanus in intertidal zone is -", opts: ["Mutualism", "Competition", "Parasitism", "Amensalism"], ans: 1, exp: "Competition." },
+    { q: "155. Population dynamics is related to -", opts: ["Increase in population", "Decrease in population", "Change in population", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "156. Term homeostasis in an ecosystem refers to-", opts: ["Self regulatory mechanism", "Feed back mechanism", "Influence of productivity", "State of equilibrium"], ans: 0, exp: "Self regulatory mechanism." },
+    { q: "157. At asymptote stage, the population is -", opts: ["Stabilised", "Increasing", "Decreasing", "Changing"], ans: 0, exp: "Stabilised." },
+    { q: "158. Resource partitioning includes-", opts: ["Temporal partitioning (different times for feeding)", "Spatial partitioning", "Morphological differentiation (using a resources in different ways)", "All"], ans: 3, exp: "All." },
+    { q: "159. Commensalism is the interaction in which one species benefits and the other is neither harmed nor benefitted. Which of the following is the example of commensalism?", opts: ["Epiphyte / Orchid on mango branch", "Cattle egret and grazing cattle", "Sea anemone and clown fish", "All"], ans: 3, exp: "All." },
+    { q: "160. An example of species-specific coevolution is -", opts: ["Yucca plants and the single species of moth that pollinates them", "Fig species and its pollinating species of wasp", "Both a and b", "Hydrilla and its pollinating agent"], ans: 2, exp: "Both a and b." },
+    { q: "161. Through resource partitioning-", opts: ["Two species can compete for the same prey", "Slight variation in niche allow closely related species to co-exist in the same habitat", "Competitive exclusion results in the success of the superior species", "Two species undergo character displacement that allows them to compete"], ans: 1, exp: "Slight variation in niche allow closely related species to co-exist in the same habitat." },
+    { q: "162. A female fig wasp enters the syconium of a fig, pollinates the flowers, and lays eggs in the ovaries of some of the flowers. The young larvae grow up, eat (and kill) some, but not all, of the seeds, and complete their life cycle. The fig is completely dependent on fig wasps to pollinate its flowers, and the fig wasp requires figs to complete its life cycle. The interaction between figs and fig wasps has aspects of", opts: ["mutualism.", "competition", "predator-prey and host-parasite interaction.", "a and c"], ans: 3, exp: "a and c." },
+    { q: "163. Which of the following is correct?", opts: ["Two species may not live in the same habitat", "The more dissimilar the niches of two species, the stronger is their competition", "No two species can occupy exactly the same niche in the geographical area", "No two species may occupy the same ecosystem"], ans: 2, exp: "No two species can occupy exactly the same niche in the geographical area." },
+    { q: "164. The most spectacular and evolutionary fascinating examples of mutualism is found in -", opts: ["Bacteria - animals relationship", "Algae-Animals relationship", "E. coli-Colon relationship", "Plants-Animal relationship"], ans: 3, exp: "Plants-Animal relationship." },
+    { q: "165. What does competitive exclusion theory state?", opts: ["Two closely related species competing for the same resources cannot co-exist indefinitely and competitively inferior one will be eliminated eventually", "Humans are the most widespread agents of disturbance", "In a competition for similar resource both the participants are benefitted", "In a competition, both the participants are excluded"], ans: 0, exp: "Two closely related species competing for the same resources cannot co-exist indefinitely and competitively inferior one will be eliminated eventually." },
+    { q: "166. Which of the following was not usually observed by G.F. Gause in his studies on interspecific competition?", opts: ["Species usually had higher growth rate when alone", "Some species that grew very rapidly in a particular environment would be completely eliminated when grown with other species", "Populations grow exponentially when alone", "None of the above"], ans: 3, exp: "None of the above." },
+    { q: "167. An example of species-specific coevolution is certain plant species and the single species of animal that pollinates the plant. This type beneficial system is the safeguard against-", opts: ["Pathogenic fungi", "Pollen or nectar robbers / cheaters", "Pathogenic microbes", "All"], ans: 3, exp: "All." },
+    { q: "168. Consider the following statements (A)-(D) each with one or two blanks. A. Bears go into (1) during winter to (2) cold weather. B. A conical age pyramid with a broad base represents (3) human population. C, A wasp pollinating a fig flower is an example of (4). D. An area with high levels of species richness is known as (5). Which one of the following options, gives the correct fill ups for the respective blank numbers from (1) to (5) in the statements?", opts: ["(3) - stable (4) - commensalism, (5) marsh", "(1) - aestivation, (2) - escape, (3) - stable, (4) - mutualism", "(3)-expanding, (4) - commensalism, (5)-biodiversity park", "(1) - hibernation, (2) - escape, (3) - expanding, (4) Mutualism, (5) hot spot"], ans: 3, exp: "(1) - hibernation, (2) - escape, (3) - expanding, (4) Mutualism, (5) hot spot." },
+    { q: "169. The birth and death rates of four countries are given below. Which one will have the least population growth rate? Country M: Birth 15, Death 5. N: Birth 25, Death 10. O: Birth 35, Death 18. P: Birth 48, Death 41.", opts: ["M", "N", "O", "P"], ans: 3, exp: "P." },
+    { q: "170. A species whose distribution is restricted to small geographical area due to the presence of a comparatively superior species, expands its distribution when the competing species is experimentally removed. This phenomenon is called-", opts: ["Competitive exclusion", "Competitive release", "Competitive arrival", "Appearance, physiology"], ans: 1, exp: "Competitive release." },
+    { q: "172. Ecologists say that a niche is like a species __ ___, while habitat is like its __________.", opts: ["Occupation, address", "Competitive release", "Education, occupation", "Interference competition"], ans: 0, exp: "Occupation, address." },
+    { q: "173. A population growth becomes asymptote when population density", opts: ["Crosses carrying capacity", "Is in lag phase", "Is in log phase", "Reaches carrying capacity"], ans: 3, exp: "Reaches carrying capacity." },
+    { q: "174. Consider the following four conditions (a - d) and select the correct pair of them as adaptation to environment in desert lizards. A. Burrowing in soil to escape high temperature B. Losing heat rapidly from the body during high temperature C. Bask in sun when temperature is low D. Insulating body due to thick fatty dermis", opts: ["(A), (B)", "(C), (D)", "(A), (C)", "(B), (D)"], ans: 2, exp: "(A), (C)." },
+    { q: "176. Most living organisms cannot survive at temperature above 45°C. How are some microbes able to live in habitats with temperature exceeding 100°C?", opts: ["Occurrence of branched chains of lipids reducing fluidity of cell membrane", "Reduction in amount of free water", "Development of heat tolerant enzymes", "All"], ans: 3, exp: "All." },
+    { q: "177. If a population grow exponentially doubles in size in 3 years, what is the intrinsic rate of increase (r) of the population-", opts: ["25.94%", "80%", "100%", "10%"], ans: 0, exp: "25.94%." },
+    { q: "179. Large Woody Vines are more commonly found in", opts: ["Alpine forests", "Temperate forests", "Mangroves", "Tropical rainforests"], ans: 3, exp: "Tropical rainforests." },
+    { q: "180. Natural selection operates at", opts: ["Species level", "Population level", "Individual level", "Community level"], ans: 1, exp: "Population level." },
+    { q: "181. Which one of the following is categorised as a parasite in true sense?", opts: ["The cuckoo (koel) lays its egg in crow's nest", "The female Anopheles bites and sucks blood from humans", "Human foetus developing inside the uterus draws nourishment from the mother", "Head louse living on the human scalp as well as laying eggs on human hair"], ans: 3, exp: "Head louse living on the human scalp as well as laying eggs on human hair." },
+    { q: "182. In growth pattern, (1 - N/K) is", opts: ["Carrying capacity", "Intrinsic rate of natural increase", "Environmental resistance", "Biotic potential"], ans: 2, exp: "Environmental resistance." },
+    { q: "183. The interaction is detrimental to both the species, in", opts: ["Predation", "Commensalism", "Amensalism", "Competition"], ans: 3, exp: "Competition." },
+    { q: "184. Verhulst-Pearl logistic growth pattern is", opts: ["Sigmoid", "J-shaped", "Straight line", "Hyperbola"], ans: 0, exp: "Sigmoid." },
+    { q: "185. The association between clown fish and sea anemone is the same as between", opts: ["Egret and grazing cattle", "Cuckoo and crow", "Fig and wasp", "Cuscuta and hedge plant"], ans: 0, exp: "Egret and grazing cattle." },
+    { q: "186. What are 'large undisturbed areas where wildlife is protected in its natural habitat'?", opts: ["Biosphere reserves", "National parks", "Sacred landscapes", "Wildlife sanctuaries"], ans: 1, exp: "National parks." },
+    { q: "187. The animals that rely on the heat from environment than metabolism to raise their body temperature are, in strict sense, called", opts: ["ectothermic", "poikilothermic", "homeothermic", "endothermic."], ans: 0, exp: "Ectothermic." },
+    { q: "188. Which of the following is most appropriately defined?", opts: ["Host is an organism which provides food to another organism", "Amensalism is a relationship in which one species is benefited whereas the other is unaffected", "Predator is an organism that catches and kills other organism for food", "Parasite is an organism which always lives inside the body of other organism and may kill it"], ans: 2, exp: "Predator is an organism that catches and kills other organism for food." },
+    { q: "189. A biologist studies the population of rats in a barn. He found that the average natality was 250, average mortality 240, immigration 20 and emigration 30. The net increase in population is-", opts: ["15", "05", "Zero", "10"], ans: 2, exp: "Zero." },
+    { q: "190. When the value of 'r' is significantly low as compared to another species: it is better known by", opts: ["Competition exclusion", "Interference competition", "Resource partition", "Competitive release"], ans: 0, exp: "Competition exclusion." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 30; // ⚠️ 12th Class Chapter 11 is Chapter 30 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
