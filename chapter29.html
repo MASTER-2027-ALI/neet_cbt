@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 29: Biotechnology and its Applications - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 29: Biotechnology and its Applications</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. Bt toxin is -", opts: ["Intracellular lipids", "Intracellular crystalline protein", "Extracellular crystalline protein", "Intracellular polysaccharide"], ans: 1, exp: "Bt toxin is an intracellular crystalline protein." },
+    { q: "2. cry-genes have been introduced in -", opts: ["Cotton and corn", "Rice", "Potato and Soyabean", "All"], ans: 3, exp: "cry-genes have been introduced in all these crops." },
+    { q: "3. Which of the following is for increasing food production?", opts: ["Agro-chemical based agriculture", "Organic agriculture", "Genetically engineered crop-based agriculture", "All"], ans: 3, exp: "All are methods for increasing food production." },
+    { q: "4. Biotechnology deals with industrial scale production of biopharmaceuticals and biologicals using genetically modified-", opts: ["Microbes only", "Fungi Only", "Plants and animals only", "All of the above"], ans: 3, exp: "All of the above can be genetically modified." },
+    { q: "5. The application of biotechnology includes all except -", opts: ["Therapeutics", "Diagnostics", "Conventional hybridization", "Bioremediation"], ans: 2, exp: "Conventional hybridization is a traditional method, not a modern biotechnology application." },
+    { q: "6. Three critical research areas of biotechnology are - I. Providing the best catalyst in the form of improved organism usually a microbe or pure enzyme II. Multiple Ovulation Transfer Technology (MOET) III. Creating optimal conditions through engineering for a catalyst to act. IV. Downstream processing technologies", opts: ["I, II, III, IV", "I, III, IV", "I, II", "II and IV"], ans: 1, exp: "I, III, and IV are the three critical research areas." },
+    { q: "7. Which of the following is not included under the application of biotechnology?", opts: ["Genetically modified crops", "Processed food", "Waste treatment; and energy production", "None"], ans: 3, exp: "All are included under biotechnology." },
+    { q: "8. The crops having cry-genes need -", opts: ["No insecticide", "Mild quantity of insecticide", "Large amount of insecticide", "5 kg insecticide / hectare"], ans: 0, exp: "Bt crops need no insecticide." },
+    { q: "9. Bacillus thuringiensis is a bacterium of-", opts: ["Small intestine", "Dirty water", "Skin of dog", "Soil"], ans: 3, exp: "It is a soil bacterium." },
+    { q: "10. First transgenic crop is -", opts: ["Cotton", "Pea", "Tobacco", "Flax"], ans: 2, exp: "Tobacco was the first transgenic crop." },
+    { q: "11. Which is not a transgenic plant?", opts: ["Soyabean", "Maize", "Golden rice", "Cucumber"], ans: 3, exp: "Cucumber is not a prominent transgenic plant in this context." },
+    { q: "12. Strains of Bacillus thuringiensis are used in producing -", opts: ["Bioinsecticidal plants", "Biomineralization", "Biometallurgical techniques", "Biofertilizers"], ans: 0, exp: "They are used to produce bioinsecticidal plants." },
+    { q: "13. Which of the following statements is false? I. Insulin was originally extracted from pancreas of slaughtered pigs and cattle II. Animal insulin is difficult to obtain III. Animal insulin is identical to human insulin IV. Non human insulin caused some patients to develop allergy V. Recombinant DNA allowed scientists to insert a human insulin gene into a bacterial expression sector VI. Recombinant insulin is actually obtained from E. coli bacterial cell", opts: ["Only I and II", "Only III and IV", "Only III", "Only VI"], ans: 2, exp: "Animal insulin is not identical to human insulin." },
+    { q: "14. Which of the following is a correct statement?", opts: ["'Bt' in Bt-cotton indicates that it is genetically modified organism produced through Biotechnology", "Somatic hybridization involves fusion of two complete plant cells carrying desired genes", "The anticoagulant hirudin is being produced from transgenic Brassica napus seeds", "All of the above"], ans: 3, exp: "All of the above are correct." },
+    { q: "15. The first human drug made using recombinant DNA technology was-", opts: ["Glyphosatase", "TPA", "Insulin", "Erythropoietin"], ans: 2, exp: "Insulin was the first human drug made using rDNA technology." },
+    { q: "16. Which of the following is correct?", opts: ["The proteins encoded by the genes crylAc and cryllAb control cotton bollworms", "Protein encoded by crylAb controls corn borer", "Both", "Proteins encoded by crylAc and crylAb control flies"], ans: 2, exp: "Both statements are correct." },
+    { q: "17. Fill up the blanks - At present, about _______ recombinant therapeutics have been approved for human-use the world over. In India, ______ of these are presently being marketed.", opts: ["30, 12", "40, 20", "109, 32", "111, 9"], ans: 2, exp: "109, 32." },
+    { q: "18. Bt toxin genes are isolated from Bacillus thuringiensis and incorporated into crop plants making them insecticidal. The choice of genes depend upon-", opts: ["Crop plant only", "Targeted pest only", "Both a and b", "Neither type of crop nor targeted pest"], ans: 2, exp: "Both the crop plant and targeted pest matter." },
+    { q: "19. mRNA silencing is called -", opts: ["RNAi", "RNA activation", "RNA without initiation codon", "RNA is not producing interferon"], ans: 0, exp: "RNAi (RNA interference)." },
+    { q: "20. How does Bt toxin kill the larvae of certain insects?", opts: ["by binding of activated toxin on mid gut epithelial cells, creating pores, leading to swelling and lysis", "By stopping transcription of larval cells", "By altering central dogma taking place in the cells of gut of larva", "by stopping protein synthesis"], ans: 0, exp: "It binds to midgut epithelial cells and creates pores." },
+    { q: "21. The RNAi stands for -", opts: ["RNA inactivation", "RNA initiation", "RNA interference", "RNA interferon"], ans: 2, exp: "RNA interference." },
+    { q: "22. Bt toxin is harmful to insects like -", opts: ["Lepidopterans (tobacco budworm, armyworms)", "Coleopterans (beetles)", "Dipterans (flies and mosquito)", "All"], ans: 3, exp: "All are affected." },
+    { q: "23. Which of the following nematode infects the roots of tobacco plants and causes a great reduction in yield?", opts: ["Wuchereria", "Ancyclostoma", "Meloidegyne incognitia", "Enterobius"], ans: 2, exp: "Meloidegyne incognitia." },
+    { q: "24. Introduction of transgenes will result in -", opts: ["Formation of new species", "Formation of new protein", "Alter a biosynthetic pathway", "Both b and c"], ans: 3, exp: "It can form a new protein or alter a pathway." },
+    { q: "25. Antisense RNA is -", opts: ["RNA that makes opposite sense", "RNA that investigators find confusing", "The noncoding strand of DNA molecule", "RNA that is complementary to certain mRNA"], ans: 3, exp: "It is complementary to mRNA." },
+    { q: "26. A plant expressing a gene from another organism is -", opts: ["Transgenic", "Clone", "Transformed", "Somaclonal variant"], ans: 0, exp: "Transgenic." },
+    { q: "27. Bt gene produces protein toxin to insect larvae is -", opts: ["Cry", "ciy", "Typ", "trp"], ans: 0, exp: "Cry gene." },
+    { q: "28. Bt toxin is -", opts: ["Exotoxin biodegradable insecticide", "Exotoxin, bionondegradable insecticide", "Endotoxin biodegradable insecticide", "Endotoxin, bionondegradable insecticide"], ans: 2, exp: "Endotoxin and biodegradable insecticide." },
+    { q: "29. I. Recombinant DNA technology is used to improve crop plants by increasing their productivity, by making them more nutritious and by developing disease resistant. II. Bt cotton is resistant to bollworm infestation. III. Bacillus thuringiensis forms cry protein during any phase of their growth IV. Bacillus thuringiensis is not harmed by self Cry protein because of its occurrence as protoxin (inactive) V. Protoxin Cry protein is changed into active Cry protein in the stomach of insects due to alkaline pH in stomach", opts: ["All are correct", "I and IV are correct", "Only III is false", "All are false"], ans: 2, exp: "Statement III is false." },
+    { q: "30. Genetically modified tobacco plant with Bt gene is resistant to -", opts: ["Bollworms", "Hornworms", "Hookworms", "Roundworms"], ans: 1, exp: "Hornworms." },
+    { q: "31. Bt is resistant to -", opts: ["Viruses", "Abiotic stress", "Bollworm", "Herbicide"], ans: 2, exp: "Bollworm." },
+    { q: "32. Bt cotton farming has shown good results in -", opts: ["Malwa (Punjab)", "Katihar (Bihar)", "Kolkata (West Bengal)", "Shimla"], ans: 0, exp: "Malwa (Punjab)." },
+    { q: "33. Several nematodes parasitise -", opts: ["A wide variety of plants", "A wide variety of animals", "Human", "All"], ans: 3, exp: "All." },
+    { q: "34. When DNA is transcribed into mRNA, usually the mRNA remains single-stranded, but in some cases an RNA can be made that is complementary to the mRNA. This is called _______ and its main function is to _______", opts: ["Antisense RNA, block gene expression", "Antisense RNA, amplify mRNA", "Antisense RNA, enhance translation", "Reverse transcription, enhance translation"], ans: 0, exp: "Antisense RNA blocks gene expression." },
+    { q: "35. Which of the following is the source of complementary strand in mRNA silencing.", opts: ["An infection by viruses having RNA genome", "Mobile genetic elements (Transposons)", "Both", "Proteins"], ans: 2, exp: "Both." },
+    { q: "36. A doctor while operating on an HIV + patient accidentally cut himself with a scalpel. He comes to you, suspecting himself to have contracted the virus which test will you advise him to rule out/ confirm his suspicion?", opts: ["PCR", "Routine urine examination", "TLC", "DLC"], ans: 0, exp: "PCR." },
+    { q: "37. When a patient with defective ADA was treated, which of the following steps was performed for gene therapy? I. Lymphocytes were obtained from the patients II. Lymphocytes are transferred to culture dishes III. Lymphocytes were transfected with normal ADA genes IV. The transfected cells are returned to the patients", opts: ["All", "Only III and IV", "Only IV"], ans: 0, exp: "All steps." },
+    { q: "38. Which of the following techniques serve the purpose of early diagnosis? I. R-DNA technology II. PCR III. ELISA IV. Conventional method of diagnosis (serum, urine analysis, etc)", opts: ["I, II, III", "IV only", "III only", "All"], ans: 0, exp: "I, II, III." },
+    { q: "39. Human gene therapy requires-", opts: ["Gene isolation", "Introduction of DNA into target cells", "Inclusion of a promoter sequence", "All"], ans: 3, exp: "All." },
+    { q: "40. Why is repeated transfusions of genetically engineered cells required in SCID patients?", opts: ["Transfused cells have a limited life span", "The introduced gene is mutated", "Transfused cells are immortal", "Both a and b"], ans: 0, exp: "Transfused cells have a limited life span." },
+    { q: "41. Which of the following could be a permanent cure for treatment of severe combined immunodeficiency (SCID) -", opts: ["Bone marrow transplantation", "Gene therapy", "Enzyme replacement therapy", "Both a and c"], ans: 1, exp: "Gene therapy." },
+    { q: "42. For effective treatment of a disease -", opts: ["Early diagnosis is needed but understanding of its pathophysiology is not needed", "Early diagnosis is not needed but understanding of its pathophysiology is needed", "Early diagnosis and understanding of its pathophysiology are needed", "Neither early diagnosis nor understanding of its pathophysiology is needed"], ans: 2, exp: "Both are needed." },
+    { q: "43. 'Silencing' of mRNA molecule in order to control the production of a harmful protein has been used in protection of plants from-", opts: ["Nematodes", "Mosquitoes", "Beetles", "Flies"], ans: 0, exp: "Nematodes." },
+    { q: "44. The first clinical gene therapy was given in 1990 to a 4 years old girl with which of the following enzyme deficiency?", opts: ["Adenosine deaminase (ADA)", "Tyrosine oxidase", "Monamine oxidase", "Glutamate dehydrogenase"], ans: 0, exp: "ADA." },
+    { q: "45. Why insulin not administered orally to diabetic patient?", opts: ["Insulin is bitter in taste", "Insulin is a peptide", "Insulin will lead to sudden decrease in blood sugar if given orally", "Insulin leads to peptic ulcer if given orally"], ans: 1, exp: "Insulin is a peptide and would be digested." },
+    { q: "46. Which of the following peptide chain is removed during maturation of pro-insulin into insulin?", opts: ["A peptide", "B-peptide", "C-peptide", "A and C peptide"], ans: 2, exp: "C-peptide." },
+    { q: "47. RNA interference (RNAi) technique has been devised to protect the plants from nematode is silenced by _______ produced by the host plant.", opts: ["dsDNA", "ssDNA", "dsRNA", "target proteins"], ans: 2, exp: "dsRNA." },
+    { q: "48. Which technique would you expect to be completely curative in SCID?", opts: ["Gene therapy in adult stage", "Gene therapy in embryonic stage", "Bone marrow transplantation", "Enzyme replacement therapy"], ans: 1, exp: "Gene therapy in embryonic stage." },
+    { q: "49. Which of the following is a benefit to having insulin produced by biotechnology?", opts: ["it is just as effective and is less expensive", "it can be mass-produced", "It is non allergic", "All"], ans: 3, exp: "All." },
+    { q: "50. Following are the steps in one type of gene therapy - I. Inject engineered cells into patients bone marrow II. Viral DNA carrying the normal allele inserts into chromosome III. Let retrovirus infect bone marrow cells that have removed from patient and cultured IV. Insert RNA version of normal allele into retrovirus. Which of the following is correct sequence of steps -", opts: ["I, II, III, IV", "IV, III, II, I", "I, II, IV, III", "IV, III, I, II"], ans: 1, exp: "IV, III, II, I." },
+    { q: "51. Which of the following is correct about ADA?", opts: ["ADA is crucial for immune system to function", "In the absence of this enzyme, purine metabolism is disturbed and T-cells fail to function", "ADA deficiency is caused by deletion of the gene for ADA", "All"], ans: 3, exp: "All." },
+    { q: "52. Transgenic rats, rabbits, pigs, sheep cows and fish have produced although over 95 percent of all existing transgenic animals are-", opts: ["pigs", "fish", "rats", "mice"], ans: 3, exp: "Mice." },
+    { q: "53. What might be an advantage of beginning gene therapy prior to birth?", opts: ["This would give the body plenty of time to utilize the new genes", "The body would not reject it as it hasn't yet recognised 'self'", "Since cells are extremely young, they are more receptive of gene therapy", "There probably isn't any advantage"], ans: 1, exp: "The body would not reject it." },
+    { q: "54. Which one is correct?", opts: ["Bone marrow transplants are not a problem for patients with SCID.", "Many simple organisms can become transgenic. Humans are too complex to become transgenic", "Insulin is a protein and would be digested if ingested", "All"], ans: 2, exp: "Insulin is a protein and would be digested if ingested." },
+    { q: "55. Deliberate alteration of genome for treatment of disease is called -", opts: ["Transformation rescue", "Imprinting", "Exon shuffle", "Gene therapy"], ans: 3, exp: "Gene therapy." },
+    { q: "56. A functional ADA cDNA can be introduced into cells of the patients receiving gene therapy by using vector constituted by-", opts: ["E. coli", "Reovirus", "Retrovirus", "Agrobacterium"], ans: 2, exp: "Retrovirus." },
+    { q: "57. Which one of the following genes is defective in patients suffering from severe combined immunodeficiency syndrome (SCID)?", opts: ["RNAase", "ADA", "Ribonucleotide reductase", "DNAase"], ans: 1, exp: "ADA." },
+    { q: "58. DNA hybridization technique is based on all of the following properties of DNA except -", opts: ["Double-strandedness and base-pairing properties", "Denaturation renaturation properties", "Minor and major grooves", "Sequence specificity"], ans: 2, exp: "Minor and major grooves." },
+    { q: "59. Which of the following is based upon the principle of antigen-antibody interaction?", opts: ["PCR", "ELISA", "R DNA technology", "RNA"], ans: 1, exp: "ELISA." },
+    { q: "60. PCR is used to -", opts: ["detect HIV in suspected AIDS patients", "Detect mutations in genes in suspected cancer patients", "Identify many genetic disorders", "All"], ans: 3, exp: "All." },
+    { q: "61. A sample of DNA from a person suspected of having sickle-cell anaemia is subjected to DNA hybridization using two probes. One that binds to the normal allele and another that binds to the sickle-cell allele. If both probes bind to the DNA, this individual -", opts: ["Is homozygous dominant for the sickle-cell gene", "Is heterozygous for the sickle-cell gene", "Is heterozygous recessive for the sickle cell gene", "Has sickle cell anaemia"], ans: 1, exp: "Heterozygous." },
+    { q: "62. Which of the following is a critically important tool used in experiments involving DNA hybridization?", opts: ["DNA sequencing machines", "Ligase", "DNA probes", "Vectors"], ans: 2, exp: "DNA probes." },
+    { q: "63. A nucleic acid probe might be used to -", opts: ["Insert genes into a host cell", "Make DNA for gene cloning", "Splice pieces of DNA", "Find a nucleotide sequence"], ans: 3, exp: "Find a nucleotide sequence." },
+    { q: "64. Transgenic animals are those which have -", opts: ["Foreign DNA in some of its cells", "Foreign DNA in all its cells", "Foreign RNA in all its cells", "both a and c"], ans: 1, exp: "Foreign DNA in all its cells." },
+    { q: "65. The technique by which 'Dolly' the sheep was obtained, is called -", opts: ["Cloning by gene transfer", "Cloning by nuclear transfer", "Cloning tissue culture of somatic cells", "Cloning without help of gametes"], ans: 1, exp: "Cloning by nuclear transfer." },
+    { q: "66. Which method of cellular defence is common to all eukaryotic organisms?", opts: ["RNA interference", "Phagocytosis", "VNTR", "Reverse transcription"], ans: 0, exp: "RNA interference." },
+    { q: "67. Following are the steps of southern blot procedure. I. Autoradiography II. Hybridization with radioactive nucleic acid (probe) III. Blotting IV. DNA fragments are treated to make them single stranded V. Electrophoresis VI. Cleaving of DNA by restriction endonuclease VII. isolation of DNA from sample. The correct sequence is -", opts: ["I,2,3,4,5,6,7", "7,6,5,4,3,2,1", "1,2,6,7,3,4,5", "7,6,1,2,5,3,4"], ans: 1, exp: "7,6,5,4,3,2,1." },
+    { q: "68. The DNA probe, 3'-GGCTTA, will hybridize with which of the following?", opts: ["5'-CCGUUA", "5'-GGCTTA", "5'-CCGAAT", "3'-CCGAAT"], ans: 2, exp: "5'-CCGAAT." },
+    { q: "70. Which Indian plants have either been patented or attempts have been made to patent them by western nations for their commercial use?", opts: ["Basmati rice", "Turmeric", "Neem", "All of these have been targeted"], ans: 3, exp: "All of these have been targeted." },
+    { q: "71. Which variety of rice was patented by a U.S company even though the highest number of varieties of this rice is found in India?", opts: ["Sharbati Sonara", "Co-667", "Basmati", "Lerma Roja"], ans: 2, exp: "Basmati." },
+    { q: "72. The use of bioresources by multinational companies and other organisations without proper authorisation from the countries and people concerned without compensatory payment is called -", opts: ["Bioethics", "Biopiracy", "Bioterror", "Bioweapon"], ans: 1, exp: "Biopiracy." },
+    { q: "73. How many varieties of rice has been estimated to be present in India?", opts: ["2,000", "20,000", "200,000", "2,000,000"], ans: 2, exp: "200,000." },
+    { q: "74. Introduction of genetically modified food is not desirable because -", opts: ["Allergies and toxicity may be caused", "Incorporation of antibiotic resistance in human beings", "Disturbance in metabolism due to enzyme for antibiotic resistance", "All"], ans: 3, exp: "All." },
+    { q: "75. Which of the following statements is correct?", opts: ["The current interest in the manipulation of microbes, plants and animal has raised serious ethical issues", "One possible risk of genetic engineering is the accidental production dangerously resistant microorganisms", "Although risks are possible, genetic engineering appears to offer more of a contribution to human welfare than threats", "All of the above"], ans: 3, exp: "All are correct." },
+    { q: "76. 'Pharming' is a term that describes -", opts: ["Animal used in transgenic research", "Plants making genetically altered foods", "Synthesis of recombinant drugs by bacteria", "Synthesis of a protein drug in the milk of a transgenic animal"], ans: 3, exp: "Synthesis of a protein drug in the milk of a transgenic animal." },
+    { q: "77. Which of the following is correct?", opts: ["The procedure for chemical safety testing / toxicity is the same as that used for testing toxicity of drugs.", "Transgenic animals are more sensitive to the toxic substances than non-transgenic animals", "Golden rice, a genetically engineered rice has high vitamin A (retinol) content", "All"], ans: 3, exp: "All are correct." },
+    { q: "78. To test the vaccine safety before its use on human, transgenic _______ are used to test. If successful, _______ are used to host the safety of vaccine-", opts: ["Mice, monkeys", "Monkeys, mice", "Cows, mice", "Sheep, cows"], ans: 0, exp: "Mice, monkeys." },
+    { q: "79. GMO / transgenic animal are used in testing safety of polio vaccine before they are used on human?", opts: ["Transgenic sheep", "Transgenic cow", "Transgenic viruses", "Transgenic mice"], ans: 3, exp: "Transgenic mice." },
+    { q: "80. Rosie was produced in year -", opts: ["2001", "1999", "1997", "2009"], ans: 2, exp: "1997." },
+    { q: "81. 'Rosie' a transgenic cow known to produce a type of milk which has all the following characteristics except -", opts: ["Protein content of 2.4 gm/litre", "Has human alpha-lactalbumin", "More balanced diet than normal milk for babies", "None"], ans: 3, exp: "None." },
+    { q: "82. Which of the following transgenic protein product has been used to treat emphysema -", opts: ["alpha-lactalbumin", "Cry protein", "gamma-globulin", "alpha-1-antitrypsin"], ans: 3, exp: "alpha-1-antitrypsin." },
+    { q: "83. In which disease the advancement of genetic engineering has still not been used as clinical cure. *", opts: ["Anencephaly", "Emphysema", "Phenylketonuria", "Cystic fibrosis"], ans: 0, exp: "Anencephaly." },
+    { q: "84. Bioaugmentation is", opts: ["The addition of commercially prepared bacterial strains with specific catabolic activities to degrade wastes.", "Production of fertilizers by using bacteria", "The metals are deposited as insoluble oxides and sulphides by activity of bacteria", "Removal of pests"], ans: 0, exp: "The addition of commercially prepared bacterial strains with specific catabolic activities to degrade wastes." },
+    { q: "85. Transgenic animals are produced for which of the following purposes? I. To study how gene are regulated and how they affect the normal functions of body and its development II. To study of diseases III. To obtain useful biological product IV. To test vaccine safety and chemical safety", opts: ["All", "I and IV", "II and IV", "Only I"], ans: 0, exp: "All." },
+    { q: "86. Cyanogen bromide is used in ________.", opts: ["Genetic finger printing", "Tissue culture", "synthesis of humulin", "Hybridoma technology"], ans: 2, exp: "Synthesis of humulin." },
+    { q: "87. Which one of the following is not an application of DNA finger printing?", opts: ["Solving immigration cases", "Solving paternity cases", "Therapy for curing SCID", "identifying gene mutation"], ans: 2, exp: "Therapy for curing SCID." },
+    { q: "88. Technique of production of monoclonal antibodies was developed by", opts: ["Fredrick Miescher", "Bentham and Hooker", "Milstein and Kohler", "Watson and Crick"], ans: 2, exp: "Milstein and Kohler." },
+    { q: "89. Which of the following cannot be patented", opts: ["GM plants", "New substance of utility", "New species of plants", "Wind energy."], ans: 3, exp: "Wind energy." },
+    { q: "90. A genetically engineered microorganism used successfully in bioremediation of oil spills is a species of", opts: ["Xanthomonas", "Bacillus", "Pseudomonas", "Trichoderma"], ans: 2, exp: "Pseudomonas." },
+    { q: "91. Reagent used in ELISA test is", opts: ["Endonuclease", "Polymerase", "Ligase", "Peroxidase."], ans: 3, exp: "Peroxidase." },
+    { q: "92. Strains of Bacillus thuringiensis (Bt) are used in producing", opts: ["Bioinsecticidal plants", "Biomineralisation", "Biometallurgical techniques", "Biofertilizers."], ans: 0, exp: "Bioinsecticidal plants." },
+    { q: "93. A transgenic crop has genes for", opts: ["Synthesis of new proteins", "Resistance to antibiotics", "Formation of enzymes for antibiotics", "All the above."], ans: 3, exp: "All the above." },
+    { q: "94. Bt toxin is", opts: ["Intracellular lipid", "Intracellular crystalline protein", "Extracellular crystalline protein", "Lipid."], ans: 1, exp: "Intracellular crystalline protein." },
+    { q: "95. Transgenic Golden Rice is enriched with high", opts: ["Lysine", "Methionine", "Glutenin", "Vitamin A."], ans: 3, exp: "Vitamin A." },
+    { q: "96. Transgenic bacteria are being used for producing", opts: ["Epinephrine", "Human insulin", "Thyroxine", "Cortisol."], ans: 1, exp: "Human insulin." },
+    { q: "97. Addition of foreign gene into a crop is", opts: ["Genetic engineering", "Biotechnology", "Tissue culture", "Immunisation"], ans: 0, exp: "Genetic engineering." },
+    { q: "98. A transgenic food crop which may help in solving the problem of night blindness in developing countries is", opts: ["Golden Rice", "Bt Soya bean", "Flavr Savr Tomato", "Starlink Maize."], ans: 0, exp: "Golden Rice." },
+    { q: "99. Main objective of producing herbicide resistant GM crops is", opts: ["Encourage ecofriendly herbicides", "Reduce herbicide accumulation in food articles for health safety", "Eliminate weeds from fields without the use of manual labour", "Eliminate weeds from the fields without the use of herbicides."], ans: 2, exp: "Eliminate weeds from fields without the use of manual labour." },
+    { q: "100. It is now possible to breed plants and animals with desired characters through", opts: ["Genetic engineering", "Chromosome engineering", "Ikebana technique", "Bonsai technique."], ans: 0, exp: "Genetic engineering." },
+    { q: "101. A transgene expression can achieve which of the following ?", opts: ["Prevent expression of a native gene", "Modify an existing biosynthetic pathway", "Produce a protein that itself produces the phenotype of interest or is the product of interest", "All the above."], ans: 3, exp: "All the above." },
+    { q: "102. Biopiracy is related to which of the following :", opts: ["Traditional knowledge", "Biomolecules and regarding bioresources genes isolated from bioresources", "Bioresources", "All the above."], ans: 3, exp: "All the above." },
+    { q: "103. Which is being synthesized by genetic engineering?", opts: ["Insulin", "Renin", "Thyroxine", "Progesterone."], ans: 0, exp: "Insulin." },
+    { q: "104. How many recombinant therapeutics have been approved for human-use the world over?", opts: ["12", "30", "20", "18"], ans: 1, exp: "30." },
+    { q: "105. In some children, ADA deficiency can be cured by :", opts: ["Bone marrow transplantation", "Enzyme replacement therapy", "Both", "None"], ans: 2, exp: "Both." },
+    { q: "106. Today, transgenic models exist for many human diseases which includes- A. Cancer B. Cystic fibrosis C. Rheumatoid arthritis D. Alzheimer's disease", opts: ["A and C only", "B and C only", "A, B and C only", "A, B, C and D"], ans: 3, exp: "A, B, C and D." },
+    { q: "107. Molecular probes use for identification or recombinant clone carrying the desired DNA insert can be- A. denatured double stranded DNA probes B. double stranded RNA probes C. protein probes D. single stranded DNA probes.", opts: ["A, B", "B, C", "A, D", "A, B, C, D"], ans: 2, exp: "A, D." },
+    { q: "108. Consumption of which one of the following foods can prevent the kind of blindness associated with vitamin 'A' deficiency?", opts: ["Flavr Savr tomato", "Canolla", "Golden rice", "Bt-Brinjal"], ans: 2, exp: "Golden rice." },
+    { q: "109. The decisions regarding the validity of genetic modification research and the safety of introducing genetically modified organisms for public services in India is taken by-", opts: ["national biotechnology board (NBTB)", "department of biotechnology (DBT)", "department of science and technology (DST)", "Genetic engineering approval committee (GEAC)"], ans: 3, exp: "GEAC." },
+    { q: "110. Tobacco plants resistant to a nematode have been developed by the introduction of DNA that produced (in the host cells).", opts: ["both sense and anti-sense RNA", "a particular hormone", "an antifeedant", "a toxic protein"], ans: 0, exp: "Both sense and anti-sense RNA." },
+    { q: "111. Which Indian plants have either been patented or attempts have been made to patent them by western nations for their commercial uses. A. basmati rice B. turmeric C. neem D. none", opts: ["A, B", "B, C", "A, B, C", "A, C"], ans: 2, exp: "A, B, C." },
+    { q: "112. Select the correct statement(s) -", opts: ["genetic engineering works only on animals and has not yet been successfully used on plants.", "There are no risks associated with DNA technology.", "The first step in PCR is heat is used to separate both the strands of target DNA.", "DNA from one organism will not bond to DNA from another animal."], ans: 2, exp: "The first step in PCR is heat is used to separate both the strands of target DNA." },
+    { q: "113. Which one of the following statement is not true.", opts: ["The majority of baculoviruses used as biological control agents are in the genus Nucleopolyhedrovirus", "Nucleopolyhedrovirus are excellent candidates for broad-spectrum insecticidal applications", "Nucleopolyhedrovirus have no negative impacts on plants, mammals, birds, fish or even on non-target insects", "This is especially desirable when beneficial insects are being conserved to aid in an overall IPM programme"], ans: 1, exp: "Nucleopolyhedrovirus are excellent candidates for broad-spectrum insecticidal applications." },
+    { q: "114. The first clinical gene therapy was given for the deficiency of which of the following enzymes?", opts: ["adenosine deaminase (ADA) deficiency", "tyrosinase deficiency", "homogentisic acid oxidase deficiency", "phenylalanine hydroxylase deficiency"], ans: 0, exp: "adenosine deaminase (ADA) deficiency." },
+    { q: "115. Which of the following is/are product(s) of genetic engineering - A. Humulin B. hepatitis B vaccine prepared by yeast C. golden rice D. Bt cotton", opts: ["A, B", "B, C", "A, B, C", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "116. Which of the following statements is / are true about genetically engineered insulin? A. its name is humulin B. it was manufactured by American firm Eli Lilly C. it was launched on 5 July 1983 D. it is produced by the fermentation of appropriate recombinant E. coli clones,", opts: ["A, B", "B, C", "A, B, C", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "117. Which of the DNA sources would be suitable for DNA finger printing - A. hair B. semen C. saliva D. RBC", opts: ["A, B", "B, C", "A, B, C", "A, B, C, D"], ans: 2, exp: "A, B, C." },
+    { q: "118. Genetic modification has - A. made crops more tolerant to abiotic stresses. B. reduced reliance on chemical pesticides. C. increased efficiency of minerals use by plants. D. enhanced nutritional value of food.", opts: ["A, B", "B, C", "A, B, C", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "119. Which of following is / are correct? A. gene therapy has been tested on a large number of patients with a wider variety of inherited genetic disorders, and in numerous cases it has produced a complete cure. B. genetic engineering has been used to mass produce insulin for diabetes. C. DNA hybridization is the base pairing of DNA from two different sources D. genetic engineering is a technique of plant breeding.", opts: ["A, B", "B, C", "A, B, C", "A, B, C, D"], ans: 1, exp: "B, C." },
+    { q: "120. Genetic engineering can be used to- A. alter the performance of genetically modified organism. B. produce multiple copies of a desired DNA sequence. C. Generate many copies of specific genes. D. Enhance the production of a specific gene product.", opts: ["A, B", "B, C", "A, B, C", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "121. Which statement is correct? A. Somaclonal variations are the variations observed in plants regenerated from somatic cultures. B. A transgenic crop is one that contains and expresses a transgene. C. Chloromycetin is obtained from Penicillium. D. Bioprospecting is the search for known compounds.", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 0, exp: "A, B." },
+    { q: "122. PCR is routinely used to detect", opts: ["HIV", "Cancer", "TB", "Cholera"], ans: 0, exp: "HIV." },
+    { q: "123. ______was first to introduce a gene into a bacterium with the help of lambda phage.", opts: ["Paul Berg", "Stanley Cohen", "Howard Temin", "Herbert Boyer"], ans: 0, exp: "Paul Berg." },
+    { q: "124. The techniques which alter the chemistry of DNA and DNA to introduce them into host organism, is known as-", opts: ["Hybridisation", "Somatic embryogenesis", "Micropropagation", "Genetic engineering"], ans: 3, exp: "Genetic engineering." },
+    { q: "125. Genetic engineering is used in-", opts: ["Obtaining transgenic plants", "Gene therapy", "Vaccine production", "All the above"], ans: 3, exp: "All the above." },
+    { q: "126. Traditional biotechnology is used in-", opts: ["Gene synthesis", "Production of organic acids, vitamins and hormones", "Production of edible vaccines", "In vitro fertilisation"], ans: 1, exp: "Production of organic acids, vitamins and hormones." },
+    { q: "127. EFB stands for-", opts: ["European foundation of biotechnology", "European federation of biotechnology", "European foundation of biosciences", "None of the above"], ans: 1, exp: "European federation of biotechnology." },
+    { q: "128. What is true about Bt toxin", opts: ["Bt toxin exists as active toxin in the bacillus", "The activated toxin enters the ovaries of the pest to sterilise it and thus prevent its multiplication", "The Bacillus has anti toxins", "The inactive proto toxin gets converted into active form in the insect gut"], ans: 3, exp: "The inactive proto toxin gets converted into active form in the insect gut." },
+    { q: "129. The bacterium Bacillus thuringiensis is widely used in contemporary biology as-", opts: ["Insecticide", "Agent for production of dairy products", "Source of industrial enzyme", "Indicator of water pollution"], ans: 0, exp: "Insecticide." },
+    { q: "130. A genetically engineered micro-organism used successfully in bioremediation of oil spills is a species of-", opts: ["Trichoderma", "Xanthomonas", "Bacillus", "Pseudomonas"], ans: 3, exp: "Pseudomonas." },
+    { q: "131. Hirudin is-", opts: ["a protein produced by Hordeum vulgare which is rich in lysine", "A toxic molecule isolated from histamine which reduces human fertility", "A protein produced from transgenic Brassica napus which prevents blood clotting", "An antibiotic produced by a genetically engineered bacterium Escherichia coli."], ans: 2, exp: "A protein produced from transgenic Brassica napus which prevents blood clotting." },
+    { q: "132. Interferon is a glycoprotein which is", opts: ["antibacterial", "antifungal", "antiviral", "all of these"], ans: 2, exp: "Antiviral." },
+    { q: "133. Terminator gene", opts: ["is used in hybridization", "helps in terminating seed germination", "helps in delayed flowering", "is used for production of insulin"], ans: 1, exp: "Helps in terminating seed germination." },
+    { q: "134. Which of the following is used for the treatment of Cancer?", opts: ["Tetracycline", "TSH", "Insulin", "HGH"], ans: 1, exp: "TSH." },
+    { q: "135. Which one of the following is a correct statement?", opts: ["'Flavr Savr' variety of tomato has enhanced the production, of ethylene which improves its taste.", "Somatic hybridization involves fusion of two intact plant cells having desired genes.", "The anticoagulant hirudin is being produced from transgenic Brassica napus seeds.", "'Bt' in Bt cotton indicates that it is a genetically modified organism."], ans: 2, exp: "The anticoagulant hirudin is being produced from transgenic Brassica napus seeds." },
+    { q: "136. Bt cotton is resistant to", opts: ["drought", "herbicides", "salts", "insects"], ans: 3, exp: "Insects." },
+    { q: "137. Detection of a clone is done by", opts: ["gel electrophoresis", "autoradiography", "PCR", "all of these"], ans: 3, exp: "All of these." },
+    { q: "138. Which one is not correct?", opts: ["ELISA is based on the principle of antigen-antibody interaction.", "First transgenic cow, Rosie was produced in 1997.", "Gene therapy is used to treat hereditary diseases.", "Human insulin is not made in bacteria."], ans: 3, exp: "Human insulin is not made in bacteria." },
+    { q: "139. Genetically-engineered bacteria are being employed for production of", opts: ["thyroxine", "human insulin", "cortisol", "all of these"], ans: 1, exp: "Human insulin." },
+    { q: "140. Rules of conduct that may be used to regulate our activities in relation to the biological world is called", opts: ["bioethics", "biowar", "biopatent", "biopiracy"], ans: 0, exp: "Bioethics." },
+    { q: "141. Use of bioresources of other nations without proper authorization of the countries concerned is called", opts: ["biowar", "biopatent", "biopiracy", "all of these"], ans: 2, exp: "Biopiracy." },
+    { q: "142. It is now possible to breed plants and animals with desired characters through", opts: ["genetic engineering", "ikebana technique", "tissue culture", "chromosomal engineering"], ans: 0, exp: "Genetic engineering." },
+    { q: "143. A genetically-manipulated organism containing in its genome one or more inserted genes of another species is called", opts: ["transposon", "gene expression", "transgenic organism", "all of these"], ans: 2, exp: "Transgenic organism." },
+    { q: "144. Which statement is incorrect about gene therapy?", opts: ["Lymphocytes from patient's blood are cultured.", "A functional ADA cDNA is introduced into these lymphocytes.", "Lymphocytes are then introduced in the body of patient.", "Patient does not require periodic infusion of genetically engineered lymphocytes."], ans: 3, exp: "Patient does not require periodic infusion of genetically engineered lymphocytes." },
+    { q: "145. Which enzyme is crucial for proper functioning of the immune system?", opts: ["Adenosine deaminase", "Restriction endonuclease", "Ligase", "Maltase"], ans: 0, exp: "Adenosine deaminase." },
+    { q: "146. The first hormone produced artificially by culturing bacteria was", opts: ["adrenaline", "testosterone", "insulin", "thyroxine"], ans: 2, exp: "Insulin." },
+    { q: "147. Genetically-engineered human insulin is manufactured by the use of which of the following microorganisms?", opts: ["Penicillium", "Rhizopus", "E. coli", "Pseudomonas"], ans: 2, exp: "E. coli." },
+    { q: "148. What is correct about insulin?", opts: ["Two short polypeptide chains", "Polypeptide chains are linked together by disulphide bridges.", "In mammals insulin is synthesized as a prohormone.", "All the above"], ans: 3, exp: "All the above." },
+    { q: "149. Which is incorrect?", opts: ["Specific Bt toxin genes have been isolated from Bacillus thuringiensis.", "Meloidegyne incognitia does not infect the roots of tobacco plants.", "In mammals insulin is synthesized as a prohormone.", "ADA deficiency can be cured by bone marrow transplantation."], ans: 1, exp: "Meloidegyne incognitia does not infect the roots of tobacco plants." },
+    { q: "150. Which one is incorrect?", opts: ["Bt toxin gene has been cloned from the bacteria.", "Bt toxin is coded by a gene named cry.", "Bacillus thuringiensis forms protein crystal throughout their life cycle.", "Bt toxin protein exist as inactive protoxins."], ans: 2, exp: "Bacillus thuringiensis forms protein crystal throughout their life cycle." },
+    { q: "151. Proteins produced by Bacillus thuringiensis kill", opts: ["lepidopterans", "coleopterans", "dipterans", "all of these"], ans: 3, exp: "All of these." },
+    { q: "152. GM plants have been useful in increasing", opts: ["crop yield", "reduce post harvest loss", "make crops more tolerant to stresses", "all of these"], ans: 3, exp: "All of these." },
+    { q: "153. Plants, bacteria, fungi and animals whose genes have been altered by manipulation are called", opts: ["genetically modified organisms", "hybrid organisms", "pest resistant organisms", "none of the above"], ans: 0, exp: "Genetically modified organisms." },
+    { q: "154. Column I: I. Escherichia coli, II. Bacillus thuringiensis, III. Rhizobium meliloti, IV. Pseudomonas putida. Column II: A. nif gene, B. Interferon, C. Bt toxin, D. Bioremediation. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-B, II-A, III-C, IV-D", "I-B, II-C, III-A, IV-D", "I-D, II-A, III-B, IV-C"], ans: 2, exp: "I-B, II-C, III-A, IV-D." },
+    { q: "155. The process of RNA interference has been used in the development of plants resistant to", opts: ["Insects", "Nematodes", "Fungi", "Viruses"], ans: 1, exp: "Nematodes." },
+    { q: "156. Maximum number of existing transgenic animals is of", opts: ["Pig", "Fish", "Mice", "Cow"], ans: 2, exp: "Mice." },
+    { q: "157. The true statement about Genetic Engineering Approval committee (GEAC) is", opts: ["Will make decision regarding the validity of GM research", "Will make the safety of introducing GM - organism for public services", "Genetic modification of organism can have unpredictable results when such organisms are introduced into the ecosystem. Therefore, the Indian government has set up organisation such as GEAC.", "All of these"], ans: 3, exp: "All of these." },
+    { q: "158. Column I: I. Forensic science, II. ELISA, III. Humulin, IV. alpha-1-antitrypsin. Column II: A. AIDS, B. First man made hormone, C. Emphysema, D. DNA finger printing. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-B, II-A, III-C, IV-D", "I-B, II-C, III-A, IV-D", "I-D, II-A, III-B, IV-C"], ans: 3, exp: "I-D, II-A, III-B, IV-C." },
+    { q: "159. Match List I and List II and select the correct option- List I: (a) Bacillus thurengiensis, (b) Rhizobium meliloti, (c) E. coli, (d) Pseudomonas putida, (e) Trichoderma. List II: (1) Production of chitinases, (2) Scavenging of oil spills, (3) Incorporation of 'nif' gene, (4) Production of Bt toxin, (5) Production of human insulin.", opts: ["a-2, b-1, c-5, d-3", "a-2, b-5, c-1, d-3", "a-4, b-5, c-2, d-1", "a-4, b-3, c-5, d-2"], ans: 3, exp: "a-4, b-3, c-5, d-2." },
+    { q: "160. Hybridoma technology has been successfully used in-", opts: ["Production of somatic hybrids", "Synthesis of monoclonal antibodies", "Synthesis of haemoglobin", "Production of alcohol in bulk"], ans: 1, exp: "Synthesis of monoclonal antibodies." },
+    { q: "161. Cultivation of Bt cotton has been much in the news. The prefix 'Bt' means-", opts: ["Barium treated cotton seeds", "Bigger thread variety", "Produced by biotechnology using restriction enzymes and ligases", "Carrying an endotoxin gene from bacillus thuringiensis"], ans: 3, exp: "Carrying an endotoxin gene from bacillus thuringiensis." },
+    { q: "162. Column I: I. DNA probe, II. DNA library, III. Gene therapy, IV. 200,000 varieties of rice. Column II: A. Effort to fix the functional gene, B. DNA sequence that can pair with a particular gene, C. One organism's DNA stored in the host organism, D. India. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-B, II-A, III-C, IV-D", "I-B, II-C, III-A, IV-D", "I-D, II-A, III-B, IV-C"], ans: 2, exp: "I-B, II-C, III-A, IV-D." },
+    { q: "163. Which of the following is related with gene therapy? A. Enzyme-replacement therapy B. Bone marrow transplantation C. Hybridoma technique D. Hepatitis", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 0, exp: "A, B." },
+    { q: "164. Humulin is A. an antibiotic B. human insulin C. antidiabetic D. antifungal", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 1, exp: "B, C." },
+    { q: "165. Column I: I. Biopiracy, II. Retroviral vector, III. Biopatent, IV. Kohler and Milstein. Column II: A. Gene therapy, B. Illegal removal of biological materials, C. Right granted for biological entities, D. Monoclonal antibody. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-B, II-A, III-C, IV-D", "I-B, II-C, III-A, IV-D", "I-D, II-A, III-B, IV-C"], ans: 1, exp: "I-B, II-A, III-C, IV-D." },
+    { q: "166. Interferon is A. antimalarial B. antifungal C. antiviral D. anticancer", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 2, exp: "C, D." },
+    { q: "167. Column I: I. Golden Rice, II. Bt toxin, III. RNAi, IV. Rosie. Column II: A. Cry protein, B. Rich in vit. A, C. First transgenic cow, D. Gene silencing. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-B, II-A, III-C, IV-D", "I-B, II-C, III-A, IV-D", "I-D, II-A, III-B, IV-C"], ans: 0, exp: "I-B, II-A, III-D, IV-C." },
+    { q: "168. Which of the following is associated with transgenic animals? A. Vaccine safety B. Chemical safety C. Biopiracy D. Gene therapy", opts: ["A, B", "B, C", "C, D", "A, B, C, D"], ans: 0, exp: "A, B." },
+    { q: "169. Which bacteria is used as biopesticide first on the commercial scale in the world.", opts: ["Bacillus thuringiensis", "E-Coli", "Pseudomonas aeruginosa", "Agrobacterium tumefaciens"], ans: 0, exp: "Bacillus thuringiensis." },
+    { q: "170. Column I: I. DNA finger printing, II. AIDS, III. Agrobacterium, IV. DNA probes. Column II: A. Tumour, B. VNTR, C. Monkey, D. Radioactive isotopes. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-C, II-A, III-B, IV-D", "I-B, II-C, III-A, IV-D", "I-D, II-A, III-B, IV-C"], ans: 2, exp: "I-B, II-C, III-A, IV-D." },
+    { q: "171. Bacillus thuringiensis (Bt) strains have been used for designing novel", opts: ["Biofertilisers", "Bio-metallurgical techniques", "Bio-mineralisation process", "Bio-insecticidal plants"], ans: 3, exp: "Bio-insecticidal plants." },
+    { q: "172. Column I: I. Virus free plant, II. Biofertilizer, III. Bt cotton, IV. Humulin. Column II: A. Rhizobium, B. Cry gene, C. Shoot apex, D. Diabetes. The correct match is", opts: ["I-B, II-A, III-D, IV-C", "I-C, II-A, III-B, IV-D", "I-B, II-D, III-A, IV-D", "I-D, II-A, III-B, IV-C"], ans: 1, exp: "I-C, II-A, III-B, IV-D." },
+    { q: "173. Gene recombinant technology is used for-", opts: ["Vectorless gene transfer into target cell", "Vector based gene transfer into target cell", "Direct transfer of DNA protein complex", "Liposome base direct gene transfer into target cell"], ans: 1, exp: "Vector based gene transfer into target cell." },
+    { q: "174. Hybridoma cells are-", opts: ["Nervous cells of frog", "Hybrid cells resulting from myeloma cells", "Only cells having oncogenes", "Product of spore formation in bacteria"], ans: 1, exp: "Hybrid cells resulting from myeloma cells." },
+    { q: "175. Bacillus thuringiensis (Bt) is a bacterium of-", opts: ["Dirty water", "Small intestine", "Soil", "Polluted air"], ans: 2, exp: "Soil." },
+    { q: "176. Wine and beer are produced directly by fermentation, Brandy and whisky requires both fermentation and distillation because-", opts: ["Fermentation is inhibited at an alcoholic level of 10-18%", "Distillation prolongs storage", "Distillation improves quality", "Distillation purifies the beverage"], ans: 0, exp: "Fermentation is inhibited at an alcoholic level of 10-18%." },
+    { q: "177. Column I: I. Golden rice, II. Flavr Savr tomato, III. Mouse, IV. Transgenic pig. Column II: A. Increased shelf life, B. HGH, C. Vitamin A, D. Organ transplantation. The correct match is", opts: ["I-C, II-A, III-B, IV-D", "I-B, II-A, III-C, IV-D", "I-B, II-C, III-A, IV-D", "I-D, II-A, III-B, IV-C"], ans: 0, exp: "I-C, II-A, III-B, IV-D." },
+    { q: "178. Human insulin has 51 amino acids in two chains mark the correct statement-", opts: ["Chain A with 20, and chain B with 31 amino acids", "Chain A with 21, and chain B with 30 amino acids", "Chain A with 30, and chain B with 31 amino acids", "Chain A with 31, and chain B with 20 amino acids"], ans: 1, exp: "Chain A with 21, and chain B with 30 amino acids." },
+    { q: "179. Which of the following is used in Biowar ?", opts: ["A pathogen", "Toxin from a pathogen", "A delivery system for the bioweapon agent", "All the above"], ans: 3, exp: "All the above." },
+    { q: "180. ________ is thousand times sweeter than sugar", opts: ["Brazzein", "Stevia", "Both (a) and (b)", "Saccharine"], ans: 0, exp: "Brazzein." },
+    { q: "181. 'Flavr Savr' is the transgenic variety of-", opts: ["Cotton", "Rice", "Tomato", "Wheat"], ans: 2, exp: "Tomato." },
+    { q: "182. Transgenesis is ______ hybridization-", opts: ["Superior to", "As good as", "Inferior to", "None of the above"], ans: 0, exp: "Superior to." },
+    { q: "183. When strong and developed countries, powerful organizations and multinational companies exploit biological resources of other nations without proper authorization from and without any compensation to the nations concerned, it is called-", opts: ["Biopatent", "Bioethics", "Biopiracy", "Both (a) and (c)"], ans: 2, exp: "Biopiracy." },
+    { q: "184. Humulin is the term used for-", opts: ["Human insulin", "A sex hormone", "A new antibiotic", "A vaccine"], ans: 0, exp: "Human insulin." },
+    { q: "185. Hybridomas are-", opts: ["Hybrid zone", "Hybrid cultures", "Hybrid swarms", "Antibodies"], ans: 1, exp: "Hybrid cultures." },
+    { q: "186. Gene coding for crystalline proteins are called-", opts: ["Immunogenic", "Therapeutic genes", "Cry genes", "Transgenes"], ans: 2, exp: "Cry genes." },
+    { q: "187. Genetic engineering is-", opts: ["Plastic surgery", "Addition of genes", "Removal of genes", "Study of extranuclear genes"], ans: 1, exp: "Addition of genes." },
+    { q: "188. _________ first proposed that diabetes is caused by failure of the beta-cells of islets of Langerhans of pancreas to secrete a substance which he named as insulin-", opts: ["Banting", "Best", "Edward Sharpey-Shafer", "Sherlock"], ans: 2, exp: "Edward Sharpey-Shafer." },
+    { q: "189. _________ isolated insulin from the dog's pancreatic islets and demonstrated its effectiveness against diabetes-", opts: ["Edward Shafer", "Sherlock", "Banting and Best", "Edward Sharpy"], ans: 2, exp: "Banting and Best." },
+    { q: "190. Edward Jenner is known as-", opts: ["Father of immunology", "Father of genetics", "Father of microbiology", "Father of biology"], ans: 0, exp: "Father of immunology." },
+    { q: "191. Louis Pasteur is known as-", opts: ["Father of microbiology", "Father of immunology", "Father of genetics", "Father of biology"], ans: 0, exp: "Father of microbiology." },
+    { q: "192. Which of the following is a correct statement-", opts: ["'Bt' in Bt-cotton indicates that it is a genetically modified organism produced through biotechnology", "Somatic hybridization involves fusion of two complete plant cells carrying desired genes", "The anticoagulant hirudin is being produced from transgenic Brassica napus seed", "'Flavr Savr' variety of tomato has enhanced the production of ethylene which improves its taste"], ans: 0, exp: "'Bt' in Bt-cotton indicates that it is a genetically modified organism produced through biotechnology." },
+    { q: "193. Transgenic plants are the ones-", opts: ["Generated by introducing foreign DNA into a cell and regenerating a plant from the cell", "Produced after protoplast fusion in artificial medium", "Grown in artificial medium after hybridization in the field", "Produced by a somatic embryo in artificial medium"], ans: 0, exp: "Generated by introducing foreign DNA into a cell and regenerating a plant from the cell." },
+    { q: "194. Which of the following correctly defines a transgenic animal ?", opts: ["An animal which has foreign DNA in all its cells because of an injection of DNA into the nuclei of the zygote from which it is developed", "An animal which has foreign DNA and RNA in some of its cells because of an injection of DNA into the nuclei of some of the cells in adulthood.", "An animal which has foreign DNA and RNA in some of its cells because an injection of DNA and RNA into the nucleus of the zygote from which it is developed", "An animal which has foreign DNA in some of its cells because of an injection of DNA into the nuclei of some of the cells of the blastomeres."], ans: 0, exp: "An animal which has foreign DNA in all its cells because of an injection of DNA into the nuclei of the zygote from which it is developed." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 29; // ⚠️ 12th Class Chapter 10 is Chapter 29 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
