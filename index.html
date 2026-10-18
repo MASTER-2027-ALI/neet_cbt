@@ -32,7 +32,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-window.checkPasskey = function() {
+window.checkPasskey = async function() {
   const input = document.getElementById('passkeyInput').value.trim().toUpperCase();
   const errorMsg = document.getElementById('errorMsg');
   const loginBtn = document.getElementById('loginBtn');
@@ -45,12 +45,13 @@ window.checkPasskey = function() {
 
   let user = null;
 
-  if (input === MASTER_KEY) {
-    user = { name: 'Admin', role: 'master' };
-  } else {
+  // Check if Master Key exists
+  if (typeof MASTER_KEY !== 'undefined' && input === MASTER_KEY) {
+    user = { name: 'Admin', role: 'master', key: input };
+  } else if (typeof FRIEND_KEYS !== 'undefined') {
     for (const key in FRIEND_KEYS) {
       if (FRIEND_KEYS[key].key === input) {
-        user = { name: FRIEND_KEYS[key].name, role: 'friend' };
+        user = { name: FRIEND_KEYS[key].name, role: 'friend', key: input };
         break;
       }
     }
@@ -59,6 +60,7 @@ window.checkPasskey = function() {
   if (user) {
     loginBtn.textContent = '⏳ Logging in...';
     loginBtn.disabled = true;
+    errorMsg.style.display = 'none';
     loginWithFirebase(user);
   } else {
     errorMsg.textContent = '❌ Invalid Passkey. Please try again.';
@@ -74,20 +76,14 @@ async function loginWithFirebase(user) {
     const uid = userCredential.user.uid;
     const mySessionId = Date.now() + '_' + Math.random().toString(36).substring(2, 10);
     
-    // Check previous session
-    const sessionRef = doc(db, "sessions", uid);
+    // Passkey ko hi document ID banayenge taaki hamesha same rahe
+    const sessionRef = doc(db, "sessions", user.key);
     const docSnap = await getDoc(sessionRef);
     let askConfirmation = false;
     
     if (docSnap.exists()) {
-      const remoteSessionId = docSnap.data().sessionId;
-      const lastLoginTime = docSnap.data().loginTime;
-      const timeDiff = new Date() - new Date(lastLoginTime);
-      
-      // If another session is active (less than 10 seconds old)
-      if (remoteSessionId !== mySessionId && timeDiff < 10000) { 
-        askConfirmation = true;
-      }
+      // Agar pehle se koi session hai
+      askConfirmation = true;
     }
 
     if (askConfirmation) {
@@ -95,12 +91,13 @@ async function loginWithFirebase(user) {
       
       if (!confirmLogout) {
         alert("लॉगिन रद्द कर दिया गया है।");
-        window.location.href = 'index.html'; 
+        loginBtn.textContent = '🔓 Unlock Now';
+        loginBtn.disabled = false;
         return;
       }
     }
 
-    // Save new session
+    // Save new session to Firebase
     await setDoc(sessionRef, {
       sessionId: mySessionId,
       userName: user.name,
@@ -108,10 +105,11 @@ async function loginWithFirebase(user) {
       loginTime: new Date().toISOString()
     });
 
+    // Save to LocalStorage for the dashboard
     localStorage.setItem('cbt_user', JSON.stringify({
       name: user.name,
       role: user.role,
-      uid: uid,
+      uid: user.key, // UID ki jagah Passkey use kar rahe hain
       sessionId: mySessionId
     }));
     localStorage.setItem('cbt_login_time', new Date().toISOString());
@@ -120,14 +118,13 @@ async function loginWithFirebase(user) {
     
   } catch (error) {
     console.error('Login error:', error);
-    document.getElementById('errorMsg').textContent = '❌ Login failed. Internet check karein.';
+    document.getElementById('errorMsg').textContent = '❌ Login failed: ' + error.message;
     document.getElementById('errorMsg').style.display = 'block';
     document.getElementById('loginBtn').textContent = '🔓 Unlock Now';
     document.getElementById('loginBtn').disabled = false;
   }
 }
 
-// Enter key support
 document.getElementById('passkeyInput').addEventListener('keypress', function(e) {
   if (e.key === 'Enter') window.checkPasskey();
 });
