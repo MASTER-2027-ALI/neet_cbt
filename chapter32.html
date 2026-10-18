@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 32: Biodiversity and Conservation - Full CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 32: Biodiversity and Conservation</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. Which of the following phyla has largest number of species?", opts: ["Arthropoda", "Echinodermata", "Cephalochordata", "Annelida"], ans: 0, exp: "Arthropoda is the largest phylum, accounting for over 80% of all known animal species." },
+    { q: "2. The numbers of National Parks, Biosphere and Wildlife sanctuaries of India were:", opts: ["90,14,448", "158,62, 10", "58, 412, 10", "96, 412, 10"], ans: 0, exp: "India has 90 National Parks, 14 Biosphere Reserves, and 448 Wildlife Sanctuaries." },
+    { q: "3. The term \"The Evil Quartet\" is related with", opts: ["four major causes of forest loss", "four major causes of population explosion", "four major causes of air pollution", "four major causes of biodiversity losses."], ans: 3, exp: "The Evil Quartet refers to habitat loss, over-exploitation, alien species invasion, and co-extinctions." },
+    { q: "4. Which species is most likely to be positively selected by natural selection?", opts: ["One with a large gene pool", "One with a medium gene pool", "One with a small gene pool", "No correlation exists between gene pool and natural selection"], ans: 0, exp: "A large gene pool provides greater genetic variation, which is essential for natural selection and adaptation." },
+    { q: "5. Where was the World Summit on Sustainable Development held?", opts: ["South Africa", "U.S.A.", "South Korea", "U.K."], ans: 0, exp: "The 2002 World Summit on Sustainable Development was held in Johannesburg, South Africa." },
+    { q: "6. Species diversity _____ as we move away from the equator towards the poles.", opts: ["Increases", "Decreases", "First increases then decreases", "First decreases then increases"], ans: 1, exp: "Species diversity decreases as we move from the equator towards the poles." },
+    { q: "7. What is the affect of species diversity, as one moves from high to low altitudes.", opts: ["Increases", "Decreases", "First increases then decreases", "First decreases then increases"], ans: 0, exp: "Species diversity increases as we move from high to low altitudes." },
+    { q: "8. Which of the following is not an example of in-situ conservation?", opts: ["Biosphere Reserves", "National Parks", "Wildlife Sanctuaries", "Zoos and botanical gardens"], ans: 3, exp: "Zoos and botanical gardens are examples of ex-situ conservation." },
+    { q: "9. What is Biodiversity referred to as?", opts: ["species in a region", "genes & species in a region", "Genetic, species & ecological diversity in a region", "Genes and species in an ecosystem"], ans: 2, exp: "Biodiversity encompasses genetic, species, and ecological diversity." },
+    { q: "10. What are the total number of hot spots present in the world?", opts: ["25", "29", "34", "39"], ans: 2, exp: "There are 34 biodiversity hotspots in the world." },
+    { q: "11. What is the approximate percentage of the earth covered by terrestrial hot spots?", opts: ["1.5% (less than 2%)", "2.5%", "3.5%", "4.5%"], ans: 0, exp: "Biodiversity hotspots cover less than 2% of the Earth's land surface." },
+    { q: "12. What is the decreasing order of number of animal species, as far as India is concerned?", opts: ["Mammals, Aves, Reptiles, Amphibia", "Aves, Reptiles, Mammals, Amphibia", "Mammals, Reptiles, Amphibia, Aves", "Reptiles, Amphibia, Mammals, Aves"], ans: 1, exp: "In India, Aves (birds) have the highest number of species, followed by Reptiles, Mammals, and Amphibia." },
+    { q: "13. Which one of the following are two hot spots of biodiversity in India?", opts: ["Western ghats & North eastern Himalayas", "Deccan and Western Ghats", "Himalayan and Deccan Plateau", "Western Ghats and Gangetic Plains"], ans: 0, exp: "The Western Ghats and the Eastern Himalayas (North-East India) are the two biodiversity hotspots in India." },
+    { q: "14. Wild life is destroyed mostly by-", opts: ["Lack of proper care", "Mass scale Hurting", "Destruction of natural Habitats", "Natural calamity"], ans: 2, exp: "Habitat destruction is the primary cause of wildlife destruction." },
+    { q: "15. Troublesome American water used weed found in India is-", opts: ["Trapa", "Cyperus", "Typha", "Eichormia"], ans: 3, exp: "Eichhornia (water hyacinth) is an invasive alien weed that drains oxygen from water bodies." },
+    { q: "16. Which of the following is NOT associated with small populations?", opts: ["Homozygosity can increase the fitness of individuals.", "Some degree of inbreeding becomes inevitable.", "Genetic drift can quickly eliminate most alleles, leaving individuals extremely similar genetically.", "Problems arise when allelic diversity is reduced."], ans: 0, exp: "Increased homozygosity usually decreases fitness (inbreeding depression), it doesn't increase it." },
+    { q: "17. Breeding place of Flamingo (Hansawar) in India is-", opts: ["Sambhar lake", "Chilka lake", "Runn of Kutch", "Ghana vihar"], ans: 3, exp: "Ghana Vihar (Keoladeo National Park) is a famous breeding ground for flamingos." },
+    { q: "18. As estimated by Robert May, what is the total number of species present on earth?", opts: ["3 million", "5 million", "7 million", "9 million"], ans: 2, exp: "Robert May estimated that the global species diversity is about 7 million." },
+    { q: "19. Threats to biodiversity comes from -", opts: ["habitat loss", "Over exploitation", "Intensive agriculture", "AII"], ans: 3, exp: "All of these are major threats to biodiversity." },
+    { q: "20. Which of the following was the first National Park of India?", opts: ["Corbett", "Nanda Devi", "Kaziranga", "Jaldapara"], ans: 0, exp: "Jim Corbett National Park was the first National Park established in India (1936)." },
+    { q: "21. The major extinct from India in-", opts: ["Cannibalism", "Felling tress", "Habitat destruction", "None of these"], ans: 2, exp: "Habitat destruction is the major cause of extinction in India." },
+    { q: "22. In which part of biosphere reserves human settlement is permissible?", opts: ["Buffer Zone", "Transition Zone", "Core Zone", "Settlement not allowed"], ans: 1, exp: "The transition zone is the outermost part of a biosphere reserve where human settlements, farming, and forestry are permitted." },
+    { q: "23. Historically, island species have tended to become extinct faster than species living on a mainland. Which of the following reasons can not be used to explain this phenomenon?", opts: ["Island species have often evolved in the absence of predators and have no natural avoidance strategies.", "Humans have introduced diseases and competitors to islands, which negatively impacts island populations.", "Island populations are-usually smaller than mainland populations.", "Island populations are usually less fit than mainland populations."], ans: 3, exp: "Island populations are not inherently less fit; their extinction is due to other factors like small population size and lack of defenses." },
+    { q: "24. Idri Idri is found is-", opts: ["Australia", "Madagascar", "Mauritius", "Tasmania"], ans: 2, exp: "The Dodo (Idri Idri) was endemic to Mauritius and is a classic example of extinction." },
+    { q: "25. Commercial latex in obtained from-", opts: ["Euphorbioceal", "Acaria anobica", "Tectona grand's", "Marilot esculerta"], ans: 0, exp: "Euphorbiaceae is a family that includes many plants yielding commercial latex (like rubber)." },
+    { q: "26. What is sustainable use?", opts: ["The study of methods to help protect biodiversity.", "Protected strips of land that allow organisms to migrate from one wilderness area to another.", "A law that makes it illegal to do harm to species that are listed as endangered or threatened.", "The ability to use natural resources in a way that helps people and protects the ecosystem."], ans: 3, exp: "Sustainable use means using natural resources in a way that meets human needs while preserving the ecosystem for future generations." },
+    { q: "27. When the last member of a particular species dies, the species is said to be ______.", opts: ["isolated", "endangered", "diversified", "extinct"], ans: 3, exp: "Extinction is the termination of a species when its last member dies." },
+    { q: "28. Most large whale species have been driven to the brink of extinction. Which of the following is the most accepted explanation for this situation?", opts: ["Overexploitation", "habitat loss", "pollution", "competition from introduced species"], ans: 0, exp: "Overexploitation (excessive hunting/whaling) is the primary cause of the decline of large whale species." },
+    { q: "29. Biosphere reserves differ from national parks and wild life sanctuaries because in the former-", opts: ["Human beings are not allowed to enter", "People are an integral part of the system", "Plants are paid greater attention than the animals", "Living organisms are brought from all over the world and preserved for posterity"], ans: 1, exp: "In biosphere reserves, local people are an integral part of the conservation system, unlike strict national parks." },
+    { q: "30. Conservation hotspots are best described as", opts: ["areas with large numbers of endemic species that are disappearing rapidly.", "areas where people are particularly active supporters of biological diversity.", "islands that are experiencing high rates of extinction.", "areas where native species ate being replaced with introduced species."], ans: 0, exp: "Conservation hotspots are regions with high levels of endemic species facing significant habitat loss." },
+    { q: "31. Identify the odd combination of the habitat and the particular animal concerned.", opts: ["Sunderbans______ Bengal tiger", "Periyar______Elephant", "Rann of kutch______wwil Ass", "Dachigam national park______Snao leopard"], ans: 3, exp: "Dachigam National Park is famous for the Hangul (Kashmir stag), not the snow leopard." },
+    { q: "32. Which of these statements is true?", opts: ["Biodiversity tends to increase as you get closer to the equator", "Tropical regions of Earth contain very few of the world's land species.", "Coral reefs tend to be less biologically diverse than temperate deciduous forests.", "Cold climates have greater amounts of biodiversity than warm climates."], ans: 0, exp: "Biodiversity is highest in the tropics and decreases towards the poles." },
+    { q: "33. Which of the following countries has the most deforestation today?", opts: ["Brazil", "United States", "Japan", "none of the above"], ans: 0, exp: "Brazil has high deforestation rates, particularly in the Amazon rainforest." },
+    { q: "34. A keystone species is one that", opts: ["has a higher likelihood of extinction than a nonkeystone species.", "exerts a strong influence on an ecosystem.", "causes other species to become extinct.", "has a weak influence on an ecosystem."], ans: 1, exp: "A keystone species exerts a strong influence on the structure and function of an ecosystem." },
+    { q: "35. What is the difference between a threatened species and an endangered species ?", opts: ["A threatened species is already extinct. An endangered species means that the population's numbers have increased greatly over the last 5 years.", "A threatened species and an endangered species are the same thing.", "A threatened species means that the population is likely to become endangered. An endangered species is already extinct.", "A threatened species means that the population is likely to become endangered. An endangered species has population numbers so low that it is likely to become extinct."], ans: 3, exp: "Threatened species are likely to become endangered, while endangered species face a very high risk of extinction in the wild." },
+    { q: "36. How much of the Earth's land surface have humans disturbed or degraded?", opts: ["60-70%", "5-10%", "30-40%", "10-20%"], ans: 0, exp: "Humans have disturbed or degraded about 60-70% of the Earth's land surface." },
+    { q: "37. An endemic species is", opts: ["one found in many different geographic areas.", "one found naturally in just one geographic area.", "one found only on islands.", "one that has been introduced to a new geographic area."], ans: 1, exp: "Endemic species are those restricted to a specific geographical area and found nowhere else." },
+    { q: "38. The lion-tailed mankeys macaca silenus are found only in-", opts: ["Kaziranga", "Eastern ghats and Chennai", "Western ghats including travancore and Mysore", "Himalayas"], ans: 2, exp: "The lion-tailed macaque is endemic to the Western Ghats." },
+    { q: "39. Ex situ strategies include -", opts: ["Botanical garden", "Zoos", "Seed / Pollen banks", "Gene bank and tissue culture"], ans: 3, exp: "Ex-situ conservation includes all these methods, where threatened species are taken out of their natural habitat and placed in special settings." },
+    { q: "40. Which one of the following in a pair of Endangered species ?", opts: ["Garden lizard and maxican poppy", "Rhesus monkey and sal tree", "Indian peacock and cannot glass", "flornbill and Indian aconite"], ans: 3, exp: "Hornbill and Indian aconite are endangered species in India." },
+    { q: "41. An exotic species that is introduced to a new area, spreads rapidly and eliminates native species is called -", opts: ["an immigrant species", "an invasive species", "destructive species", "none"], ans: 1, exp: "Invasive species are non-native species that spread rapidly and cause harm to native species." },
+    { q: "42. Which of the following statements describe natural extinction?", opts: ["Extinctions abetted by human activities.", "Slow replacement of existing species", "Also known as background extinction", "A small population is most likely to be extinct."], ans: 2, exp: "Natural extinction, also known as background extinction, occurs at a slow rate without human interference." },
+    { q: "43. Forest research institute in situated at-", opts: ["Naisital", "Chennai", "Kolkata", "Dehradun"], ans: 3, exp: "The Forest Research Institute (FRI) is located in Dehradun, Uttarakhand." },
+    { q: "44. More than 25% of drugs are derived from plants. What benefits does this describe?", opts: ["Ethical value", "Aesthetic value", "Direct economic value", "Indirect economic value"], ans: 2, exp: "Deriving drugs from plants provides direct economic and medicinal benefits." },
+    { q: "45. Modern Ex situ conservation includes -", opts: ["cryopreservation techniques", "in vitro fertilisation", "plants can be propagated using tissue culture methods", "All"], ans: 3, exp: "Modern ex-situ conservation employs all these advanced techniques." },
+    { q: "46. Ex situ conservation is used for the conservation of-", opts: ["All plants", "All animals", "threatened animals and plants", "None"], ans: 2, exp: "Ex-situ conservation is primarily used for threatened and endangered species." },
+    { q: "47. Bandipur (Karnataka) National park runs a project for-", opts: ["Peacock", "Deer", "Tiger", "Elephant"], ans: 2, exp: "Bandipur National Park is a Tiger Reserve under Project Tiger." },
+    { q: "48. Nandan kanan zoo in known for the-", opts: ["Nilgiri Cows", "Hippopotamers", "White tiger", "Rhirocheros"], ans: 2, exp: "Nandankanan Zoological Park in Odisha is famous for its white tigers." },
+    { q: "49. Exploring molecular, genetic and species-level diversity for products of economic importance like medicines is called-", opts: ["Bioremediation", "Bioprospecting", "Bioprocessing", "Ecosystem services."], ans: 1, exp: "Bioprospecting is the exploration of biodiversity for commercially valuable genetic and biochemical resources." },
+    { q: "50. Which of the following statements is true concerning the relationship between humans and the rest of the living world?", opts: ["Modern technology has made it so that we no longer depend on other living organisms.", "We are dependent on artificial ecosystems, such as agroecosystems, but gain no benefit from natural ecosystems.", "We are dependent on natural ecosystems at present, but the technology exists to completely replace natural ecosystems so that we will no longer depend on them.", "Our survival is tightly linked to the survival of natural ecosystems throughout the world."], ans: 3, exp: "Human survival is fundamentally dependent on the health of natural ecosystems worldwide." },
+    { q: "51. Kashmir stag in commonly found in-", opts: ["Dachigam wild life sanctuary", "Manas wild life sanctuary", "Bhanatpur wild life Sanetuary", "Annamalai wild life sanectuary"], ans: 0, exp: "The Kashmir stag (Hangul) is found in Dachigam National Park/Wildlife Sanctuary." },
+    { q: "52. In recent years the number of species driven to extinction has increased dramatically. Which of the following is not a reason for this?", opts: ["Overexploitation", "Habitat destruction", "Introduction of predators", "Natural predation"], ans: 3, exp: "Natural predation is a normal ecological process, not a cause of the recent dramatic increase in extinctions." },
+    { q: "53. When a species goes extinct in one area, it is often desirable to reintroduce the species from other populations. A major problem with this approach is that", opts: ["genetic diseases can easily be introduced when the species is reintroduced.", "populations are often adapted to local conditions and may not survive when moved to a different location.", "the community will have adapted to the extinct species' absence. Reproduction may seriously disrupt the community.", "it is difficult to get an adequate sample of individuals to properly reestablish the population."], ans: 1, exp: "Local adaptation is a major issue; species from one area may not survive or thrive in a different location." },
+    { q: "54. Which of the following is not currently a major cause of species extinctions?", opts: ["Habitat destruction", "Climate change", "Overexploitation", "Introduction of predators"], ans: 3, exp: "While introduced predators can cause extinctions, habitat destruction, climate change, and overexploitation are currently the major drivers of species extinctions." },
+    { q: "55. Of the following organisms which has the highest conservation priority?", opts: ["A plant found on North America and in Europe.", "A plant endemic to Australia", "A plant found on the Galapagos islands and in Brazil,", "A plant found world wide."], ans: 1, exp: "Endemic species (found in only one specific area) have the highest conservation priority because they are most vulnerable to extinction." },
+    { q: "56. The number of species that become extinct due to habitat destruction is greatest in _______ ecosystems with many______species.", opts: ["temperate, migratory", "tropical, endemic", "temperate, keystone", "tropical, migratory"], ans: 1, exp: "Tropical ecosystems with high endemism are most vulnerable to habitat destruction." },
+    { q: "57. Which of the following methods could be used to restore a population of animals from a few male and female individuals.", opts: ["Cross breeding", "Interbreeding", "Captive breeding", "Selective breeding"], ans: 2, exp: "Captive breeding is a method used in ex-situ conservation to restore populations from a small number of individuals." },
+    { q: "58. Red data book deals with-", opts: ["Enderive plants", "Plants sharing photoperiodism", "Plants on the verge of extinction", "None"], ans: 2, exp: "The Red Data Book contains data on species that are on the verge of extinction." },
+    { q: "59. Amazon rain forests are considered as lungs of the planet as they contribute ______ of the total oxygen in the earth's atmosphere.", opts: ["10%", "15%", "20%", "30%"], ans: 2, exp: "The Amazon rainforest is often called the 'lungs of the planet' and contributes about 20% of the Earth's oxygen." },
+    { q: "60. How many percent of the earth's land area is covered by all the biodiversity hotspots.", opts: ["More than two percent", "Less than two percent", "More than five percent", "Less than ten percent"], ans: 1, exp: "Biodiversity hotspots cover less than two percent of the Earth's land area." },
+    { q: "61. There are genetic variation shown by medicinal plant Rauwolfia vomitoria. This plant growing in which one of the following regions", opts: ["Deccan Peninsula", "Gangatic plains", "Himalayan, ranges", "North-East."], ans: 3, exp: "Rauwolfia vomitoria is found in the North-East region of India." },
+    { q: "62. In the formula logs = Log C + Z log A, Ecologist have discovered that the value of z lies in the range of", opts: ["0.1 to 0.5", "0.5to1", "0.1 to 0.2", "1 to 5"], ans: 0, exp: "The value of Z (slope) generally ranges from 0.1 to 0.2 regardless of the taxonomic group or the region." },
+    { q: "63. If the Bengal tiger becomes extinct-", opts: ["Hyaenas and Wolves will become scarce", "The wild Oveas will be safe for man and domestic animals", "Its gene pool will be lost forever", "The population of beautiful animals like deers will be stabilized."], ans: 2, exp: "Extinction means the permanent loss of the species' gene pool." },
+    { q: "64. What is the primary reason for targeting 'biodiversity hotspots1 for conservation?", opts: ["They are the only areas where species are seriously threatened in the world", "The number of species threatened far exceeds our capacity to protect them and we can therefore only concentrate on areas of highest species diversity", "They are areas where people do not live and conservation would therefore not be effecting the economic development of the area", "To protect all areas of threatened species would not allow for new species to develop"], ans: 1, exp: "With limited resources, focusing on hotspots allows us to protect the maximum number of species." },
+    { q: "65. 1500 enderive species of dicohyledons are found is-", opts: ["Eastern Hinalayas", "Eastern Ghats", "Western Hinalayas", "Western Ghats"], ans: 3, exp: "The Western Ghats are home to numerous endemic plant species." },
+    { q: "66. Approximately what proportion of the global land surface is used for agriculture and grazing by the world's 6 billion people?", opts: ["One eightieth", "One tenth", "Three quarters", "One third"], ans: 3, exp: "About one-third of the global land surface is used for agriculture and grazing." },
+    { q: "67. Which of the following represent maximum number of species among global biodiversity ?", opts: ["Lichens", "Fungi", "Mosses and Ferns", "Algae"], ans: 1, exp: "Fungi represent a very large number of species among global biodiversity." },
+    { q: "68. Total number of identified biodiversity hot spots in the world is", opts: ["25", "24", "40", "34."], ans: 3, exp: "There are 34 biodiversity hotspots in the world." },
+    { q: "69. Sacred groves are specially useful in :", opts: ["generating environmental awareness", "preventing soil erosion", "year-round flow of water in rivers", "conserving rare and threatened species"], ans: 3, exp: "Sacred groves are patches of forest protected by local communities and act as reservoirs of rare and threatened species." },
+    { q: "70. Which hypothesis suggests ecosystems are like aeroplane wings where flight (ecosystem functioning) may or may not be compromised depending upon which species are lost-", opts: ["rivet popper hypothesis", "Gaia hypothesis", "Cause - exclusion hypothesis", "Oudum's hypothesis"], ans: 0, exp: "The Rivet Popper Hypothesis compares an ecosystem to an airplane and species to rivets; losing a few might not cause a crash, but losing a critical one will." },
+    { q: "71. Which of the following is incorrectly matched?", opts: ["alpha diversity - number of species in a given habitat", "genetic diversity - variation of genes within species", "beta-diversity - diversity of habitat in the whole region", "species diversity - product of species richness & evenness"], ans: 2, exp: "Beta-diversity refers to the diversity between habitats, not the whole region." },
+    { q: "72. Which of the following is NOT a benefit that humans receive from a biologically diverse world?", opts: ["source of medicine", "source of water", "source of economic gains", "source of food"], ans: 1, exp: "While biodiversity is linked to water cycles, 'source of water' is not a direct benefit in the way medicine, food, and economic gains are." },
+    { q: "73. As estimated by Robert May, what is the total number of species present on earth?", opts: ["3 million", "5 million", "7 million", "9 million"], ans: 2, exp: "Robert May estimated that the global species diversity is about 7 million." },
+    { q: "74. Threats to biodiversity comes from -", opts: ["habitat loss", "Over exploitation", "Intensive agriculture", "All of these"], ans: 3, exp: "All of these are major threats to biodiversity." },
+    { q: "75. Which of the following was the first National Park of India?", opts: ["Corbett", "Nanda Devi", "Kaziranga", "Jaldapara"], ans: 0, exp: "Jim Corbett National Park was the first National Park established in India (1936)." },
+    { q: "76. The major extinct from India is-", opts: ["Cannibalism", "Felling trees", "Habitat destruction", "None of these"], ans: 2, exp: "Habitat destruction is the major cause of extinction in India." },
+    { q: "77. In which part of biosphere reserves human settlement is permissible?", opts: ["Buffer Zone", "Transition Zone", "Core Zone", "Settlement not allowed"], ans: 1, exp: "The transition zone is the outermost part of a biosphere reserve where human settlements, farming, and forestry are permitted." },
+    { q: "78. Historically, island species have tended to become extinct faster than species living on a mainland. Which of the following reasons can not be used to explain this phenomenon?", opts: ["Island species have often evolved in the absence of predators and have no natural avoidance strategies.", "Humans have introduced diseases and competitors to islands, which negatively impacts island populations.", "Island populations are usually smaller than mainland populations.", "Island populations are usually less fit than mainland populations."], ans: 3, exp: "Island populations are not inherently less fit; their extinction is due to other factors like small population size and lack of defenses." },
+    { q: "79. Idri Idri is found in-", opts: ["Australia", "Madagascar", "Mauritius", "Tasmania"], ans: 2, exp: "The Dodo (Idri Idri) was endemic to Mauritius and is a classic example of extinction." },
+    { q: "80. Commercial latex is obtained from-", opts: ["Euphorbiaceae", "Acacia arabica", "Tectona grandis", "Manihot esculenta"], ans: 0, exp: "Euphorbiaceae is a family that includes many plants yielding commercial latex (like rubber)." },
+    { q: "81. What is sustainable use?", opts: ["The study of methods to help protect biodiversity.", "Protected strips of land that allow organisms to migrate from one wilderness area to another.", "A law that makes it illegal to do harm to species that are listed as endangered or threatened.", "The ability to use natural resources in a way that helps people and protects the ecosystem."], ans: 3, exp: "Sustainable use means using natural resources in a way that meets human needs while preserving the ecosystem for future generations." },
+    { q: "82. When the last member of a particular species dies, the species is said to be ______.", opts: ["isolated", "endangered", "diversified", "extinct"], ans: 3, exp: "Extinction is the termination of a species when its last member dies." },
+    { q: "83. Most large whale species have been driven to the brink of extinction. Which of the following is the most accepted explanation for this situation?", opts: ["Overexploitation", "habitat loss", "pollution", "competition from introduced species"], ans: 0, exp: "Overexploitation (excessive hunting/whaling) is the primary cause of the decline of large whale species." },
+    { q: "84. Biosphere reserves differ from national parks and wild life sanctuaries because in the former-", opts: ["Human beings are not allowed to enter", "People are an integral part of the system", "Plants are paid greater attention than the animals", "Living organisms are brought from all over the world and preserved for posterity"], ans: 1, exp: "In biosphere reserves, local people are an integral part of the conservation system, unlike strict national parks." },
+    { q: "85. Conservation hotspots are best described as", opts: ["areas with large numbers of endemic species that are disappearing rapidly.", "areas where people are particularly active supporters of biological diversity.", "islands that are experiencing high rates of extinction.", "areas where native species ate being replaced with introduced species."], ans: 0, exp: "Conservation hotspots are regions with high levels of endemic species facing significant habitat loss." },
+    { q: "86. Identify the odd combination of the habitat and the particular animal concerned.", opts: ["Sunderbans - Bengal tiger", "Periyar - Elephant", "Rann of kutch - Wild Ass", "Dachigam national park - Snow leopard"], ans: 3, exp: "Dachigam National Park is famous for the Hangul (Kashmir stag), not the snow leopard." },
+    { q: "87. Which of these statements is true?", opts: ["Biodiversity tends to increase as you get closer to the equator", "Tropical regions of Earth contain very few of the world's land species.", "Coral reefs tend to be less biologically diverse than temperate deciduous forests.", "Cold climates have greater amounts of biodiversity than warm climates."], ans: 0, exp: "Biodiversity is highest in the tropics and decreases towards the poles." },
+    { q: "88. Which of the following countries has the most deforestation today?", opts: ["Brazil", "United States", "Japan", "none of the above"], ans: 0, exp: "Brazil has high deforestation rates, particularly in the Amazon rainforest." },
+    { q: "89. A keystone species is one that", opts: ["has a higher likelihood of extinction than a nonkeystone species.", "exerts a strong influence on an ecosystem.", "causes other species to become extinct.", "has a weak influence on an ecosystem."], ans: 1, exp: "A keystone species exerts a strong influence on the structure and function of an ecosystem." },
+    { q: "90. What is the difference between a threatened species and an endangered species ?", opts: ["A threatened species is already extinct. An endangered species means that the population's numbers have increased greatly over the last 5 years.", "A threatened species and an endangered species are the same thing.", "A threatened species means that the population is likely to become endangered. An endangered species is already extinct.", "A threatened species means that the population is likely to become endangered. An endangered species has population numbers so low that it is likely to become extinct."], ans: 3, exp: "Threatened species are likely to become endangered, while endangered species face a very high risk of extinction in the wild." },
+    { q: "91. How much of the Earth's land surface have humans disturbed or degraded?", opts: ["60-70%", "5-10%", "30-40%", "10-20%"], ans: 0, exp: "Humans have disturbed or degraded about 60-70% of the Earth's land surface." },
+    { q: "92. An endemic species is", opts: ["one found in many different geographic areas.", "one found naturally in just one geographic area.", "one found only on islands.", "one that has been introduced to a new geographic area."], ans: 1, exp: "Endemic species are those restricted to a specific geographical area and found nowhere else." },
+    { q: "93. The lion-tailed macaques (Macaca silenus) are found only in-", opts: ["Kaziranga", "Eastern ghats and Chennai", "Western ghats including travancore and Mysore", "Himalayas"], ans: 2, exp: "The lion-tailed macaque is endemic to the Western Ghats." },
+    { q: "94. Ex situ strategies include -", opts: ["Botanical garden", "Zoos", "Seed / Pollen banks", "Gene bank and tissue culture"], ans: 3, exp: "Ex-situ conservation includes all these methods, where threatened species are taken out of their natural habitat and placed in special settings." },
+    { q: "95. Which one of the following is a pair of Endangered species?", opts: ["Garden lizard and Mexican poppy", "Rhesus monkey and sal tree", "Indian peacock and cannot glass", "Hornbill and Indian aconite"], ans: 3, exp: "Hornbill and Indian aconite are endangered species in India." },
+    { q: "96. An exotic species that is introduced to a new area, spreads rapidly and eliminates native species is called -", opts: ["an immigrant species", "an invasive species", "destructive species", "none"], ans: 1, exp: "Invasive species are non-native species that spread rapidly and cause harm to native species." },
+    { q: "97. Which of the following statements describe natural extinction?", opts: ["Extinctions abetted by human activities.", "Slow replacement of existing species", "Also known as background extinction", "A small population is most likely to be extinct."], ans: 2, exp: "Natural extinction, also known as background extinction, occurs at a slow rate without human interference." },
+    { q: "98. Forest research institute is situated at-", opts: ["Nainital", "Chennai", "Kolkata", "Dehradun"], ans: 3, exp: "The Forest Research Institute (FRI) is located in Dehradun, Uttarakhand." },
+    { q: "99. More than 25% of drugs are derived from plants. What benefits does this describe?", opts: ["Ethical value", "Aesthetic value", "Direct economic value", "Indirect economic value"], ans: 2, exp: "Deriving drugs from plants provides direct economic and medicinal benefits." },
+    { q: "100. Modern Ex situ conservation includes -", opts: ["cryopreservation techniques", "in vitro fertilisation", "plants can be propagated using tissue culture methods", "All"], ans: 3, exp: "Modern ex-situ conservation employs all these advanced techniques." },
+    { q: "101. Ex situ conservation is used for the conservation of-", opts: ["All plants", "All animals", "threatened animals and plants", "None"], ans: 2, exp: "Ex-situ conservation is primarily used for threatened and endangered species." },
+    { q: "102. Bandipur (Karnataka) National park runs a project for-", opts: ["Peacock", "Deer", "Tiger", "Elephant"], ans: 2, exp: "Bandipur National Park is a Tiger Reserve under Project Tiger." },
+    { q: "103. Nandan kanan zoo is known for the-", opts: ["Nilgiri Cows", "Hippopotamers", "White tiger", "Rhinoceros"], ans: 2, exp: "Nandankanan Zoological Park in Odisha is famous for its white tigers." },
+    { q: "104. Exploring molecular, genetic and species-level diversity for products of economic importance like medicines is called-", opts: ["Bioremediation", "Bioprospecting", "Bioprocessing", "Ecosystem services."], ans: 1, exp: "Bioprospecting is the exploration of biodiversity for commercially valuable genetic and biochemical resources." },
+    { q: "105. Which of the following statements is true concerning the relationship between humans and the rest of the living world?", opts: ["Modern technology has made it so that we no longer depend on other living organisms.", "We are dependent on artificial ecosystems, such as agroecosystems, but gain no benefit from natural ecosystems.", "We are dependent on natural ecosystems at present, but the technology exists to completely replace natural ecosystems so that we will no longer depend on them.", "Our survival is tightly linked to the survival of natural ecosystems throughout the world."], ans: 3, exp: "Human survival is fundamentally dependent on the health of natural ecosystems worldwide." },
+    { q: "106. Kashmir stag is commonly found in-", opts: ["Dachigam wild life sanctuary", "Manas wild life sanctuary", "Bharatpur wild life Sanctuary", "Annamalai wild life sanctuary"], ans: 0, exp: "The Kashmir stag (Hangul) is found in Dachigam National Park/Wildlife Sanctuary." },
+    { q: "107. In recent years the number of species driven to extinction has increased dramatically. Which of the following is not a reason for this?", opts: ["Overexploitation", "Habitat destruction", "Introduction of predators", "Natural predation"], ans: 3, exp: "Natural predation is a normal ecological process, not a cause of the recent dramatic increase in extinctions." },
+    { q: "108. When a species goes extinct in one area, it is often desirable to reintroduce the species from other populations. A major problem with this approach is that", opts: ["genetic diseases can easily be introduced when the species is reintroduced.", "populations are often adapted to local conditions and may not survive when moved to a different location.", "the community will have adapted to the extinct species' absence. Reproduction may seriously disrupt the community.", "it is difficult to get an adequate sample of individuals to properly reestablish the population."], ans: 1, exp: "Local adaptation is a major issue; species from one area may not survive or thrive in a different location." },
+    { q: "109. Which of the following is not currently a major cause of species extinctions?", opts: ["Habitat destruction", "Climate change", "Overexploitation", "Introduction of predators"], ans: 3, exp: "While introduced predators can cause extinctions, habitat destruction, climate change, and overexploitation are currently the major drivers of species extinctions." },
+    { q: "110. Of the following organisms which has the highest conservation priority?", opts: ["A plant found on North America and in Europe.", "A plant endemic to Australia", "A plant found on the Galapagos islands and in Brazil,", "A plant found world wide."], ans: 1, exp: "Endemic species (found in only one specific area) have the highest conservation priority because they are most vulnerable to extinction." },
+    { q: "111. The number of species that become extinct due to habitat destruction is greatest in _______ ecosystems with many______species.", opts: ["temperate, migratory", "tropical, endemic", "temperate, keystone", "tropical, migratory"], ans: 1, exp: "Tropical ecosystems with high endemism are most vulnerable to habitat destruction." },
+    { q: "112. Which of the following methods could be used to restore a population of animals from a few male and female individuals.", opts: ["Cross breeding", "Interbreeding", "Captive breeding", "Selective breeding"], ans: 2, exp: "Captive breeding is a method used in ex-situ conservation to restore populations from a small number of individuals." },
+    { q: "113. Red data book deals with-", opts: ["Endemic plants", "Plants sharing photoperiodism", "Plants on the verge of extinction", "None"], ans: 2, exp: "The Red Data Book contains data on species that are on the verge of extinction." },
+    { q: "114. Amazon rain forests are considered as lungs of the planet as they contribute ______ of the total oxygen in the earth's atmosphere.", opts: ["10%", "15%", "20%", "30%"], ans: 2, exp: "The Amazon rainforest is often called the 'lungs of the planet' and contributes about 20% of the Earth's oxygen." },
+    { q: "115. How many percent of the earth's land area is covered by all the biodiversity hotspots.", opts: ["More than two percent", "Less than two percent", "More than five percent", "Less than ten percent"], ans: 1, exp: "Biodiversity hotspots cover less than two percent of the Earth's land area." },
+    { q: "116. There are genetic variation shown by medicinal plant Rauwolfia vomitoria. This plant growing in which one of the following regions", opts: ["Deccan Peninsula", "Gangatic plains", "Himalayan ranges", "North-East"], ans: 3, exp: "Rauwolfia vomitoria is found in the North-East region of India." },
+    { q: "117. In the formula logs = Log C + Z log A, Ecologists have discovered that the value of z lies in the range of", opts: ["0.1 to 0.5", "0.5 to 1", "0.1 to 0.2", "1 to 5"], ans: 0, exp: "The value of Z (slope) generally ranges from 0.1 to 0.2 regardless of the taxonomic group or the region." },
+    { q: "118. If the Bengal tiger becomes extinct-", opts: ["Hyaenas and Wolves will become scarce", "The wild Oveas will be safe for man and domestic animals", "Its gene pool will be lost forever", "The population of beautiful animals like deers will be stabilized."], ans: 2, exp: "Extinction means the permanent loss of the species' gene pool." },
+    { q: "119. What is the primary reason for targeting 'biodiversity hotspots' for conservation?", opts: ["They are the only areas where species are seriously threatened in the world", "The number of species threatened far exceeds our capacity to protect them and we can therefore only concentrate on areas of highest species diversity", "They are areas where people do not live and conservation would therefore not be effecting the economic development of the area", "To protect all areas of threatened species would not allow for new species to develop"], ans: 1, exp: "With limited resources, focusing on hotspots allows us to protect the maximum number of species." },
+    { q: "120. 1500 endemic species of dicotyledons are found in-", opts: ["Eastern Himalayas", "Eastern Ghats", "Western Himalayas", "Western Ghats"], ans: 3, exp: "The Western Ghats are home to numerous endemic plant species." },
+    { q: "121. Approximately what proportion of the global land surface is used for agriculture and grazing by the world's 6 billion people?", opts: ["One eightieth", "One tenth", "Three quarters", "One third"], ans: 3, exp: "About one-third of the global land surface is used for agriculture and grazing." },
+    { q: "122. Which of the following represent maximum number of species among global biodiversity?", opts: ["Lichens", "Fungi", "Mosses and Ferns", "Algae"], ans: 1, exp: "Fungi represent a very large number of species among global biodiversity." },
+    { q: "123. Total number of identified biodiversity hot spots in the world is", opts: ["25", "24", "40", "34"], ans: 3, exp: "There are 34 biodiversity hotspots in the world." },
+    { q: "124. Sacred groves are specially useful in :", opts: ["generating environmental awareness", "preventing soil erosion", "year-round flow of water in rivers", "conserving rare and threatened species"], ans: 3, exp: "Sacred groves are patches of forest protected by local communities and act as reservoirs of rare and threatened species." },
+    { q: "125. Which hypothesis suggests ecosystems are like aeroplane wings where flight (ecosystem functioning) may or may not be compromised depending upon which species are lost-", opts: ["rivet popper hypothesis", "Gaia hypothesis", "Cause - exclusion hypothesis", "Oudum's hypothesis"], ans: 0, exp: "The Rivet Popper Hypothesis compares an ecosystem to an airplane and species to rivets; losing a few might not cause a crash, but losing a critical one will." },
+    { q: "126. Which of the following is incorrectly matched?", opts: ["alpha diversity - number of species in a given habitat", "genetic diversity - variation of genes within species", "beta-diversity - diversity of habitat in the whole region", "species diversity - product of species richness & evenness"], ans: 2, exp: "Beta-diversity refers to the diversity between habitats, not the whole region." },
+    { q: "127. Which of the following is NOT a benefit that humans receive from a biologically diverse world?", opts: ["source of medicine", "source of water", "source of economic gains", "source of food"], ans: 1, exp: "While biodiversity is linked to water cycles, 'source of water' is not a direct benefit in the way medicine, food, and economic gains are." },
+    { q: "128. Which of the following is not a part of the 'Evil Quartet'?", opts: ["Habitat loss and fragmentation", "Over-exploitation", "Alien species invasion", "Pollution"], ans: 3, exp: "The Evil Quartet includes habitat loss, over-exploitation, alien species invasion, and co-extinctions. Pollution is a threat but not part of the Evil Quartet." },
+    { q: "129. Which of the following is true about the 'Rivet Popper Hypothesis'?", opts: ["It was proposed by Paul Ehrlich.", "It compares an ecosystem to an airplane.", "It explains the importance of each species in an ecosystem.", "All of the above"], ans: 3, exp: "The Rivet Popper Hypothesis was proposed by Paul Ehrlich, compares ecosystems to airplanes, and emphasizes the role of each species." },
+    { q: "130. The concept of 'Biodiversity Hotspots' was given by-", opts: ["Norman Myers", "Paul Ehrlich", "Robert May", "Charles Darwin"], ans: 0, exp: "The concept of biodiversity hotspots was given by Norman Myers in 1988." },
+    { q: "131. Which of the following is an example of ex-situ conservation?", opts: ["National Park", "Wildlife Sanctuary", "Biosphere Reserve", "Cryopreservation"], ans: 3, exp: "Cryopreservation is an ex-situ conservation method where genetic material is preserved at very low temperatures." }
+  ];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 32; // ⚠️ 12th Class Chapter 13 is Chapter 32 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
