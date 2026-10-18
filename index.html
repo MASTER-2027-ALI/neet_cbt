@@ -11,7 +11,7 @@
   <div class="login-box">
     <div class="logo">🧬</div>
     <h1>NEET 2027 CBT</h1>
-    <p class="subtitle">Class 11 Biology - Complete Test Series</p>
+    <p class="subtitle">Class 11 & 12 Biology - Complete Test Series</p>
     <div class="input-group">
       <label>Enter Your Passkey</label>
       <input type="text" id="passkeyInput" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters">
@@ -23,15 +23,19 @@
 </div>
 
 <script src="keys.js"></script>
-<script>
-function checkPasskey() {
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+window.checkPasskey = function() {
   const input = document.getElementById('passkeyInput').value.trim().toUpperCase();
   const errorMsg = document.getElementById('errorMsg');
   const loginBtn = document.getElementById('loginBtn');
-
-  console.log('Login attempt:', input);
-  console.log('MASTER_KEY:', typeof MASTER_KEY, MASTER_KEY);
-  console.log('FRIEND_KEYS:', typeof FRIEND_KEYS, FRIEND_KEYS);
 
   if (!input) {
     errorMsg.textContent = '⚠️ Please enter a passkey';
@@ -43,12 +47,10 @@ function checkPasskey() {
 
   if (input === MASTER_KEY) {
     user = { name: 'Admin', role: 'master' };
-    console.log('Master key matched');
   } else {
     for (const key in FRIEND_KEYS) {
       if (FRIEND_KEYS[key].key === input) {
         user = { name: FRIEND_KEYS[key].name, role: 'friend' };
-        console.log('Friend key matched:', FRIEND_KEYS[key].name);
         break;
       }
     }
@@ -57,32 +59,77 @@ function checkPasskey() {
   if (user) {
     loginBtn.textContent = '⏳ Logging in...';
     loginBtn.disabled = true;
-    
-    // Save user data
-    localStorage.setItem('cbt_user', JSON.stringify({
-      name: user.name,
-      role: user.role,
-      uid: 'user_' + Date.now()
-    }));
-    localStorage.setItem('cbt_login_time', new Date().toISOString());
-    
-    console.log('User saved, redirecting...');
-    
-    // Redirect
-    setTimeout(function() {
-      window.location.href = 'dashboard.html';
-    }, 500);
+    loginWithFirebase(user);
   } else {
     errorMsg.textContent = '❌ Invalid Passkey. Please try again.';
     errorMsg.style.display = 'block';
     document.getElementById('passkeyInput').value = '';
     document.getElementById('passkeyInput').focus();
   }
+};
+
+async function loginWithFirebase(user) {
+  try {
+    const userCredential = await signInAnonymously(auth);
+    const uid = userCredential.user.uid;
+    const mySessionId = Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+    
+    // Check previous session
+    const sessionRef = doc(db, "sessions", uid);
+    const docSnap = await getDoc(sessionRef);
+    let askConfirmation = false;
+    
+    if (docSnap.exists()) {
+      const remoteSessionId = docSnap.data().sessionId;
+      const lastLoginTime = docSnap.data().loginTime;
+      const timeDiff = new Date() - new Date(lastLoginTime);
+      
+      // If another session is active (less than 10 seconds old)
+      if (remoteSessionId !== mySessionId && timeDiff < 10000) { 
+        askConfirmation = true;
+      }
+    }
+
+    if (askConfirmation) {
+      const confirmLogout = confirm("⚠️ आपकी इस पासकी से पहले से एक डिवाइस पर लॉगिन है।\n\nक्या आप उस पिछले डिवाइस को लॉगआउट करना चाहते हैं?\n\n(अगर आप 'Cancel' दबाते हैं, तो आप लॉगिन नहीं कर पाएंगे)");
+      
+      if (!confirmLogout) {
+        alert("लॉगिन रद्द कर दिया गया है।");
+        window.location.href = 'index.html'; 
+        return;
+      }
+    }
+
+    // Save new session
+    await setDoc(sessionRef, {
+      sessionId: mySessionId,
+      userName: user.name,
+      userRole: user.role,
+      loginTime: new Date().toISOString()
+    });
+
+    localStorage.setItem('cbt_user', JSON.stringify({
+      name: user.name,
+      role: user.role,
+      uid: uid,
+      sessionId: mySessionId
+    }));
+    localStorage.setItem('cbt_login_time', new Date().toISOString());
+    
+    window.location.href = 'dashboard.html';
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    document.getElementById('errorMsg').textContent = '❌ Login failed. Internet check karein.';
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('loginBtn').textContent = '🔓 Unlock Now';
+    document.getElementById('loginBtn').disabled = false;
+  }
 }
 
 // Enter key support
 document.getElementById('passkeyInput').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') checkPasskey();
+  if (e.key === 'Enter') window.checkPasskey();
 });
 
 // Check if already logged in
