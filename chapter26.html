@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 26: Human Health and Disease - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 26: Human Health and Disease</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. An autoimmune disease is", opts: ["myasthenia gravis", "haemophilia", "AIDS", "none of these."], ans: 0, exp: "Myasthenia gravis is an autoimmune disease." },
+    { q: "2. Triple antigen vaccine is not used for", opts: ["diphtheria", "pertussis", "typhoid", "tetanus."], ans: 2, exp: "Triple antigen (DPT) is for diphtheria, pertussis, and tetanus. Not typhoid." },
+    { q: "3. Vaccination of malaria is not possible because", opts: ["they produce antibodies and antitoxins", "they do not produce antibodies and antitoxins", "antibodies resistant to vaccines are produced", "none of the above."], ans: 1, exp: "The malaria parasite does not produce antibodies and antitoxins in a way that a vaccine can work." },
+    { q: "4. In malaria, which of the following is released in blood to cause severe chill", opts: ["hematin", "haemozoin", "haemoglobin", "haemolysin"], ans: 1, exp: "Haemozoin is released, causing chills and fever." },
+    { q: "5. Disease which occurs due to malfunctioning of organs is", opts: ["deficiency disease", "degenerative disease", "allergic disease", "hereditary disease."], ans: 1, exp: "Degenerative diseases are due to malfunctioning of organs." },
+    { q: "6. One of the inflammatory reactions induced by histamines is", opts: ["vasoconstriction of blood vessels", "vasodilation of peripheral blood vessels", "increased vascular permeability", "accelerated blood clotting."], ans: 1, exp: "Histamine causes vasodilation." },
+    { q: "7. Which of the following immunoglobulin(s) is present in milk?", opts: ["IgA", "IgG", "IgM", "IgE."], ans: 0, exp: "IgA is present in milk (colostrum)." },
+    { q: "8. Most bacteria ingested with food are killed by", opts: ["cilia and mucus on the lining of the tract", "stomach acids", "the intrinsic factor in the stomach", "bile in the small intestine."], ans: 1, exp: "Stomach acid (HCl) kills most bacteria." },
+    { q: "9. Which of the following blood groups enables a person to give blood to any person?", opts: ["A+", "B-", "AB+", "O-"], ans: 3, exp: "O negative is the universal donor." },
+    { q: "10. The letter T in T-lymphocyte refers to", opts: ["thalamus", "tonsil", "thymus", "thyroid"], ans: 2, exp: "T stands for thymus." },
+    { q: "11. Lymphocytes that cause the formation of holes in plasma membranes are", opts: ["B cells", "killer (cytotoxic) T cells", "suppressor T cells", "helper T cells."], ans: 1, exp: "Cytotoxic T cells cause holes in target cell membranes." },
+    { q: "12. Which of the following is a pair of viral diseases?", opts: ["common cold, AIDS", "dysentery, common cold", "typhoid, tuberculosis", "ringworm, AIDS"], ans: 0, exp: "Common cold and AIDS are both viral." },
+    { q: "13. Alcohol is mostly metabolised in", opts: ["liver", "kidneys", "all body cells", "connective tissue."], ans: 0, exp: "Alcohol is metabolized mostly in the liver." },
+    { q: "14. Continued exposure to vinylchloride (VC) may cause cancer to the", opts: ["vagina", "skin", "liver", "prostate gland."], ans: 2, exp: "Vinyl chloride causes liver cancer." },
+    { q: "15. Artificial immunity can be acquired from a", opts: ["serious illness", "vaccination", "repeated exposure to the same microbe", "treatment with penicillin."], ans: 1, exp: "Vaccination provides artificial immunity." },
+    { q: "16. Excessive consumption of alcohol mainly leads to", opts: ["state of hallucination", "loss of memory", "suppression of brain function", "cirrhosis of liver."], ans: 3, exp: "Cirrhosis of the liver is a major effect." },
+    { q: "17. The term immunity refers to", opts: ["the combined actions of all white blood cells", "events that occur within the lymphatic system", "general defenses against all microorganisms", "specific defenses against microbes encountered during an earlier exposure."], ans: 3, exp: "Immunity is specific defense against previously encountered microbes." },
+    { q: "18. Fatty liver syndrome is due to", opts: ["cigarette smoke", "alcoholic drinks", "opiate narcotics", "psychedelic drugs."], ans: 1, exp: "Alcoholic drinks cause fatty liver syndrome." },
+    { q: "19. AIDS disease was first reported in", opts: ["Russia", "USA", "Germany", "France"], ans: 1, exp: "AIDS was first reported in the USA in 1981." },
+    { q: "20. Find the incorrect pair out", opts: ["Culex — malaria", "Xenopsylla — plague", "Aedes — yellow fever", "Phlebotomus — kala-azar."], ans: 0, exp: "Malaria is spread by Anopheles, not Culex." },
+    { q: "21. Sporogony of malarial parasite occurs in", opts: ["stomach wall of mosquito", "salivary glands of mosquito", "RBCs of man", "liver of man"], ans: 0, exp: "Sporogony occurs in the stomach wall of the mosquito." },
+    { q: "22. Which of the following organs is not involved in the generation of immune response?", opts: ["brain", "lymph nodes", "spleen", "thymus."], ans: 0, exp: "The brain is not a primary lymphoid organ." },
+    { q: "23. Which cells of immune system causes pore formation at the surface of the plasma membrane?", opts: ["helper cell", "killer T-cell", "suppressor T-cell", "B-cell"], ans: 1, exp: "Killer T-cells (cytotoxic) cause pore formation." },
+    { q: "25. If a person shows production of interferons in his body, the chances are that he has got an infection of", opts: ["typhoid", "influenza", "tetanus", "malaria."], ans: 1, exp: "Interferons are produced in viral infections like influenza." },
+    { q: "27. An allergic reaction is initiated by antibodies of the", opts: ["IgG group", "IgM group", "IgA group", "IgE group."], ans: 3, exp: "IgE antibodies initiate allergic reactions." },
+    { q: "28. Perspiration, saliva and tears contains an enzyme, lysozyme, that kills", opts: ["virus- infected cells", "protozoa", "bacteria", "viruses."], ans: 2, exp: "Lysozyme kills bacteria." },
+    { q: "29. The tobacco products cause", opts: ["aneurysms", "polyarteritis nodosa", "thromboangiitis obliterans", "Wernicke's syndrome."], ans: 2, exp: "Tobacco causes thromboangiitis obliterans (Buerger's disease)." },
+    { q: "30. Which one of the following statements is correct?", opts: ["benign tumours show the property of metastasis", "heroin accelerates body functions", "malignant tumours may exhibit metastasis", "patients who have undergone surgery are given cannabinoids to relieve pain."], ans: 2, exp: "Malignant tumours exhibit metastasis." },
+    { q: "31. Ganja and LSD are classified in", opts: ["stimulants", "narcotics", "depressants", "hallucinogens"], ans: 3, exp: "Ganja and LSD are hallucinogens." },
+    { q: "32. The regions of an antibody that make it distinct from all other kinds of antibodies are its", opts: ["variable (V) regions", "constant (C) regions", "mutated (M) regions", "bifurcated (B) regions."], ans: 0, exp: "Variable regions make them distinct." },
+    { q: "33. Which of the following combinations causes damage to gastric mucosa?", opts: ["alcohol & vum", "alcohol & barbiturate", "alcohol & aspirin", "alcohol & hashish"], ans: 2, exp: "Alcohol and aspirin together damage the gastric mucosa." },
+    { q: "34. Persons with severe combined immunodeficiency has no", opts: ["interferons", "macrophages", "T or B cells", "functioning lymph nodes."], ans: 2, exp: "SCID patients lack functional T and B cells." },
+    { q: "35. The major phagocytic cells are", opts: ["lymphocytes", "mast cells", "plasma cells", "macrophages"], ans: 3, exp: "Macrophages are major phagocytic cells." },
+    { q: "36. Lysozyme kills by destroying", opts: ["cell walls.", "mitochondrial enzymes", "lipid bilayers", "the machinery for DNA replication"], ans: 0, exp: "Lysozyme destroys bacterial cell walls." },
+    { q: "37. A person likely to develop tetanus is immunised by administering", opts: ["preformed antibodies", "wide spectrum antibiotics", "weakened germs", "dead germs"], ans: 0, exp: "Preformed antibodies (antitoxin) are given for immediate protection." },
+    { q: "38. Use of anti-histamines and steroids give a quick relief from", opts: ["nausea", "cough", "headache", "allergy"], ans: 3, exp: "They give relief from allergy." },
+    { q: "39. Blood vessels near a wound dilate and become more permeable in response to which material released from damaged cells?", opts: ["pyrogens", "antibodies", "histamine", "interferons."], ans: 2, exp: "Histamine causes vasodilation." },
+    { q: "40. Allergic condition caused by pollen grains of certain flowers causing inflammation of the nose is called", opts: ["laryngitis", "rhinitis", "pharyngitis", "bronchitis."], ans: 1, exp: "Rhinitis is inflammation of the nose." },
+    { q: "41. Messenger molecules, released by virus-infected cells, that bind to the surfaces of healthy cells and stimulate them to synthesize proteins that prevent viral reproduction are called", opts: ["interferons", "antibiotics", "cytotoxins", "lymphokines."], ans: 0, exp: "Interferons prevent viral reproduction." },
+    { q: "42. Untreated victims of severe combined immunodeficiency usually die from", opts: ["infections that in other people are minor", "anaphylactic shock", "congested lungs", "unusually high fever."], ans: 0, exp: "They die from minor infections." },
+    { q: "43. Hypotensive tranquilizer drug reserpine is obtained from roots of", opts: ["Ferula asafoetida", "Rauwolfia serpentina", "Papaver somniferum", "Curcuma longa"], ans: 1, exp: "Reserpine is from Rauwolfia serpentina." },
+    { q: "44. Naloxone/nalorphine is used as antidote intravenously for overdose of", opts: ["heroin", "alcohol", "librium", "morphine."], ans: 3, exp: "Naloxone is an antidote for morphine overdose." },
+    { q: "45. Synthetic, drugs structurally related to adrenaline are", opts: ["amphetamines", "barbiturates", "hallucinogens", "analgesics"], ans: 0, exp: "Amphetamines are structurally related to adrenaline." },
+    { q: "47. Heroin is -", opts: ["morphine", "diacetylmorphine", "stimulant", "hallucinogen"], ans: 1, exp: "Heroin is diacetylmorphine." },
+    { q: "48. Which one of the following is the correct statement regarding the particular psychotropic drug specified?", opts: ["morphine leads to delusions and disturbed emotions", "barbiturates cause relaxation and temporary euphoria", "hashish alters thought, feelings, perceptions and hallucinations", "opium stimulates nervous system and causes hallucinations."], ans: 2, exp: "Hashish alters thoughts and perceptions." },
+    { q: "49. Charas or hashish is obtained from", opts: ["Leaves of Cannabis", "Resinous secretion of flowering tops of female Cannabis", "Dried leaves of female Cannabis", "Resinous secretion from bark of male plants of Cannabis."], ans: 1, exp: "Hashish is from the resin of female Cannabis." },
+    { q: "50. Amphetamines are central nervous-system stimulants. Barbiturates are", opts: ["CNS stimulants", "no effect on CNS", "hallucinogenic", "CNS depressant"], ans: 3, exp: "Barbiturates are CNS depressants." },
+    { q: "51. Methadone is used for", opts: ["narcotic", "relieving chronic pain", "deadiction of morphine and heroin", "all of the above."], ans: 3, exp: "Methadone is used for all these." },
+    { q: "52. Use of Cannabis products results in", opts: ["alteration in perception, thoughts and feelings", "depressed brain activity and feeling of calmness", "suppressed brain function and relief in pain", "stimulation of nervous system, increased alertness and activity."], ans: 0, exp: "Alteration in perception and thoughts." },
+    { q: "53. The effect of opiates is", opts: ["numbing of pain causing drowsiness, lethargy and feeling of well being", "reduction of anxiety and tension", "lowering of blood pressure and breathing rate", "all of the above."], ans: 3, exp: "All of the above effects are of opiates." },
+    { q: "54. Heroin is also known by the name", opts: ["coke", "crack", "smack", "hemp."], ans: 2, exp: "Heroin is also called smack." },
+    { q: "55. Match the Column I with Column II and select the correct Column I: (A) LSD (B) Cocaine (C) Hashish Column II: (i) Euphorian effect (ii) Cannabis (iii) Ergot alkaloid", opts: ["A-(iii), B-(i), C-(ii)", "A-(i), B-(ii), C-(iii)", "A-(iii), B-(ii), C-(i)", "A-(i), B-(iii), C-(ii)"], ans: 0, exp: "LSD (ergot alkaloid), Cocaine (euphoria), Hashish (Cannabis)." },
+    { q: "56. Sedatives differ from tranquillizers in", opts: ["sedatives induce sleep while tranquillizers do not do so", "sedatives depress brain activity while tranquillizers activate brain functioning", "sedatives are strong tranquillizers", "sedatives cause addiction while tranquillizers do not produce such an effect."], ans: 0, exp: "Sedatives induce sleep; tranquilizers do not." },
+    { q: "57. T-cells have a life of", opts: ["4-5 days", "4-5 weeks", "4-5 months", "4-5 years."], ans: 3, exp: "T-cells live for years." },
+    { q: "58. Caffeine can be obtained from", opts: ["Thea sinensis", "Coffea arabica", "Theobroma cacao", "all of these."], ans: 3, exp: "Caffeine is found in all these plants." },
+    { q: "59. A person is drug addict because of", opts: ["irritable behaviour, uncoordinated actions and emotional detachment", "habit of taking drug", "irresistible urge to take the drug and increase the dose", "none of the above."], ans: 2, exp: "Irresistible urge to take the drug." },
+    { q: "60. Which one of the following depresses brain activity and produces feelings of calmness and relaxation?", opts: ["morphine", "Valium", "amphetamines", "hashish."], ans: 1, exp: "Valium (diazepam) is a depressant." },
+    { q: "61. Which of the following is a hallucinogen?", opts: ["bhang", "charas", "marijuana", "all of these"], ans: 3, exp: "All are hallucinogens." },
+    { q: "62. An autoimmune disease is", opts: ["rheumatoid arthritis", "multiple sclerosis", "insulin dependent diabetes", "all of these."], ans: 3, exp: "All are autoimmune diseases." },
+    { q: "63. Human immunodeficiency virus (HIV) is comprised of a protein coat and genetic material, which is", opts: ["single stranded DNA", "single stranded RNA", "double stranded RNA", "double stranded DNA"], ans: 1, exp: "HIV has single-stranded RNA." },
+    { q: "64. Hangover is due to accumulation of", opts: ["ethanol in liver", "ethanol in lungs", "acetaldehyde in body", "formation of formaldehyde from acetaldehyde."], ans: 2, exp: "Acetaldehyde accumulation causes hangover." },
+    { q: "65. Which is an autoimmune disease?", opts: ["cancer", "asthma", "erythroblastosis fetalis", "rheumatoid arthritis"], ans: 3, exp: "Rheumatoid arthritis is autoimmune." },
+    { q: "66. Antigen binding site in an antibody is found between", opts: ["two light chains", "two heavy chains", "one heavy and one light chain", "either between two light chains or between one heavy and one light chain depending upon the nature of antigen."], ans: 2, exp: "It is between one heavy and one light chain." },
+    { q: "67. Which one of the following statements is correct with regard to the principle of safe blood transfusion?", opts: ["the donor's red blood corpuscles should not contain antibodies against the recipient's serum", "the recipient's serum should not contain antigens against the donor's antibodies", "the recipient's serum should not contain the antibodies against the red blood corpuscles of the donor", "the recipient's red blood corpuscles should not contain antibodies against the donor's antigen."], ans: 2, exp: "Recipient's serum should not have antibodies against donor RBCs." },
+    { q: "68. Damage to thymus in a child may lead to", opts: ["a reduction in haemoglobin content of blood", "a reduction in stem cell production", "loss of antibody mediated immunity", "loss of cell mediated immunity."], ans: 3, exp: "Thymus is for cell-mediated immunity." },
+    { q: "69. Colostrum provides the infant with", opts: ["auto immunity", "passive immunity", "active immunity", "innate immunity"], ans: 1, exp: "Colostrum provides passive immunity." },
+    { q: "70. The virus that causes acquired immune deficiency syndrome (AIDS) parasitizes", opts: ["B cells", "cytotoxic T cells", "helper T cells", "All"], ans: 2, exp: "HIV parasitizes helper T cells." },
+    { q: "71. A person may die after getting a bee sting in his body due to", opts: ["toxicity", "coagulation of blood", "anaphylactic shock", "toxicity and coagulation of blood."], ans: 2, exp: "Anaphylactic shock causes death." },
+    { q: "72. The humoral immune system defends mostly against bacteria and viruses in the", opts: ["body fluids", "digestive tract", "internal organs", "regions beneath the skin."], ans: 0, exp: "Humoral immunity is in body fluids." },
+    { q: "73. The treatment of snake-bite by antivenin is an example of", opts: ["artificially acquired active immunity", "artificially acquired passive immunity", "naturally acquired passive immunity", "specific natural immunity."], ans: 1, exp: "Antivenin is artificially acquired passive immunity." },
+    { q: "74. An immune disease in which the body destroys the ill-functioning thyroid gland itself is", opts: ["Simmond's disease", "myxoedema", "Hashimoto's disease", "cretinism"], ans: 2, exp: "Hashimoto's disease is autoimmune thyroiditis." },
+    { q: "75. The term 'active immunity' means", opts: ["increasing rate of heart beat", "increasing quantity of blood", "resistance developed after disease", "resistance developed before disease."], ans: 2, exp: "Active immunity develops after disease or vaccination." },
+    { q: "76. The immunoglobulin present in mother's milk is", opts: ["IgD", "IgE", "IgM", "IgA"], ans: 3, exp: "IgA is in mother's milk." },
+    { q: "77. Monoclonal antibodies are produced from which type of cells?", opts: ["hybridoma", "multinucleate", "prokaryote", "uninucleate"], ans: 0, exp: "Hybridoma cells produce monoclonal antibodies." },
+    { q: "78. Lymphocytes that inhibit the development and proliferation of T and B cell are", opts: ["suppressor B cells", "suppressor T cells", "macrophages", "neutrophils"], ans: 1, exp: "Suppressor T cells inhibit T and B cells." },
+    { q: "79. White blood cell that are non-specific killers of microbes are", opts: ["B cells", "phagocytes", "killer T cells", "helper T cells."], ans: 1, exp: "Phagocytes are non-specific killers." },
+    { q: "80. Peyer's patches produce", opts: ["mucous", "lymphocytes", "trypsin", "enterokinase"], ans: 1, exp: "Peyer's patches produce lymphocytes." },
+    { q: "81. Recognition and digestion by phagocytosis due to coated surface of antibodies is", opts: ["opsonisation", "immunization", "T-cell immunization", "B-cell immunization."], ans: 0, exp: "Opsonisation." },
+    { q: "82. The formation of antibodies within our body is called", opts: ["passive immunity", "active immunity", "innate immunity", "acquired immunity"], ans: 1, exp: "Active immunity." },
+    { q: "83. Kupffer cells are present in", opts: ["pancreas", "thyroid gland", "liver", "small intestine"], ans: 2, exp: "Kupffer cells are in the liver." },
+    { q: "84. Which of the following is observed as No Tobacco Day?", opts: ["1st May", "31st May", "1st August", "31st August"], ans: 1, exp: "31st May is World No Tobacco Day." },
+    { q: "85. Which one of the following provides non-specific pathogen defense for the body?", opts: ["T-cells", "B-cells", "phagocytes", "stem cells"], ans: 2, exp: "Phagocytes provide non-specific defense." },
+    { q: "86. The common means of transmission of AIDS is", opts: ["sexual intercourse", "blood transfusion", "placental transfer", "all of these."], ans: 3, exp: "All are means of transmission." },
+    { q: "87. Which of these is not a cell of the macrophage system?", opts: ["Kupffer cell", "osteoclasts", "Langerhans cells", "astrocyte"], ans: 3, exp: "Astrocytes are not macrophages." },
+    { q: "88. Which of the following are most abundant types of antibody?", opts: ["IgA", "IgG", "IgE", "IgM"], ans: 1, exp: "IgG is most abundant." },
+    { q: "89. A certain patient is suspected to be suffering from Acquired Immuno Deficiency Syndrome. Which diagnostic technique will you reconfirm for its detection?", opts: ["WIDAL", "ELISA", "MRI", "Ultra sound"], ans: 1, exp: "ELISA is used for AIDS detection." },
+    { q: "90. Smoking is harmful as it produces polycyclic aromatic hydrocarbons that cause", opts: ["reduction in oxygen transport", "increase in blood pressure", "cancer", "retardation of foetus."], ans: 2, exp: "PAHs cause cancer." },
+    { q: "91. Where will you look for the sporozoites of the malarial parasite?", opts: ["Salivary glands of freshly moulted female Anopheles mosquito", "Saliva of infected female Anopheles mosquito", "Red blood corpuscles of humans suffering from malaria", "Spleen of infected humans"], ans: 1, exp: "Sporozoites are in the saliva of the infected mosquito." },
+    { q: "92. Tobacco addiction causes-", opts: ["gastric and duodenal ulcers", "anthrax", "skin eruptions", "none of these"], ans: 0, exp: "Tobacco causes ulcers." },
+    { q: "94. Which one of the following acts as a physiological barrier to the entry of microorganisms in human body?", opts: ["Skin", "Epithelium of Urogenital tract", "Tears", "Monocytes"], ans: 2, exp: "Tears (lysozyme) act as a physiological barrier." },
+    { q: "95. Alcoholic beverages contain", opts: ["methyl alcohol", "ethyl alcohol", "propyl alcohol", "a mixture of all the above."], ans: 1, exp: "They contain ethyl alcohol." },
+    { q: "96. Tobacco is obtained from", opts: ["Diospyros melanoxylon", "Nicotiana tabacum", "Nicotiana rustica", "both (b) and (c)"], ans: 3, exp: "Both Nicotiana species." },
+    { q: "97. Cancer cells are more easily damaged by radiation than normal cells because they are", opts: ["Starved to nutrition", "Undergo rapid division", "Different in structure", "Non-dividing"], ans: 1, exp: "They divide rapidly." },
+    { q: "98. Hybridomas are result of the fusion of", opts: ["normal antibody producing cell with myeloma", "abnormal antibody producing cell with myeloma", "male reproductive cell with myeloma", "female reproductive cell with myeloma"], ans: 0, exp: "Normal antibody-producing cell with myeloma." },
+    { q: "99. Withdrawal of tobacco produces", opts: ["restlessness, depression and anxiety", "increased appetite but disturbed bowels", "insomnia and impaired concentration", "all of the above."], ans: 3, exp: "All are withdrawal symptoms." },
+    { q: "100. Alteration of which genes lead to cancer ?", opts: ["Cell proliferation gene (proto oncogenes)", "Tumour suppressor gene", "Mutant alder", "Any of these"], ans: 3, exp: "Any of these can lead to cancer." },
+    { q: "101. An example of innate immunity is", opts: ["PMNL - neutrophils", "T-lymphocytes", "B-lymphocytes", "TH cells"], ans: 0, exp: "Neutrophils provide innate immunity." },
+    { q: "102. A 'drunk person' has earliest effect on which part of the brain?", opts: ["cerebrum", "cerebellum", "pons", "medulla oblongata"], ans: 0, exp: "Cerebrum is affected first." },
+    { q: "103. Which of the following diseases is due to an allergic reaction?", opts: ["goitre", "skin cancer", "hay fever", "enteric fever."], ans: 2, exp: "Hay fever is an allergic reaction." },
+    { q: "104. Alcohol is", opts: ["hallucinogen", "tranquilliser", "stimulant", "depressant"], ans: 3, exp: "Alcohol is a depressant." },
+    { q: "105. Hela cells used in cell biology are", opts: ["Cancerous cell grown in laboratory", "Cervical cancer cell derivatives", "Both of these", "None of these"], ans: 2, exp: "Both of these." },
+    { q: "106. Out of the following diseases which are caused due to bacterial infection?", opts: ["A. Typhoid B. Elephantiasis C. Cholera D. Tuberculosis", "A, B, C, D", "A, C, D", "B, C", "A, B"], ans: 2, exp: "Typhoid, cholera, tuberculosis are bacterial." },
+    { q: "107. Rickets occurs in the absence of -", opts: ["protein", "vitamin", "minerals", "hormone"], ans: 1, exp: "Vitamin D deficiency causes rickets." },
+    { q: "108. Personal hygiene means A. to keep the body clean B. to keep the surroundings neat and clean C. regular exercise D. protein-rich diet", opts: ["A, B", "B, C", "A, C, D", "A, B, C, D"], ans: 3, exp: "All are parts of personal hygiene." },
+    { q: "109. Hormone disease is -", opts: ["colour blindness", "allergy disease", "cretinism", "haemophilia"], ans: 2, exp: "Cretinism is a hormonal disease." },
+    { q: "110. Drugs are obtained from -", opts: ["mines", "mango seeds", "flowering plants", "non- flowering plants"], ans: 2, exp: "Many drugs are from flowering plants." },
+    { q: "111. Bacteria causes -", opts: ["tetanus", "AIDS", "Kala-azar", "filaria"], ans: 0, exp: "Tetanus is bacterial." },
+    { q: "112. Cigarettes smoke contains -", opts: ["carbon dioxide", "carbon", "hydrogen oxide", "hydrogen monoxide"], ans: 0, exp: "Cigarette smoke contains carbon dioxide." },
+    { q: "113. Pathogen of malaria is -", opts: ["Aedes", "Plasmodium", "Wuchereria", "Anopheles"], ans: 1, exp: "Plasmodium is the pathogen." },
+    { q: "114. Name the factors which do not allow them to enter the body -", opts: ["physiological barrier", "anatomical barrier", "inflammatory barrier", "all these"], ans: 3, exp: "All these barriers." },
+    { q: "115. Mental health requires -", opts: ["rest and sleep", "walking and running", "addiction and sleep", "none of these"], ans: 0, exp: "Rest and sleep." },
+    { q: "116. Diagnosis of sexually-transmitted disease is done by -", opts: ["DNA hybridisation", "PCR", "Elisa test", "all these"], ans: 3, exp: "All these can be used." },
+    { q: "117. What are needed for good health?", opts: ["Balanced diet", "Healthy air", "Healthy dwelling house", "All of these"], ans: 3, exp: "All are needed." },
+    { q: "118. A. Antigen is usually a foreign body which causes the formation of antibody. B. Antibody is a protein molecule. C. Antigen can be either protein or polysaccharide molecule. D. Antibody joins an antigen to destroy the latter.", opts: ["Only A and B statements are correct.", "Only A and C statements are correct,", "All statements are incorrect.", "All statements are correct."], ans: 3, exp: "All are correct." },
+    { q: "119. Dengu fever is caused by -", opts: ["bacteria", "virus", "protozoa", "worms"], ans: 1, exp: "Dengue is viral." },
+    { q: "120. From erythroxylon plant is obtained -", opts: ["hashish", "cocaine", "opium", "tobacco"], ans: 1, exp: "Cocaine is from Erythroxylon." },
+    { q: "121. Tobacco causes -", opts: ["mouth cancer", "hypertension", "heart diseases", "all of these"], ans: 3, exp: "All of these." },
+    { q: "122. Psychotropic drugs are -", opts: ["Psilocybin", "LSD", "Cocaine, Hashish, Charas, Marijuana", "all of these"], ans: 3, exp: "All are psychotropic." },
+    { q: "123. Elephantiasis is caused by -", opts: ["bacteria", "virus", "fungi", "worm"], ans: 3, exp: "Wuchereria bancrofti (worm)." },
+    { q: "124. Wine causes-", opts: ["increased blood pressure", "cardiac diseases", "liver damage", "all of these"], ans: 3, exp: "All of these." },
+    { q: "125. Protozoa causes -", opts: ["malaria", "Kala-azar", "sleeping sickness", "all of these"], ans: 3, exp: "All of these." },
+    { q: "126. Antiserum is -", opts: ["serum which contains lymphocytes", "serum which contains red cells", "serum containing thrombocytes", "serum containing antibody"], ans: 3, exp: "Serum containing antibodies." },
+    { q: "127. One of the following is caused by virus -", opts: ["cholera", "malaria", "influenza", "leprosy"], ans: 2, exp: "Influenza is viral." },
+    { q: "128. What are the methods to avoid AIDS?", opts: ["Keep away sex from many", "Use condom during sexual intercourse", "Use only disposable needle for injection", "All of these"], ans: 3, exp: "All of these." },
+    { q: "129. Agents spreading diseases are -", opts: ["malaria", "Kala-azar", "filaria", "all of these"], ans: 3, exp: "All are agents." },
+    { q: "130. Oncology is the study of - A. infectious diseases B. protozoan parasites C. tumour D. cancer", opts: ["A, B", "B, C", "C, D"], ans: 2, exp: "Tumour and cancer." },
+    { q: "131. Metastasis is the process of-", opts: ["Excessive cell proliferation", "Transformation of benign tumour into a malignant tumour", "Transformation of normal cell cancerous cells", "Movement of cancerous cells from one organ to another"], ans: 3, exp: "Movement of cancerous cells." },
+    { q: "132. Current treatment for cancer does not include which of the following-", opts: ["Chemotherapy", "Radiation therapy", "Surgery", "Physiotherapy"], ans: 3, exp: "Physiotherapy is not for cancer." },
+    { q: "133. Nervous system is influenced by -", opts: ["heroine", "cocaine", "hashish", "all of these"], ans: 3, exp: "All influence it." },
+    { q: "134. Benign tumour is one which-", opts: ["Shows metastasis", "Differentiated and capsulated", "Differential and uncapsulated", "Non-Differentiated and capsulated"], ans: 1, exp: "Benign is differentiated and capsulated." },
+    { q: "135. Nutritive food elements are -", opts: ["carbohydrates", "proteins", "fat", "all of these"], ans: 3, exp: "All are nutritive." },
+    { q: "136. External factors responsible to produce disease is -", opts: ["virus", "bacteria", "parasites", "all of these"], ans: 3, exp: "All of these." },
+    { q: "137. Degenerative diseases are -", opts: ["arthritis", "stroke of the brain", "cardiac diseases", "all of these"], ans: 3, exp: "All of these." },
+    { q: "138. Hereditary disease is -", opts: ["diabetes", "Haemophilia", "Cretinism", "none of these"], ans: 1, exp: "Haemophilia is hereditary." },
+    { q: "139. Smoke causes -", opts: ["diseases of lungs", "bronchitis", "asthma", "all of these"], ans: 3, exp: "All of these." },
+    { q: "140. A frequent form of tumour which occurs due to AIDS is-", opts: ["Achondroplasia", "Anorexia", "Astigmatism", "Kaposi sarcoma"], ans: 3, exp: "Kaposi sarcoma." },
+    { q: "141. Elephantiasis is caused by -", opts: ["Ascaris", "Taenia", "Wuchereria"], ans: 2, exp: "Wuchereria." },
+    { q: "142. Types of cancer are - A. sarcoma B. leukaemia C. gastric ulcer D. lymphoma", opts: ["A, B, D", "B, C", "A, C, D", "A, B, C, D"], ans: 0, exp: "Sarcoma, leukemia, lymphoma." },
+    { q: "143. Zidovudine is a drug used in-", opts: ["Dengue fever", "AIDS", "Yellow fever", "Leukemia"], ans: 1, exp: "Zidovudine is for AIDS." },
+    { q: "144. Pneumonia is caused by A. Trichophyton B. contact with infected person C. Streptococcus pneumoniae D. Epidermophyton", opts: ["A, B", "B, C", "A, C, D", "A, B, C, D"], ans: 1, exp: "Contact and Streptococcus pneumoniae." },
+    { q: "145. Interferon is protein that", opts: ["Inactivates a virus", "Protects unattacked cells from virus", "Prevents viruses from taking over the cellular machinery", "Both (b) & (c)"], ans: 3, exp: "Both (b) & (c)." },
+    { q: "146. Which term would you use for combination of diseases such as Kaposi's sarcoma, Pneumocystis carinii pneumonia, Leukoplakia etc?", opts: ["Contagious diseases", "Opportunistic diseases", "Diarrhoeal diseases", "Autoimmune diseases"], ans: 1, exp: "Opportunistic diseases." },
+    { q: "147. Urge of tobacco smoking can be easily given up by - A. motivation B. substitution with other activities C. regular exercise to reduce the stress D. nonvegetarian diet", opts: ["A, B", "A, B, C", "A, C, D", "A, B, C, D"], ans: 1, exp: "A, B, C." },
+    { q: "148. If you are advised to get a WIDAL test done for yourself - which disease is your doctor suspecting?", opts: ["Typhoid", "Cholera", "Pneumonia", "Filariasis"], ans: 0, exp: "Typhoid." },
+    { q: "149. Air-borne diseases are A. influenza B. typhoid C. tuberculosis D. diarrhoea", opts: ["A, B", "B, C", "A, C, D", "A, B, C, D"], ans: 1, exp: "Influenza and tuberculosis." },
+    { q: "150. Which infectious disease can be treated effectively using oil of chenopodium?", opts: ["Ascariasis", "Filariasis", "Malaria", "Poliomyelitis"], ans: 0, exp: "Ascariasis." },
+    { q: "151. Diseases of human being caused by protozoan parasites are A. amebiasis B. malaria C. trypanosomiasis D. typhoid", opts: ["A, B", "A, B, C", "A, C, D", "A, B, C, D"], ans: 1, exp: "A, B, C." },
+    { q: "152. A disease which often produces deformities of fingers and toes is", opts: ["Poliomyelitis", "Tuberculosis", "Typhoid", "Leprosy"], ans: 3, exp: "Leprosy." },
+    { q: "153. Hodgkin's disease is", opts: ["Cancer of WBC's", "Cancer of liver", "Cancer of lymphoid tissue", "Cancer of mammary"], ans: 2, exp: "Cancer of lymphoid tissue." },
+    { q: "154. Smoke of tobacco usually contains - A. alcohol B. nicotine C. phenol D. tar", opts: ["A, B", "A, B, C", "B, C, D", "A, B, C, D"], ans: 2, exp: "Nicotine, phenol, tar." },
+    { q: "155. AIDS-day is celebrated on", opts: ["5th June", "1st Oct", "1st July", "1st Dec."], ans: 3, exp: "1st December." },
+    { q: "156. Immune responses are carried out by A. lymphocytes B. adipocytes C. immunoglobulin D. melanocytes", opts: ["A, B", "B, C", "A, C", "A, B, C, D"], ans: 2, exp: "Lymphocytes and immunoglobulins." },
+    { q: "157. Ringworm is caused by fungus A. Microsporum B. Trichophyton C. Rhizopus D. Oscillatoria", opts: ["A, B", "B, C", "A, C, D", "A, B, C, D"], ans: 0, exp: "Microsporum and Trichophyton." },
+    { q: "158. A plant known as 'Sadabahar' is known to produce an anti-cancer drug known as", opts: ["Taxol", "Vincristine", "Colchicine", "Cyclosporine"], ans: 1, exp: "Vincristine." },
+    { q: "159. Carcinoma is a cancer of-", opts: ["Lymphocytes", "Connective Tissue", "Erythrocytes", "Ectoderm and endoderm"], ans: 3, exp: "Ectoderm and endoderm." },
+    { q: "160. A cancerous condition known as Burkitts Lymphoma is known to be caused by virus like", opts: ["Rous Sarcoma virus", "Herpes simplex virus", "Ebstein Barr virus", "Hepatitis B virus"], ans: 2, exp: "Epstein Barr virus." },
+    { q: "161. Your patient shows paroxysms of Malaria after every 72 hours. Which species of Plasmodium will be considered responsible to cause the infection?", opts: ["P. vivax", "P. ovale", "P. malariae", "P. falciparum"], ans: 2, exp: "P. malariae." },
+    { q: "162. Which stage of Plasmodium parasite is infective for man?", opts: ["Schizont", "Gametocytes", "Sporozoite", "Merozoites"], ans: 2, exp: "Sporozoite." },
+    { q: "163. Carcinogen present in coal tar is", opts: ["Nitroso dimethylene", "3,4- benzopyrine", "2-naphthylamine", "4-amino biphenyl"], ans: 1, exp: "3,4-benzopyrine." },
+    { q: "164. Which of the following is/are example of autoimmune disease?", opts: ["Multiple sclerosis", "Insulin dependent diabetes", "Rheumatoid arthritis", "All of these"], ans: 3, exp: "All of these." },
+    { q: "165. In leukaemia, there is tremendous increase in the numbers of", opts: ["Red blood corpuscles", "Immature cells", "White blood corpuscles", "Both white blood cells and immature cells"], ans: 3, exp: "Both WBCs and immature cells." },
+    { q: "166. Antigenic determinant sites bind to which portions of an antibody molecule?", opts: ["Light chains", "Heavy chains", "Intermediate chains", "Both (a) & (b)"], ans: 3, exp: "Both light and heavy chains." },
+    { q: "167. Malarial parasite can be obtained from patient", opts: ["During fever", "Before temperature rise", "After temperature becomes normal", "Elephantiasis"], ans: 0, exp: "During fever." },
+    { q: "168. Which of the following immunity is conferred by transfer of immune products like antibodies from another individual into a non-immune individual?", opts: ["Adaptive immunity", "Specific immunity", "Active immunity", "Passive immunity"], ans: 3, exp: "Passive immunity." },
+    { q: "169. Marijuana is obtained from", opts: ["Ergot", "Cannabis", "Papaver", "Coffea"], ans: 1, exp: "Cannabis." },
+    { q: "170. The opposite to innate immunity is", opts: ["Passive immunity", "T cells immunity", "Phagocytosis", "Acquired immunity"], ans: 3, exp: "Acquired immunity." },
+    { q: "171. One of the following drugs depresses (switch off) the activities of CNS and is known as sedative. It gives feeling of calmness, relaxation or drowsiness", opts: ["Opium", "Heroin", "Cocaine", "Barbiturate"], ans: 3, exp: "Barbiturate." },
+    { q: "172. What is the role of complement in the body's defense?", opts: ["It interferes with viral replication", "It is involved with antibody production", "It aids antigen presentation", "It causes cell lysis"], ans: 3, exp: "It causes cell lysis." },
+    { q: "173. Neoplasms are", opts: ["Nuclei with massive DNA", "Cells without covering membranes", "Cells capable of unlimited division", "Newly produced cells formed through uncontrolled cell proliferation"], ans: 3, exp: "Uncontrolled cell proliferation." },
+    { q: "174. Antibody is", opts: ["A substance that specifically inactivates an antigen", "Phagocyte that feeds on invading pathogen", "Cellular component of blood", "Secretion of RBC"], ans: 0, exp: "It inactivates antigens." },
+    { q: "175. Filariasis is caused by", opts: ["Wuchereria bancrofti", "Glossina", "Phlebotomus", "All of these"], ans: 0, exp: "Wuchereria bancrofti." },
+    { q: "176. The cell which plays major role in host defense against tumor cells and the cells infected with viruses", opts: ["B - lymphocytes", "Interferon", "NK cells", "Neutrophils"], ans: 2, exp: "NK cells." },
+    { q: "177. Entamoeba histolytica causes", opts: ["Chicken pox", "Tetanus", "Dysentry"], ans: 2, exp: "Dysentery." },
+    { q: "178. Active immunity is due to", opts: ["MARY cells", "Killer T-cells", "Helper cells", "Suppressor T-cells"], ans: 1, exp: "Killer T-cells." },
+    { q: "179. Antihistamine relieves", opts: ["Nephritis", "Allergy", "Stroke", "Angina pectoris"], ans: 1, exp: "Allergy." },
+    { q: "180. Immunity acquired after an infection is", opts: ["Active immunity", "Passive immunity", "Innate immunity", "Both (b) & (c)"], ans: 0, exp: "Active immunity." },
+    { q: "181. Which of the following is obtained from Papaver somniferum?", opts: ["Opium", "Heroin", "Methadone", "All of these"], ans: 3, exp: "All of these." },
+    { q: "182. Natural killer (NK) cells can destroy", opts: ["Invading micro-organisms", "Virus infected cells", "Some tumor cells", "All of these"], ans: 3, exp: "All of these." },
+    { q: "183. Sleeping pills contain", opts: ["Benzodiazepines", "Psilocybin", "Tranquillisers", "LSD"], ans: 0, exp: "Benzodiazepines." },
+    { q: "184. Active immunity is obtained by", opts: ["Natural resistance", "Antibiotics", "Weakened germs infection", "None of these"], ans: 2, exp: "Weakened germs (vaccination)." },
+    { q: "186. Which of the following is not true for interferon?", opts: ["These act outside the cells", "These are quick acting", "Their action is long lasting", "These act against viruses"], ans: 0, exp: "They act outside the cells." },
+    { q: "187. An autoimmune disease is", opts: ["Haemophilia", "AIDS", "Allergy", "Myasthenia gravis"], ans: 3, exp: "Myasthenia gravis." },
+    { q: "189. Which of the following is/are the ill-effect(s) of smoking?", opts: ["psychological stress", "reduces immunity", "coronary diseases", "Both b and c"], ans: 3, exp: "Both b and c." },
+    { q: "191. Which of the following diseases cause chronic inflammation in the lymphatic vessels of the lower limb that results into its massive swelling?", opts: ["ascariasis", "filariasis", "amoebiasis", "trypanosomiasis"], ans: 1, exp: "Filariasis." },
+    { q: "192. Normal cells are called cancerous when they show the following property", opts: ["new blood vessels formation (angiogenesis)", "uncontrolled cell division", "both a and b", "contact inhibition"], ans: 2, exp: "Both a and b." },
+    { q: "194. Which of the following is/are example(s) of the passive immunity?", opts: ["inoculated antigen administration", "polio vaccine drops", "antitoxin serum", "colostrum"], ans: 3, exp: "Colostrum." },
+    { q: "195. AIDS can be diagnosed by", opts: ["radio immunoassay (RIA)", "enzyme linked immuno-sorbent assay (ELISA)", "western blotting (Confirm test)", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "196. Opioid are popularly called", opts: ["sedative", "anti depressant", "stimulant", "pain killers"], ans: 3, exp: "Pain killers." },
+    { q: "197. Autoimmunity is caused due to the A. ability of immune cells to discriminate between self cells from non-self cells. B. inability of immune cells in damaging self cells representing foreign antigens. C. inability of immune cells in distinguishing self cells from non-self cells D. ability of immune cells to damage self cells.", opts: ["C and D are correct", "A, B and C are correct", "All are correct", "None"], ans: 0, exp: "C and D are correct." },
+    { q: "198. Innate immunity is non-specific defence present from the time of birth. It consists of", opts: ["skin, mucus coating of the epithelium", "neutrophils, monocytes, macrophages, natural killer cells.", "interferons, cytokines", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "199. Which of the following options correctly represent the life cycle of Plasmodium? A. sporozoites (human) -> RBCs -> liver cells gametocytes (RBCs) -> blood meal (female mosquito) -> multiply (mosquito) -> sporozoites (mosquito) B. sporozoites (mosquito) -> bite -> RBC s (human) -> liver cells gametocytes (RBCs) -> sporozoites (human) -> blood meal (female mosquito). C. sporozoites (human) -> liver cells -> RBCs. gametocytes (RBCs) -> blood meal (female mosquito) -> multiply (mosquito) -> sporozoites (mosquito). D. blood meal (female mosquito) -> multiply (mosquito) -> sporozoites (mosquito) -> bite -> liver cells (human) -> RBCs -> gametocytes (RBCs)", opts: ["A and B are correct", "C and D are correct", "All are correct", "None"], ans: 1, exp: "C and D are correct." },
+    { q: "201. Identify the false statements - I. Antigen-binding site of an antibody is found between two light peptide chains. II. The pathogen of elephantiasis is transmitted to a healthy person through the bite of same mosquito species which also cause malarial disease. III. Lymphoid tissues are also located within the lining of the major tracts called mucosal-associated lymphoid tissue. IV. Increase intake of coffee or tea can cause indigestion, insomnia and disturb renal functions. V. Anaphylactic shock is an autoimmune reaction which involves all the tissues of the body that results in drastic fall in blood pressure.", opts: ["III, V", "II, IV", "I, II, V", "I, II, IV"], ans: 0, exp: "III and V are false." },
+    { q: "202. AIDS spread due to", opts: ["homosexuity", "immoral way of life", "both a and b", "safe sex."], ans: 2, exp: "Both a and b." },
+    { q: "204. HIV attacks", opts: ["B-lymphocytes", "T-lymphocytes", "antibodies", "erythrocytes."], ans: 1, exp: "T-lymphocytes." },
+    { q: "206. Genes involved in cancer are", opts: ["regulator gene", "tumour gene", "oncogenes", "suppressor genes"], ans: 2, exp: "Oncogenes." },
+    { q: "207. Which of the following is correctly matched and is a sexually transmitted disease-", opts: ["AIDS - bacterium", "Syphilis - Treponema pallidum", "Gonorrhoea - Mycobacterium", "All of these"], ans: 1, exp: "Syphilis - Treponema pallidum." },
+    { q: "208. Which of the following measures is not useful for prevention and control of alcohol and drugs among adolescents?", opts: ["education & counselling", "medical help", "peer pressure", "looking for danger sign"], ans: 2, exp: "Peer pressure." },
+    { q: "209. Pneumonia is caused by", opts: ["Streptococcus pneumoniae", "Salmonella typhi", "Haemophilus influenza", "both a and c"], ans: 3, exp: "Both a and c." },
+    { q: "210. Which of the following cells are involved in immune mechanism of the body?", opts: ["lymphocytes", "macrophages", "neutrophils", "All"], ans: 3, exp: "All." },
+    { q: "211. Metastasis occurs in case of", opts: ["grown gall tumour", "benign tumour", "malignant tumour", "none of these"], ans: 2, exp: "Malignant tumour." },
+    { q: "212. Which one of the following is a matching pair of a drug and its category?", opts: ["amphetamines - stimulant", "lysergic acid diethyl amides (LSD) - narcotic", "heroin - psychotropic", "benzodiazepines - pain killer"], ans: 0, exp: "Amphetamines - stimulant." },
+    { q: "213. Amoebiasis (Amoebic dysentery) is caused by", opts: ["Wuchereria", "Ascaris", "Entamoeba", "Plasmodium"], ans: 2, exp: "Entamoeba." },
+    { q: "214. Nicotine, an I stimulates II gland to release adrenaline and nor-adrenaline into blood circulation, both of which III blood pressure and increase heart rate. Smoking is associated with increased incidence of cancers of lung, urinary bladder and throat, bronchitis, emphysema, coronary heart disease, gastric ulcer, etc. Tobacco chewing is associated with increased risk of cancer of the oral cavity. Smoking increases IV content in blood and reduces the concentration of haembound V", opts: ["I- Alkaloid, II- Adrenal, III- Raise, IV- CO, V- O2", "I- Acid, II- Adrenal, III- Raise, IV- CO, V- O2", "I- Alkaloid, II - Thyroid, III - Raise, IV- CO2, V- CO", "I- Alkaloid, II - Adrenal, III - Decrease, IV- CO, V- O2"], ans: 0, exp: "I- Alkaloid, II- Adrenal, III- Raise, IV- CO, V- O2." },
+    { q: "215. Which is a cancer-causing virus-", opts: ["Myxovirus", "Rubella virus", "SV-40", "All of these"], ans: 2, exp: "SV-40." },
+    { q: "216. Women who consumed the drug thalidomide for relief from vomiting during early month of pregnancy gave birth to children with-", opts: ["No spleer", "Harelip", "Extra fingers and toes", "Under developed limbs"], ans: 3, exp: "Under developed limbs." },
+    { q: "217. A person showing unpredictable moods, outbursts of emotions, quarrelsome behaviour and conflicts with others is suffering from-", opts: ["Schizophrenia", "Borderline personality disorder (BPD)", "Mood disorders", "Addictive disorders"], ans: 1, exp: "Borderline personality disorder." },
+    { q: "218. Identify the true statements- I. Abstinence from drugs of dependence causes withdrawal symptoms but not craving. II. Chikungunya is confirmed by Widal test. III. Rheumatoid arthritis which affects many people in our society is an auto-immune disease. IV. AIDS was first reported in 1981 and is caused by a member of a group of viruses called retroviruses. V. Benign tumors are normally considered with metastasis. VI. Most powerful stimulant is cocaine.", opts: ["II, IV", "I, III, IV, VI", "III, V, VI", "III, IV, V"], ans: 1, exp: "I, III, IV, VI." },
+    { q: "219. Select the false statements - I. An antibody is a protein molecule made by the lymphocytes. II. An antibody binds to a specific foreign antigen and neutralizes its odd effects, III. A type of acquired immune response is called cell-mediated immunity. This type of immunity is mediated by T-lymphocytes. IV. Cancer is contagious and cells can spread from one person to another. V. Cancerous cells are highly differentiated cells. VI. Cancer detection is based on biopsy and histopathological studies of the tissue and blood. VII. Techniques like radiography, CT and MRI are very useful to detect cancers of the internal organs. VIII. Diseases which are easily transmitted from one person to another, are called infectious diseases. IX AIDS is non-infectious and cancer is infectious disease, X Salmonella typhi is a pathogenic bacterium which causes typhoid fever in human beings. XI. Sustained high fever (39° to 40°C), weakness, stomach pain, constipation, headache and loss of appetite are some of the common symptoms of typhoid. XII. Nicotine stimulates thyroid gland. XIII. Smoking increases CO2 content in blood. XIV. AIDS has no cure, prevention is the best option. XV. HIV/AIDS infected people should be shunned by society.", opts: ["I, IV", "IV, V, IX, XII, XIII, XV", "All", "None"], ans: 1, exp: "IV, V, IX, XII, XIII, XV." },
+    { q: "221. Fill up the blanks. I. The primary lymphoid organs are ____ and ____ II. Heroin commonly called 'smack' is chemically ____ III. ____ tumors remain confined to their original location and do not spread to other parts of the body. IV. The immune system comprises ____ cells and ____ cells. V. ____ is very effective sedative and pain killer. VI. A group of symptoms is literally termed as ____ VII. The fungi Trichophyton is responsible for ____", opts: ["I - bone marrow & thymus; II - diacetylmorphine; III - benign; IV - B, T; V - morphine; VI - syndrome; VII - ringworms", "I - bone marrow & thymus; II - diacetylmorphine; III - benign; IV - B, T; V - morphine; VI - ringworms; VII - syndrome", "I - bone marrow & thymus; II - diacetylmorphine; III - benign; IV - B, T; V - syndrome; VI - morphine; VII - ringworms", "I - bone marrow & thymus; II - diacetylmorphine; III - benign; IV - B, T; V - ringworms; VI - syndrome; VII - morphine."], ans: 0, exp: "I - bone marrow & thymus; II - diacetylmorphine; III - benign; IV - B, T; V - morphine; VI - syndrome; VII - ringworms." },
+    { q: "222. Table: Properties Normal Cells Cancerous cells. Tumor formation A B. Contact inhibition C D. Metastasis E F. The correct option is-", opts: ["A-Yes, B-No, C-No, D-Yes, E-No, F-Yes", "A-No, B-Yes, C-Yes, D-No, E-No, F-Yes", "A-No, B-Yes, C-No, D-Yes, E-No, F-Yes", "A-Yes, B-No, C-Yes, D-No, E-Yes, F-No"], ans: 1, exp: "A-No, B-Yes, C-Yes, D-No, E-No, F-Yes." },
+    { q: "223. Which one of the following techniques is safest for the detection of cancers", opts: ["Magnetic resonance imaging (MRI)", "Radiography (X-ray)", "Computed tomography (CT)", "Histopathological studies"], ans: 0, exp: "MRI is safest." },
+    { q: "224. Slow respiration, slow pulse and constriction of pupil occurs due to addiction of", opts: ["Morphine and opium", "Cocaine and Heroin", "Alcohol and Thalidomide", "Nicotine and caffeine"], ans: 0, exp: "Morphine and opium." },
+    { q: "225. Given below are 4-statements. Read the statements and mark the option that has both correct statements (I) Heroin, commonly called Smack, is obtained by acetylation of morphine (II) Cocaine is obtained from the latex of Papaver somniferum (III) Marijuana interferes with the transmission of dopamine (IV) Morphine is an effective sedative and pain killer", opts: ["A and B", "A and D", "B and C", "C and D"], ans: 1, exp: "A and D." },
+    { q: "226. Following vaccine has been produced from yeast by recombinant DNA technology", opts: ["Hepatitis A", "Hepatitis B", "Hib", "Oral Polio"], ans: 1, exp: "Hepatitis B." },
+    { q: "227. Mark the incorrect statement", opts: ["The property of metastasis is shown by malignant tumours", "Carcinogens are chemical agents for causing cancer", "Cellular oncogenes (C-ONC) are found in normal cells", "None of these"], ans: 3, exp: "None of these (all are correct)." },
+    { q: "228. When a quick immune response is required due to infection of a deadly microbe, the patient is injected with", opts: ["Protein of pathogen", "Inactivated or weakened pathogen", "Preformed antibodies", "Vaccine"], ans: 2, exp: "Preformed antibodies." },
+    { q: "229. The antibodies produced during allergy are", opts: ["IgG type", "IgM type", "IgA type", "IgE type"], ans: 3, exp: "IgE type." },
+    { q: "230. The toxic substance, 'Haemozoin', related to the high fever and chill, is released during following disease", opts: ["Dengue", "Malaria", "Diphtheria", "Pneumonia"], ans: 1, exp: "Malaria." },
+    { q: "231. The name of 'Mary Mallon' is associated with the disease", opts: ["Typhoid", "Leprosy", "Tuberculosis", "Small pox"], ans: 0, exp: "Typhoid." },
+    { q: "232. A person suffering from a disease caused by Plasmodium experiences recurring chill and fever at the time when?", opts: ["the sporozoites released from RBCs are being rapidly killed and broken down inside spleen", "The trophozoites reach maximum growth and give out certain toxins", "The parasite after its rapid multiplication inside RBCs ruptures them, releasing the stage to enter fresh RBCs.", "The microgametocytes and megagametocytes are being destroyed by the WBCs"], ans: 2, exp: "Rupture of RBCs releases merozoites and toxins." },
+    { q: "233. The foetus gets immunized after receiving antibodies from mother through placenta. This type of immunization is called", opts: ["Active immunity", "Innate immunity", "Passive immunity", "Humoral immunity"], ans: 2, exp: "Passive immunity." },
+    { q: "234. Bacteria like Streptococcus and Haemophilus influenzae are responsible for", opts: ["Diphtheria", "Dysentery", "Plague", "Pneumonia"], ans: 3, exp: "Pneumonia." },
+    { q: "235. The exaggerated response of the immune system to certain antigens is called", opts: ["Primary response", "Secondary response", "Immune suppression response", "Allergy"], ans: 3, exp: "Allergy." },
+    { q: "236. Both, Hepatitis B and AIDS are", opts: ["Cause by Retro-viruses", "Transmitted through sexual contact", "Congenital diseases", "Transmitted through infected blood"], ans: 1, exp: "Transmitted through sexual contact." },
+    { q: "237. The following lymphoid organ provides the site for the interaction of lymphocytes with the antigen -", opts: ["Bone marrow", "Thymus", "Spleen", "All of these"], ans: 2, exp: "Spleen." },
+    { q: "238. The pathogens of genera, Microsporum, Trichophyton and Epidermophyton are responsible for", opts: ["Botulism", "Conjunctivitis", "Ring worms", "Skin allergy"], ans: 2, exp: "Ring worms." },
+    { q: "239. Which of the following disease is caused by the member of Retro-virus group ?", opts: ["Cancer", "AIDS", "Dengue", "Common cold"], ans: 1, exp: "AIDS." },
+    { q: "240. The use of antihistamine, adrenaline and steroids quickly reduce the symptoms of", opts: ["Fungal disease", "Viral disease", "Allergy", "helminths disease"], ans: 2, exp: "Allergy." },
+    { q: "241. Which of the following non-infectious disease is a major cause of death in human beings?", opts: ["AIDS", "Cirrhosis", "Cancer", "Asthma"], ans: 2, exp: "Cancer." },
+    { q: "242. Malignant malaria is caused by the following species of Plasmodium", opts: ["vivax", "malariae", "ovale", "falciparum"], ans: 3, exp: "falciparum." },
+    { q: "243. The cell-mediated immunity inside the human body is carried out by-", opts: ["B- lymphocytes", "Thrombocytes", "Erythrocytes", "T- lymphocytes"], ans: 3, exp: "T- lymphocytes." },
+    { q: "244. Which of the following is correctly matched.", opts: ["Thyroxine - Tetanus", "Insulin- Diabetes insipidus", "Adrenaline- Hepatitis", "Parathyroid- Tetary"], ans: 3, exp: "Parathyroid- Tetary." },
+    { q: "245. Xenograft means", opts: ["a graft between two genetically identical individuals", "a graft in which a tissue is grafted from one individual to another individual of the same species", "a graft between individuals of different species", "tissue grafted from one area to another of the same individual."], ans: 2, exp: "Graft between different species." },
+    { q: "246. Which one of the following is not a property of cancerous cells whereas the remaining three are ?", opts: ["They compete with normal cells for vital nutrients.", "They do not remain confined in the area of formation.", "They divide in an uncontrolled manner", "They show contact inhibition."], ans: 3, exp: "They do not show contact inhibition." },
+    { q: "247. Aedes aegypti is the vector for", opts: ["Dengue fever", "Yellow fever", "Both a and b", "Japanese encephalitis"], ans: 2, exp: "Both a and b." },
+    { q: "248. Motile zygote of Plasmodium occurs in :", opts: ["Gut of female Anopheles", "Salivary glands of Anopheles", "Human RBCs", "Human liver"], ans: 0, exp: "Gut of female Anopheles." },
+    { q: "249. Infection of Ascaris usually occurs by", opts: ["Eating imperfectly cooked meat", "Tse-tse fly", "Mosquito bite", "Drinking water containing eggs of Ascaris"], ans: 3, exp: "Drinking water containing eggs." },
+    { q: "250. Inadequate protein intake leads to kwashiorkor. The subsequent oedema is mostly closely related to inadequate synthesis of which protein-", opts: ["Gamma globulins", "Glucogon", "Insulin", "Albumin"], ans: 3, exp: "Albumin." },
+    { q: "251. Which one among the following forms the chemical barrier for infections?", opts: ["Isozyme", "Lysozyme", "Coughing", "Lysosome"], ans: 1, exp: "Lysozyme." },
+    { q: "252. In which one of the following options the two examples are correctly matched with their particular type of immunity Examples Type of immunity", opts: ["Polymorphonuclear leukocytes and monocyte Cellular barriers", "Anti-tetanus and anti-snake bite injection Active immunity", "Saliva in mouth and Tears in eyes Physical barriers", "Mucus coating of epithelium lining the urinogenital tract and the HCl in stomach Physiological barriers"], ans: 0, exp: "Polymorphonuclear leukocytes and monocyte - Cellular barriers." },
+    { q: "253. Cirrhosis of liver is caused by the chronic intake of", opts: ["Opium", "Alcohol", "Tobacco (Chewing)", "Cocaine"], ans: 1, exp: "Alcohol." },
+    { q: "254. Common cold differs from pneumonia in, that:", opts: ["Pneumonia is a communicable disease whereas the common cold is a nutritional deficiency disease.", "Pneumonia can be prevented by a live attenuated bacterial vaccine whereas the common cold has no effective vaccine.", "Pneumonia is caused by a virus while the common cold is caused by the bacterium Haemophilus influenzae.", "Pneumonia pathogen infects alveoli whereas the common cold affects nose and respiratory passage but not the lungs"], ans: 3, exp: "Pneumonia affects alveoli." },
+    { q: "255. Alcohol affects mental and motor functions because-", opts: ["It is quickly absorbed in gut", "It causes degeneration of contractile fibers of muscles", "It crosses blood brain barrier", "It raises blood pressure"], ans: 2, exp: "It crosses the blood-brain barrier." },
+    { q: "257. Which one of the following is not a property of cancerous cells whereas the remaining three are ?", opts: ["They compete with normal cells for vital nutrients", "They do not remain confined in the area of formation", "They divide in an uncontrolled manner", "They show contact inhibition"], ans: 3, exp: "They do not show contact inhibition." },
+    { q: "258. Which of the following is correctly matched regarding an institute and its location.", opts: ["National Institute of virology- pune", "National Institute of communicable disease", "Central Drug research institute- kasuti", "National institute of Nutrition- Mumbai"], ans: 0, exp: "National Institute of Virology is in Pune." },
+    { q: "259. In certain parts of central india, muscular dystrophy is commonly found amongst the poor people because they eat cheap pulse from the plant-", opts: ["Pisum sativum", "Lathyrus sativus", "Cicer arietinum", "Phaseolus mungo"], ans: 1, exp: "Lathyrus sativus." },
+    { q: "260. Kala azar is transmitted by-", opts: ["Sandfly", "Tse-Tse fly", "Housefly", "Mosquitoes"], ans: 0, exp: "Sandfly." },
+    { q: "261. Diphtheria is caused by-", opts: ["Poisons released by living bacterial cells into the host tissue", "Poisons released from dead bacterial cells into the host tissue", "Poisons released from virus into the host tissue", "Excessive immune response by the host's body"], ans: 0, exp: "Poisons from living cells." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 26; // ⚠️ 12th Class Chapter 7 is Chapter 26 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
