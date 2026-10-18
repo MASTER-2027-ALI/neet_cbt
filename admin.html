@@ -122,7 +122,10 @@
 </div>
 
 <script src="keys.js"></script>
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 // ========================================
 // LOGIN CHECK - ONLY MASTER
 // ========================================
@@ -137,6 +140,12 @@ if (user.role !== 'master') {
 }
 
 // ========================================
+// FIREBASE INIT
+// ========================================
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ========================================
 // CHAPTER NAMES
 // ========================================
 const chapterNames = [
@@ -147,114 +156,104 @@ const chapterNames = [
   "Respiration in Plants", "Plant Growth and Development",
   "Breathing and Exchange of Gases", "Body Fluids and Circulation",
   "Excretory Products and their Elimination", "Locomotion and Movement",
-  "Neural Control and Coordination", "Chemical Coordination and Integration"
+  "Neural Control and Coordination", "Chemical Coordination and Integration",
+  "Sexual Reproduction in Flowering Plants", "Human Reproduction", "Reproductive Health",
+  "Principles of Inheritance and Variation", "Molecular Basis of Inheritance", "Evolution",
+  "Human Health and Disease", "Microbes in Human Welfare",
+  "Biotechnology: Principles and Processes", "Biotechnology and its Applications",
+  "Organisms and Populations", "Ecosystem", "Biodiversity and Conservation"
 ];
 
 // ========================================
-// LOAD RESULTS
+// LOAD RESULTS FROM FIREBASE
 // ========================================
-const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+async function loadResults() {
+  const historyDiv = document.getElementById('historyTable');
+  historyDiv.innerHTML = '<div class="no-data">⏳ Data loading from Firebase...</div>';
 
-let totalAttempts = 0;
-let attemptedChapters = 0;
-let totalPercent = 0;
-let percentCount = 0;
-
-// ========================================
-// BUILD HISTORY TABLE
-// ========================================
-const historyDiv = document.getElementById('historyTable');
-
-if (Object.keys(results).length === 0) {
-  historyDiv.innerHTML = '<div class="no-data">📭 Abhi tak koi test nahi diya gaya is device par.</div>';
-} else {
-  let tableHTML = `
-    <div class="table-scroll">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Chapter</th>
-            <th>Chapter Name</th>
-            <th>User</th>
-            <th>Correct</th>
-            <th>Wrong</th>
-            <th>Total</th>
-            <th>Marks</th>
-            <th>Percent</th>
-            <th>Attempt</th>
-            <th>Date & Time</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-
-  // Loop through all users and chapters
-  const allKeys = Object.keys(results);
-  const attemptedSet = new Set();
-
-  // Sort keys: by user then by chapter
-  allKeys.sort().forEach(key => {
-    // Key format: "UserName_chapter5"
-    const match = key.match(/^(.+)_chapter(\d+)$/);
-    if (!match) return;
+  try {
+    // Firebase 'results' collection se saara data mangwayein
+    const querySnapshot = await getDocs(collection(db, "results"));
     
-    const userName = match[1];
-    const chapterNum = parseInt(match[2]);
-    const r = results[key];
-    
-    if (r && r.attempts && r.attempts.length > 0) {
-      attemptedSet.add(chapterNum);
-      totalAttempts += r.attempts.length;
-      
-      // Show all attempts (latest first)
-      const sortedAttempts = [...r.attempts].reverse();
-      sortedAttempts.forEach((attempt, idx) => {
-        const scoreClass = attempt.percent >= 50 ? 'score' : 'low';
-        const date = new Date(attempt.date).toLocaleString('en-IN', {
-          day: '2-digit', month: 'short', year: 'numeric',
-          hour: '2-digit', minute: '2-digit'
-        });
-        const isBest = r.best && attempt.percent === r.best.percent;
-        const attemptNum = r.attempts.length - idx;
-        
-        totalPercent += parseFloat(attempt.percent);
-        percentCount++;
-        
-        tableHTML += `
-          <tr class="${isBest ? 'best-row' : ''}">
-            <td>Ch ${chapterNum}${isBest ? ' 🏆' : ''}</td>
-            <td>${chapterNames[chapterNum-1] || 'Unknown'}</td>
-            <td><strong>${userName}</strong></td>
-            <td class="score">${attempt.correct}</td>
-            <td class="low">${attempt.wrong}</td>
-            <td>${attempt.total}</td>
-            <td>${attempt.marks}</td>
-            <td class="${scoreClass}">${attempt.percent}%</td>
-            <td>#${attemptNum}</td>
-            <td>${date}</td>
-          </tr>
-        `;
-      });
+    if (querySnapshot.empty) {
+      historyDiv.innerHTML = '<div class="no-data">📭 Abhi tak kisi ne koi test nahi diya.</div>';
+      return;
     }
-  });
-
-  attemptedChapters = attemptedSet.size;
-
-  tableHTML += '</tbody></table></div>';
-  historyDiv.innerHTML = tableHTML;
+    
+    let tableHTML = `
+      <div class="table-scroll">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Chapter</th>
+              <th>Chapter Name</th>
+              <th>User</th>
+              <th>Correct</th>
+              <th>Wrong</th>
+              <th>Total</th>
+              <th>Marks</th>
+              <th>Percent</th>
+              <th>Date & Time</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    let totalAttempts = 0;
+    let totalPercent = 0;
+    const attemptedChaptersSet = new Set();
+    
+    // Har document ko table row mein badlein
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const chapterNum = data.chapterNum;
+      const chName = chapterNames[chapterNum - 1] || "Unknown";
+      
+      const displayPercent = Math.max(0, data.percent); // Negative fix
+      const scoreClass = displayPercent >= 50 ? 'score' : 'low';
+      
+      const date = new Date(data.timestamp).toLocaleString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+      
+      totalAttempts++;
+      totalPercent += parseFloat(displayPercent);
+      attemptedChaptersSet.add(chapterNum);
+      
+      tableHTML += `
+        <tr>
+          <td>Ch ${chapterNum}</td>
+          <td>${chName}</td>
+          <td><strong>${data.userName}</strong></td>
+          <td class="score">${data.correct}</td>
+          <td class="low">${data.wrong}</td>
+          <td>${data.total}</td>
+          <td>${data.marks}</td>
+          <td class="${scoreClass}">${displayPercent}%</td>
+          <td>${date}</td>
+        </tr>
+      `;
+    });
+    
+    tableHTML += `</tbody></table></div>`;
+    historyDiv.innerHTML = tableHTML;
+    
+    // Statistics Update karein
+    document.getElementById('totalAttempts').textContent = totalAttempts;
+    document.getElementById('attemptedChapters').textContent = attemptedChaptersSet.size;
+    document.getElementById('avgScore').textContent = totalAttempts > 0 
+      ? (totalPercent / totalAttempts).toFixed(1) + '%' 
+      : '0%';
+      
+  } catch (e) {
+    console.error("Error loading admin data:", e);
+    historyDiv.innerHTML = '<div class="no-data" style="color:#f87171;">⚠️ Error: Data load nahi ho paya. Firebase Rules check karein.</div>';
+  }
 }
 
 // ========================================
-// UPDATE STATS
-// ========================================
-document.getElementById('totalAttempts').textContent = totalAttempts;
-document.getElementById('attemptedChapters').textContent = attemptedChapters;
-document.getElementById('avgScore').textContent = percentCount > 0 
-  ? (totalPercent / percentCount).toFixed(1) + '%' 
-  : '0%';
-
-// ========================================
-// KEYS TABLE
+// KEYS TABLE (Passkeys List)
 // ========================================
 const keysTable = document.getElementById('keysTable');
 let keysHTML = `<tr><td>👑</td><td>Master (Admin)</td><td><code>${MASTER_KEY}</code></td></tr>`;
@@ -268,12 +267,14 @@ keysTable.innerHTML = keysHTML;
 // ========================================
 // LOGOUT
 // ========================================
-function logout() {
+window.logout = function() {
   localStorage.removeItem('cbt_user');
   localStorage.removeItem('cbt_login_time');
-  // ⚠️ cbt_results NAHI delete karenge - taki results safe rahein
   window.location.href = 'index.html';
-}
+};
+
+// Start loading data
+loadResults();
 </script>
 </body>
 </html>
