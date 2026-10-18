@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 31: Ecosystem - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 31: Ecosystem</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. The gas that is removed from the atmosphere by plants and algae is", opts: ["nitrogen.", "oxygen.", "carbon dioxide.", "methane."], ans: 2, exp: "Carbon dioxide is removed by photosynthesis." },
+    { q: "2. Carbon cycles relatively rapidly except when it is", opts: ["dissolved in freshwater ecosystems.", "released by respiration.", "converted into sugars.", "stored in petroleum, coal, or wood."], ans: 3, exp: "Stored in petroleum, coal, or wood." },
+    { q: "3. In the past 150 years there has been a major new input to the carbon cycle. What is it?", opts: ["There are more humans releasing large quantities of carbon dioxide as respiration.", "Increased animal farming has resulted in greater carbon dioxide releases.", "Industrialization has resulted in the burning of fossil fuels such as oil and coal, which releases carbon dioxide into the atmosphere.", "Changes in ocean currents have lead to the release of large quantities of carbon dioxide"], ans: 2, exp: "Industrialization and burning of fossil fuels." },
+    { q: "4. In succession,_________is a crucial factor.", opts: ["Time", "Direction", "Height", "Space"], ans: 0, exp: "Time is crucial." },
+    { q: "5. A rat feeding on potato tuber is-", opts: ["Carnivore", "Decomposer", "Producer", "Primary consumer"], ans: 3, exp: "Primary consumer." },
+    { q: "6. What do primary producers have available to convert into biomass?", opts: ["10% of secondary productivity", "energy used for respiration", "gross primary productivity", "net primary productivity"], ans: 3, exp: "Net primary productivity." },
+    { q: "7. Productivity in terrestrial ecosystems is affected by", opts: ["temperature.", "light intensity,", "availability of nutrients and water.", "all of the above."], ans: 3, exp: "All of the above." },
+    { q: "8. Which of the following organisms and trophic levels is mismatched?", opts: ["algae—producer", "phytoplankton—primary consumer", "fungi—detritivore", "bobcat—secondary consumer"], ans: 1, exp: "Phytoplankton are producers, not primary consumers." },
+    { q: "9. The open ocean and tropical rain forest are the two largest contributors to Earth's net primary productivity because", opts: ["both have high rates of net primary productivity.", "both cover huge surface areas of the Earth.", "nutrients cycle fastest in these two ecosystems.", "the ocean covers a huge surface area and the tropical rain forest has a high rate of productivity."], ans: 3, exp: "The ocean covers a huge surface area and the tropical rain forest has a high rate of productivity." },
+    { q: "10. Which of the following is not true of a pyramid of productivity?", opts: ["Only about 10% of the energy in one trophic level is passed into the next level.", "Because of the loss of energy at each trophic level, most food chains are limited to three to five steps.", "The pyramid of productivity of some aquatic ecosystems is inverted because of the large zooplankton primary-consumer level", "Eating grain-fed beef is an inefficient means of obtaining the energy trapped by photosynthesis"], ans: 2, exp: "The pyramid of productivity is usually upright, not inverted." },
+    { q: "11. Nitrogen is often in short supply in terrestrial ecosystems. Why?", opts: ["There is very little free nitrogen in the air.", "Atmospheric nitrogen is primarily in the stratosphere and does not come into contact with terrestrial ecosystems.", "Atmospheric nitrogen cannot be used by most organisms. It needs to be converted to useful forms by bacteria and cyanobacteria.", "Nitrogen solubility in water is very low and therefore atmospheric nitrogen enters cells very slowly."], ans: 2, exp: "Atmospheric nitrogen needs to be fixed by bacteria/cyanobacteria." },
+    { q: "12. Primary productivity", opts: ["is equal to the standing crop of an ecosystem.", "is greatest in freshwater ecosystems.", "is the rate of conversion of light to chemical energy in an ecosystem.", "is inverted in some aquatic ecosystems."], ans: 2, exp: "Rate of conversion of light to chemical energy." },
+    { q: "13. Which of the following trophic levels would have the largest numbers of individuals?", opts: ["primary producers", "omnivores", "primary consumers", "opportunistic feeders"], ans: 0, exp: "Primary producers." },
+    { q: "14. In an ecosystem, bacteria are considered as-", opts: ["Microconsumers", "Macroconsumers", "Primary consumers", "Secondary consumers"], ans: 0, exp: "Microconsumers (decomposers)." },
+    { q: "15. Frog that feeds on an insect is-", opts: ["Primary consumer", "Secondary consumer", "Tertiary consumer", "Decomposer"], ans: 1, exp: "Secondary consumer." },
+    { q: "16. The nature's cleaners are-", opts: ["Producers", "Consumers", "Decomposer and scavenger", "Symbionts"], ans: 2, exp: "Decomposers and scavengers." },
+    { q: "17. Density and distribution of the plant and animal species vary along-", opts: ["Stratification", "Succession", "Gradation", "Zonation"], ans: 3, exp: "Zonation." },
+    { q: "18. In an ecosystem,", opts: ["energy is recycled through the trophic structure.", "energy is usually captured from sunlight by primary producers, passed to secondary producers in the form of organic compounds, and lost to detritivores in the form of heat.", "chemicals are recycled between the biotic and abiotic sectors, whereas energy makes a one-way trip through the food web.", "there is a continuous process by which energy is lost as heat, and chemical elements leave the ecosystem through runoff"], ans: 2, exp: "Chemicals are recycled, energy flows one way." },
+    { q: "19. Chemosynthetic bacteria found around deep-sea vents are examples of", opts: ["producers.", "decomposers.", "chemical cycling.", "secondary productivity"], ans: 0, exp: "Producers." },
+    { q: "20. Photosynthesis and respiration are central to which cycle?", opts: ["The nitrogen cycle", "The carbon cycle", "The phosphorus cycle", "The sulfur cycle"], ans: 1, exp: "The carbon cycle." },
+    { q: "21. Most of Earth's nitrogen is in", opts: ["the atmosphere.", "the oceans.", "fresh water.", "soil."], ans: 0, exp: "The atmosphere." },
+    { q: "22. Most of the world's carbon is found", opts: ["as carbon dioxide in the atmosphere.", "in living organisms.", "as bicarbonate and carbonate ions dissolved in the oceans.", "as carbonate minerals in sedimentary rock."], ans: 3, exp: "As carbonate minerals in sedimentary rock." },
+    { q: "23. Which of these processes is incorrectly paired with its description?", opts: ["nitrification—oxidation of ammonium in the soil to nitrite and nitrate", "nitrogen fixation—reduction of atmospheric nitrogen into ammonia", "denitrification—removal of nitrogen from organic compounds", "ammonification—decomposition of organic compounds into ammonia"], ans: 2, exp: "Denitrification is the conversion of nitrates back to nitrogen gas." },
+    { q: "24. Secondary productivity", opts: ["is measured by the standing crop.", "is the rate of biomass production in consumers,", "is greater than primary productivity.", "is 10% less than primary productivity."], ans: 1, exp: "Rate of biomass production in consumers." },
+    { q: "25. Biogeochemical cycles are global for elements", opts: ["that are found in the atmosphere.", "that are found mainly in the soil,", "such as carbon, nitrogen, and phosphorus.", "that are dissolved in water."], ans: 0, exp: "That are found in the atmosphere." },
+    { q: "26. Stratification is more common in-", opts: ["Deciduous forest", "Tropical rain forest", "Temperature forest", "Tropical savannah"], ans: 1, exp: "Tropical rain forest." },
+    { q: "27. Deer in a forest ecosystem acts as-", opts: ["Primary consumer", "Secondary consumer", "Decomposer", "None"], ans: 0, exp: "Primary consumer." },
+    { q: "28. Which of the following biogeochemical cycles has a major reservoir in sedimentary rock?", opts: ["Carbon cycle", "Nitrogen cycle", "Phosphorus cycle", "More than one cycle"], ans: 2, exp: "Phosphorus cycle." },
+    { q: "29. In biogeochemical cycles, elements that cycle fastest", opts: ["are found in organisms.", "are scarce.", "have a gaseous phase.", "do not become fixed into sediment."], ans: 2, exp: "Have a gaseous phase." },
+    { q: "30. Black soil is due to the presence in it of-", opts: ["Air", "Minerals", "More Moisture", "Organic matter"], ans: 3, exp: "Organic matter." },
+    { q: "31. Which of the following statements regarding the hydrological cycle is false?", opts: ["Most input to the oceans occurs via runoff from rivers.", "More water evaporates from the surface of the oceans than falls as rain over the oceans.", "Less water evaporates from the surface of the land than falls as rain over the land.", "Water found in sedimentary rock is constantly exchanged with the ocean."], ans: 3, exp: "Water in sedimentary rock is not constantly exchanged." },
+    { q: "32. Which of the following always has a 'pyramidal' shape, that is, decreasing values at higher trophic levels?", opts: ["Pyramids of numbers only", "Pyramids of biomass only", "Pyramids of energy only", "Both pyramids of biomass and pyramids of energy"], ans: 2, exp: "Pyramids of energy only." },
+    { q: "33. Which of the following could not be considered an ecosystem?", opts: ["A small pond", "All the fish in a coral reef", "Earth", "A pile of dung in a pasture"], ans: 1, exp: "All the fish in a coral reef (only a community, not ecosystem)." },
+    { q: "34. Which of the following is not an objective of integrated pest management?", opts: ["To eliminate the use of chemicals in agriculture", "To develop pest-resistant strains", "To use natural biological control methods", "To reduce agriculturally-caused pollution"], ans: 0, exp: "To eliminate the use of chemicals in agriculture." },
+    { q: "35. Water logging occurs in-", opts: ["Sandy soil", "Gravel soil", "Loamy soil", "Clay soil"], ans: 3, exp: "Clay soil." },
+    { q: "36. Green plants constitute-", opts: ["1st Trophic level", "2nd trophic level", "3rd trophic level", "4th trophic level"], ans: 0, exp: "1st Trophic level." },
+    { q: "37. Grasslands can support greater grazing rates by herbivores than forests because", opts: ["grasslands receive more sunlight.", "the net production of grasslands is greater.", "grasslands produce less woody plant tissue.", "more of the grassland production is above ground."], ans: 2, exp: "Grasslands produce less woody plant tissue." },
+    { q: "38. Which of the following statements about food chains and energy flow through ecosystems is false?", opts: ["A single organism can feed at several trophic levels.", "The lower the trophic level at which an organism feeds, the more energy is available.", "Detritivores feed at all trophic levels except the producer level.", "Food webs include two or more food chains."], ans: 2, exp: "Detritivores feed at all trophic levels including the producer level." },
+    { q: "39. What is true about photolithotrophs?", opts: ["Obtain energy from radiations and hydrogen from organic compounds", "Obtain energy from radiations and hydrogen from inorganic compounds", "Obtain energy from organic compounds", "Obtain energy from inorganic compounds"], ans: 1, exp: "Obtain energy from radiations and hydrogen from inorganic compounds." },
+    { q: "40. Which of the following biogeochemical cycles is characterized by a major reservoir that is gaseous, and a major inorganic form that can only be utilized by a small group of bacteria and cyanobacteria?", opts: ["Carbon cycle", "Nitrogen cycle", "Phosphorus cycle", "Sulfur cycle"], ans: 1, exp: "Nitrogen cycle." },
+    { q: "41. On average, how much of the energy assimilated at one trophic level is converted to production at the next trophic level (excluding the conversion of sunlight into chemical energy by plants)?", opts: ["5 - 20%", "Less than 1 %", "20 - 30%", "30 - 50%"], ans: 0, exp: "5 - 20%." },
+    { q: "42. A plant in the dark uses 0.02 ml of O2 per minute. The same plant in sunlight releases 0.14 ml of O2 per minute. A correct estimate of its rate of gross primary production is", opts: ["0.02 ml of O2 per minute,", "0.12 ml of O2 per minute.", "0.14 ml of O2 per minute.", "0.16 ml of O2 per minute."], ans: 3, exp: "0.16 ml (0.14 + 0.02)." },
+    { q: "43. Which of the following biogeochemical cycles has a gaseous phase released by volcanoes and fumaroles?", opts: ["Carbon cycle", "Nitrogen cycle", "Phosphorus cycle", "Sulfur cycle"], ans: 3, exp: "Sulfur cycle." },
+    { q: "44. An inverted pyramid of _______ may occasionally be observed in ________ communities.", opts: ["energy, grassland", "energy, forest", "biomass, marine", "biomass, grassland"], ans: 2, exp: "Biomass, marine." },
+    { q: "45. In light, a plant fixes 0.12ml of CO2 per hour, however, in the dark the same plant releases 0.04 ml of CO2 per hour. What is the estimated net primary production of this plant?", opts: ["0.04 ml/hour", "0.08 ml/hour", "0.12 ml/hour", "0.16 ml/hour"], ans: 1, exp: "0.08 ml/hour." },
+    { q: "46. Which of the environment is richest in free oxygen?", opts: ["Salt water", "Atmosphere", "Warm fresh water", "Cold Fresh water"], ans: 1, exp: "Atmosphere." },
+    { q: "47. The large carnivores such as lion, tiger, which cannot be preyed upon further are called-", opts: ["Predator", "Organolithotroph", "Top Carnivore", "Omnivore"], ans: 2, exp: "Top Carnivore." },
+    { q: "48. The phosphorus cycle differs from the carbon cycle in that", opts: ["phosphorus does not enter living organisms, whereas carbon does.", "the phosphorus cycle does not include a gaseous phase, whereas the carbon cycle does.", "the phosphorus cycle includes a solid phase, whereas the carbon cycle does not.", "the primary reservoir of the phosphorus cycle is the atmosphere, whereas the primary reservoir for the carbon cycle is in rock."], ans: 1, exp: "Phosphorus cycle does not include a gaseous phase." },
+    { q: "49. Which of the following changes would not result in an increase in net primary production?", opts: ["Increased precipitation in an arid area", "Increased soil fertility", "Increased latitude (moving from the equator toward the poles)", "Moving down a mountain to warmer temperatures"], ans: 2, exp: "Increased latitude." },
+    { q: "50. Which of the following biogeochemical cycles is characterized by a form which is a major greenhouse gas?", opts: ["Carbon cycle", "Nitrogen cycle", "Phosphorus cycle", "Sulfur cycle"], ans: 0, exp: "Carbon cycle." },
+    { q: "51. Which of the following biogeochemical cycles lacks a gaseous phase?", opts: ["Carbon cycle", "Nitrogen cycle", "Phosphorus cycle", "Sulfur cycle"], ans: 2, exp: "Phosphorus cycle." },
+    { q: "52. Which of the following is not a part of either gross or net primary production in plants?", opts: ["Light reflected from the leaf", "Energy fixed into glucose", "Energy expended in moving material through membranes"], ans: 0, exp: "Light reflected from the leaf." },
+    { q: "53. After nutrient input into a lake is reduced, the time required for the lake to return to pre-eutrophication conditions depends on", opts: ["the rate of turnover of its waters.", "the presence of the appropriate algae-eating fish,", "whether there is a thermocline in the lake.", "the amount of groundwater reaching the lake."], ans: 0, exp: "The rate of turnover of its waters." },
+    { q: "54. Which of the following statements regarding the movement of energy and nutrients through ecosystems is true?", opts: ["Energy flows and nutrients flow.", "Energy flows and nutrients cycle,", "Energy cycles and nutrients cycle.", "Energy cycles and nutrients flow."], ans: 1, exp: "Energy flows and nutrients cycle." },
+    { q: "55. In the human-induced condition called eutrophication, the main biogeochemical cycle that is altered is the ______ cycle, and the effect is to create ________ conditions and decrease species diversity..", opts: ["hydrological, aerobic", "phosphorus, anaerobic", "hydrological, aerobic", "phosphorus, aerobic"], ans: 1, exp: "Phosphorus, anaerobic." },
+    { q: "56. The pyramid of energy is always upright for any ecosystem. This situation indicates the fact that -", opts: ["Producers have the lowest energy conversion efficiency", "Carnivores have a better energy conversion efficiency than herbivores", "Energy conversion efficiency is the same in all trophic", "Herbivores have a better energy conversion efficiency than carnivores"], ans: 0, exp: "Producers have the lowest energy conversion efficiency." },
+    { q: "57. Which of the following statements about biogeochemical cycles is false?", opts: ["Carbon and nitrogen cycle faster than phosphorus.", "All biogeochemical cycles include both organisms and nonliving components.", "Most elements remain longest in the living portion of their cycle.", "You may have atoms in your body that were once part of a dinosaur."], ans: 2, exp: "Most elements remain longest in the living portion of their cycle." },
+    { q: "58. _______is the only life containing region of the atmosphere.", opts: ["Mesosphere", "Exosphere", "Thermosphere", "Troposphere"], ans: 3, exp: "Troposphere." },
+    { q: "59. The amount of energy reaching an upper trophic level is determined by", opts: ["net primary production.", "net primary production and the efficiencies with which food energy is converted to biomass.", "gross primary production.", "gross primary production and the efficiencies with which food energy is converted to biomass."], ans: 1, exp: "Net primary production and the efficiencies with which food energy is converted to biomass." },
+    { q: "60. In a food chain, the maximum population is that of-", opts: ["Producers", "Primary Consumers", "Secondary consumers", "Tertiary consumers"], ans: 0, exp: "Producers." },
+    { q: "61. Termite is a-", opts: ["Detrivore", "Decomposer", "Saprotroph", "All of these"], ans: 0, exp: "Detrivore." },
+    { q: "62. Which of the following is true about the amount of sunlight and heat arriving on Earth?", opts: ["Every place on Earth receives the same annual number of hours of sunlight and the same amount of heat.", "Every place on Earth receives the same annual number of hours of sunlight, but not the same amount of heat.", "Every place on Earth receives the same annual amount of heat, but not the same number of hours of sunlight.", "Both the annual amount of sunlight and the amount of heat received vary over the surface of Earth."], ans: 3, exp: "Both vary over the surface of Earth." },
+    { q: "63. Which of the following statements about biogeochemical cycles is not true?", opts: ["Most elements remain longest in the living portion of their cycle.", "Gaseous elements cycle more quickly than elements without a gaseous phase.", "You may have some atoms in your body that were once part of a dinosaur.", "Biogeochemical cycles all include both organismal and nonliving components."], ans: 0, exp: "Most elements remain longest in the living portion of their cycle." },
+    { q: "65. The energy transferred from one trophic level to another is-", opts: ["5%", "10%", "5%", "20%"], ans: 1, exp: "10%." },
+    { q: "66. The total amount of energy that plants assimilate by photosynthesis is called", opts: ["gross primary production,", "net primary production,", "biomass.", "a pyramid of energy."], ans: 0, exp: "Gross primary production." },
+    { q: "67. In which of the following compartments of the global ecosystem would circulation of materials be affected by Earth's revolution around the sun?", opts: ["Oceans", "Fresh waters", "Atmosphere", "All of the above"], ans: 3, exp: "All of the above." },
+    { q: "69. Secondary producers are", opts: ["Herbivores", "Producers", "Carnivores", "None"], ans: 0, exp: "Herbivores." },
+    { q: "70. The transfer of energy in food chain is", opts: ["Bidirectional", "Unidirectional", "Multi-directional", "Reversible."], ans: 1, exp: "Unidirectional." },
+    { q: "71. A vegetarian food habit of man help in getting", opts: ["Less energy than non-vegetarian", "More energy than non-vegetarian", "Some amount of energy as in non-vegetarian", "More or less same energy as non-vegetarian but depending upon the type of food taken."], ans: 1, exp: "More energy than non-vegetarian." },
+    { q: "72. Second most important trophic level in a lake is", opts: ["Phytoplankton", "Zooplankton", "Benthos", "Fishes."], ans: 1, exp: "Zooplankton." },
+    { q: "73. Percentage of nitrogen in air is about", opts: ["78%", "69%", "21%", "0.03%"], ans: 0, exp: "78%." },
+    { q: "74. In a forest ecosystem green plants are", opts: ["Primary producers", "Primary consumers", "Consumers", "Decomposers"], ans: 0, exp: "Primary producers." },
+    { q: "75. Which is correct sequence in the food chain?", opts: ["Grass -> Wolf -> Deer -> Buffalo", "Bacteria -> Grass -> Rabbit -> Wolf", "Grass -> insect -> Bird -> Snake", "Grass -> Snake -> insect -> Deer."], ans: 2, exp: "Grass -> insect -> Bird -> Snake." },
+    { q: "76. A pond is", opts: ["A biome", "A natural ecosystem", "An artificial ecosystem", "A community of plants and animals only."], ans: 1, exp: "A natural ecosystem." },
+    { q: "77. In an ecosystem, the population of", opts: ["Primary producer is greater than primary consumers", "Secondary consumers is largest", "Primary consumers out number primary", "Primary consumer is least dependent upon primary producers."], ans: 0, exp: "Primary producer is greater than primary consumers." },
+    { q: "78. In a food chain, herbivores are", opts: ["Primary consumers", "Primary producers", "Secondary consumers", "Decomposers."], ans: 0, exp: "Primary consumers." },
+    { q: "79. The secondary productivity means", opts: ["Rate of increase in the biomass of autotrophs", "Rate of increase in the biomass of heterotrophs", "The rate at which the organic molecules are formed in an autotroph", "The rate at which organic molecules are used up by an autotroph."], ans: 1, exp: "Rate of increase in the biomass of heterotrophs." },
+    { q: "80. Which one of the following has the largest population in a food chain?", opts: ["Producers", "Primary consumers", "Secondary consumers", "Decomposers."], ans: 0, exp: "Producers." },
+    { q: "81. Total number of living material at the various trophic levels of a food chain is depicted by pyramids of-", opts: ["Number", "Energy", "Biomass", "All of the above"], ans: 2, exp: "Biomass." },
+    { q: "82. Nepenthes is a-", opts: ["Primary producer", "Consumer", "Saprophyte", "Primary producer and consumer"], ans: 3, exp: "Primary producer and consumer." },
+    { q: "83. Strong winds with intermediate duration are termed-", opts: ["Storm", "Typhoon", "Gusts", "Squall"], ans: 3, exp: "Squall." },
+    { q: "84. When a big fish eats a small fish which eats water fleas supported by phytoplankton, the water fleas are :", opts: ["Producer", "Primary consumers", "Secondary consumers", "Top consumer in this food chain."], ans: 1, exp: "Primary consumers." },
+    { q: "85. Graphic representation of biomass relationship between the producer and the consumers is called", opts: ["Ecological system", "Ecological niche", "Ecological pyramid", "Trophic level"], ans: 2, exp: "Ecological pyramid." },
+    { q: "86. When a peacock eats snakes which eats insects thriving on green plants, the peacock is", opts: ["A primary consumer", "A primary decomposer", "A final decomposer", "The apex of the food pyramid."], ans: 3, exp: "The apex of the food pyramid." },
+    { q: "87. The correct definition of ecosystem is", opts: ["A community of organisms interacting with one another", "The biotic components of an area", "That part of the earth and its atmosphere which is inhabited by living organisms", "A community of organisms together with the environment in which they live."], ans: 3, exp: "A community of organisms together with the environment in which they live." },
+    { q: "88. Which of the following process helps in nutrient conservation?", opts: ["Mineralization", "Immobilization", "Leaching", "Nitrification."], ans: 1, exp: "Immobilization." },
+    { q: "89. Which of the following is most stable ecosystem.", opts: ["Forest", "Desert", "Mountain", "Ocean"], ans: 3, exp: "Ocean." },
+    { q: "90. Which of the following is an abiotic component of the ecosystem?", opts: ["Bacteria", "Humus", "Plants", "Fungi."], ans: 1, exp: "Humus." },
+    { q: "91. Which of the food chain will be advantageous in terms of energy ?", opts: ["Plants -> Man", "Plants -> Goat -> Man", "Plants -> Mice -> Snakes -> Hawk", "Plants -> Grass hopper -> Insects -> Frog -> Snake -> Hawk."], ans: 0, exp: "Plants -> Man." },
+    { q: "92. A food chain consists of-", opts: ["Producer only", "Producer and consumer", "Consumers", "Decomposers."], ans: 1, exp: "Producer and consumer." },
+    { q: "93. Ecosystem has two components", opts: ["Plants and animals", "Weeds and trees", "Biotic and abiotic", "Frogs and man."], ans: 2, exp: "Biotic and abiotic." },
+    { q: "94. Ecological niche refers to", opts: ["Habitat", "Microhabitat", "Habitat and its relationship", "Habitat and climate."], ans: 2, exp: "Habitat and its relationship." },
+    { q: "95. Intensive planting of trees to increase forest cover is-", opts: ["Afforestation", "Agro-Foresting", "Deforestation", "Social forestry"], ans: 0, exp: "Afforestation." },
+    { q: "96. Forest area in India is about-", opts: ["9% of geographical area", "19% of geographical area", "29% of geographical area", "37% of geographical area"], ans: 1, exp: "19% of geographical area." },
+    { q: "97. The gaseous portion of outer earth surface is", opts: ["Hydrosphere", "Atmosphere", "Lithosphere", "Biotic component"], ans: 1, exp: "Atmosphere." },
+    { q: "98. Photic zone lies upto the depth of", opts: ["10 M", "100 M", "150 M", "200 M"], ans: 3, exp: "200 M." },
+    { q: "99. Which of the following biome has largest number of species?", opts: ["Taiga", "Tropical forest", "Deciduous forest", "Chapparal."], ans: 1, exp: "Tropical forest." },
+    { q: "100. Which of the following represents the sedimentary type of nutrient cycle?", opts: ["Nitrogen", "Carbon", "Phosphorus", "Oxygen."], ans: 2, exp: "Phosphorus." },
+    { q: "101. Mild grazing in grasslands by herbivores-", opts: ["Retards growth of grasses", "Destroys vegetation", "Arrests growth of grasses", "Stimulates growth of grasses"], ans: 3, exp: "Stimulates growth of grasses." },
+    { q: "102. Soil fertility is reduced by-", opts: ["Nitrogen fixing bacteria", "Decaying organic matter", "Crop rotation", "Intensive agriculture"], ans: 3, exp: "Intensive agriculture." },
+    { q: "103. Water-logged soil is-", opts: ["Physically wet but physiologically dry", "Physically as well as physiologically wet", "Physically as well as physiologically dry", "Physically dry"], ans: 0, exp: "Physically wet but physiologically dry." },
+    { q: "104. Primary productivity depends upon - A. the plant species inhabiting a particular area B. availability of nutrients C. photosynthetic capacity of plants D. none", opts: ["A, B, C", "A, B", "B, C", "A, C"], ans: 0, exp: "A, B, C." },
+    { q: "105. Arrange the following ecosystems in increasing order of mean NPP (Tonnes / ha / year) A. Tropical deciduous forest B. Temperate coniferous forest C. Tropical rain forest D. Temperate deciduous forest", opts: ["B < A < D < C", "D < B < A < C", "A < C < D < B", "B < D < A < C"], ans: 3, exp: "B < D < A < C." },
+    { q: "106. Which is correct?", opts: ["primary succession occurs faster than secondary succession.", "secondary succession occurs faster than primary succession", "primary and secondary succession occur at the same rate", "none"], ans: 1, exp: "Secondary succession occurs faster than primary succession." },
+    { q: "107. Which of the following is/are incorrect - A. All ecosystems are constant in size B. In nature food chains exist, not food web C. flow of energy in ecosystem is linear D. Gene flow occurs between 2 different population (of 2 species)", opts: ["A, C", "A, D", "A, B, D", "A, B, C, D"], ans: 3, exp: "All are incorrect." },
+    { q: "108. Column I: I. Phosphorus, II. Carbon, III. Goat, IV. Grasses. Column II: A. Atmosphere, B. Producers, C. Rock, D. T2. The correct match is", opts: ["I-C, II-B, III-D, IV-A", "I-C, II-A, III-D, IV-B", "I-A, II-C, III-B, IV-D", "I-B, II-C, III-D, IV-A"], ans: 1, exp: "I-C, II-A, III-D, IV-B." },
+    { q: "109. A. The amount of living matter (biomass) present at every trophic level is called standing crop. B. Saprophytes are not given any place in ecological pyramids. C. Ecological pyramid does not account the same species belonging to two or more trophic levels. D. Humus is reservoir of nutrients.", opts: ["All are correct", "All are incorrect", "Only D is correct", "A, D and C are correct"], ans: 0, exp: "All are correct." },
+    { q: "110. Food chain starts with -", opts: ["Respiration", "Photosynthesis", "N2-fixation", "None"], ans: 1, exp: "Photosynthesis." },
+    { q: "111. Autotrophs are-", opts: ["T1", "T2", "T3", "T4"], ans: 0, exp: "T1." },
+    { q: "112. Column I: I. Presence of 3-4 storey of plant crowns in a forest, II. A biome having grasses with scattered trees, III. Man made ecosystem, IV. Pioneer in Hydrosere. Column II: A. BGA, B. Stratification, C. Savannah, D. Dam. The correct match is", opts: ["I-C, II-B, III-D, IV-A", "I-C, II-A, III-D, IV-B", "I-A, II-C, III-B, IV-D", "I-B, II-C, III-D, IV-A"], ans: 3, exp: "I-B, II-C, III-D, IV-A." },
+    { q: "113. A dynamic equilibrium is established between community and environment when-", opts: ["climax is attained", "pioneers are found", "seral communities are growing", "none"], ans: 0, exp: "Climax is attained." },
+    { q: "114. Column I: I. Pioneer community on lithosphere, II. Ecological succession, III. Climax community, IV. Ecological pyramid. Column II: A. Crustose lichens, B. Mesophytes, C. Ecosystem development, D. Elton. The correct match is", opts: ["I-C, II-B, III-D, IV-A", "I-C, II-A, III-D, IV-B", "I-A, II-C, III-B, IV-D", "I-B, II-C, III-D, IV-A"], ans: 2, exp: "I-A, II-C, III-B, IV-D." },
+    { q: "115. Which of the following include(s) ecosystem services - A. purification of air and water by forests B. forests mitigate droughts and flood C. forests act as store house of carbon D. forests influence hydrological cycle", opts: ["A, C", "A, D", "A, B, C", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "116. Which of the following ecological pyramids may be upright or inverted? A. pyramid of energy B. pyramid of number C. pyramid of biomass D. none", opts: ["A, C", "B, C", "A, B, C", "A, B, C, D"], ans: 1, exp: "B, C." },
+    { q: "117. Which of following is / are trend (s) in ecological succession A. an increase in complexity of species B. an increase in productivity C. an increase in community stability and species diversity D. a decrease in nonliving organic materials.", opts: ["A, C", "A, D", "A, B, C", "A, B, C, D"], ans: 2, exp: "A, B, C." },
+    { q: "118. Which is / are true regarding ecosystem? A. self sufficient unit B. cyclic exchange of materials between living beings and environment C. only requirement is input of energy D. characterized by a major vegetation type", opts: ["A, C", "A, D", "A, B, C", "A, B, C, D"], ans: 2, exp: "A, B, C." },
+    { q: "119. Which of the following factors influence communities- A. Climate B. Species interaction C. feeding relationships among organisms D. succession", opts: ["A, C", "A, D", "A, B, C", "A, B, C, D"], ans: 3, exp: "A, B, C, D." },
+    { q: "120. Causes of succession include- A. climatic change B. one species altering the environment for the next species C. different species dispersal mechanism D. None", opts: ["A, C", "A, D", "A, B, C", "D"], ans: 2, exp: "A, B, C." },
+    { q: "121. The phosphates remain outside the natural cycle for a long time -", opts: ["When they form compounds with metals", "When they are incorporated in bone and teeth", "When the bodies of the organisms excrete and decompose", "Both (a) and (b)"], ans: 3, exp: "Both (a) and (b)." },
+    { q: "122. Column I: I. Primary succession, II. Climax community, III. Consumer, IV. Producer. Column II: A. Autotrophs, B. Community that has completed succession, C. Colonization of a new environment, D. Animals. The correct match is", opts: ["I-C, II-B, III-D, IV-A", "I-C, II-A, III-D, IV-B", "I-A, II-C, III-B, IV-D", "I-B, II-C, III-D, IV-A"], ans: 0, exp: "I-C, II-B, III-D, IV-A." },
+    { q: "123. Ecological succession is-", opts: ["directional but unpredictable", "directionless but predictable", "directional and predictable", "directionless and unpredictable"], ans: 2, exp: "Directional and predictable." },
+    { q: "124. Herbivores are -", opts: ["Primary consumer", "T3", "T2", "Primary consumers or T2 or Consumer of 1st order."], ans: 3, exp: "Primary consumers or T2 or Consumer of 1st order." },
+    { q: "125. Succession is a -", opts: ["long term process", "very fast process", "process leading the development of a population", "migration"], ans: 0, exp: "Long term process." },
+    { q: "126. Select the incorrect statement(s) - A. The factors affecting decomposition are chemical nature of detritus and the climatic factors. B. If detritus is rich in lignin and chitin decomposition is very fast C. Decomposition is very slow if the detritus is rich in nitrogen D. Detritus is the raw material for decomposition", opts: ["A, C", "A, D", "A, B, C", "A, B, C, D"], ans: 2, exp: "A, B, C." },
+    { q: "127. Which of the following statement(s) is / are correct about biogeochemical cycle - A. Carbon and nitrogen cycle faster than phosphorus cycle B. All biogeochemical cycles include both organisms and nonliving components C. Most elements remain longest in the living portion of their cycle D. The chemical elements used by organisms in large quantities cycle back and forth between organisms and environment.", opts: ["A, C", "A, B, D", "A, B, C", "A, B, C, D"], ans: 1, exp: "A, B, D." },
+    { q: "128. A food chain consists of - A. 1° producers B. secondary producers C. consumers D. none", opts: ["A, C", "A, D", "A, B, C", "D"], ans: 0, exp: "A, C." },
+    { q: "129. Food chains differ from food webs in that - A. food chains are a single sequence of who eats whom in a community. B. food chains better represent the entire community. C. food webs represent the complex interaction among food chain. D. food chain is the flow of energy in a population", opts: ["A, C", "A, D", "A, B, C", "A, B, C, D"], ans: 0, exp: "A, C." },
+    { q: "130. An ecosystem which can be easily damaged but recover after some time if damaging effect stops will be having - A. high stability B. low stability C. high resistance D. low resistance", opts: ["A, C", "A, D", "A, B, C", "A, B, C, D"], ans: 0, exp: "A, C." },
+    { q: "131. Which of the following are artificial aquatic ecosystems? A. large dams and reservoirs B. lakes and canals C. fishery tanks and aquaria D. none", opts: ["A", "A, B", "A, C", "A, B, C"], ans: 2, exp: "A, C." },
+    { q: "132. The term used to describe all the species and physical factor at a site is the-", opts: ["ecology", "habitat", "ecosystem", "community"], ans: 2, exp: "Ecosystem." },
+    { q: "133. The amount of energy that is left to build bodies is termed -", opts: ["gross productivity", "net productivity", "total productivity", "respiratory loss"], ans: 1, exp: "Net productivity." },
+    { q: "134. Which of the following in the least source of renewable energy ?", opts: ["Petroleum", "Forests", "Coal", "Cattle"], ans: 0, exp: "Petroleum." },
+    { q: "135. Which of the following is NOT a reason why productivity declines from one trophic level to the next?", opts: ["Energy is converted into tissue by many trophic levels.", "Some of the energy stored in the chemical bonds of reduced carbon compounds is lost as heat as it is metabolized.", "Carnivores never consume many herbivores because they hide effectively or sequester toxins.", "Much of the net primary productivity is unavailable to herbivores."], ans: 0, exp: "Energy is converted into tissue by many trophic levels." },
+    { q: "137. Why are changes in the global carbon cycle important?", opts: ["Less atmospheric carbon means that there are less fossil fuels available.", "Changes to the global carbon cycle cause changes in the global nitrogen cycle, as well.", "More atmospheric carbon dioxide means that there is less carbon available for the growth of terrestrial plants.", "Carbon dioxide functions as a greenhouse gas."], ans: 3, exp: "Carbon dioxide functions as a greenhouse gas." },
+    { q: "138. Using the figure, which of the following is NOT true of the biogeochemical cycle? (Figure unavailable, standard question)", opts: ["Nutrients are taken up from the soil by plants and incorporated into plant tissue.", "Nutrients pass to animal members of the ecosystem once plants are eaten.", "If the plant dies, the nutrients and the plant biomass become litter.", "Nutrients remain in an animal until the animal's death."], ans: 3, exp: "Nutrients remain in an animal until the animal's death." },
+    { q: "139. Which of the following is NOT true of a food web?", opts: ["The overall average number of trophic levels found in a food web is about 3.5.", "It describes the species occupying each trophic level in a particular ecosystem.", "As energy is transferred through the food chain, a lot of it is lost.", "Several species can be present in each trophic level of a food web."], ans: 0, exp: "The overall average number of trophic levels found in a food web is about 3.5." },
+    { q: "140. Several of the major human impacts are farming, logging, burning, and soil erosion. They all result in accelerated nutrient loss by what common mechanism?", opts: ["soil compaction", "environmental pollution", "vegetation removal", "loss of animal habitat"], ans: 2, exp: "Vegetation removal." },
+    { q: "141. Which of the following is true of net primary production?", opts: ["Deserts and arctic regions have the highest productivity.", "There is no productivity in the depths of the oceans.", "Marine productivity is highest along coasts and in areas where water wells up from the ocean bottom to the surface.", "Temperate areas are more productive than tropical areas."], ans: 2, exp: "Marine productivity is highest along coasts and in areas where water wells up from the ocean bottom to the surface." },
+    { q: "142. Which of the following is NOT a hypothesis for why food-chain length is limited?", opts: ["Food-chain length is limited by one organism's ability to consume another.", "Food-chain length is limited because they are easily disrupted by environmental perturbations.", "Food-chain length is limited by productivity.", "Food-chain length is a function of an ecosystem's physical structure."], ans: 0, exp: "Food-chain length is limited by one organism's ability to consume another." },
+    { q: "143. In a comparative study of grassland ecosystem and pond ecosystem it may be observed that -", opts: ["The biotic components are almost similar", "The abiotic components are almost similar", "Primary and secondary consumers are similar", "Both biotic and abiotic components are different"], ans: 3, exp: "Both biotic and abiotic components are different." },
+    { q: "144. Which of the following is NOT a basic aspect of biogeochemical cycling?", opts: ["the nature and size of the pools or reservoirs where elements are stored for a period of time", "how different biogeochemical cycles interact", "how energy flows through an ecosystem", "the rate of movement between pools and the factors that influence these rates"], ans: 2, exp: "How energy flows through an ecosystem." },
+    { q: "145. Source of energy which does not produce CO2 is-", opts: ["Oil", "Coal", "Nuclear energy", "Organic compounds"], ans: 2, exp: "Nuclear energy." },
+    { q: "146. Which of the following is false? I. Quantity of biomass in a trophic level at a particular period is called standing crop. II. The energy content in a trophic level is determined by considering a few individuals of a species in that trophic level. III. The succession that occurs in newly cooled lava is called primary succession. IV. Rate of succession is faster in the secondary succession V. Phytoplanktons are the pioneers in aquatic succession", opts: ["Only II", "Only III", "Only V", "Only I and IV"], ans: 0, exp: "Only II." },
+    { q: "147. Which of the following is NOT part of the natural nitrogen cycle?", opts: ["decomposition", "lightning", "biological fixation", "fossil fuels"], ans: 3, exp: "Fossil fuels." },
+    { q: "148. With which of four levels of biological organisation Ecology is basically concerned? A. Organisms B. Species C. Family D. Population E. Community F. Biomass", opts: ["A, B, C, D", "A, C, D, E", "A, D, E, F", "B, D, E, F"], ans: 2, exp: "A, D, E, F." },
+    { q: "149. Which of the following statements are correct? A. Detritivores break down detritus into smaller particles. This process is called fragmentation. B. By the process of leaching, water soluble inorganic nutrients go down into the soil horizon and get precipitated as unavailable salts. C. Bacterial and fungal enzymes degrade detritus into simpler inorganic substances. This process is called catabolism.", opts: ["A, B, C", "A, B", "B, C", "A, C"], ans: 0, exp: "A, B, C." },
+    { q: "150. Two similar Halophytes are called-", opts: ["Isotype", "Neotype", "Synotype", "Mesotype"], ans: 2, exp: "Synotype." },
+    { q: "151. In trophic level of our ecosystem we belong to-", opts: ["Secondary consumer and fourth trophic level", "Secondary consumer and 3rd trophic level", "Tertiary consumer and 3rd trophic level", "Tertiary consumer and fourth trophic level"], ans: 0, exp: "Secondary consumer and fourth trophic level." },
+    { q: "152. The component of the ecosystem are seen to function as a unit when you consider which of the following aspects A. Productivity B. Decomposition C. Energy flow D. Nutrient cycle", opts: ["B, C, D", "A, B, C", "A, B", "A only"], ans: 1, exp: "A, B, C." },
+    { q: "153. The free floating organism of an open sea and sea shores are collectively called-", opts: ["Plankton", "Nektons", "Benthonic", "None"], ans: 0, exp: "Plankton." },
+    { q: "154. Which of the following is correct?", opts: ["Decomposition is largely an oxygen non-requiring process.", "The rate of decomposition is controlled by chemical composition of detritus and climate factors", "In particular climatic condition, decomposition rate is faster if detritus is rich in lignin and chitin and decomposition is slower if detritus is rich in nitrogen and water-soluble substances like sugars.", "Temperature and soil moisture are the least important climatic factor that regulate, decomposition through their effect on the activities of soil microbes"], ans: 1, exp: "The rate of decomposition is controlled by chemical composition of detritus and climate factors." },
+    { q: "155. Desert can be converted into green land by planting -", opts: ["Oxylophytes", "Psammophytes", "Halophytes", "Tropical trees"], ans: 1, exp: "Psammophytes." },
+    { q: "156. Dead plant remains such as leaves, bark, flowers and dead remains of animals, including fecal matter constitutes", opts: ["Detritus", "Duff", "Solonchak", "Humus"], ans: 0, exp: "Detritus." },
+    { q: "158. The amount of biomass or organic matter produced per unit area over a time period by plants during photosynthesis is called primary production, which is expressed as", opts: ["g-2", "kcal m-2", "(kcal m-2) yr-1", "Both (a) & (b)."], ans: 2, exp: "(kcal m-2) yr-1." },
+    { q: "159. Match the following - Column I: A. Standing state, B. Gaseous cycles, C. Standing crop, D. Sedimentary cycles. Column II: (i) Perfect, (ii) Amount of nutrients, (iii) Imperfect, (iv) Living matter at different trophic levels", opts: ["A-(ii), B-(i), C-(iv), D-(iii)", "A-(i), B-(ii), C-(iii), D-(iv)", "A-(iii), B-(ii), C-(iv), D-(i)", "A-(i), B-(iv), C-(iii), D-(ii)"], ans: 0, exp: "A-(ii), B-(i), C-(iv), D-(iii)." },
+    { q: "161. Parmelia and Peltigera are-", opts: ["Foliose lichens", "Crustose lichens", "Fructicose lichens", "Moss"], ans: 0, exp: "Foliose lichens." },
+    { q: "162. Which of the following statements regarding decomposition is false? I. Warm and moist favours decomposition. II. Decomposition rate is slower if detritus is rich in chitin and lignin. III. Earthworm is detritus. IV. Precipitation of soluble inorganic nutrients in the soil horizon as unavailable salt is called mineralization. V. Detritus is the raw material for decomposition.", opts: ["Only II", "Only I", "Only IV", "Only V"], ans: 2, exp: "Only IV." },
+    { q: "163. Which of the following represents an incomplete ecosystem?", opts: ["Small pond, forest lake", "Tree ecosystem, Estuaries", "Agricultural ecosystem, kitchen-garden", "Rain water pond, sea bottom"], ans: 3, exp: "Rain water pond, sea bottom." },
+    { q: "164. Organisms which are associated with first as well as third trophic level are", opts: ["Macrophytes", "Phytoplanktons", "Chemoautotrophs", "Insectivorous plants"], ans: 3, exp: "Insectivorous plants." },
+    { q: "166. Which of the following most often limits the rate at which nutrients move through an ecosystem?", opts: ["species composition", "decomposition rate", "primary production", "none of the above"], ans: 1, exp: "Decomposition rate." },
+    { q: "167. Lichen is the pioneer vegetation in which type of succession-", opts: ["Hydrosere", "Lithosere", "Psammosere", "Xerosere"], ans: 1, exp: "Lithosere." },
+    { q: "169. Productivity at the second trophic level is always", opts: ["greater than the productivity at the first trophic level", "less than the productivity at the first trophic level", "equal to the productivity at the first trophic level", "extremely variable compared to the productivity at the first trophic level"], ans: 1, exp: "Less than the productivity at the first trophic level." },
+    { q: "170. The overall productivity in terrestrial ecosystems is limited by", opts: ["temperature", "water", "sunlight", "a combination of the above"], ans: 3, exp: "A combination of the above." },
+    { q: "173. Which one of the following animals may occupy more than one trophic levels in the same ecosystem at the same time?", opts: ["Sparrow", "Lion", "Goat", "Frog"], ans: 0, exp: "Sparrow." },
+    { q: "174. Bacterial role in carbon cycle is-", opts: ["Chemosynthesis", "Photosynthesis", "Breakdown of organic matter", "None of these"], ans: 2, exp: "Breakdown of organic matter." },
+    { q: "175. Perturbation of which of the following cycles contributes most to global warming?", opts: ["the global carbon cycle", "the global water cycle", "the global nitrogen cycle", "All of these cycles contribute equally."], ans: 0, exp: "The global carbon cycle." },
+    { q: "176. The path that an element takes as it moves from abiotic systems through living organisms and back again is referred to as its", opts: ["biogeochemical cycle", "biological cycle", "nutrient cycle", "geochemical cycle"], ans: 0, exp: "Biogeochemical cycle." },
+    { q: "178. An ecological pyramid of biomass is the representation of the ecosystem's", opts: ["energy flow through each trophic level", "population in each food web", "tissue organisation at each trophic level.", "all of these."], ans: 2, exp: "Tissue organisation at each trophic level." },
+    { q: "179. Which one has always a steeper vertical gradient?", opts: ["pyramid of mass", "pyramid of energy", "pyramid of numbers", "pyramid of energy in aquatic ecosystem"], ans: 1, exp: "Pyramid of energy." },
+    { q: "181. The problem(s) with the notion that if all humans became vegetarians, then the earth could support more people is that", opts: ["some land is suitable only for grazing, not raising grains.", "humans require supplemental protein, which often comes from dairy products, in their diets.", "without population stabilization, humans would eventually use up all the agricultural land anyway.", "all of the above are true."], ans: 3, exp: "All of the above are true." },
+    { q: "183. Of the five elements that are the most important constituents of living things, the only one that requires the action of microorganisms to enter the living system is", opts: ["carbon.", "hydrogen.", "oxygen.", "nitrogen."], ans: 3, exp: "Nitrogen." },
+    { q: "184. Which one is inverted pyramid?", opts: ["pyramid of biomass in grassland", "Pyramid of biomass in pond ecosystem", "pyramid of numbers in grassland ecosystem", "pyramid of energy in a pond ecosystem."], ans: 1, exp: "Pyramid of biomass in pond ecosystem." },
+    { q: "185. Which one of the following is not used for construction of ecological pyramids?", opts: ["fresh weight", "dry weight", "number of individuals", "rate of energy flow"], ans: 0, exp: "Fresh weight." },
+    { q: "186. Pyramid of numbers in grassland ecosystem is", opts: ["linear", "upright", "inverted", "negative."], ans: 1, exp: "Upright." },
+    { q: "187. Tip of an ecological pyramid is occupied by -", opts: ["Producers", "Herbivores", "Carnivores", "None of the above"], ans: 2, exp: "Carnivores." },
+    { q: "188. In most food chains,", opts: ["there are fewer individuals at the top predator level than at the second trophic level.", "there is less usable energy at the herbivore level than at the carnivore level.", "there are few individuals at the decomposer level.", "there is less usable energy at the autotrophic level than at the carnivore level."], ans: 0, exp: "There are fewer individuals at the top predator level than at the second trophic level." },
+    { q: "189. Relationships in an ecosystem can be depicted through", opts: ["pyramid of energy", "pyramid of biomass", "pyramid of numbers", "all the above."], ans: 3, exp: "All the above." },
+    { q: "190. Which one of the following regarding ecological pyramid is not correct?", opts: ["In most ecosystems, the pyramid of numbers and biomass are upright", "In tree-dominated ecosystem the pyramid of numbers is inverted", "The pyramid of energy expresses mainly the rate of food production", "In deep water ecosystem, the pyramid of biomass is upright"], ans: 3, exp: "In deep water ecosystem, the pyramid of biomass is upright." },
+    { q: "191. Mr. X is eating yoghurt. For this he is occupying the trophic level -", opts: ["First", "Second", "Third", "Fourth"], ans: 1, exp: "Second." },
+    { q: "193. Which of the following is called as a detritivore?", opts: ["an animal feeding on decaying organic matter", "an animal feeding on a plant", "a plant feeding on an animal", "an animal feeding on another animal."], ans: 0, exp: "An animal feeding on decaying organic matter." },
+    { q: "194. In a pyramid of numbers, in a grassland ecosystem, the largest population is that of", opts: ["producers", "tertiary consumers", "secondary consumers", "primary consumers."], ans: 0, exp: "Producers." },
+    { q: "195. The breakdown of detritus into smaller particles by earthworm is a process called -", opts: ["Humification", "Fragmentation", "Mineralization", "Catabolism"], ans: 1, exp: "Fragmentation." },
+    { q: "196. In autogenic succession", opts: ["early and continued dominance of autotrophic organism takes place like green plants", "replacement of existing communities cause largely by any other external condition", "early dominance of heterotrophs takes place such as bacteria, fungi and other animals", "community itself modifies its own environment thus causing its own replacement by new communities."], ans: 3, exp: "Community itself modifies its own environment." },
+    { q: "197. If a pyramid of number, representing an ecosystem of a large fresh water pond, the number of primary consumers is", opts: ["more than the producers", "less than the tertiary consumers", "more than the secondary consumers", "less than the secondary consumers."], ans: 2, exp: "More than the secondary consumers." },
+    { q: "198. The most energy-efficient method to feed large human populations such as in China is to eat:", opts: ["mostly rice and vegetables with little meat", "large amounts of meat with few vegetables", "large amounts of fish with little rice", "None"], ans: 0, exp: "Mostly rice and vegetables with little meat." },
+    { q: "199. Which of the following statements is false? I. Pyramids of energy and yearly biomass production can never be inverted, since this would violate the laws of thermodynamics. II. Pyramids of standing crop and numbers can be inverted, since the amount of organisms at any one time does not indicate the amount of energy flowing through the system. III. There are certain limitations of ecological pyramids such as it does not take into account the same species belonging to two or more trophic levels. IV. Saprophytes are not given any place in ecological pyramids even though they play a vital role in the ecosystem", opts: ["I and II", "III and IV", "All", "None"], ans: 3, exp: "None." },
+    { q: "200. The correct sequence of plants in a hydrosere is", opts: ["Volvox -> Hydrilla -> Pistia -> Scirpus -> Lantana -> Oak", "Pistia -> Volvox -> Scirpus -> Hydrilla -> Oak -> Lantana", "Oak -> Lantana -> Volvox -> Hydrilla -> Pistia -> Scirpus", "Oak -> Lantana -> Scirpus -> Pistia -> Hydrilla -> Volvox."], ans: 0, exp: "Volvox -> Hydrilla -> Pistia -> Scirpus -> Lantana -> Oak." },
+    { q: "201. In the process of ecological succession, organisms that are present at one stage change", opts: ["the environment in some way", "from abiotic to biotic factors", "from producers to consumers", "the relationship between global warming and natural disturbances"], ans: 0, exp: "The environment in some way." },
+    { q: "202. The bacteria which attack dead animals are", opts: ["first link of the food chain and are known as primary producers.", "second link of the food chain and are herbivorous", "third link of the food chain and are tertiary consumers", "the end of food chain and are decomposers."], ans: 3, exp: "The end of food chain and are decomposers." },
+    { q: "203. The four main processes of the water cycle are", opts: ["evaporation, transpiration, condensation, and vaporization", "precipitation, condensation, transpiration, and evaporation", "transpiration, evaporation, precipitation, and vaporization", "condensation, vaporization, precipitation, and circulation"], ans: 1, exp: "Precipitation, condensation, transpiration, and evaporation." },
+    { q: "204. Animals with a constant body temperature such as mammals and birds require more food than do animals with changing body temperature such as reptiles and fish. Why?", opts: ["Much of the food is utilised to produce heat to keep warm", "Warm-blooded animals waste more food than cold-blooded animals", "Cold-blooded animals digest their food more efficiently than warm-blooded animals", "None"], ans: 0, exp: "Much of the food is utilised to produce heat to keep warm." },
+    { q: "205. Which one of the following types of organisms occupy more than one trophic level in a pond ecosystem?", opts: ["fish", "zooplankton", "frog", "phytoplankton."], ans: 0, exp: "Fish." },
+    { q: "206. In recycling of mineral elements within an ecosystem, the responsible direct causal organism are called", opts: ["Decomposers", "Producers", "Primary consumers", "Secondary consumers"], ans: 0, exp: "Decomposers." },
+    { q: "207. Which one of the following is considered as pioneer community in xerarch?", opts: ["annual herb", "perennial herb", "shrub stage", "lichen."], ans: 3, exp: "Lichen." },
+    { q: "208. Read the following statements carefully. (i) Primary succession is a very slow process taking thousands of years for the climax to be reached. (ii) Energy at a higher trophic level is always more than at a lower level. (iii) Bacterial and fungal enzymes degrade detritus into simpler inorganic substances. This process is called fragmentation, (iv) All succession whether taking place in water or on land, proceeds to a similar climax community — the mesic. Which of the two above statements are, correct?", opts: ["(i) & (ii)", "(ii) & (iii)", "(i) & (iv)", "(iii) & (iv)."], ans: 2, exp: "(i) & (iv)." },
+    { q: "209. Amount of carbon in the environment", opts: ["does not change", "is converted to heat and lost to the abiotic environment", "is called the carbon cycle", "immediately converts to carbon dioxide"], ans: 2, exp: "Is called the carbon cycle." },
+    { q: "210. A detrivorous animal of economic importance is", opts: ["earthworm", "giriraja fowl", "caterpillar larva", "leech."], ans: 0, exp: "Earthworm." },
+    { q: "211. Consider the following statements concerning food chains. (A) Removal of 80% tigers from an area resulted in greatly increased growth of vegetation (B) Removal of most of the carnivores resulted in an increased population of deers' (C) The length of food chains is generally limited to 3-4 trophic levels due to energy loss (D) The length of food chains may vary from 2 to 8 trophic levels. Which two of the above statements are correct?", opts: ["A, D", "A, B", "B, C", "C, D."], ans: 2, exp: "B, C." },
+    { q: "212. Which one of the following ecosystem types has the highest annual net primary productivity?", opts: ["tropical deciduous forest", "temperate evergreen forest", "temperate deciduous forest", "tropical rain forest."], ans: 3, exp: "Tropical rain forest." },
+    { q: "213. The free floating organisms of an open sea and the shore are collectively called", opts: ["planktons", "benthos", "nektons", "sea anemone."], ans: 0, exp: "Planktons." },
+    { q: "214. In plant succession when climax is reached the net productivity", opts: ["continues to increase", "becomes halved", "becomes stable", "becomes zero"], ans: 2, exp: "Becomes stable." },
+    { q: "215. Find out the correct order of succession levels in xerarch.", opts: ["lichen, moss stage, annual herb stage, perennial herb stage, shrub stage, forest", "annual herb stage, perennial herb stage, lichen, moss stage, shrub stage, forest", "perennial herb stage, annual herb stage, lichen, moss stage, shrub stage, forest", "shrub stage, forest, annual herb stage, perennial herb stage, lichen, moss stage."], ans: 0, exp: "Lichen, moss stage, annual herb stage, perennial herb stage, shrub stage, forest." },
+    { q: "216. Which creatures are direct or indirect food of all creatures on the ocean's surface?", opts: ["protozoans", "phytoplanktons", "fish", "aquatic insects."], ans: 1, exp: "Phytoplanktons." },
+    { q: "217. Both, hydrarch and xerarch successions lead to :", opts: ["Medium water conditions", "Xeric conditions", "Highly dry conditions", "Excessive wet conditions"], ans: 0, exp: "Medium water conditions." },
+    { q: "218. The dominant second trophic level, in a lake ecosystem is", opts: ["phytoplankton", "zooplankton", "benthos", "plankton"], ans: 1, exp: "Zooplankton." },
+    { q: "219. A consumer whose carbon atoms have already passed through three species is a -", opts: ["scavenger", "tertiary producer", "tertiary consumer", "secondary consumer"], ans: 2, exp: "Tertiary consumer." },
+    { q: "220. Which one of the following processes during decomposition is correctly described ?", opts: ["Humification-Leads to the accumulation of a dark coloured substance humus which undergoes microbial action at a very fast rate", "Catabolism-Last step in the decomposition under fully anaerobic condition", "Leaching - water soluble inorganic nutrients rise to the top layers of soil", "Fragmentation-Carried out by organisms such as earthworm"], ans: 3, exp: "Fragmentation-Carried out by organisms such as earthworm." },
+    { q: "221. In an ecosystem, at a particular time, standing crop", opts: ["total living material", "total detritus", "both (a) and (b)", "total nutrients present in the crop."], ans: 0, exp: "Total living material." },
+    { q: "222. Which one of the following is not a functional unit of an ecosystem", opts: ["Energy flow", "Decomposition", "Productivity", "Stratification"], ans: 3, exp: "Stratification." },
+    { q: "223. In terms of percentage of total forest cover, the most abundant type of the forest in India is", opts: ["Tropical evergreen", "Tropical moist deciduous", "Tropical dry deciduous", "Tropical scrubs"], ans: 1, exp: "Tropical moist deciduous." },
+    { q: "225. The given pyramid shows the relative biomass of zooplankton and phytoplankton in a marine ecosystem. The biomass of the zooplanktons is higher than that of the phytoplanktons because-", opts: ["The zooplanktons convert energy more efficiently", "The zooplanktons have a shorter life cycle than the phytoplanktons", "The phytoplanktons are individually much smaller than the zooplanktons", "The phytoplanktons have an extremely high turnover rate"], ans: 3, exp: "The phytoplanktons have an extremely high turnover rate." },
+    { q: "226. Which one of the following statements is correct for secondary succession?", opts: ["it is similar to primary succession except that it has a relatively fast pace", "It begins on a bare rock", "It occurs on a deforested site", "It follows primary succession"], ans: 2, exp: "It occurs on a deforested site." },
+    { q: "227. The upright pyramid of number is absent in", opts: ["Pond", "Forest", "Lake", "Grassland"], ans: 1, exp: "Forest." },
+    { q: "228. The rate of formation of new organic matter by rabbit in a grassland, is called :", opts: ["Net productivity", "Secondary productivity", "Net primary productivity", "Gross primary productivity"], ans: 1, exp: "Secondary productivity." },
+    { q: "229. A term biotype means-", opts: ["All individuals having same phenotype", "All individuals having same genotype", "All individual with different phenotype", "All individuals with different genotype"], ans: 1, exp: "All individuals having same genotype." },
+    { q: "230. Identify the possible link 'A' in the following food chain : Plant -> insect -> frog -> 'A' -> Eagle", opts: ["Rabbit", "Wolf", "Cobra", "Parrot"], ans: 2, exp: "Cobra." },
+    { q: "231. The second stage of hydrosere is occupied by plants like :", opts: ["Azolla", "Typha", "Salix", "Vallisneria"], ans: 3, exp: "Vallisneria." },
+    { q: "232. The pyramid of number of a parasitic food chain in forest ecosystem is-", opts: ["Always inverted", "Always upright", "Mixture of inverted & upright", "Sometimes inverted and sometimes upright"], ans: 0, exp: "Always inverted." },
+    { q: "233. The important steps, in the process of decomposition are", opts: ["fragmentation and mineralization", "leaching and catabolism", "humification and mineralization", "all of these."], ans: 3, exp: "All of these." },
+    { q: "234. Secondary productivity is rate of formation of new organic matter by-", opts: ["Parasite", "Consumer", "Decomposer", "Producer"], ans: 1, exp: "Consumer." },
+    { q: "235. A sedentary sea anemone gets attached to the shell lining of hermit crab. The association is-", opts: ["Symbiosis", "Commensalism", "Amensalism", "Ectoparasitism"], ans: 1, exp: "Commensalism." },
+    { q: "236. Natural reservoir of phosphorus is-", opts: ["Animal bones", "Rock", "Fossils", "Sea water"], ans: 1, exp: "Rock." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 31; // ⚠️ 12th Class Chapter 12 is Chapter 31 in Dashboard
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
