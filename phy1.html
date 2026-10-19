@@ -1,215 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 1: Physical World - CBT</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
-  .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
-  .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
-  .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-  .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
-  .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
-  .stat-box .lbl { font-size: 11px; color: #4a5568; }
-  .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
-  .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
-  .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
-  .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
-  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
-  .legend span { display: flex; align-items: center; gap: 3px; }
-  .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-  .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
-  .dot.attempted { background: #38a169; }
-  .dot.not-answered { background: #e53e3e; }
-  .dot.marked { background: #805ad5; }
-  .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
-  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
-  .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
-  .palette-btn:hover { transform: scale(1.05); }
-  .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
-  .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
-  .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
-  .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
-  .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
-  .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
-  .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
-  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
-  .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
-  .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
-  .question-box { flex: 1; margin-bottom: 15px; }
-  .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
-  .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
-  .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
-  .option:hover { border-color: #90cdf4; background: #ebf8ff; }
-  .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
-  .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
-  .option.disabled { pointer-events: none; opacity: 0.8; }
-  .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
-  .feedback.show { display: block; }
-  .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
-  .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
-  .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
-  .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
-  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-  .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
-  .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
-  .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
-  .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
-  .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
-  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-  .modal-overlay.show { display: flex; }
-  .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
-  .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
-  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
-  .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
-  .result-item .label { font-size: 12px; color: #4a5568; }
-  .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
-  .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
-  .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
-  .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
-  .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
-  .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-  @media (max-width: 850px) {
-    .main-container { flex-direction: column; height: auto; }
-    .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
-    .sidebar.open { transform: translateY(0); }
-    .mobile-palette-toggle { display: block; }
-    .quiz-area { min-height: 500px; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 33: Physical World - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
 </head>
 <body>
 
 <button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
 
 <div class="main-container">
-  <div class="sidebar">
-    <h3>📋 Question Palette</h3>
-    <div class="stats-grid">
-      <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
-      <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
-      <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
-      <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
-      <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
-      <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
-      <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
-      <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
     </div>
-    <div class="legend">
-      <span><span class="dot not-visited"></span> Not Visited</span>
-      <span><span class="dot attempted"></span> Attempted</span>
-      <span><span class="dot not-answered"></span> Not Answered</span>
-      <span><span class="dot marked"></span> Marked</span>
-      <span><span class="dot answered-marked"></span> Ans & Marked</span>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 33: Physical World</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
     </div>
-    <div class="palette" id="palette"></div>
-  </div>
-  <div class="quiz-area">
-    <div class="quiz-header">
-      <h2>📚 Physical World</h2>
-      <div class="q-counter" id="qCounter">Q 1 / 0</div>
-    </div>
-    <div class="question-box" id="questionBox"></div>
-    <div class="nav-buttons">
-      <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
-      <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
-      <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
-      <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
-      <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
-    </div>
-  </div>
 </div>
 
 <div class="modal-overlay" id="resultModal">
-  <div class="modal-box">
-    <h2>📋 Final Result</h2>
-    <div class="result-grid">
-      <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
-      <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
-      <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
-      <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
-      <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
     </div>
-    <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
-    <br>
-    <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
-    <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
-  </div>
 </div>
-
 <script src="keys.js"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window.fb = { db, doc, getDoc, setDoc, deleteDoc, collection, addDoc };
-</script>
-
 <script>
-// ⚠️ Yahan CHAPTER_NUM = 33 hai kyunki Physics Dashboard mein 33 se shuru ho raha hai
-const CHAPTER_NUM = 33;
-
 const questions = [
-  { q: "In 1913, Niels Bohr gave a theory on the basis of", opts: ["quantum theory of helium atom", "nuclear model of atom", "classical theory of helium atom", "classical theory of hydrogen atom"], ans: 3, exp: "Bohr gave the classical theory of hydrogen atom." },
-  { q: "In Rutherford, α-scattering experiment as shown in figure. Here, A, B and C refer to", opts: ["polonium sample, aluminium foil, microscope", "polonium sample, gold foil, microscope", "uranium sample, gold foil, microscope", "polonium sample, aluminium foil, telescope"], ans: 1, exp: "A is polonium sample, B is gold foil and C is microscope." },
-  { q: "Maxwell's set of equation encapsulated basic laws such as", opts: ["Coulomb and Oersted's laws", "Ampere and Faraday's laws", "Faraday's and Optic laws", "Both (a) and (b)"], ans: 3, exp: "Maxwell's equations encapsulated both Coulomb and Oersted's laws and Ampere and Faraday's laws." },
-  { q: "In Physics, quantitative measurement is central to the growth of science because", opts: ["laws of nature are expressible in precise mathematical equations", "basic laws universally apply in different contexts", "strategy of approximation turned out to be very successful", "All of the above"], ans: 3, exp: "All the given statements are correct." },
-  { q: "What is full form of GMRT?", opts: ["Ground Mobile Receive Terminal", "Geometric Mean Reciprocal Titer", "Giant Metrewave Radio Telescope", "General Maintenance and Repair Technician"], ans: 2, exp: "GMRT stands for Giant Metrewave Radio Telescope." },
-  { q: "Macroscopic forces are", opts: ["contact forces between bodies", "viscous force", "surface tension of a liquid", "All of the above"], ans: 3, exp: "All are macroscopic forces." },
-  { q: "Forces acting on microscopic domain are", opts: ["electric forces", "magnetic forces", "nuclear forces", "All of these"], ans: 3, exp: "All these forces act on microscopic domain." },
-  { q: "The elastic spring force arises due", opts: ["to net attraction between the neighbouring atoms of the spring", "to net repulsion between the neighbouring atoms of the spring", "Both (a) and (b)", "None of the above"], ans: 2, exp: "It arises due to both attraction and repulsion between neighbouring atoms." },
-  { q: "In gravitational force,", opts: ["there is mutual force of attraction between any two objects by virtue of their masses", "it is a universal force", "it causes formation and evolution of stars, galaxies and galactic clusters", "All of the above"], ans: 3, exp: "All statements are correct." },
-  { q: "Gravitational force dominates in terrestrial phenomena because", opts: ["masses involved are quite large", "distances are quite large", "masses are small", "distances are small"], ans: 0, exp: "Masses involved are quite large." },
-  { q: "Electromagnetic force is", opts: ["the force between charged particles", "due to charges in motion", "10^36 times the gravitational force between two protons for any fixed distance", "All of the above"], ans: 3, exp: "All statements are correct." },
-  { q: "Electromagnetic force dominates microscopic phenomena because", opts: ["masses involved are quite large", "distances are quite large", "masses are small", "distances are small"], ans: 3, exp: "Distances are small." },
-  { q: "Which of the following is the weakest force?", opts: ["Gravitational force", "Strong nuclear force", "Weak nuclear force", "Electric force"], ans: 0, exp: "Gravitational force is the weakest." },
-  { q: "Electric force manifest itself in atmosphere, where", opts: ["atoms are non-ionised", "atoms are ionised and that leads to lightning", "atoms are ionised", "atoms are electrically neutral"], ans: 1, exp: "Atoms are ionised and that leads to lightning." },
-  { q: "When we hold a book in our hand, we are balancing the gravitational force on the book due to", opts: ["normal force provided by our hand", "friction force provided by our book", "Both (a) and (b)", "None of the above"], ans: 0, exp: "Normal force provided by our hand." },
-  { q: "Protons and neutrons are built out of", opts: ["neutrino", "quarks", "anti-neutrino", "electron"], ans: 1, exp: "Quarks." },
-  { q: "The unification of electromagnetism and optics leads to the", opts: ["celestial and terrestrial mechanics", "discovery of uncertainty principle", "discovery of optical fibres", "discovery of light as an electromagnetic wave"], ans: 3, exp: "Discovery of light as an electromagnetic wave." },
-  { q: "For motion under an external conservative force, which quantity is conserved?", opts: ["Kinetic energy", "Mechanical energy", "Potential energy", "None of the above"], ans: 1, exp: "Mechanical energy is conserved." },
-  { q: "Prior to the advent of the Einstein's theory of relativity, it was concluded that", opts: ["matter was thought to be indestructible", "total binding energy of the reacting molecules is greater than total binding energy of product molecules", "small change in the binding energy are too small to be measured as changes in mass", "All of the above"], ans: 3, exp: "All of the above." },
-  { q: "According to law of conservation of energy and momentum for β-decay, the existence of a new particle along with electron was predicted, which was", opts: ["electron", "proton", "neutron", "neutrino"], ans: 3, exp: "Neutrino." },
-  { q: "Conservation laws are such that", opts: ["it cannot be proved but can be verified", "it can neither be proved nor can be verified", "it can be proved and verified", "it can be proved but not verified"], ans: 0, exp: "It cannot be proved but can be verified." },
-  { q: "Energy evolved in a chemical reaction comes from", opts: ["conversion of mass into energy", "conversion of binding energy into heat energy", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "Both conversion of mass into energy and conversion of binding energy into heat energy." },
-  { q: "Assertion: Spring force, friction force, normal force, tension in rope, etc. are similar forces. Reason: They arise out of the gravitational force between the particles.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Assertion is correct but Reason is incorrect. They arise out of electromagnetic force." },
-  { q: "Assertion: Electric force and magnetic force are jointly called electromagnetic force. Reason: Electric and magnetic effects are inseparable.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Both Assertion and Reason are correct and Reason is the correct explanation of Assertion." },
-  { q: "Assertion: In universe, gravitational force dominates in long distance and electric force dominates in short distance. Reason: For gravitational force ∝ (mass)^2 / distance^2 and electric force ∝ charge^2 / distance^2", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Both Assertion and Reason are correct and Reason is the correct explanation of Assertion." },
-  { q: "Assertion: In spite of repulsion between two protons in the nucleus, it is difficult to kick them out of the nucleus. Reason: Nuclear force is weaker than electromagnetic force.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Assertion is correct but Reason is incorrect. Nuclear force is stronger." },
-  { q: "I. Science is ever static. II. There is no final theory in science and no unquestioned authority among scientists. Which of the following statement(s) is/are correct?", opts: ["Only I", "Only II", "Both I and II", "Neither I nor II"], ans: 1, exp: "Only II is correct." },
-  { q: "I. Optics deal with the phenomena involving light. II. The efficiency of heat engines and refrigerator, the direction of a physical or chemical process, etc., involves thermodynamics. III. Macroscopic domain of physics deals with the constitution and structure of matter at the minute scales of atoms and nuclei. Which of the following statement(s) is/are incorrect?", opts: ["Both I and II", "Only II", "Only I", "Only III"], ans: 3, exp: "Only III is incorrect." },
-  { q: "I. In 1938, Hahn and Meitner discovered the phenomenon of neutron-induced fission of uranium. II. In 20th century, silicon chip triggered revolutionary changes in technology of computer system. III. The fossil fuels of the planet are dwindling fast and there is an urgent need to discover new source of energy. IV. The international year of physics was declared as 2005. Which of the following statement(s) is/are correct?", opts: ["Only I", "Both I and II", "Only III", "I, II, III and IV"], ans: 3, exp: "All statements are correct." },
-  { q: "I. Aristotle had given wrong ideas about the concept of force. II. The corrective notion of force was arrived at by Isaac Newton in his famous laws of motion. Which of the following statement(s) is/are correct?", opts: ["Only I", "Both I and II", "Only II", "Neither I nor II"], ans: 1, exp: "Both I and II are correct." },
-  { q: "I. Strong nuclear force binds protons and neutrons in a nucleus. II. Nuclear force is charge independent and acts equally between a proton and a proton. III. Nuclear range is extremely small of about nuclear dimensions (10^-15 m). Which of the following statement(s) is/are correct?", opts: ["Only I", "Both I and II", "Only III", "I, II and III"], ans: 3, exp: "All statements are correct." },
-  { q: "I. The concept of energy is central to physics and expression for energy can be written for every physical system. II. Law of conservation of energy is not valid for all forces and for any kind of transformation between different forms of energy. Which of the following statement(s) is/are correct?", opts: ["Only I", "Only II", "Both I and II", "None of these"], ans: 0, exp: "Only I is correct." },
-  { q: "Which one of the following statement(s) is/are incorrect? I. Conservation laws have a deep connection with symmetries of nature. II. Space is heterogeneous and there is no preferred location in the universe.", opts: ["Only I", "Only II", "Both I and II", "None of these"], ans: 1, exp: "Only II is incorrect." },
-  { q: "Which of the following statement(s) is/are correct? I. Symmetry of laws of nature with respect to translation in space give rise to conservation of linear momentum. II. Isotropy of space underlies the law of conservation of angular momentum.", opts: ["Only I", "Only II", "Both I and II", "Neither I nor II"], ans: 2, exp: "Both I and II are correct." },
-  { q: "Which of the following statement is incorrect?", opts: ["Science originates from the Greek word Scientia meaning 'to know'.", "Science is a systematic attempt to understand natural phenomena.", "The scientific method involves; systematic observation, controlled experiment, qualitative and quantitative reasoning, mathematical modeling, prediction and verification, etc.", "Physics is a study of the basic laws of nature and their manifestation in different natural phenomena."], ans: 0, exp: "Science originates from the Latin word Scientia meaning 'to know'." },
-  { q: "Which of the following statement is correct?", opts: ["Physics is a basic discipline in the category of natural sciences, which does not induced other disciplines.", "In physics, we attempt to explain similar physical phenomena in terms of a few concepts and laws.", "The attempts to unify fundamental forces of nature is called unification.", "An approach to derive the properties of a smaller system from the properties and interactions of its bigger part is called reductionism."], ans: 2, exp: "The attempts to unify fundamental forces of nature is called unification." },
-  { q: "Which of the following statement is correct?", opts: ["The same law of gravitation does not describes the fall of an apple to the ground, the motion of the moon around the sun.", "The basic laws of electromagnetism governs only magnetic phenomena.", "The subjects of thermodynamics, deals with bulk systems in terms of macroscopic quantities such as temperature, internal energy, entropy, etc.", "The subjects of kinetic energy and statistical mechanics interpreted microscopic quantities in terms of the properties of the molecular constituents of the bulk system."], ans: 2, exp: "The subjects of thermodynamics, deals with bulk systems in terms of macroscopic quantities such as temperature, internal energy, entropy, etc." },
-  { q: "Which of the following statement is incorrect?", opts: ["Physics is the study of nature and natural phenomena.", "Physics and technology are not related to each other.", "Electrodynamics deals with electric and magnetic phenomena associated with charged and magnetic bodies.", "The most significant area to which physics has and will contribute is the development of alternative energy resources."], ans: 1, exp: "Physics and technology are related to each other." },
-  { q: "Which of the following statement is incorrect?", opts: ["Classical physics deals mainly with macroscopic phenomena and includes subject like mechanics, electrodynamics, optics and thermodynamics.", "All physics and also mathematics, is based on assumptions, each of which is variously called hypothesis or axiom or postulate, etc.", "A hypothesis is a supposition with assuming that it is true.", "An axiom is a self-evident truth while a model is a theory proposed to explain observed phenomena."], ans: 2, exp: "A hypothesis is a supposition without assuming that it is true." },
-  { q: "Which of the following statement is incorrect?", opts: ["The universal law of gravitation proposed by Newton is an assumption or hypothesis.", "Universal law of gravitation can be verified and substantiated by experiments and observations.", "Einstein's special theory of relativity is also based on two postulates, the constancy as the speed of electromagnetic radiation and the validity of physical laws in all inertial frame of reference.", "Euclid's statement that parallel lines never meet is a supposition with assuming that it is true."], ans: 3, exp: "Euclid's statement that parallel lines never meet is a hypothesis. This means that, if we suppose this without assuming it is true, then with this statement, we can explain several properties of straight lines." },
-  { q: "Which of the following statement is correct?", opts: ["Technology gives rise to new physics.", "Wireless communication followed the discovery of basic laws of electricity and magnetism.", "Bohr had dismissed the possibility of tapping energy from atoms.", "Both (a) and (b)"], ans: 3, exp: "Both (a) and (b) are correct." },
-  { q: "Which of the following statement is correct?", opts: ["The laws for derived forces are independent as the laws of fundamental forces in nature.", "Like gravitational force, electromagnetic force acts over large distances and does not need any intervening medium.", "Gravity is always attractive while electromagnetic force is repulsive.", "The weak nuclear force is not as weak as the electromagnetic force but weaker than the strong nuclear force."], ans: 1, exp: "Like gravitational force, electromagnetic force acts over large distances and does not need any intervening medium." },
-  { q: "Which of the following statement is incorrect?", opts: ["Some special physical quantities, however remain constant in time. They are the conserved quantities of nature.", "The law of conservation of energy is thought to be valid across all domains of nature, from the microscopic to the macroscopic.", "All conserved quantities are scalars.", "Symmetry of nature with respect to translation (i.e. displacement) in time is equivalent to the law of conservation of energy."], ans: 2, exp: "All conserved quantities are not necessarily scalars." },
-  { q: "Which of the following statement is correct?", opts: ["Conservation of energy, momentum, angular momentum, charge, etc, are considered to be fundamental laws in physics.", "The phenomena are the same everywhere in the universe.", "Law of gravitation is different on the moon and the earth.", "Symmetries of space and time and other abstract symmetries does not play a central role in modern theories as fundamental forces in nature."], ans: 0, exp: "Conservation of energy, momentum, angular momentum, charge, etc, are considered to be fundamental laws in physics." },
-  { q: "Match the Column I (domains) with Column II (relation) and select the correct answer from the codes given below. Column I: A. Mechanics, B. Electrodynamics, C. Thermodynamics, D. Microscopic. Column II: 1. electric and magnetic fields, 2. macroscopic equilibrium, 3. minute scales of atoms and nuclei, 4. Newton's law of motion.", opts: ["A-4, B-2, C-3, D-1", "A-4, B-1, C-2, D-3", "A-1, B-2, C-4, D-3", "A-2, B-3, C-1, D-4"], ans: 1, exp: "A-4, B-1, C-2, D-3." },
-  { q: "Match the Column I (physical quantities) with Column II (scale) and select the correct answer from the codes given below. Column I: A. Size of electron or proton, B. Mass of an electron, C. Extent of universe, D. Mass of observable universe. Column II: 1. 10^-30 kg, 2. 10^-14 m, 3. 10^26 m, 4. 10^55 kg", opts: ["A-2, B-1, C-3, D-4", "A-2, B-3, C-4, D-1", "A-4, B-1, C-3, D-2", "A-2, B-4, C-3, D-1"], ans: 0, exp: "A-2, B-1, C-3, D-4." },
-  { q: "Match the Column I (name of physicists) with Column II (contribution/discovery) and select the correct answer from the codes given below. Column I: A. Galileo Galilei, B. JC Bose, C. Albert Einstein, D. JJ Thomson. Column II: 1. explanation of photoelectric effect, 2. law of inertia, 3. discovery of ultra short radiowaves, 4. discovery of electron.", opts: ["A-2, B-3, C-1, D-4", "A-1, B-2, C-4, D-3", "A-2, B-1, C-3, D-4", "A-3, B-4, C-1, D-2"], ans: 0, exp: "A-2, B-3, C-1, D-4." },
-  { q: "Match the Column I (name of physicists) with Column II (contribution/discovery) and select the correct answer from the codes given below. Column I: A. SN Bose, B. James Chadwick, C. John Bardeen, D. Abdus Salam. Column II: 1. discovery of neutron, 2. contribution in quantum statistics, 3. theory of superconductivity and transistors, 4. unification of weak and electromagnetic interactions.", opts: ["A-2, B-1, C-3, D-4", "A-4, B-1, C-2, D-3", "A-1, B-2, C-3, D-4", "A-2, B-3, C-1, D-4"], ans: 0, exp: "A-2, B-1, C-3, D-4." },
-  { q: "Match the Column I (technology) with Column II (scientific principle) and select the correct answer from the codes given below. Column I: A. Nuclear reactor, B. Rocket propulsion, C. SONAR, D. Photocell. Column II: 1. photoelectric effect, 2. reflection of ultrasonic waves, 3. controlled nuclear fission, 4. Newton's laws of motion.", opts: ["A-3, B-4, C-2, D-1", "A-4, B-1, C-2, D-3", "A-1, B-2, C-3, D-4", "A-4, B-2, C-3, D-1"], ans: 0, exp: "A-3, B-4, C-2, D-1." },
-  { q: "Match the Column I (force) with Column II (relative strength) and select the correct answer from the codes given below. Column I: A. Gravitational force, B. Weak nuclear force, C. Electromagnetic force, D. Strong nuclear force. Column II: 1. 10^-13, 2. 1, 3. 10^-2, 4. 10^-39", opts: ["A-4, B-1, C-3, D-2", "A-4, B-1, C-2, D-3", "A-1, B-3, C-2, D-4", "A-4, B-2, C-3, D-1"], ans: 0, exp: "A-4, B-1, C-3, D-2." }
+    { q: "1. In 1913, Niels Bohr gave a theory on the basis of", opts: ["quantum theory of helium atom", "nuclear model of atom", "classical theory of helium atom", "classical theory of hydrogen atom"], ans: 1, exp: "Using the result of experiment of scattering of alpha particles by gold foil, in 1911 Ernest Rutherford established the nuclear model of the atom. This nuclear model then became the basis of the quantum theory of hydrogen atom given by Niels Bohr in 1913." },
+    { q: "2. In Rutherford, α-scattering experiment as shown in figure. Here, A, B and C refer to", img: "images/phy1-q2.png", opts: ["polonium sample, aluminium foil, microscope", "polonium sample, gold foil, microscope", "uranium sample, gold foil, microscope", "polonium sample, aluminium foil, telescope"], ans: 1, exp: "In Rutherford's α-scattering experiment, A is a polonium sample (source of alpha particles), B is a thin gold foil, and C is a microscope (or zinc sulphide screen observed through a microscope) to detect the scattered alpha particles." },
+    { q: "3. Maxwell's set of equation encapsulated basic laws such as", opts: ["Coulomb and Oersted's laws", "Ampere and Faraday's laws", "Faraday's and Optic laws", "Both (a) and (b)"], ans: 3, exp: "Maxwell's equations encapsulated basic laws of electromagnetism including Coulomb's law, Ampere's law, Faraday's law, and Oersted's discovery relating electricity and magnetism." },
+    { q: "4. In Physics, quantitative measurement is central to the growth of science because", opts: ["laws of nature are expressible in precise mathematical equations", "basic laws universally apply in different contexts", "strategy of approximation turned out to be very successful", "All of the above"], ans: 3, exp: "Quantitative measurement is central because it allows laws of nature to be expressed in precise mathematical equations, verifies universal applicability, and supports successful approximations." },
+    { q: "5. What is full form of GMRT?", opts: ["Ground Mobile Receive Terminal", "Geometric Mean Reciprocal Titer", "Giant Metrewave Radio Telescope", "General Maintenance and Repair Technician"], ans: 2, exp: "GMRT stands for Giant Metrewave Radio Telescope, a major astronomical observatory located in India." },
+    { q: "6. Macroscopic forces are", opts: ["contact forces between bodies", "viscous force", "surface tension of a liquid", "All of the above"], ans: 3, exp: "Macroscopic forces include contact forces (like friction, normal force), viscous forces, and surface tension, all of which act on everyday objects." },
+    { q: "7. Forces acting on microscopic domain are", opts: ["electric forces", "magnetic forces", "nuclear forces", "All of these"], ans: 3, exp: "In the microscopic domain, forces mainly include electric, magnetic, and nuclear forces which govern the behavior of atoms and nuclei." },
+    { q: "8. The elastic spring force arises due", opts: ["to net attraction between the neighbouring atoms of the spring", "to net repulsion between the neighbouring atoms of the spring", "Both (a) and (b)", "None of the above"], ans: 2, exp: "The elastic spring force arises due to the net attraction and repulsion between the neighbouring atoms/molecules of the spring. When stretched, attractive forces dominate; when compressed, repulsive forces dominate." },
+    { q: "9. In gravitational force,", opts: ["there is mutual force of attraction between any two objects by virtue of their masses", "it is a universal force", "it causes formation and evolution of stars, galaxies and galactic clusters", "All of the above"], ans: 3, exp: "Gravitational force is a universal attractive force between any two masses, and it plays a key role in large-scale phenomena like the formation of stars, galaxies, and galactic clusters." },
+    { q: "10. Gravitational force dominates in terrestrial phenomena because", opts: ["masses involved are quite large", "distances are quite large", "masses are small", "distances are small"], ans: 0, exp: "Gravitational force becomes very high in terrestrial and astronomical phenomena because the bodies involved are huge like planets, stars, etc., and their masses are quite large (F ∝ m1m2)." },
+    { q: "11. Electromagnetic force is", opts: ["the force between charged particles", "due to charges in motion", "10^36 times the gravitational force between two protons for any fixed distance", "All of the above"], ans: 3, exp: "Electromagnetic force acts between charged particles, is responsible for forces due to charges in motion, and is enormously strong compared to gravity (about 10^36 times stronger between two protons)." },
+    { q: "12. Electromagnetic force dominates microscopic phenomena because", opts: ["masses involved are quite large", "distances are quite large", "masses are small", "distances are small"], ans: 3, exp: "At microscopic level, electromagnetic force dominates gravitational force. The reason is that the distance between bodies under electromagnetic force is very small at this level." },
+    { q: "13. Which of the following is the weakest force?", opts: ["Gravitational force", "Strong nuclear force", "Weak nuclear force", "Electric force"], ans: 0, exp: "The correct order of strength of four fundamental forces is: Gravitational force < Weak nuclear force < Electromagnetic force < Strong nuclear force. Hence, gravitational is the weakest." },
+    { q: "14. Electric force manifest itself in atmosphere, where", opts: ["atoms are non-ionised", "atoms are ionised and that leads to lightning", "atoms are ionised", "atoms are electrically neutral"], ans: 1, exp: "In the atmosphere, when atoms get ionised, the movement of charges (electrons and ions) leads to phenomena like lightning." },
+    { q: "15. When we hold a book in our hand, we are balancing the gravitational force on the book due to", opts: ["normal force provided by our hand", "friction force provided by our book", "Both (a) and (b)", "None of the above"], ans: 0, exp: "When we hold a book in our hand, we balance the gravitational force on the book due to the 'normal force' provided by our hand (upward push)." },
+    { q: "16. Protons and neutrons are built out of", opts: ["neutrino", "quarks", "anti-neutrino", "electron"], ans: 1, exp: "Protons and neutrons are not fundamental particles; they are made up of more fundamental particles called quarks." },
+    { q: "17. The unification of electromagnetism and optics leads to the", opts: ["celestial and terrestrial mechanics", "discovery of uncertainty principle", "discovery of optical fibres", "discovery of light as an electromagnetic wave"], ans: 3, exp: "The unification of electromagnetism and optics is done by James Clerk Maxwell in 1873. It showed that light is an electromagnetic wave." },
+    { q: "18. For motion under an external conservative force, which quantity is conserved?", opts: ["Kinetic energy", "Mechanical energy", "Potential energy", "None of the above"], ans: 1, exp: "For motion under an external conservative force, the total mechanical energy, i.e., the sum of kinetic and potential energy of a body is a constant." },
+    { q: "19. Prior to the advent of the Einstein's theory of relativity, it was concluded that", opts: ["matter was thought to be indestructible", "total binding energy of the reacting molecules is greater than total binding energy of product molecules", "small change in the binding energy are too small to be measured as changes in mass", "All of the above"], ans: 0, exp: "Until the advent of Einstein's theory of relativity, the law of conservation of mass was regarded as basic conservation law of nature, since matter was thought to be indestructible." },
+    { q: "20. According to law of conservation of energy and momentum for β-decay, the existence of a new particle along with electron was predicted, which was", opts: ["electron", "proton", "neutron", "neutrino"], ans: 3, exp: "Using the conservation laws of energy and momentum for β-decay, Wolfgang Pauli in 1931 correctly predicted the existence of a new particle called neutrino emitted in β-decay along with the electron." },
+    { q: "21. Conservation laws are such that", opts: ["it cannot be proved but can be verified", "it can neither be proved nor can be verified", "it can be proved and verified", "it can be proved but not verified"], ans: 0, exp: "A conservation law is a hypothesis based on observation and experiments. It is important to remember that a conservation law cannot be proved. It can be verified or disproved by experiments." },
+    { q: "22. Energy evolved in a chemical reaction comes from", opts: ["conversion of mass into energy", "conversion of binding energy into heat energy", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 1, exp: "A chemical reaction is basically a rearrangement of atoms. If the total binding energy of the reacting molecules is less than the product molecules, the difference appears as heat energy. Hence, it's conversion of binding energy into heat." },
+    { q: "23. Assertion: Spring force, friction force, normal force, tension in rope, etc. are similar forces.\nReason: They arise out of the gravitational force between the particles.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "The origin of spring force, friction force, normal force, tension in rope is electromagnetic force which is one of the four fundamental forces found in nature. Therefore, Assertion is correct but Reason is incorrect." },
+    { q: "24. Assertion: Electric force and magnetic force are jointly called electromagnetic force.\nReason: Electric and magnetic effects are inseparable.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Charges in motion produces magnetic effects and a magnetic field gives rise to a force on a moving charge. So, electric and magnetic effects are inseparable. Therefore, it is named as electromagnetic force. Both A and R are correct and R is the correct explanation." },
+    { q: "25. Assertion: In universe, gravitational force dominates in long distance and electric force dominates in short distance.\nReason: For gravitational force ∝ (mass)² / distance² and electric force ∝ charge² / distance².", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Gravitational force ∝ m/r². In case of measurement regarding stars and galaxies, gravitational force dominates due to large mass of stars, etc. And electric force ∝ q/r² is due to infinite-simal small distances, thus electric field dominates at microscopic level. Both A and R are correct and R is the correct explanation." },
+    { q: "26. Assertion: In spite of repulsion between two protons in the nucleus, it is difficult to kick them out of the nucleus.\nReason: Nuclear force is weaker than electromagnetic force.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Nuclear force which is attractive in nature at nuclear level keeps all the protons together in the nucleus in spite of their mutual repulsion. So, it is difficult to kick them out of the nucleus. This is because these are stronger than the electromagnetic force. Therefore, A is correct but R is incorrect." },
+    { q: "27. Statement I: Science is ever static.\nStatement II: There is no final theory in science and no unquestioned authority among scientists.", opts: ["Only I", "Only II", "Both I and II", "Neither I nor II"], ans: 1, exp: "Statement II is correct but I is incorrect and it can be corrected as, Science is ever dynamic (not static)." },
+    { q: "28. Statement I: Optics deal with the phenomena involving light.\nStatement II: The efficiency of heat engines and refrigerator, the direction of a physical or chemical process, etc., involves thermodynamics.\nStatement III: Macroscopic domain of physics deals with the constitution and structure of matter at the minute scales of atoms and nuclei.", opts: ["Both I and II", "Only II", "Only I", "Only III"], ans: 3, exp: "Statement III is incorrect and it can be corrected as, The microscopic (not macroscopic) domain of physics deals with the constitution and structure of matter at the minute scales of atoms and nuclei. Rest statements I and II are correct." },
+    { q: "29. Statement I: In 1938, Hahn and Meitner discovered the phenomenon of neutron-induced fission of uranium.\nStatement II: In 20th century, silicon chip triggered revolutionary changes in technology of computer system.\nStatement III: The fossil fuels of the planet are dwindling fast and there is an urgent need to discover new source of energy.\nStatement IV: The international year of physics was declared as 2005.", opts: ["Only I", "Both I and II", "Only III", "I, II, III and IV"], ans: 3, exp: "All the statements I, II, III and IV are correct factual statements from the history of physics and technology." },
+    { q: "30. Statement I: Aristotle had given wrong ideas about the concept of force.\nStatement II: The corrective notion of force was arrived at by Isaac Newton in his famous laws of motion.", opts: ["Only I", "Both I and II", "Only II", "Neither I nor II"], ans: 1, exp: "Aristotle had given wrong ideas about the concept of force and the corrective notion of force was arrived at by Isaac Newton in his famous laws of motion. Both statements are correct." },
+    { q: "31. Statement I: Strong nuclear force binds protons and neutrons in a nucleus.\nStatement II: Nuclear force is charge independent and acts equally between a proton and a proton.\nStatement III: Nuclear range is extremely small of about nuclear dimensions (10^-15 m).", opts: ["Only I", "Both I and II", "Only III", "I, II and III"], ans: 3, exp: "All statements I, II, and III correctly describe the properties of strong nuclear force. It binds nucleons, is charge-independent, and has a very short range (~10^-15 m)." },
+    { q: "32. Statement I: The concept of energy is central to physics and expression for energy can be written for every physical system.\nStatement II: Law of conservation of energy is not valid for all forces and for any kind of transformation between different forms of energy.", opts: ["Only I", "Only II", "Both I and II", "None of these"], ans: 0, exp: "Statement I is correct but II is incorrect and it can be corrected as, the general law of conservation of energy is valid for all forces and for any kind of transformation between different forms of energy." },
+    { q: "33. Statement I: Conservation laws have a deep connection with symmetries of nature.\nStatement II: Space is heterogeneous and there is no preferred location in the universe.", opts: ["Only I", "Only II", "Both I and II", "None of these"], ans: 0, exp: "Statement I is correct but II is incorrect and it can be corrected as, Space is homogeneous (not heterogeneous) and there is no preferred location in the universe." },
+    { q: "34. Statement I: Symmetry of laws of nature with respect to translation in space give rise to conservation of linear momentum.\nStatement II: Isotropy of space underlies the law of conservation of angular momentum.", opts: ["Only I", "Only II", "Both I and II", "Neither I nor II"], ans: 2, exp: "Both the statements are correct. Translation symmetry in space leads to conservation of linear momentum, and isotropy of space (no preferred direction) leads to conservation of angular momentum." },
+    { q: "35. Which of the following statement is incorrect?", opts: ["Science originates from the Greek word Scientia meaning 'to know'", "Science is a systematic attempt to understand natural phenomena", "The scientific method involves; systematic observation, controlled experiment, qualitative and quantitative reasoning, mathematical modeling, prediction and verification, etc.", "Physics is a study of the basic laws of nature and their manifestation in different natural phenomena"], ans: 0, exp: "The statement given in option (a) is incorrect and it can be corrected as: The word science originates from the Latin verb Scientia (not Greek word) meaning 'to know'." },
+    { q: "36. Which of the following statement is correct?", opts: ["Physics is a basic discipline in the category of natural sciences, which does not induced other disciplines.", "In physics, we attempt to explain similar physical phenomena in terms of a few concepts and laws.", "The attempts to unify fundamental forces of nature is called unification.", "An approach to derive the properties of a smaller system from the properties and interactions of its bigger part is called reductionism."], ans: 2, exp: "Statement given in option (c) is correct. Unification is the attempt to unify fundamental forces of nature. (Physics does induce other disciplines, explains diverse phenomena, and reductionism means deriving properties of a bigger system from its constituent smaller parts)." },
+    { q: "37. Which of the following statement is correct?", opts: ["The same law of gravitation does not describes the fall of an apple to the ground, the motion of the moon around the sun.", "The basic laws of electromagnetism governs only magnetic phenomena.", "The subjects of thermodynamics, deals with bulk systems in terms of macroscopic quantities such as temperature, internal energy, entropy, etc.", "The subjects of kinetic energy and statistical mechanics interpreted microscopic quantities in terms of the properties of the molecular constituents of the bulk system."], ans: 2, exp: "Statement (c) is correct. Thermodynamics deals with bulk systems in terms of macroscopic quantities. The same law of gravitation *does* describe both falling apples and moon's motion. Electromagnetism governs both electric and magnetic phenomena." },
+    { q: "38. Which of the following statement is incorrect?", opts: ["Physics is the study of nature and natural phenomena.", "Physics and technology are not related to each other.", "Electrodynamics deals with electric and magnetic phenomena associated with charged and magnetic bodies.", "The most significant area to which physics has and will contribute is the development of alternative energy resources."], ans: 1, exp: "The statement given in option (b) is incorrect and it can be corrected as, Physics and technology are related with each other (not unrelated)." },
+    { q: "39. Which of the following statement is incorrect?", opts: ["Classical physics deals mainly with macroscopic phenomena and includes subject like mechanics, electrodynamics, optics and thermodynamics.", "All physics and also mathematics, is based on assumptions, each of which is variously called hypothesis or axiom or postulate, etc.", "A hypothesis is a supposition with assuming that it is true.", "An axiom is a self-evident truth while a model is a theory proposed to explain observed phenomena."], ans: 2, exp: "The statement given in option (c) is incorrect and it can be corrected as, A hypothesis is a supposition *without* assuming that it is true." },
+    { q: "40. Which of the following statement is incorrect?", opts: ["The universal law of gravitation proposed by Newton is an assumption or hypothesis.", "Universal law of gravitation can be verified and substantiated by experiments and observations.", "Einstein's special theory of relativity is also based on two postulates, the constancy as the speed of electromagnetic radiation and the validity of physical laws in all inertial frame of reference.", "Euclid's statement that parallel lines never meet is a supposition with assuming that it is true."], ans: 3, exp: "The statement given in option (d) is incorrect and it can be corrected as, Euclid's statement that parallel lines never meet is a hypothesis (not a supposition assuming it true)." },
+    { q: "41. Which of the following statement is correct?", opts: ["Technology gives rise to new physics.", "Wireless communication followed the discovery of basic laws of electricity and magnetism.", "Bohr had dismissed the possibility of tapping energy from atoms.", "Both (a) and (b)"], ans: 3, exp: "Both statements (a) and (b) are correct. Technology can give rise to new physics, and wireless communication followed the discovery of basic laws of electricity and magnetism. Statement (c) is incorrect (Rutherford, not Bohr, dismissed tapping energy from atoms)." },
+    { q: "42. Which of the following statement is correct?", opts: ["The laws for derived forces are independent as the laws of fundamental forces in nature.", "Like gravitational force, electromagnetic force acts over large distances and does not need any intervening medium.", "Gravity is always attractive while electromagnetic force is repulsive.", "The weak nuclear force is not as weak as the electromagnetic force but weaker than the strong nuclear force."], ans: 1, exp: "Statement (b) is correct. Like gravitational force, electromagnetic force acts over large distances and does not need any intervening medium. (Derived forces are not independent of fundamental forces; EM force can be attractive or repulsive; weak nuclear is weaker than EM)." },
+    { q: "43. Which of the following statement is incorrect?", opts: ["Some special physical quantities, however remain constant in time. They are the conserved quantities of nature.", "The law of conservation of energy is thought to be valid across all domains of nature, from the microscopic to the macroscopic.", "All conserved quantities are scalars.", "Symmetry of nature with respect to translation (i.e. displacement) in time is equivalent to the law of conservation of energy."], ans: 2, exp: "The statement given in option (c) is incorrect and it can be corrected as: All conserved quantities are not necessarily scalars (e.g., linear momentum and angular momentum are vectors)." },
+    { q: "44. Which of the following statement is correct?", opts: ["Conservation of energy, momentum, angular momentum, charge, etc, are considered to be fundamental laws in physics.", "The phenomena are the same everywhere in the universe.", "Law of gravitation is different on the moon and the earth.", "Symmetries of space and time and other abstract symmetries does not play a central role in modern theories as fundamental forces in nature."], ans: 0, exp: "Only statement (a) is correct. Conservation laws are considered fundamental. (Phenomena can differ due to conditions, though laws are same; law of gravitation is same everywhere; symmetries play a central role)." },
+    { q: "45. Match the Column I (domains) with Column II (relation) and select the correct answer from the codes given below.\n\nColumn I:\nA. Mechanics\nB. Electrodynamics\nC. Thermodynamics\nD. Microscopic\n\nColumn II:\n1. electric and magnetic fields\n2. macroscopic equilibrium\n3. minute scales of atoms and nuclei\n4. Newton's law of motion", opts: ["A-4, B-1, C-2, D-3", "A-4, B-2, C-3, D-1", "A-1, B-2, C-4, D-3", "A-2, B-3, C-1, D-4"], ans: 1, exp: "Hence, A → 4, B → 1, C → 2 and D → 3. Mechanics (Newton's laws), Electrodynamics (electric/magnetic fields), Thermodynamics (macroscopic equilibrium), Microscopic (atoms/nuclei)." },
+    { q: "46. Match the Column I (physical quantities) with Column II (scale) and select the correct answer from the codes given below.\n\nColumn I:\nA. Size of electron or proton\nB. Mass of an electron\nC. Extent of universe\nD. Mass of observable universe\n\nColumn II:\n1. 10^-30 kg\n2. 10^-14 m\n3. 10^26 m\n4. 10^55 kg", opts: ["A-2, B-1, C-3, D-4", "A-4, B-1, C-2, D-3", "A-1, B-2, C-3, D-4", "A-2, B-3, C-1, D-4"], ans: 0, exp: "Size of electron/proton ~ 10^-14 m (A-2). Mass of electron ~ 10^-30 kg (B-1). Extent of universe ~ 10^26 m (C-3). Mass of observable universe ~ 10^55 kg (D-4)." },
+    { q: "47. Match the Column I (name of physicists) with Column II (contribution/discovery) and select the correct answer from the codes given below.\n\nColumn I:\nA. Galileo Galilei\nB. JC Bose\nC. Albert Einstein\nD. JJ Thomson\n\nColumn II:\n1. explanation of photoelectric effect\n2. law of inertia\n3. discovery of ultra short radiowaves\n4. discovery of electron", opts: ["A-2, B-3, C-1, D-4", "A-1, B-2, C-4, D-3", "A-3, B-4, C-1, D-2", "A-2, B-1, C-4, D-3"], ans: 0, exp: "Galileo (Law of inertia: 2), JC Bose (ultra short radiowaves: 3), Einstein (photoelectric effect: 1), JJ Thomson (electron: 4). So A-2, B-3, C-1, D-4." },
+    { q: "48. Match the Column I (name of physicists) with Column II (contribution/discovery) and select the correct answer from the codes given below.\n\nColumn I:\nA. SN Bose\nB. James Chadwick\nC. John Bardeen\nD. Abdus Salam\n\nColumn II:\n1. discovery of neutron\n2. contribution in quantum statistics\n3. theory of superconductivity and transistors\n4. unification of weak and electromagnetic interactions", opts: ["A-2, B-1, C-3, D-4", "A-3, B-1, C-2, D-4", "A-1, B-3, C-2, D-4", "A-2, B-4, C-1, D-3"], ans: 0, exp: "SN Bose (quantum statistics: 2), James Chadwick (neutron: 1), John Bardeen (superconductivity/transistors: 3), Abdus Salam (electroweak unification: 4). So A-2, B-1, C-3, D-4." },
+    { q: "49. Match the Column I (technology) with Column II (scientific principle) and select the correct answer from the codes given below.\n\nColumn I:\nA. Nuclear reactor\nB. Rocket propulsion\nC. SONAR\nD. Photocell\n\nColumn II:\n1. photoelectric effect\n2. reflection of ultrasonic waves\n3. controlled nuclear fission\n4. Newton's laws of motion", opts: ["A-3, B-4, C-2, D-1", "A-1, B-2, C-4, D-3", "A-4, B-3, C-1, D-2", "A-2, B-1, C-3, D-4"], ans: 0, exp: "Nuclear reactor (fission: 3), Rocket propulsion (Newton's laws: 4), SONAR (ultrasonic reflection: 2), Photocell (photoelectric effect: 1). So A-3, B-4, C-2, D-1." },
+    { q: "50. Match the Column I (force) with Column II (relative strength) and select the correct answer from the codes given below.\n\nColumn I:\nA. Gravitational force\nB. Weak nuclear force\nC. Electromagnetic force\nD. Strong nuclear force\n\nColumn II:\n1. 10^-13\n2. 1\n3. 10^-2\n4. 10^-39", opts: ["A-4, B-1, C-3, D-2", "A-1, B-2, C-4, D-3", "A-3, B-4, C-2, D-1", "A-4, B-2, C-3, D-1"], ans: 0, exp: "Relative strengths: Gravitational (10^-39: 4), Weak nuclear (10^-13: 1), Electromagnetic (10^-2: 3), Strong nuclear (1: 2). Hence A-4, B-1, C-3, D-2." }
 ];
 
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
 const totalQ = questions.length;
 let currentQ = 0;
 const userAnswers = new Array(totalQ).fill(null);
@@ -218,217 +208,219 @@ const visited = new Array(totalQ).fill(false);
 let correctCount = 0;
 let wrongCount = 0;
 
-const currentUser = JSON.parse(localStorage.getItem('cbt_user') || '{}').name || 'Guest';
-const saveId = currentUser + '_autosave_ch' + CHAPTER_NUM;
-let saveTimeout = null;
-
 const questionBox = document.getElementById('questionBox');
 const palette = document.getElementById('palette');
 
 function renderPalette() {
-  palette.innerHTML = '';
-  for (let i = 0; i < totalQ; i++) {
-    const btn = document.createElement('button');
-    btn.className = 'palette-btn';
-    btn.textContent = i + 1;
-    btn.id = 'pal-' + i;
-    btn.onclick = () => goToQuestion(i);
-    palette.appendChild(btn);
-  }
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
 }
 
 function updatePalette() {
-  for (let i = 0; i < totalQ; i++) {
-    const btn = document.getElementById('pal-' + i);
-    if (!btn) continue;
-    btn.className = 'palette-btn';
-    if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
-    else if (marked[i]) btn.classList.add('marked');
-    else if (userAnswers[i] !== null) btn.classList.add('attempted');
-    else if (visited[i]) btn.classList.add('not-answered');
-    else btn.classList.add('not-visited');
-    if (i === currentQ) btn.classList.add('current');
-  }
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
 }
 
 function updateStats() {
-  let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
-  for (let i = 0; i < totalQ; i++) {
-    if (userAnswers[i] !== null) attempted++;
-    else if (visited[i]) notAnswered++;
-    else notVisited++;
-    if (marked[i]) markedCount++;
-  }
-  document.getElementById('sbTotal').textContent = totalQ;
-  document.getElementById('sbAttempted').textContent = attempted;
-  document.getElementById('sbNotAnswered').textContent = notAnswered;
-  document.getElementById('sbNotVisited').textContent = notVisited;
-  document.getElementById('sbMarked').textContent = markedCount;
-  document.getElementById('sbCorrect').textContent = correctCount;
-  document.getElementById('sbWrong').textContent = wrongCount;
-  const marks = correctCount * 1 - wrongCount * 0.25;
-  document.getElementById('sbMarks').textContent = marks.toFixed(2);
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
 }
 
 function renderQuestion() {
-  visited[currentQ] = true;
-  const q = questions[currentQ];
-  let optsHTML = '';
-  q.opts.forEach((opt, oi) => {
-    let cls = 'option';
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
     if (userAnswers[currentQ] !== null) {
-      cls += ' disabled';
-      if (oi === q.ans) cls += ' correct-ans';
-      else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
     }
-    optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
-  });
 
-  let fbHTML = '';
-  if (userAnswers[currentQ] !== null) {
-    const isCorrect = userAnswers[currentQ] === q.ans;
-    fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
-      ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
-      ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
-    </div>`;
-  }
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
 
-  questionBox.innerHTML = `
-    <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
-    <div>${optsHTML}</div>
-    ${fbHTML}
-  `;
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
 
-  document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
-  document.getElementById('btnPrev').disabled = currentQ === 0;
-  document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
-  document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
-  document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
 
-  updatePalette();
-  updateStats();
+    updatePalette();
+    updateStats();
 }
 
 function selectAnswer(optIdx) {
-  if (userAnswers[currentQ] !== null) return;
-  userAnswers[currentQ] = optIdx;
-  if (optIdx === questions[currentQ].ans) correctCount++;
-  else wrongCount++;
-  triggerAutoSave();
-  renderQuestion();
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
 }
 
-function goToQuestion(idx) { 
-  currentQ = idx; 
-  triggerAutoSave();
-  renderQuestion(); 
-  document.querySelector('.sidebar').classList.remove('open'); 
-}
-function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; triggerAutoSave(); renderQuestion(); } }
-function prevQuestion() { if (currentQ > 0) { currentQ--; triggerAutoSave(); renderQuestion(); } }
-function toggleMark() { marked[currentQ] = !marked[currentQ]; triggerAutoSave(); renderQuestion(); }
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
 
-async function showResult() {
-  const marks = correctCount * 1 - wrongCount * 0.25;
-  const percent = ((marks / totalQ) * 100).toFixed(2);
-  document.getElementById('rTotal').textContent = totalQ;
-  document.getElementById('rCorrect').textContent = correctCount;
-  document.getElementById('rWrong').textContent = wrongCount;
-  document.getElementById('rMarks').textContent = marks.toFixed(2);
-  document.getElementById('rPercent').textContent = percent + '%';
-  document.getElementById('resultModal').classList.add('show');
-  
-  try {
-    await window.fb.deleteDoc(window.fb.doc(window.fb.db, "autosave", saveId));
-  } catch(e) { console.log(e); }
-
-  try {
-    const _currentUser = JSON.parse(localStorage.getItem('cbt_user') || '{}');
-    await window.fb.addDoc(window.fb.collection(window.fb.db, "results"), {
-      userName: _currentUser.name,
-      userRole: _currentUser.role,
-      chapterNum: CHAPTER_NUM,
-      correct: correctCount,
-      wrong: wrongCount,
-      total: totalQ,
-      marks: parseFloat(marks.toFixed(2)),
-      percent: parseFloat(percent),
-      timestamp: new Date().toISOString()
-    });
-    console.log("✅ Result saved to Firebase!");
-  } catch(e) {
-    console.error("Result save error:", e);
-  }
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
 }
 
 function resetQuiz() {
-  if (!confirm('Are you sure you want to reset the quiz?')) return;
-  for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
-  correctCount = 0; wrongCount = 0; currentQ = 0;
-  document.getElementById('resultModal').classList.remove('show');
-  triggerAutoSave();
-  renderQuestion();
-}
-
-async function loadAutoSave() {
-  try {
-    const docRef = window.fb.doc(window.fb.db, "autosave", saveId);
-    const docSnap = await window.fb.getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      const savedData = docSnap.data();
-      if (savedData.answers) {
-        for (let i = 0; i < totalQ; i++) {
-          if (savedData.answers[i] !== undefined) {
-            userAnswers[i] = savedData.answers[i];
-            marked[i] = savedData.marked[i];
-            visited[i] = savedData.visited[i];
-            if (userAnswers[i] !== null) {
-              if (userAnswers[i] === questions[i].ans) correctCount++;
-              else wrongCount++;
-            }
-          }
-        }
-        if (savedData.currentQ !== undefined) {
-          currentQ = savedData.currentQ;
-        }
-        renderQuestion();
-        updateStats();
-        console.log("✅ Pichla data wapas mil gaya!");
-      }
-    }
-  } catch (e) {
-    console.error("Load error:", e);
-  }
-}
-
-function triggerAutoSave() {
-  if (saveTimeout) clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(async () => {
-    try {
-      const docRef = window.fb.doc(window.fb.db, "autosave", saveId);
-      await window.fb.setDoc(docRef, {
-        answers: userAnswers,
-        marked: marked,
-        visited: visited,
-        currentQ: currentQ,
-        timestamp: new Date().toISOString()
-      });
-      console.log("💾 Data Firebase me save ho gaya");
-    } catch(e) {
-      console.error("Save error:", e);
-    }
-  }, 1000);
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
 }
 
 renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 33; // ⚠️ Set to 33 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
 window.addEventListener('load', function() {
   setTimeout(function() {
-    if (window.fb) {
-      loadAutoSave();
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
     }
-  }, 1000);
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
 });
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
 </script>
 </body>
 </html>
