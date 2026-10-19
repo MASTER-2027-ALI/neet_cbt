@@ -6,6 +6,38 @@
 <title>Dashboard - NEET 2027 CBT</title>
 <link rel="stylesheet" href="style.css">
 <style>
+  /* नए टैब्स के लिए स्टाइल */
+  .subject-tabs {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0 30px 0;
+    justify-content: center;
+  }
+  .subject-btn {
+    padding: 15px 40px;
+    font-size: 18px;
+    font-weight: 700;
+    border: 2px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    background: rgba(30, 41, 59, 0.85);
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .subject-btn:hover {
+    border-color: #60a5fa;
+    color: #e2e8f0;
+  }
+  .subject-btn.active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+    border-color: #3b82f6;
+    color: #fff;
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+  }
+
   .class-heading {
     font-size: 20px;
     color: #2b6cb0;
@@ -23,6 +55,19 @@
     font-size: 14px;
     color: #2c5282;
   }
+
+  /* सेक्शन छिपाने/दिखाने के लिए */
+  .subject-section {
+    display: none;
+  }
+  .subject-section.active {
+    display: block;
+    animation: fadeIn 0.4s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
@@ -38,7 +83,7 @@
 
   <div class="stats-bar">
     <div class="stat-card">
-      <div class="num">32</div>
+      <div class="num" id="totalChaptersCount">61</div>
       <div class="label">Total Chapters</div>
     </div>
     <div class="stat-card">
@@ -51,11 +96,30 @@
     </div>
   </div>
 
-  <h2 class="class-heading">📚 Class 11 Biology <span>19 Chapters</span></h2>
-  <div class="chapters-grid" id="class11Grid"></div>
+  <!-- SUBJECT SELECTION TABS -->
+  <div class="subject-tabs">
+    <button class="subject-btn active" id="btnBio" onclick="switchSubject('bio')">🧬 Biology</button>
+    <button class="subject-btn" id="btnPhy" onclick="switchSubject('phy')">⚛️ Physics</button>
+  </div>
 
-  <h2 class="class-heading">📚 Class 12 Biology <span>13 Chapters</span></h2>
-  <div class="chapters-grid" id="class12Grid"></div>
+  <!-- BIOLOGY SECTION -->
+  <div id="section-bio" class="subject-section active">
+    <h2 class="class-heading">📚 Class 11 Biology <span>19 Chapters</span></h2>
+    <div class="chapters-grid" id="bio11Grid"></div>
+
+    <h2 class="class-heading">📚 Class 12 Biology <span>13 Chapters</span></h2>
+    <div class="chapters-grid" id="bio12Grid"></div>
+  </div>
+
+  <!-- PHYSICS SECTION -->
+  <div id="section-phy" class="subject-section">
+    <h2 class="class-heading">📚 Class 11 Physics <span>15 Chapters</span></h2>
+    <div class="chapters-grid" id="phy11Grid"></div>
+
+    <h2 class="class-heading">📚 Class 12 Physics <span>14 Chapters</span></h2>
+    <div class="chapters-grid" id="phy12Grid"></div>
+  </div>
+
 </div>
 
 <script src="keys.js"></script>
@@ -77,34 +141,24 @@ document.getElementById('userBadge').textContent = '👤 ' + user.name;
 if (user.role === 'master') {
   document.getElementById('adminBtn').style.display = 'inline-block';
 }
+
 // ========================================
 // SESSION LISTENER (Auto Logout)
 // ========================================
 function listenForSession() {
   if (!user.uid) return;
-  
-  // Passkey (user.uid) ko hi document ID bana diya hai
   const sessionRef = doc(db, "sessions", user.uid);
   
   onSnapshot(sessionRef, (docSnap) => {
     if (docSnap.exists()) {
       const remoteSessionId = docSnap.data().sessionId;
-      
-      // Agar Firebase mein naya session ID aa gaya hai (matlab kisi aur ne login kiya)
       if (remoteSessionId !== user.sessionId) {
-        
-        // Popup dikhayein
         alert('⚠️ आपकी पासकी से किसी और ने लॉगिन कर लिया है।\n\nआपको लॉगआउट किया जा रहा है।');
-        
-        // Local storage saaf karein
         localStorage.removeItem('cbt_user');
         localStorage.removeItem('cbt_login_time');
-        
-        // Redirect to login page
         window.location.href = 'index.html';
       }
     } else {
-      // Agar document hi delete ho gaya (logout button dabane par)
       localStorage.removeItem('cbt_user');
       localStorage.removeItem('cbt_login_time');
       window.location.href = 'index.html';
@@ -113,11 +167,28 @@ function listenForSession() {
 }
 listenForSession();
 
+// ========================================
+// SUBJECT SWITCH LOGIC
+// ========================================
+window.switchSubject = function(sub) {
+  document.getElementById('btnBio').classList.remove('active');
+  document.getElementById('btnPhy').classList.remove('active');
+  document.getElementById('section-bio').classList.remove('active');
+  document.getElementById('section-phy').classList.remove('active');
+
+  if (sub === 'bio') {
+    document.getElementById('btnBio').classList.add('active');
+    document.getElementById('section-bio').classList.add('active');
+  } else {
+    document.getElementById('btnPhy').classList.add('active');
+    document.getElementById('section-phy').classList.add('active');
+  }
+};
 
 // ========================================
 // CHAPTER LISTS
 // ========================================
-const class11Chapters = [
+const bio11Chapters = [
   { num: 1, name: "The Living World", file: "chapter1.html" },
   { num: 2, name: "Biological Classification", file: "chapter2.html" },
   { num: 3, name: "Plant Kingdom", file: "chapter3.html" },
@@ -139,7 +210,7 @@ const class11Chapters = [
   { num: 19, name: "Chemical Coordination and Integration", file: "chapter19.html" }
 ];
 
-const class12Chapters = [
+const bio12Chapters = [
   { num: 20, name: "Sexual Reproduction in Flowering Plants", file: "chapter20.html" },
   { num: 21, name: "Human Reproduction", file: "chapter21.html" },
   { num: 22, name: "Reproductive Health", file: "chapter22.html" },
@@ -153,6 +224,42 @@ const class12Chapters = [
   { num: 30, name: "Organisms and Populations", file: "chapter30.html" },
   { num: 31, name: "Ecosystem", file: "chapter31.html" },
   { num: 32, name: "Biodiversity and Conservation", file: "chapter32.html" }
+];
+
+// Physics Chapters (Aap inhe apne hisaab se badal sakte hain)
+const phy11Chapters = [
+  { num: 33, name: "Physical World", file: "phy1.html" },
+  { num: 34, name: "Units and Measurements", file: "phy2.html" },
+  { num: 35, name: "Motion in a Straight Line", file: "phy3.html" },
+  { num: 36, name: "Motion in a Plane", file: "phy4.html" },
+  { num: 37, name: "Laws of Motion", file: "phy5.html" },
+  { num: 38, name: "Work, Energy and Power", file: "phy6.html" },
+  { num: 39, name: "System of Particles and Rotational Motion", file: "phy7.html" },
+  { num: 40, name: "Gravitation", file: "phy8.html" },
+  { num: 41, name: "Mechanical Properties of Solids", file: "phy9.html" },
+  { num: 42, name: "Mechanical Properties of Fluids", file: "phy10.html" },
+  { num: 43, name: "Thermal Properties of Matter", file: "phy11.html" },
+  { num: 44, name: "Thermodynamics", file: "phy12.html" },
+  { num: 45, name: "Kinetic Theory", file: "phy13.html" },
+  { num: 46, name: "Oscillations", file: "phy14.html" },
+  { num: 47, name: "Waves", file: "phy15.html" }
+];
+
+const phy12Chapters = [
+  { num: 48, name: "Electric Charges and Fields", file: "phy16.html" },
+  { num: 49, name: "Electrostatic Potential and Capacitance", file: "phy17.html" },
+  { num: 50, name: "Current Electricity", file: "phy18.html" },
+  { num: 51, name: "Moving Charges and Magnetism", file: "phy19.html" },
+  { num: 52, name: "Magnetism and Matter", file: "phy20.html" },
+  { num: 53, name: "Electromagnetic Induction", file: "phy21.html" },
+  { num: 54, name: "Alternating Current", file: "phy22.html" },
+  { num: 55, name: "Electromagnetic Waves", file: "phy23.html" },
+  { num: 56, name: "Ray Optics and Optical Instruments", file: "phy24.html" },
+  { num: 57, name: "Wave Optics", file: "phy25.html" },
+  { num: 58, name: "Dual Nature of Radiation and Matter", file: "phy26.html" },
+  { num: 59, name: "Atoms", file: "phy27.html" },
+  { num: 60, name: "Nuclei", file: "phy28.html" },
+  { num: 61, name: "Semiconductor Electronics", file: "phy29.html" }
 ];
 
 // ========================================
@@ -180,22 +287,23 @@ async function loadResults() {
       userResults[chNum].best = attempts.find(a => a.percent === bestPercent);
     }
     
-    renderChapters(userResults);
+    renderAll(userResults);
     
   } catch (e) {
     console.error('Firebase load error:', e);
-    document.getElementById('class11Grid').innerHTML = '<div style="padding:20px;color:#f87171;">⚠️ Firebase se data load nahi hua. Internet check karein.</div>';
-    document.getElementById('class12Grid').innerHTML = '';
+    document.getElementById('bio11Grid').innerHTML = '<div style="padding:20px;color:#f87171;">⚠️ Data load nahi hua.</div>';
   }
 }
 
-function renderChapters(userResults) {
-  renderGrid(class11Chapters, 'class11Grid', userResults);
-  renderGrid(class12Chapters, 'class12Grid', userResults);
+function renderAll(userResults) {
+  renderGrid(bio11Chapters, 'bio11Grid', userResults);
+  renderGrid(bio12Chapters, 'bio12Grid', userResults);
+  renderGrid(phy11Chapters, 'phy11Grid', userResults);
+  renderGrid(phy12Chapters, 'phy12Grid', userResults);
   
   let totalAttempted = 0;
   let totalPercent = 0;
-  const allChapters = [...class11Chapters, ...class12Chapters];
+  const allChapters = [...bio11Chapters, ...bio12Chapters, ...phy11Chapters, ...phy12Chapters];
   
   allChapters.forEach(ch => {
     const result = userResults[ch.num];
@@ -213,6 +321,7 @@ function renderChapters(userResults) {
 
 function renderGrid(chapters, gridId, userResults) {
   const grid = document.getElementById(gridId);
+  if (!grid) return;
   grid.innerHTML = '';
   
   chapters.forEach(ch => {
@@ -251,7 +360,12 @@ function renderGrid(chapters, gridId, userResults) {
   });
 }
 
-window.logout = function() {
+window.logout = async function() {
+  try {
+    const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    await deleteDoc(doc(db, "sessions", user.uid));
+  } catch(e) { console.log(e); }
+  
   localStorage.removeItem('cbt_user');
   localStorage.removeItem('cbt_login_time');
   window.location.href = 'index.html';
