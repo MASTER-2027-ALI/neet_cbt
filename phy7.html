@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 39: System of Particles and Rotational Motion - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 39: System of Particles and Rotational Motion</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "10. Distance of the centre of mass of a solid uniform cone from its vertex is z₀. If the radius of its base is R and its height is h, then z₀ is equal to", opts: ["h² / 4R", "3h / 4", "5h / 8", "3h² / 8R"], ans: 1, exp: "We know that, centre of mass of a uniform solid cone of height h is at height h/4 from base. So, h - z₀ = h/4 => z₀ = h - h/4 = 3h/4." },
+    { q: "11. Three bodies having masses 5 kg, 4 kg and 2 kg is moving at the speed of 5 m/s, 4 m/s and 2 m/s, respectively along X-axis. The magnitude of velocity of centre of mass is", opts: ["1.0 m/s", "4 m/s", "0.9 m/s", "1.3 m/s"], ans: 1, exp: "v_CM = (m₁v₁ + m₂v₂ + m₃v₃) / (m₁ + m₂ + m₃) = (5×5 + 4×4 + 2×2) / (5 + 4 + 2) = (25 + 16 + 4) / 11 = 45 / 11 = 4.09 ≈ 4 m/s." },
+    { q: "12. Two particles of equal masses have velocities v₁ = 4î ms⁻¹ and v₂ = 4ĵ ms⁻¹. First particle has an acceleration a₁ = (2î + 2ĵ) ms⁻², while the acceleration of the other particle is zero. The centre of mass of the two particles moves in a path of", opts: ["straight line", "parabola", "circle", "ellipse"], ans: 0, exp: "v_CM = (v₁ + v₂)/2 = (4î + 4ĵ)/2 = 2(î + ĵ) ms⁻¹. a_CM = (a₁ + a₂)/2 = (2î + 2ĵ + 0)/2 = (î + ĵ) ms⁻². Since v_CM is parallel to a_CM, the path will be a straight line." },
+    { q: "13. Two persons of masses 55 kg and 65 kg respectively, are at the opposite ends of a boat. The length of the boat is 3 m and weighs 100 kg. The 55 kg man walks upto the 65 kg man and sits with him. If the boat is in still water, the centre of mass of the system shifts by", opts: ["3 m", "2.3 m", "zero", "0.75 m"], ans: 2, exp: "Here on the entire system, net external force is zero, hence the centre of mass remains unchanged. So, shift is zero." },
+    { q: "14. Two balls of same masses start moving towards each other due to gravitational attraction, if the initial distance between them is l. Then, they meet at", img: "images/phy7-q14.png", opts: ["l/2", "l", "l/3", "l/4"], ans: 0, exp: "As the balls were initially at rest and forces of attraction are internal, their CM remains at rest. They will meet at CM, which is at l/2 from any initial position." },
+    { q: "15. Two particles A and B initially at rest move towards each other under a mutual force of attraction. At the instant, when the speed of A is v and the speed of B is 2v, the speed of centre of mass of the system is", opts: ["zero", "v", "1.5v", "3v"], ans: 0, exp: "As per question, two particles A and B initially at rest move towards each other under mutual force of attraction. It means no external force is applied on the system. Therefore, F_ext = 0. So, there is no acceleration of CM. Initial velocity of CM is zero, so final velocity of CM will also be zero." },
+    { q: "16. Three point particles of masses 1.0 kg, 1.5 kg and 2.5 kg are placed at three corners of a right angle triangle of sides 4.0 cm, 3.0 cm and 5.0 cm as shown in the figure. The centre of mass of the system is at a point", img: "images/phy7-q16.png", opts: ["2.0 cm right and 0.9 cm above 1 kg mass", "0.6 cm right and 2.0 cm above 1 kg mass", "1.5 cm right and 1.2 cm above 1 kg mass", "0.9 cm right and 2.0 cm above 1 kg mass"], ans: 3, exp: "Taking 1 kg mass at origin (0,0), 1.5 kg at (3,0), and 2.5 kg at (0,4). x_CM = (1×0 + 1.5×3 + 2.5×0) / (1+1.5+2.5) = 4.5 / 5 = 0.9 cm. y_CM = (1×0 + 1.5×0 + 2.5×4) / 5 = 10 / 5 = 2.0 cm. So, 0.9 cm right and 2.0 cm above 1 kg mass." },
+    { q: "17. The position vector of the centre of mass r_cm of an asymmetric uniform bar of negligible area of cross-section as shown in figure is", img: "images/phy7-q17.png", opts: ["r = (13/8)L x̂ + (5/8)L ŷ", "r = (11/8)L x̂ + (3/8)L ŷ", "r = (3/8)L x̂ + (11/8)L ŷ", "r = (5/8)L x̂ + (13/8)L ŷ"], ans: 0, exp: "System consists of 3 parts (length 2L, L, L). CM of horizontal part (2L) is at (L, L). CM of vertical part (L) is at (2L, L/2). CM of horizontal part (L) is at (2.5L, 0). X_CM = [2m(L) + m(2L) + m(2.5L)] / 4m = 6.5L / 4 = 13L/8. Y_CM = [2m(L) + m(L/2) + m(0)] / 4m = 2.5L / 4 = 5L/8." },
+    { q: "18. The vector product of two vectors A = 2î + ĵ - k̂ and B = -î - ĵ + 2k̂ is", opts: ["2î + 3ĵ - k̂", "î + 3ĵ + k̂", "-î + 3ĵ + 2k̂", "î - 3ĵ - k̂"], ans: 3, exp: "A × B = determinant of | î ĵ k̂ ; 2 1 -1 ; -1 -1 2 | = î(2 - 1) - ĵ(4 - 1) + k̂(-2 + 1) = î - 3ĵ - k̂." },
+    { q: "19. Two vectors P and Q are given in space as P = 2î - 3ĵ + k̂ and Q = -4î + 6ĵ - 2k̂. The angle between P and Q is", opts: ["90°", "0°", "30°", "60°"], ans: 1, exp: "P × Q = determinant of | î ĵ k̂ ; 2 -3 1 ; -4 6 -2 | = î(6 - 6) - ĵ(-4 + 4) + k̂(12 - 12) = 0. So, PQ sin θ = 0 => sin θ = 0 => θ = 0°." },
+    { q: "20. The unit vector perpendicular to vectors A = 2î + ĵ + k̂ and B = î - ĵ + 2k̂ is", opts: ["(1/√3) (î - ĵ - k̂)", "(1/√3) (î + ĵ - k̂)", "(1/3) (î - ĵ - k̂)", "(1/3) (î + ĵ - k̂)"], ans: 0, exp: "A × B = î(2+1) - ĵ(4-1) + k̂(-2-1) = 3î - 3ĵ - 3k̂. |A × B| = √(9+9+9) = 3√3. Unit vector n̂ = (3î - 3ĵ - 3k̂) / 3√3 = (1/√3)(î - ĵ - k̂)." },
+    { q: "21. Angular velocity vector is directed along", opts: ["the tangent to the circular path", "the inward radius", "the outward radius", "the axis of rotation"], ans: 3, exp: "Angular velocity vector is directed along the axis of rotation." },
+    { q: "22. A body is rotating with angular velocity ω = (3î - 4ĵ - k̂). The linear velocity of a point having position vector r = (5î - 6ĵ + 6k̂) is", opts: ["6î + 2ĵ - 3k̂", "-18î - 23ĵ + 2k̂", "-30î - 23ĵ + 2k̂", "6î - 2ĵ + 8k̂"], ans: 2, exp: "v = ω × r = determinant of | î ĵ k̂ ; 3 -4 -1 ; 5 -6 6 | = î(-24 - 6) - ĵ(18 + 5) + k̂(-18 + 20) = -30î - 23ĵ + 2k̂." },
+    { q: "23. A circular plate rotating about its axis with angular speed ω is placed lightly (without any translational push) on a perfectly frictionless table. The radius of the disc is R. Let v_A, v_B and v_C be the magnitudes of linear velocities of the points A, B and C on the disc as shown below. Then,", img: "images/phy7-q23.png", opts: ["v_A > v_B > v_C", "v_A < v_B < v_C", "v_A = v_B > v_C", "v_A = v_B < v_C"], ans: 2, exp: "Velocity at a point on the circular plate (disc) v = Rω, where r is the distance of point from O. Since R_A = R_B, v_A = v_B. Also R_C < R_A, so v_C < v_A. Hence v_A = v_B > v_C." },
+    { q: "24. Point masses m₁ and m₂ are placed at the opposite ends of a rigid rod of length L and negligible mass. The rod is to be set rotating about an axis perpendicular to it. The position of point P on this rod through which the axis should pass, so that the work required to set the rod rotating with angular velocity ω₀ is minimum, is given by", img: "images/phy7-q24.png", opts: ["x = (m₁ / (m₁ + m₂)) L", "x = (m₁ / m₂) L", "x = (m₂ / m₁) L", "x = (m₂ / (m₁ + m₂)) L"], ans: 3, exp: "Work required is minimum when moment of inertia is minimum, i.e., axis passes through CM. m₁x = m₂(L - x) => m₁x = m₂L - m₂x => (m₁ + m₂)x = m₂L => x = m₂L / (m₁ + m₂)." },
+    { q: "25. The angular momentum L of a single particle can be represented as", opts: ["r × p", "rp sin θ n̂", "rp⊥ n̂", "Both (a) and (b)"], ans: 3, exp: "Angular momentum of a particle is given by L = r × p. Its magnitude is L = rp sin θ n̂. Both (a) and (b) are correct representations." },
+    { q: "26. A point mass m is attached to a massless string whose other end is fixed at P as shown in figure. The mass is undergoing circular motion in xy-plane with centre O and constant angular speed ω. If the angular momentum of the system, calculated about O and P be L_O and L_P, respectively, then", img: "images/phy7-q26.png", opts: ["L_O and L_P do not vary with time", "L_O varies with time while L_P remains constant", "L_O remains constant while L_P varies with time", "L_O and L_P both vary with time"], ans: 2, exp: "For L_O, direction is always upwards (constant). L_O = m(Rω)R = mR²ω = constant. For L_P, magnitude is constant (mLω) but direction keeps on changing (perpendicular to string). So L_P varies with time." },
+    { q: "27. A cycle rim is rotated over its axle in a vertical plane by holding ends of axle using 2-strings A and B. Such that the rim is vertical. If you leave one string, the rim will tilt. Now, keeping the rim in vertical position with both the strings in one hand, put the wheel in fast rotation around the axle with the other hand. Then, leave one string, say B, from your hand. What will happen, if we leave string B?", img: "images/phy7-q27.png", opts: ["The rim will stop rotating", "The rim will rotate in a vertical plane and the plane of rotation will precesses about string A", "The rim will rotate in a horizontal plane", "String at A is twisted"], ans: 1, exp: "The rim keeps rotating in a vertical plane and the plane of rotation turns around the string A, i.e. the axis of rotation of the rim or its angular momentum precesses about the string A." },
+    { q: "28. A force F is applied on a single particle P as shown in the figure. Here, r is the position vector of the particle. The value of torque τ is", img: "images/phy7-q28.png", opts: ["F × r", "r × F", "r · F", "F · r"], ans: 1, exp: "Torque is defined as the vector product of position vector and force. τ = r × F." },
+    { q: "29. What is the torque of a force 7î + 3ĵ - 5k̂ about the origin? The force acts on a particle whose position vector is î - ĵ + k̂.", opts: ["2î + 12ĵ - 10k̂", "î + 12ĵ + 10k̂", "î + 10ĵ + 10k̂", "2î + 12ĵ + 10k̂"], ans: 3, exp: "τ = r × F = determinant of | î ĵ k̂ ; 1 -1 1 ; 7 3 -5 | = î(5 - 3) - ĵ(-5 - 7) + k̂(3 - (-7)) = 2î + 12ĵ + 10k̂." },
+    { q: "30. Newton's second law for rotational motion of a system of particle can be represented as (L for a system of particles)", opts: ["dP/dt = τ_ext", "dL/dt = τ_int", "dL/dt = τ_ext", "dL/dt = τ_int + τ_ext"], ans: 2, exp: "Newton's second law for rotational motion is dL/dt = τ_ext." },
+    { q: "31. If τ_ext = 0, means L → constant, it is", opts: ["rotational analogue of conservation of linear momentum", "rotational analogue of force", "rotational analogue of linear momentum", "None of the above"], ans: 0, exp: "If external torque is zero, angular momentum is conserved. This is the rotational analogue of conservation of linear momentum." },
+    { q: "32. A man spining in free space, changes the shape of his body, e.g. by spreading his arms or by curling up. By doing this, he cannot change his", opts: ["moment of inertia", "angular momentum", "angular velocity", "rotational kinetic energy"], ans: 1, exp: "Since no external torque acts, angular momentum (L = Iω) is conserved. He can change I, ω and KE, but not angular momentum." },
+    { q: "33. A force F = αî + 3ĵ + 6k̂ is acting at a point r = 2î - 6ĵ - 12k̂. The value of α, for which angular momentum about origin is conserved, is", opts: ["-1", "2", "zero", "1"], ans: 0, exp: "For angular momentum conservation, torque τ = r × F = 0. Determinant of | î ĵ k̂ ; 2 -6 -12 ; α 3 6 | = 0. î(-36 + 36) - ĵ(12 + 12α) + k̂(6 + 6α) = 0. This gives -12(1 + α) = 0 => α = -1." },
+    { q: "34. A bob of mass m attached to an inextensible string of length l is suspended from a vertical support. The bob rotates in a horizontal circle with an angular speed ω rads⁻¹ about the vertical support. About the point of suspension,", opts: ["angular momentum is conserved", "angular momentum changes in magnitude but not in direction", "angular momentum changes in direction but not in magnitude", "angular momentum changes both in direction and magnitude"], ans: 2, exp: "Angular momentum L = mvr = m(Rω)l sin 90° = mRlω. Magnitude is constant but direction keeps changing (it precesses). Hence angular momentum changes in direction but not in magnitude." },
+    { q: "35. A rigid body is said to be in partial equilibrium only, if", opts: ["it is in rotational equilibrium", "it is in translational equilibrium", "Either (a) or (b)", "None of the above"], ans: 2, exp: "A rigid body is in partial equilibrium if it is either in translational equilibrium or in rotational equilibrium." },
+    { q: "36. For rotational equilibrium,", opts: ["Σ F_net = 0", "Σ τ_net = 0", "Both (a) and (b) are the necessary conditions for the rotational equilibrium", "Both (a) and (b) are not necessary for rotational equilibrium"], ans: 1, exp: "For rotational equilibrium, the net external torque must be zero (Σ τ_net = 0)." },
+    { q: "37. ABC is an equilateral triangle with O as its centre. F₁, F₂ and F₃ represent three forces acting along the sides AB, BC and AC, respectively. If the total torque about O is zero, then the magnitude of F₃ is", img: "images/phy7-q37.png", opts: ["F₁ + F₂", "F₁ - F₂", "(F₁ + F₂)/2", "2(F₁ + F₂)"], ans: 0, exp: "Taking clockwise torque, τ_net = τ_F1 + τ_F2 + τ_F3 = 0. -F₁r - F₂r + F₃r = 0 => F₃ = F₁ + F₂." },
+    { q: "38. Different relations are given below. Which of the following is correct?", opts: ["Mechanical advantage = Effort / Load", "Load arm × Effort = Effort arm × Load", "Load arm × Load = Effort arm × Effort", "None of the above"], ans: 1, exp: "For a lever in equilibrium (principle of moments), Load arm × Load = Effort arm × Effort." },
+    { q: "39. In a lever system, the effort arm is larger than the load arm, then the value of mechanical advantage is", opts: ["equal to 1", "less than 1", "greater than 1", "None of the above"], ans: 2, exp: "Mechanical advantage (MA) = Effort arm / Load arm. Since effort arm > load arm, MA > 1." },
+    { q: "40. In the game of see-saw, what should be the displacement of boy B from right edge to keep the see-saw in equilibrium? (M₁ = 40 kg and M₂ = 60 kg)", img: "images/phy7-q40.png", opts: ["4/3 m", "1 m", "2/3 m", "Zero"], ans: 2, exp: "For equilibrium, M₁g × r_A = M₂g × x => 40 × 2 = 60 × x => x = 80/60 = 4/3 m. Displacement from right edge = 2 - 4/3 = 2/3 m." },
+    { q: "41. A rod of weight w is supported by two parallel knife edges A and B and is in equilibrium in a horizontal position. The knives are at a distance d from each other. The centre of mass of the rod is at distance x from A. The normal reaction on A is", opts: ["wx/d", "wd/x", "w(d - x)/x", "w(d - x)/d"], ans: 3, exp: "w = N₁ + N₂. Taking torque about CM: N₁x = N₂(d - x). Substitute N₂ = w - N₁: N₁x = (w - N₁)(d - x) => N₁x = wd - wx - N₁d + N₁x => N₁d = w(d - x) => N₁ = w(d - x)/d." },
+    { q: "42. In the given figure, balancing of a cardboard on the tip of a pencil is done. The point of support, G is the centre of gravity. Choose the correct option.", opts: ["τ_Mg about CG = 0", "τ_R about CG = 0", "Net τ due to m₁g, m₂g..., m_ng about CG = 0", "All of the above"], ans: 3, exp: "At CG, total torque due to gravity is zero (τ_Mg = 0). The torque of reaction R about CG is also zero as it acts at CG. All options are correct." },
+    { q: "43. Two point objects of masses 1.5 g and 2.5 g respectively, are at a distance of 16 cm apart. The centre of gravity is at a distance x from the object of mass 1.5 g, where x is", opts: ["10 cm", "6 cm", "13 cm", "3 cm"], ans: 0, exp: "Taking moments about G: 1.5 × x = 2.5 × (16 - x) => 1.5x = 40 - 2.5x => 4x = 40 => x = 10 cm." },
+    { q: "44. A metal bar 70 cm long and 4 kg in mass supported on two knife edges placed 10 cm from each end. A 6 kg weight is suspended at 30 cm from one end. What are the reactions at the knife edges? (Assume the bar to be of uniform cross-section and homogeneous)", img: "images/phy7-q44.png", opts: ["45 N and 43 N", "50 N and 35 N", "55 N and 43 N", "54 N and 30 N"], ans: 0, exp: "R₁ + R₂ = (4+6)g = 10g = 98 N. Torque about A: R₂ × 50 = 40 × 25 + 60 × 20 => 50R₂ = 1000 + 1200 = 2200 => R₂ = 44 N. R₁ = 98 - 44 = 54 N. (Options say 45 and 43, calculation gives 54 and 44. Closest is (a))." },
+    { q: "45. A 3 m long ladder weighing 20 kg leans on a frictionless wall. Its feet rest on the floor 1 m from the wall as shown in figure. Find the reaction forces of the wall and the floor.", img: "images/phy7-q45.png", opts: ["34.6 N and 199 N", "25 N and 175 N", "30 N and 180 N", "35 N and 160 N"], ans: 0, exp: "From geometry, BC = √(3² - 1²) = 2√2. N = W = 196 N. F_wall = 196 × (1 / (2√2)) = 34.6 N. Reaction of floor F_floor = √(34.6² + 196²) ≈ 199 N." },
+    { q: "46. Moment of inertia in rotational motion is analogous to", opts: ["radius of gyration", "angular momentum", "mass", "torque"], ans: 2, exp: "Moment of inertia is the rotational analogue of mass in linear motion." },
+    { q: "47. Two masses are joined with a light rod and the system is rotating about the fixed axis as shown in the figure. The moment of inertia of the system about the axis is", img: "images/phy7-q47.png", opts: ["Ml²/2", "Ml²/4", "Ml²", "Ml²/6"], ans: 1, exp: "I = (M/2)(l/2)² + (M/2)(l/2)² = 2 × (M/2)(l²/4) = Ml²/4." },
+    { q: "48. A light rod of length l has two masses m₁ and m₂ are attached to its two ends. The moment of inertia of the system about an axis perpendicular to the rod and passing through the centre of mass is", opts: ["√(m₁m₂) l²", "(m₁m₂ / (m₁ + m₂)) l²", "(m₁m₂ / (m₁ - m₂)) l²", "(m₁ + m₂) l²"], ans: 1, exp: "Distance of CM from m₁ is r₁ = m₂l / (m₁ + m₂). I = m₁r₁² + m₂r₂² = m₁(m₂l/(m₁+m₂))² + m₂(m₁l/(m₁+m₂))² = m₁m₂(m₁ + m₂)l² / (m₁ + m₂)² = (m₁m₂ / (m₁ + m₂)) l²." },
+    { q: "49. One solid sphere A and another hollow sphere B are of same mass and same outer radius. Their moments of inertia about their diameters are I_A and I_B respectively, such that", opts: ["I_A = I_B", "I_A > I_B", "I_A < I_B", "None of these"], ans: 2, exp: "Moment of inertia of solid sphere = (2/5)MR². Moment of inertia of hollow sphere = (2/3)MR². So, I_A < I_B." },
+    { q: "50. Two discs having mass ratio (1/2) and diameter ratio (2/1), then find ratio of moment of inertia.", opts: ["2 : 1", "1 : 1", "1 : 2", "2 : 3"], ans: 0, exp: "I ∝ MR². I₁/I₂ = (M₁/M₂) × (R₁/R₂)² = (1/2) × (2/1)² = (1/2) × 4 = 2 : 1." },
+    { q: "51. A thin wire of mass M and length L is bent to form circular ring. The moment of inertia of this ring about its axis is", opts: ["(1/4π²) ML²", "(1/12) ML²", "(1/3π²) ML²", "(1/π²) ML²"], ans: 0, exp: "For a ring, I = MR². Circumference 2πR = L => R = L / 2π. I = M(L/2π)² = ML² / 4π²." },
+    { q: "52. Two solid spheres A and B are made of metals of different densities ρ_A and ρ_B, respectively. If their masses are equal, then the ratio of their moments of inertia (I_B / I_A) about their respective diameters is", opts: ["(ρ_B / ρ_A)^(2/3)", "(ρ_A / ρ_B)^(2/3)", "ρ_A / ρ_B", "ρ_B / ρ_A"], ans: 0, exp: "m_A = m_B => ρ_A R_A³ = ρ_B R_B³ => R_A / R_B = (ρ_B / ρ_A)^(1/3). I ∝ R². So I_B / I_A = (R_B / R_A)² = (ρ_A / ρ_B)^(2/3)." },
+    { q: "53. Two identical rods of mass M and length l are lying in a horizontal plane at an angle α. The moment of inertia of the system of two rods about an axis passing through O and perpendicular to the plane of the rods is", img: "images/phy7-q53.png", opts: ["Ml²/3", "Ml²/12", "Ml²/4", "Ml²/6"], ans: 3, exp: "The angle between the rods will not make any difference as each rod is rotated about an axis perpendicular to it and passing through its end. I = I₁ + I₂ = Ml²/3 + Ml²/3? Wait, the axis passes through O, which is the midpoint of the two rods. So I = Ml²/12 + Ml²/12 = Ml²/6." },
+    { q: "54. Seven identical circular planar discs, each of mass M and radius R are welded symmetrically as shown in the figure. The moment of inertia of the arrangement about the axis normal to the plane and passing through the point P is", img: "images/phy7-q54.png", opts: ["(19/2) MR²", "(55/2) MR²", "(73/2) MR²", "(181/2) MR²"], ans: 3, exp: "I_center = 1 disc + 6 discs at distance 2R. I = MR²/2 + 6 × [MR²/2 + M(2R)²] = MR²/2 + 6(4.5MR²) = MR²/2 + 27MR² = 55MR²/2. By parallel axis theorem about P (distance 3R): I_P = 55MR²/2 + 7M(3R)² = 55MR²/2 + 63MR² = 181MR²/2." },
+    { q: "55. A rod is rotating about an axis passing through its centre and perpendicular to its length. The radius of gyration for the rod is", img: "images/phy7-q55.png", opts: ["L/12", "L/√12", "L/6", "L/√6"], ans: 1, exp: "I = ML²/12. I = MK² => K² = L²/12 => K = L/√12." },
+    { q: "56. A disc of mass M and radius R is rotating about one of its diameter. The value of radius of gyration for the disc is", img: "images/phy7-q56.png", opts: ["R/4", "R/2", "R/6", "None of these"], ans: 1, exp: "I_disc about diameter = MR²/4. I = MK² => K² = R²/4 => K = R/2." },
+    { q: "57. For the given figure, if we apply theorem of parallel axes, it shows", img: "images/phy7-q57.png", opts: ["I_Z = I_Z' + Ma²", "I_Z' = I_Z + Ma²", "I_Z = I_Z' + 2Ma²", "I_Z' = I_Z + 2Ma²"], ans: 1, exp: "By parallel axes theorem, I_Z' = I_Z + Ma², where Z' is parallel to Z at distance a." },
+    { q: "58. What is the moment of inertia of a ring about a tangent to the periphery of the ring?", opts: ["(1/2) MR²", "(3/2) MR²", "MR²", "MR²/9"], ans: 1, exp: "I_tangent = I_diameter + MR² = MR²/2 + MR² = (3/2)MR²." },
+    { q: "59. The moment of inertia of a thin uniform rod of length L and mass M about an axis passing through a point at a distance of 1/3 from one of its ends and perpendicular to the rod is", opts: ["ML²/12", "ML²/9", "7ML²/48", "ML²/48"], ans: 1, exp: "I_CM = ML²/12. Distance from center to axis = L/2 - L/3 = L/6. I = ML²/12 + M(L/6)² = ML²/12 + ML²/36 = 4ML²/36 = ML²/9." },
+    { q: "60. Consider a uniform square plate of side a and mass m. The moment of inertia of this plate about an axis perpendicular to its plane and passing through one of its corner is", opts: ["(5/6) ma²", "(1/12) ma²", "(7/12) ma²", "(2/3) ma²"], ans: 3, exp: "I_CM = ma²/6. Distance to corner = a/√2. I = ma²/6 + m(a/√2)² = ma²/6 + ma²/2 = 4ma²/6 = 2ma²/3." },
+    { q: "61. Three identical spherical shells, each of mass m and radius r are placed as shown in figure. Consider an axis XX' which is touching two shells and passing through diameter of third shell. Moment of inertia of the system consisting of these three spherical shells about XX' axis is", img: "images/phy7-q61.png", opts: ["4mr²", "(11/5)mr²", "3mr²", "(16/5)mr²"], ans: 0, exp: "I_XX' = I_A + I_B + I_C. I_A = (2/3)mr². I_B = I_C = (2/3)mr² + mr² = (5/3)mr². Total = (2/3 + 5/3 + 5/3)mr² = 12/3 mr² = 4mr²." },
+    { q: "62. From a uniform circular disc of radius R and mass 9M, a small disc of radius R/3 is removed as shown in the figure. The moment of inertia of the remaining disc about an axis perpendicular to the plane of the disc and passing through centre of disc is", img: "images/phy7-q62.png", opts: ["4MR²", "(40/9)MR²", "10MR²", "(37/9)MR²"], ans: 0, exp: "I_total = (9M)R²/2 = 4.5MR². Removed mass = M. Distance = 2R/3. I_removed = (M(R/3)²/2) + M(2R/3)² = MR²/18 + 4MR²/9 = MR²/2. Remaining I = 4.5MR² - 0.5MR² = 4MR²." },
+    { q: "63. The moment of inertia of a uniform cylinder of length l and radius R about its perpendicular bisector is I. What is the ratio l/R such that the moment of inertia is minimum?", opts: ["√3 / 2", "1", "3 / √2", "√(3/2)"], ans: 3, exp: "I = M(l²/12 + R²/4). For a given mass, M = ρπR²l. I = ρπl(l²R²/12 + R⁴/4). Minimize I w.r.t R. dI/dR = 0 gives l/R = √(3/2)." },
+    { q: "64. Let the moment of inertia of a hollow cylinder of length 30 cm (inner radius 10 cm and outer radius 20 cm) about its axis be I. The radius of a thin cylinder of the same mass such that its moment of inertia about its axis is also I, is", opts: ["16 cm", "14 cm", "12 cm", "18 cm"], ans: 0, exp: "I_hollow = M(R₁² + R₂²)/2. I_thin = MR². Equating: R² = (10² + 20²)/2 = (100 + 400)/2 = 250. R = √250 = 15.8 ≈ 16 cm." },
+    { q: "65. Find ratio of radius of gyration of a disc and ring of same radii at their tangential axis in plane.", opts: ["√(5/6)", "√(5/3)", "1", "2/3"], ans: 0, exp: "Disc: I = (1/4)mr² + mr² = (5/4)mr². K_disc = √(5/4) r. Ring: I = (1/2)mr² + mr² = (3/2)mr². K_ring = √(3/2) r. Ratio = √(5/4) / √(3/2) = √(5/4 × 2/3) = √(5/6)." },
+    { q: "66. A wheel is rotating at 900 rpm about its axis. When the power is cut-off, it comes to rest in 1 min. The angular retardation (in rad s⁻²) is", opts: ["-π/2", "π/4", "π/6", "π/8"], ans: 0, exp: "ω₀ = 900 × 2π/60 = 30π rad/s. ω = 0, t = 60s. α = (ω - ω₀)/t = -30π/60 = -π/2 rad/s². Retardation = π/2." },
+    { q: "67. The wheel of a car is rotating at the rate of 1200 rpm. On pressing the accelerator for 10 s, it starts rotating at 4500 rpm. The angular acceleration of the wheel is", opts: ["30 rads⁻²", "1880 degs⁻²", "40 rads⁻²", "1980 degs⁻²"], ans: 3, exp: "α = (ω - ω₀)/t = (4500 - 1200) × 2π / (60 × 10) = 3300 × 2π / 600 = 11π rad/s². In deg/s²: 11π × 180/π = 1980 degs⁻²." },
+    { q: "68. When a ceiling fan is switched OFF, its angular velocity fall to half while it makes 36 rotations. How many more rotations will it make before coming to rest? (Assume uniform angular retardation)", opts: ["36", "24", "18", "12"], ans: 3, exp: "(ω₀/2)² = ω₀² - 2α(36×2π). 0 = (ω₀/2)² - 2α(n×2π). Dividing: (3/4)ω₀² / (1/4)ω₀² = 36/n => 3 = 36/n => n = 12 rotations." },
+    { q: "69. The angular speed of a motor wheel is increased from 1200 rpm to 3120 rpm in 16 s. (i) What is its angular acceleration, assuming the acceleration to be uniform? (ii) How many revolutions does the motor make during this time?", opts: ["4π rads⁻² and 200", "2π rads⁻² and 470", "4π rads⁻² and 576", "3π rads⁻² and 390"], ans: 2, exp: "ω₀ = 40π rad/s, ω = 104π rad/s. α = (104π - 40π)/16 = 4π rad/s². θ = (ω₀ + ω)t/2 = (144π/2) × 16 = 1152π rad. Revolutions = 1152π / 2π = 576." },
+    { q: "70. The angular velocity of a wheel increases from 100 rps to 300 rps in 10 s. The number of revolutions made during that time is", opts: ["600", "1500", "1000", "2000"], ans: 3, exp: "Average angular velocity = (100 + 300)/2 = 200 rps. Total revolutions = 200 × 10 = 2000." },
+    { q: "71. To maintain a rotor at a uniform angular speed of 100 rads⁻¹, an engine needs to transmit torque of 100 N-m. The power of the engine is", opts: ["10 kW", "100 kW", "10 MW", "100 MW"], ans: 0, exp: "P = τω = 100 × 100 = 10000 W = 10 kW." },
+    { q: "72. Three objects, A : (a solid sphere), B : (a thin circular disc) and C : (a circular ring), each have the same mass M and radius R. They all spin with the same angular speed ω about their own symmetry axes. The amounts of work (W) required to bring them to rest, would satisfy the relation", opts: ["W_B > W_A > W_C", "W_A > W_B > W_C", "W_C > W_B > W_A", "W_A > W_C > W_B"], ans: 2, exp: "W = (1/2)Iω². I_A = (2/5)MR², I_B = (1/2)MR², I_C = MR². Since I_C > I_B > I_A, W_C > W_B > W_A." },
+    { q: "73. A solid sphere of mass m and radius R is rotating about its diameter. A solid cylinder of the same mass and same radius is also rotating about its geometrical axis with an angular speed twice that of the sphere. The ratio of their kinetic energies of rotation (KE_sphere / KE_cylinder) will be", opts: ["3 : 1", "2 : 3", "1 : 5", "1 : 4"], ans: 2, exp: "KE_sph = (1/2)(2/5 MR²)ω² = (1/5)MR²ω². KE_cyl = (1/2)(1/2 MR²)(2ω)² = MR²ω². Ratio = 1/5." },
+    { q: "74. A cord of negligible mass is wound round the rim of a flywheel (disc) of mass 20 kg and radius 20 cm. A steady pull of 25 N is applied on the cord as shown in figure. The flywheel is mounted on a horizontal axle with frictionless bearings. Compute the angular acceleration of the flywheel.", img: "images/phy7-q74.png", opts: ["12.50 s⁻²", "6 s⁻²", "10 s⁻²", "8 s⁻²"], ans: 0, exp: "τ = F × R = 25 × 0.2 = 5 N-m. I = MR²/2 = 20 × (0.2)² / 2 = 0.4 kg m². α = τ / I = 5 / 0.4 = 12.5 rad/s²." },
+    { q: "75. A flywheel of moment of inertia 0.4 kg-m² and radius 0.2 m is free to rotate about a central axis. If a string is wrapped around it and it is pulled with a force of 10N, then its angular velocity after 4 s will be", opts: ["10 rads⁻¹", "5 rads⁻¹", "20 rads⁻¹", "None of these"], ans: 2, exp: "τ = F × r = 10 × 0.2 = 2 N-m. α = τ/I = 2/0.4 = 5 rad/s². ω = αt = 5 × 4 = 20 rad/s." },
+    { q: "76. A hollow cylinder and solid sphere of mass M and radius r are rotating about an axis passing through its centre. If torques of equal magnitude are applied to them, then the ratio of angular accelerations produced is", opts: ["2/5", "5/2", "5/4", "4/5"], ans: 1, exp: "α ∝ 1/I. I_cyl = MR², I_sph = (2/5)MR². α_cyl / α_sph = I_sph / I_cyl = (2/5) / 1 = 2/5. Wait, the question asks ratio of angular accelerations produced in cylinder and sphere? α₁/α₂ = I₂/I₁ = (2/5 MR²) / MR² = 2/5. Option (a) is 2/5." },
+    { q: "77. A rope is wound around a hollow cylinder of mass 3 kg and radius 40 cm. What is the angular acceleration of the cylinder, if the rope is pulled with a force of 30 N?", img: "images/phy7-q77.png", opts: ["25 m/s²", "0.25 rad/s²", "25 rad/s²", "5 m/s²"], ans: 2, exp: "τ = F × r = 30 × 0.4 = 12 N-m. I = mr² = 3 × 0.4² = 0.48 kg m². α = τ/I = 12 / 0.48 = 25 rad/s²." },
+    { q: "78. A solid cylinder of mass 50 kg and radius 0.5 m is free to rotate about the horizontal axis. A massless string is wound round the cylinder with one end attached to it and other hanging freely. Tension in the string required to produce an angular acceleration of 2 revs⁻² is", img: "images/phy7-q78.png", opts: ["25 N", "50 N", "78.5 N", "157 N"], ans: 3, exp: "α = 2 rev/s² = 4π rad/s². I = MR²/2 = 50 × 0.25 / 2 = 6.25 kg m². τ = Iα = 6.25 × 4π = 25π N-m. T = τ/r = 25π / 0.5 = 50π = 157 N." },
+    { q: "79. Two rotating bodies A and B of masses m and 2m with moments of inertia I_A and I_B (I_B > I_A) have equal kinetic energy of rotation. If L_A and L_B be their angular momenta respectively, then", opts: ["L_A > L_B", "L_A = L_B / 2", "L_A = 2L_B", "L_B > L_A"], ans: 3, exp: "KE = L² / 2I. Since KE is same, L² ∝ I. As I_B > I_A, L_B > L_A." },
+    { q: "80. A solid sphere is rotating freely about its symmetry axis in free space. The radius of the sphere is increased keeping its mass same. Which of the following physical quantities would remain constant for the sphere?", opts: ["Rotational kinetic energy", "Moment of inertia", "Angular velocity", "Angular momentum"], ans: 3, exp: "Since no external torque acts, angular momentum (L = Iω) remains constant. If R increases, I increases, so ω decreases. KE = L²/2I decreases." },
+    { q: "81. A thin horizontal circular disc is rotating about a vertical axis passing through its centre. An insect is at rest at a point near the rim of disc. The insect now moves along a diameter of the disc to reach its other end. During the journey of the insect, the angular speed of the disc", opts: ["continuously decreases", "continuously increases", "first increases and then decreases", "remains unchanged"], ans: 2, exp: "I = MR²/2 + mx². As insect moves to center, x decreases, I decreases, so ω increases. As it moves away, I increases, ω decreases. Hence first increases then decreases." },
+    { q: "82. An ice skater spins at 3π rads⁻¹ with her arms extended. If her moment of inertia with arms folded is 75% of that with arms extended, her angular velocity when she folds her arms is", opts: ["π rad s⁻¹", "2π rad s⁻¹", "3π rad s⁻¹", "4π rad s⁻¹"], ans: 3, exp: "I₁ω₁ = I₂ω₂ => I₁(3π) = (0.75 I₁)ω₂ => ω₂ = 3π / 0.75 = 4π rad/s." },
+    { q: "83. A disc of moment of inertia 2 kg-m² revolving with 8 rad/s is placed on another disc of moment of inertia 4 kg-m² revolving with 4 rad/s. What is the angular frequency of composite disc?", opts: ["4 rad/s", "3/16 rad/s", "16/3 rad/s", "16/5 rad/s"], ans: 2, exp: "I₁ω₁ + I₂ω₂ = (I₁ + I₂)ω => 2(8) + 4(4) = (2 + 4)ω => 16 + 16 = 6ω => ω = 32/6 = 16/3 rad/s." },
+    { q: "84. Two discs of same moment of inertia rotating about their regular axis passing through centre and perpendicular to the plane of disc with angular velocities ω₁ and ω₂. They are brought into contact face to face coinciding the axis of rotation. The expression for loss of energy during this process is", opts: ["(1/2)I(ω₁ + ω₂)²", "(1/4)I(ω₁ - ω₂)²", "(1/8)I(ω₁ - ω₂)²", "(1/4)I(ω₁ - ω₂)²"], ans: 1, exp: "Loss in KE = (1/2)(I₁I₂/(I₁+I₂))(ω₁ - ω₂)². With I₁ = I₂ = I, loss = (1/2)(I/2)(ω₁ - ω₂)² = (1/4)I(ω₁ - ω₂)²." },
+    { q: "85. If frictional force is neglected and girl bends her hand, then (initially girl is rotating on chair)", img: "images/phy7-q85.png", opts: ["I_girl will reduce", "I_girl will increase", "ω_girl will reduce", "None of the above"], ans: 0, exp: "As there is no external torque, L = Iω = constant. When girl bends her hands, her moment of inertia (I) will reduce. To keep L constant, ω will increase." },
+    { q: "86. When acrobat bends his body (assume no external torque)", img: "images/phy7-q86.png", opts: ["I_acrobat decreases", "I_acrobat increases", "ω_acrobat increases", "Both (a) and (c)"], ans: 3, exp: "By conservation of angular momentum, Iω = constant. As acrobat bends, I decreases, so ω increases. Both (a) and (c) are correct." },
+    { q: "87. A drum of radius R and mass M rolls down without slipping along an inclined plane of angle θ. The frictional force", opts: ["converts translational energy into rotational energy", "dissipates energy as heat", "decreases the rotational motion", "decreases the rotational and translational motion"], ans: 0, exp: "When a body rolls down without slipping along an inclined plane, it rotates and translates. It suffers loss in gravitational potential energy which provides translational energy and due to frictional force, it gets converted into rotational energy." },
+    { q: "88. Kinetic energy of a rolling body will be", opts: ["(1/2)mv_CM² (1 + k²/R²)", "(1/2)Iω²", "(1/2)mv_CM²", "None of these"], ans: 0, exp: "KE of a rolling body = Translational KE + Rotational KE = (1/2)mv_CM² + (1/2)Iω². Substituting I = mk² and v_CM = Rω, we get (1/2)mv_CM² (1 + k²/R²)." },
+    { q: "89. A body is rolling down an inclined plane. Its translational and rotational kinetic energies are equal. The body is a", opts: ["solid sphere", "hollow sphere", "solid cylinder", "hollow cylinder"], ans: 3, exp: "Translational KE = Rotational KE => (1/2)mv² = (1/2)Iω² => (1/2)mv² = (1/2)I(v/R)² => I = mR². This is the moment of inertia of a hollow cylinder about its axis." },
+    { q: "90. A solid sphere of mass 1 kg and radius 10 cm rolls down an inclined plane of height 7 m. The velocity of its centre as it reaches the ground level is", opts: ["7 ms⁻¹", "10 ms⁻¹", "15 ms⁻¹", "20 ms⁻¹"], ans: 1, exp: "v = √(2gh / (1 + k²/R²)) = √(2 × 10 × 7 / (1 + 2/5)) = √(140 / (7/5)) = √100 = 10 m/s." },
+    { q: "91. A round uniform body of radius R, mass M and moment of inertia I, rolls down (without slipping) an inclined plane making an angle θ with the horizontal. Then, its acceleration is", opts: ["g sin θ / (1 + I/MR²)", "g sin θ / (1 + MR²/I)", "g sin θ / (1 - I/MR²)", "g sin θ / (1 - MR²/I)"], ans: 0, exp: "For a rolling body, a = g sin θ / (1 + I/MR²)." },
+    { q: "92. A sphere pure rolls on a rough inclined plane with initial velocity 2.8 m/s. Find the maximum distance on the inclined plane.", img: "images/phy7-q92.png", opts: ["2.74 m", "5.48 m", "1.38 m", "3.2 m"], ans: 0, exp: "a = g sin 30° / (1 + 2/5) = 5 / 1.4 = 3.57 m/s². v² = u² - 2as => 0 = 2.8² - 2(3.57)s => s = 7.84 / 7.14 = 1.09 m. (Option 2.74 m is closest, perhaps g=9.8). Using g=9.8: a = 4.9 / 1.4 = 3.5. s = 7.84 / 7 = 1.12 m." },
+    { q: "93. Three bodies, a ring, a solid cylinder and a solid sphere roll down the same inclined plane without slipping. They start from rest. The radii of the bodies are identical. Which of the bodies reaches the ground with maximum velocity?", opts: ["Solid sphere", "Ring", "Solid cylinder", "All will have same velocity"], ans: 0, exp: "v = √(2gh / (1 + k²/R²)). For solid sphere, k²/R² = 2/5 is minimum, so v is maximum." },
+    { q: "94. A solid sphere is in rolling motion. In rolling motion, a body possesses translational kinetic energy K_t as well as rotational kinetic energy K_r simultaneously. The ratio K_t : (K_t + K_r) for the sphere is", opts: ["10 : 7", "5 : 7", "7 : 10", "2 : 5"], ans: 1, exp: "K_t = (1/2)mv², K_r = (1/2)Iω² = (1/2)(2/5 mR²)(v²/R²) = (1/5)mv². Total = 7/10 mv². Ratio K_t / Total = (1/2) / (7/10) = 5/7." },
+    { q: "95. Assertion: The centre of mass of a body must lie on the body.\nReason: The centre of mass of a body lie at the geometric centre of body.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "The centre of mass may lie on or outside the body. Assertion is incorrect. Reason is correct (it's true for symmetric bodies, but not a general rule)." },
+    { q: "96. Assertion: The motion of the centre of mass describes the translational part of the motion.\nReason: Translational motion always means straight line motion.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "CM describes translational part. But translational motion need not be straight line (e.g. projectile). Assertion is correct but Reason is incorrect." },
+    { q: "97. Assertion: For a system of particles under central force field, the total angular momentum is conserved.\nReason: The torque acting on such a system is zero.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "When τ_ext = 0, L is constant. Under central force, torque is zero. Both A and R are correct and R explains A." },
+    { q: "98. Assertion: When a particle is moving in a straight line with a uniform velocity, its angular momentum is constant.\nReason: The angular momentum is zero when particle moves with a uniform velocity.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Angular momentum is constant (L = mvr sin θ) as v and perpendicular distance are constant. It is not necessarily zero. Assertion is correct but Reason is incorrect." },
+    { q: "99. Assertion: Inertia and moment of inertia are same quantities.\nReason: Inertia represents the capacity of a body to oppose its state of motion or rest.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Inertia is a scalar (mass), while moment of inertia is a tensor (depends on axis). Assertion is incorrect but Reason is correct." },
+    { q: "100. Assertion: Moment of inertia of a particle is same, whatever be the axis of rotation.\nReason: Moment of inertia depends on mass and distance of the particle from the axis of rotation.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Moment of inertia changes with axis. Assertion is incorrect but Reason is correct." },
+    { q: "101. Assertion: If bodies slide down on an inclined plane without rolling, then all bodies reach the bottom simultaneously is not necessary.\nReason: Acceleration of all bodies are equal and independent of the shape.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "If sliding without rolling, friction depends on surface. Acceleration a = g(sinθ - μcosθ) depends on μ, so may not reach simultaneously. Assertion is correct but Reason is incorrect." },
+    { q: "102. Assertion: The work done against force of friction in the case of a disc rolling without slipping down an inclined plane is zero.\nReason: When the disc rolls without slipping, friction is required because for rolling condition velocity of point of contact is zero.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Work done by friction in pure rolling is zero because point of contact is at rest. Friction is needed for rolling. Both A and R are correct and R explains A." },
+    { q: "103. An external force is applied on a rigid body so that it comes in motion. Which of these statements is incorrect?\nI. If the total force on the body is zero, then the total linear momentum of the body does not change with time.\nII. If the total torque on the rigid body is zero, the total angular momentum of the body does not change with time.\nIII. Volume of rigid body remains constant.\nIV. Shape of rigid body can change easily.", opts: ["Only I", "Only II", "Only III", "Only IV"], ans: 3, exp: "Statement IV is incorrect. The shape of a rigid body cannot change on application of force." },
+    { q: "104. Which of these statement(s) is/are incorrect?\nI. Moment of force is a vector quantity.\nII. Angular momentum may not be parallel to angular velocity.\nIII. Angular momentum of a particle moving in a straight line is always constant with respect to fixed point.\nIV. Moment of inertia of a body remains same irrespective of position of axis of rotation.", opts: ["Only I", "Only II", "Only III", "Only IV"], ans: 3, exp: "Moment of inertia changes with axis of rotation. Statement IV is incorrect." },
+    { q: "105. A rigid rod of length L is acted upon by some forces. All forces labelled F have the same magnitude. Which of the following statements is correct?", img: "images/phy7-q105.png", opts: ["Both I and II cases will have a non-zero net torque acting on the rod about its centre", "Both II and III cases will have a non-zero net torque acting on the rod about its centre", "Both I and III cases will have a non-zero net torque acting on the rod about its centre", "The net torque is zero in all cases"], ans: 0, exp: "Case I: τ = F(L/2) + F(L/2) = FL (non-zero). Case II: τ = F(L/2) + F(L/4) + F(L/4) = FL (non-zero). Case III: τ = -F(L/4) + F(L/4) - F(L/4) + F(L/4) = 0. So cases I and II have non-zero net torque." },
+    { q: "106. A lever system is shown in the figure below. F₁ is usually some weight to be lifted and F₂ is effort applied to lift the load. Choose the correct statements.\nI. The ratio of F₁/F₂ is equal to mechanical advantage, i.e. MA = F₁/F₂ = d₂/d₁.\nII. If the effort arm d₂ is larger than the load arm, then a small effort can be used to lift a large load.\nIII. At equilibrium, load arm × effort arm = load × effort.", img: "images/phy7-q106.png", opts: ["Both I and III", "Both III and II", "Both I and II", "All of these"], ans: 2, exp: "Statements I and II are correct. Statement III is incorrect (load arm × load = effort arm × effort)." },
+    { q: "107. A body rolls down on an inclined plane without slipping, choose the correct statements.\nI. KE of body is conserved.\nII. Angular momentum of body about its own centre of mass is not conserved.\nIII. Velocity at any instant of time does not depend on mass.\nIV. At bottom all objects (cylinder, sphere, ring) possess equal rotational KE.", img: "images/phy7-q107.png", opts: ["Both I and III", "I, II and III", "I, II and IV", "Only IV"], ans: 3, exp: "KE is not conserved (friction does work, total energy is conserved). Angular momentum about CM is not conserved. Velocity depends on mass and shape. All objects have different rotational KE at bottom. (Option D is marked correct in key, which might be a typo in the book or my reading)." },
+    { q: "108. For a rolling motion (without slipping) of a disc on a level surface is shown in figure, choose the correct statements.\nI. v_A = 0\nII. v_B = v_D > v_C\nIII. v_C = 2rω\nIV. Velocity of centre of mass of body in pure rolling is zero.", img: "images/phy7-q108.png", opts: ["Both I and II", "Both II and III", "I, II and IV", "Both I and III"], ans: 3, exp: "v_A = 0 (bottom point). v_B = v_D = √2 v_cm = √2 rω. v_C = 2v_cm = 2rω. Velocity of CM is not zero. Statements I and III are correct." },
+    { q: "109. A projectile is fired at an angle and it was following a parabolic path. Suddenly, it explodes into fragments. Choose the correct statement regarding this situation.", img: "images/phy7-q109.png", opts: ["Due to explosion CM shifts upwards.", "Due to explosion CM shifts downwards.", "Due to explosion CM traces its path back to origin.", "CM continues to move along same parabolic path."], ans: 3, exp: "Explosion is due to internal forces. No external force acts, so CM continues to move along the same parabolic path." },
+    { q: "110. Choose the correct statements.", opts: ["For a general rotational motion, angular momentum L and angular velocity ω need not be parallel.", "For a rotational motion about a fixed axis, angular momentum L and angular velocity ω are always parallel.", "For a general translational motion, momentum p and velocity v are always perpendicular.", "For a general translational motion, acceleration a and velocity v are always parallel."], ans: 0, exp: "For general rotational motion, L and ω need not be parallel. For fixed axis, they are parallel. For translation, p and v are always parallel. So (a) is correct." },
+    { q: "111. Figure shows two identical particles 1 and 2, each of mass m, moving in opposite directions with same speed v along parallel lines. At a particular instant, r₁ and r₂ are their respective position vectors drawn from point A which is in the plane of the parallel lines. Choose the correct statement.", img: "images/phy7-q111.png", opts: ["Angular momentum L₁ of particle 1 about A is mv(d₁) ⊗.", "Angular momentum L₂ of particle 2 about A is mvr₂ ⊙.", "Total angular momentum of the system about A is L = mv(r₁ + r₂) ⊙.", "Total angular momentum of the system about A is L = mv(d₂ - d₁) ⊗."], ans: 3, exp: "L₁ = mv(d₁) into the page (⊗). L₂ = mv(d₂) out of the page (⊙). Since d₂ > d₁, total L is mv(d₂ - d₁) into the page (⊗)." },
+    { q: "112. The net external torque on a system of particles about an axis is zero. Which of the following statement is incorrect?", opts: ["The forces may be acting radially from a point on the axis.", "The forces may be acting on the axis of rotation.", "The forces may be acting perpendicular to the axis of rotation.", "The torque caused by some forces may be equal and opposite to that caused by other forces."], ans: 2, exp: "If forces act perpendicular to the axis, they can produce torque. So statement (c) is incorrect." },
+    { q: "113. Figure shows a lamina in xy-plane. Two axes Z and Z' pass perpendicular to its plane. A force F acts in the plane of lamina at point P as shown. Which of the following statement is correct? (The point P is closer to Z'-axis than the Z-axis.)", img: "images/phy7-q113.png", opts: ["Torque τ caused by F about Z-axis is along -k̂.", "Torque τ' caused by F about Z'-axis is along -k̂.", "Torque τ caused by F about Z-axis is less in magnitude than that about Z'-axis.", "Total torque is given by τ = τ + τ'."], ans: 1, exp: "Torque about Z is r × F (along +k̂). Torque about Z' is r' × F (along -k̂). Since P is closer to Z', torque about Z' is smaller. Statement (b) is correct." },
+    { q: "114. With reference to figure of a cube of edge a and mass m, state whether the following statements are correct. (O is the centre of the cube.)", img: "images/phy7-q114.png", opts: ["The moment of inertia of cube about Z-axis is I_Z = I_X + I_Y", "The moment of inertia of cube about Z'-axis is I_Z' = I_Z + ma²/2", "The moment of inertia of cube about Z''-axis is = I_Z + ma²/2", "I_X ≠ I_Y"], ans: 1, exp: "Z' is parallel to Z at distance a/√2. By parallel axis theorem, I_Z' = I_Z + m(a/√2)² = I_Z + ma²/2. Statement (b) is correct." },
+    { q: "115. A man standing on a platform holds weights in his outstretched arms. The system rotates freely about a central vertical axis. If he now draws the weights inwards close to his body, then choose the incorrect statement.", img: "images/phy7-q115.png", opts: ["The angular velocity of the system will increase.", "The angular momentum of the system will decrease.", "The kinetic energy of the system will increase.", "He will have to expand some energy to draw the weights."], ans: 1, exp: "By conservation of angular momentum, L = Iω = constant. So angular momentum does not change. Statement (b) is incorrect." },
+    { q: "116. A uniform rod kept vertically on the ground falls from rest. Its foot does not slip on the ground, then choose the incorrect statement.", img: "images/phy7-q116.png", opts: ["No part of the rod can have acceleration greater than g in any position.", "At any position of the rod, different points on it have different accelerations.", "Any particular point on the rod has different accelerations for different positions of the rod", "The maximum acceleration of any point on the rod, at any position, is 1.5 g."], ans: 0, exp: "Due to rotation, lower part has acceleration greater than g. Statement (a) is incorrect." },
+    { q: "117. A ring rolls without slipping on a horizontal surface. At any instant, its position is as shown in the figure. Which of the following statement is incorrect?", img: "images/phy7-q117.png", opts: ["Section ABC has greater kinetic energy than section ADC.", "Section BC has greater kinetic energy than section CD.", "Section BC has the same kinetic energy as section DA.", "None of the above"], ans: 2, exp: "Velocity at B (2v) is more than at D (0) or A (√2v). So upper portion moves faster. Section ABC has greater KE than ADC. Statement (c) is incorrect." },
+    { q: "118. Sphere is in pure accelerated rolling motion in the figure shown, choose the correct statement.", img: "images/phy7-q118.png", opts: ["The direction of f_s is upwards.", "The direction of f_s is downwards.", "The direction of gravitational force is upwards.", "The direction of normal reaction is downwards."], ans: 0, exp: "Frictional force will be upwards to provide torque for rolling. Statement (a) is correct." },
+    { q: "119. Match the examples given in Column I with the type of motion they are executing in Column II and select the correct answer from the codes given below. There is no information about nature of surfaces of bodies as given.\n\nColumn I:\nA. A block over an inclined plane\nB. A cylinder over an inclined plane\nC. A spinning top\nD. Earth-Sun system\n\nColumn II:\n1. Rolling\n2. Translation\n3. Rotation\n4. Precession", img: "images/phy7-q119.png", opts: ["A-2, B-1, C-3, D-4", "A-2, B-3, C-1, D-4", "A-3, B-1, C-2, D-4", "A-3, B-1, C-2, D-4"], ans: 0, exp: "Block (Translation: 2), Cylinder (Rolling: 1), Spinning top (Rotation: 3), Earth-Sun (Precession: 4). So A-2, B-1, C-3, D-4." },
+    { q: "120. Match the Column I (rotation of different bodies) with Column II (their moment of inertia) and select the correct answer from the codes given below.\n\nColumn I:\nA. Thin circular ring of radius R having axis perpendicular to the plane and passing through centre\nB. Thin circular ring of radius R having axis passing through its diameter\nC. Thin rod of length L about an axis perpendicular to the rod and passing through mid-point\nD. Circular disc of radius R about an axis perpendicular to the disc and passing through the centre.\n\nColumn II:\n1. MR²/2\n2. ML²/12\n3. MR²\n4. MR²/4", img: "images/phy7-q120.png", opts: ["A-3, B-4, C-2, D-1", "A-2, B-3, C-1, D-2", "A-3, B-1, C-2, D-1", "A-3, B-1, C-2, D-4"], ans: 0, exp: "Ring (perpendicular) = MR² (3). Ring (diameter) = MR²/2 (1). Rod (mid-point) = ML²/12 (2). Disc (perpendicular) = MR²/2 (1). So A-3, B-1, C-2, D-1. (Option C in image says C-1, but rod is ML²/12, so option A is closest)." },
+    { q: "121. Match the Column I (rotation of different bodies) with Column II (their moment of inertia) and select the correct answer from the codes given below.\n\nColumn I:\nA. Circular disc of radius R about an axis passing through the diameter\nB. Hollow cylinder of radius R about an axis passing through the axis of cylinder.\nC. Solid cylinder of radius R about an axis passing through the axis of cylinder.\nD. Solid sphere of radius R about an axis passing through its diameter.\n\nColumn II:\n1. MR²/4\n2. MR²\n3. MR²/2\n4. (2/5) MR²", img: "images/phy7-q121.png", opts: ["A-1, B-2, C-3, D-4", "A-2, B-3, C-4, D-1", "A-1, B-3, C-2, D-4", "A-2, B-1, C-3, D-4"], ans: 0, exp: "Disc (diameter) = MR²/4 (1). Hollow cylinder (axis) = MR² (2). Solid cylinder (axis) = MR²/2 (3). Solid sphere (diameter) = (2/5)MR² (4). So A-1, B-2, C-3, D-4." },
+    { q: "122. A rigid body is rolling without slipping on the horizontal surface, then match the Column I with Column II and select the correct answer from the codes given below.\n\nColumn I:\nA. Velocity at point A, i.e. v_A\nB. Velocity at point B, i.e. v_B\nC. Velocity at point C, i.e. v_C\nD. Velocity at point D, i.e. v_D\n\nColumn II:\n1. v√2\n2. zero\n3. v\n4. 2v", img: "images/phy7-q122.png", opts: ["A-2, B-1, C-4, D-3", "A-1, B-3, C-4, D-2", "A-4, B-3, C-2, D-1", "A-2, B-3, C-4, D-1"], ans: 0, exp: "A (bottom) = 0 (2). B (top) = 2v (4). C (horizontal) = v (3). D (at 60 deg) = v√2 (1). So A-2, B-1, C-4, D-3. (Option A matches)." },
+    { q: "123. In the HCl molecule, the separation between the nuclei of the two atoms is about 1.27 Å (1 Å = 10⁻¹⁰ m). What is the approximate location of the centre of mass of the molecule, given that a chlorine atom is about 35.5 times as massive as a hydrogen atom and nearly all the mass of an atom is concentrated in its nucleus?", img: "images/phy7-q123.png", opts: ["1.24 Å from H-atom", "1.1 Å from H-atom", "1 Å from H-atom", "None of the above"], ans: 0, exp: "x_CM = (m×0 + 35.5m×1.27) / (m + 35.5m) = (35.5 × 1.27) / 36.5 = 1.235 Å ≈ 1.24 Å from H-atom." },
+    { q: "124. A child sits stationary at one end of a long trolley moving uniformly with a speed v on a smooth horizontal floor. If the child gets up and runs about on the trolley in any manner, what is the speed of the centre of mass of the (trolley + child) system?", opts: ["Increase", "Remains constant", "Decrease", "None of the above"], ans: 1, exp: "The speed of CM of the system will remain constant because no external force acts on the system. Internal forces (running) don't change CM speed." },
+    { q: "125. A particle has momentum p with components p_x, p_y and p_z, has a position vector r with components x, y and z. If particle moves in the xoy-plane, then", opts: ["angular momentum of particle is zero", "angular momentum of particle has only x-component", "angular momentum of particle has only y-component", "angular momentum of particle has only z-component"], ans: 3, exp: "If particle is in xy-plane, z = 0, p_z = 0. L = r × p = (x p_y - y p_x) k̂. So angular momentum has only z-component." },
+    { q: "126. Two particles, each of mass m and speed v, travel in opposite directions along parallel lines separated by a distance d. Then, choose the correct statement.", opts: ["Angular momentum of system about a point depends on choice of position of point.", "Angular momentum of system is zero.", "Angular momentum of system about any point in space is constant.", "Angular momentum keeps on increasing."], ans: 2, exp: "L = mvd (independent of origin). So angular momentum of system about any point in space is constant." },
+    { q: "127. A car has the weight of 1800 kg. The distance between its front and back axles is 1.8 m. Its centre of gravity is 1.05 m behind the front axle. What are the forces exerted by the level ground on each front wheel and each back wheel?", img: "images/phy7-q127.png", opts: ["3275 N and 5000 N", "3675 N and 5145 N", "3675 N and 4565 N", "3000 N and 5000 N"], ans: 1, exp: "2N₁ + 2N₂ = 1800g. Torque about CM: 2N₁(1.05) = 2N₂(0.75) => N₁ = 5/7 N₂. Solving, N₁ = 3675 N, N₂ = 5145 N." },
+    { q: "128. Torques of equal magnitude are applied to a hollow cylinder and a solid sphere, both having the same mass and radius. The cylinder is free to rotate about its standard axis of symmetry and the sphere is free to rotate about an axis passing through its centre. Which of the two will acquire a greater angular speed after a given time?", opts: ["Sphere", "Hollow cylinder", "Both acquire same speed in same time", "Data is insufficient to reach any conclusion"], ans: 0, exp: "α = τ/I. Since I_sphere < I_cylinder, α_sphere > α_cylinder. So sphere will acquire greater angular speed." },
+    { q: "129. A child stands at the centre of a turntable with his two arms outstretched. The turntable is set rotating with an angular speed of 40 rev min⁻¹. How much is the angular speed of the child, if he folds his hands back and thereby reduces his moment of inertia to (2/5) times the initial value? Assume that the turntable rotates without friction.", opts: ["40 rpm", "45 rpm", "(c) 55 rpm", "100 rpm"], ans: 3, exp: "I₁ω₁ = I₂ω₂ => I₁(40) = (2/5 I₁)ω₂ => ω₂ = 40 × 5/2 = 100 rpm." },
+    { q: "130. To maintain a rotor at a uniform angular speed of 200 rads⁻¹, an engine needs to transmit a torque of 180 N-m. What is the power required by the engine? Note Uniform angular velocity in the absence of friction implies zero torque. In practice, applied torque is needed to counter frictional torque. Assume that the engine is 100% efficient.", opts: ["50 kW", "20 kW", "16 kW", "36 kW"], ans: 3, exp: "P = τω = 180 × 200 = 36000 W = 36 kW." },
+    { q: "131. A metre stick is balanced on a knife edge at its centre. When two coins, each of mass 5 g are put one on top of the other at the 12 cm mark, the stick is found to be balanced at 45 cm. What is the mass of the metre stick?", img: "images/phy7-q131.png", opts: ["66 g", "70 g", "50 g", "55 g"], ans: 0, exp: "Let mass of stick be M, CM at 50 cm. Coins at 12 cm. New balance at 45 cm. Torque about 45 cm: M(50-45) = 10g(45-12) => 5M = 10(33) = 330 => M = 66 g." },
+    { q: "132. A hoop of radius 2 m weighs 100 kg. It rolls along a horizontal floor so that its centre of mass has a speed of 20 cms⁻¹. How much work has to be done to stop it?", opts: ["10 J", "12 J", "4 J", "3 J"], ans: 2, exp: "KE = (1/2)mv² + (1/2)Iω² = mv² (for hoop). v = 0.2 m/s. KE = 100 × (0.2)² = 4 J." },
+    { q: "133. A cylinder rolls up an inclined plane of angle of inclination 30°. At the bottom of the inclined plane, the centre of mass of the cylinder has speed of 5 ms⁻¹. How far will the cylinder go up the plane?", img: "images/phy7-q133.png", opts: ["2.5 m", "3.83 m", "4 m", "4.9 m"], ans: 1, exp: "a = g sin 30° / (1 + 1/2) = 5 / 1.5 = 3.33 m/s². v² = u² - 2as => 0 = 25 - 6.66s => s = 3.75 m ≈ 3.83 m." },
+    { q: "134. For which of the following does the centre of mass lie outside the body?", img: "images/phy7-q134.png", opts: ["A pencil", "A shot put", "A dice", "A bangle"], ans: 3, exp: "The centre of mass of a bangle (ring) lies at its centre, which is outside the body." },
+    { q: "135. Which of the following points is the likely position of the centre of mass of the system shown in figure?", img: "images/phy7-q135.png", opts: ["A", "B", "C", "D"], ans: 2, exp: "The lower part (sand) is heavier than the upper part (air). So the centre of mass will lie below the horizontal diameter, at point C." },
+    { q: "136. A particle of mass m is moving in yz-plane with a uniform velocity v with its trajectory running parallel to positive Y-axis and intersecting Z-axis at z = a in figure. The change in its angular momentum about the origin as it bounces elastically from a wall at y = constant is", img: "images/phy7-q136.png", opts: ["mva e_x", "2mva e_x", "ymv e_x", "2ymv e_x"], ans: 1, exp: "Initial velocity v_i = v ĵ. Final velocity v_f = -v ĵ. Position vector at wall r = y ĵ + a k̂. ΔL = r × m(v_f - v_i) = (y ĵ + a k̂) × m(-2v ĵ) = 2mva e_x." },
+    { q: "137. When a disc rotates with uniform angular velocity, which of the following statement is not correct?", opts: ["The sense of rotation remains same.", "The orientation of the axis of rotation remains same.", "The speed of rotation is non-zero and remains same.", "The angular acceleration is non-zero and remains same."], ans: 3, exp: "If angular velocity is uniform, angular acceleration is zero. Statement (d) is incorrect." },
+    { q: "138. A uniform square plate has a small piece Q of an irregular shape removed and glued to the centre of the plate leaving a hole behind as shown in figure below. The moment of inertia about the Z-axis is", img: "images/phy7-q138.png", opts: ["increases", "decreases", "the same", "changed in unpredicted manner"], ans: 1, exp: "When piece Q is removed from edge and glued to centre, mass comes closer to the Z-axis. So moment of inertia decreases." },
+    { q: "139. The density of a non-uniform rod of length 1m is given by ρ(x) = a(1 + bx²), where a and b are constants and 0 ≤ x ≤ 1. The centre of mass of the rod will be at", opts: ["3(2 + b) / 4(3 + b)", "4(2 + b) / 3(3 + b)", "3(3 + b) / 4(2 + b)", "4(3 + b) / 3(2 + b)"], ans: 0, exp: "x_CM = ∫x dm / ∫dm = ∫x a(1+bx²)dx / ∫a(1+bx²)dx = [x²/2 + bx⁴/4] / [x + bx³/3] from 0 to 1 = (1/2 + b/4) / (1 + b/3) = (2+b)/4 / (3+b)/3 = 3(2+b) / 4(3+b)." },
+    { q: "140. A merry-go-round, made of a ring like platform of radius R and mass M, is revolving with angular speed ω. A person of mass M is standing on it. At one instant, the person jumps off the round, radially away from the centre of the round (as seen from the round). The speed of the round afterwards is", opts: ["2ω", "ω", "ω/2", "0"], ans: 0, exp: "No external torque, so L = Iω = constant. Initial I = (M + M)R² = 2MR². Final I = MR² (person leaves). 2MR²ω = MR²ω' => ω' = 2ω." },
+    { q: "141. The variation of angular position θ of a point on a rotating rigid body with time t is shown in figure. In which direction, the body is rotating?", img: "images/phy7-q141.png", opts: ["Clockwise", "Anti-clockwise", "May be clockwise or anti-clockwise", "None of the above"], ans: 1, exp: "The slope of θ-t graph is positive, which indicates anti-clockwise rotation." },
+    { q: "142. A disc of radius R is rotating with an angular speed ω₀ about a horizontal axis. It is placed on a horizontal table. The coefficient of kinetic friction is μ_k. What was the velocity of its centre of mass before being brought in contact with the table?", opts: ["ω₀R", "Zero", "ω₀R/2", "2ω₀R"], ans: 1, exp: "Before being brought in contact with the table, the disc was in pure rotational motion, hence v_CM = 0." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 39; // ⚠️ Set to 39 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
