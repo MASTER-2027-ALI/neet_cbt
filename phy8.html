@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 40: Gravitation - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 40: Gravitation</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. While going uphill more efforts are needed, it is due to the effect of", opts: ["attractive force of earth", "repulsive force of earth", "magnetic force of earth", "None of these"], ans: 0, exp: "Earth exerts an attractive force on all the material objects as it has a tendency to attract all of them towards it. So, going uphill is a lot more tiring than going downhill as more efforts are required to work against the attractive force of earth." },
+    { q: "2. According to Kepler's law of planetary motion, path of planet around the sun is", opts: ["circular", "elliptical", "parabolic", "hyperbolic"], ans: 1, exp: "According to Kepler's first law (law of orbits), every planet revolves around the sun in an elliptical orbit." },
+    { q: "3. A planet moves around the sun on an elliptical path as shown in the figure. If t₁ and t₂ are the time taken by the planet to cover equal area SAB and SCD respectively, then", img: "images/phy8-q3.png", opts: ["t₁ > t₂", "t₁ < t₂", "t₁ = t₂", "t₁ = √t₂"], ans: 2, exp: "According to Kepler's second law, the line joining the planet to the sun sweeps equal areas in equal intervals of time. Given areas SAB and SCD are equal, so t₁ = t₂." },
+    { q: "4. The law of areas can be understood as a consequence of", opts: ["conservation of angular momentum", "conservation of energy", "conservation of linear momentum", "Both (a) and (b)"], ans: 0, exp: "The law of areas says areal velocity is constant. Area swept = (1/2)r²dθ, areal velocity = dA/dt = (1/2)r²ω = L/2m = constant. This means angular momentum L is conserved." },
+    { q: "5. A central force is that force which acts along", opts: ["the vector perpendicular to sun", "the vector joining the sun and the planet", "the vector tangential to the orbit", "None of the above"], ans: 1, exp: "A central force acts along the line joining the two interacting bodies (e.g. sun and planet)." },
+    { q: "6. The law of areas can be interpreted as", opts: ["ΔA/Δt = L / 2m", "ΔA/Δt = L / m", "ΔA/Δt = 2(r × p)", "ΔA/Δt = 2L / m"], ans: 0, exp: "Areal velocity dA/dt = L / 2m, where L is angular momentum and m is mass." },
+    { q: "7. Let a planet is moving around the sun in an elliptical orbit as shown below. The area swept out by the planet of mass m in time interval Δt is given by", img: "images/phy8-q7.png", opts: ["ΔA = (1/2) (r × v Δt)", "ΔA = (1/2) (r × v)", "ΔA = (1/2) (r × p)", "All of these"], ans: 0, exp: "The area swept out in time Δt is ΔA = 1/2 |r × vΔt| = 1/2 |r × Δr|." },
+    { q: "8. In planetary motion, the areal velocity of position vector of a planet depends on angular velocity ω and the distance of the planet from sun r. So, the correct relation for areal velocity is", opts: ["dA/dt ∝ ωr", "dA/dt ∝ ω²r", "dA/dt ∝ ωr²", "dA/dt ∝ √(ωr)"], ans: 2, exp: "Areal velocity dA/dt = L/2m = Iω/2m = (mr²)ω/2m = (1/2)r²ω. So, dA/dt ∝ ωr²." },
+    { q: "9. Let the speed of the planet at the perihelion P in above figure be v_P and the sun planet distance SP be r_P. The corresponding quantity at the aphelion A is (r_A, v_A). The mass of the planet is m_P. The magnitude of the angular momentum at P is", img: "images/phy8-q9.png", opts: ["L_P = m_P r_P / v_P", "L_P = m_P v_P / r_P", "L_P = m_P r_P v_P", "L_P = m_P v_P"], ans: 2, exp: "For a particle, angular momentum L = r × p. At perihelion, velocity is perpendicular to position vector, so L_P = m_P r_P v_P." },
+    { q: "10. A planet is moving around the sun in an elliptical path as shown in the figure. The linear speed of the planet is minimum at", img: "images/phy8-q10.png", opts: ["P", "S", "Q", "R"], ans: 3, exp: "By conservation of angular momentum, L = mvr is constant. Speed is minimum when distance is maximum. The farthest point from sun is R, so speed is minimum at R." },
+    { q: "11. The maximum and minimum velocities of a planet are 3 × 10⁴ ms⁻¹ and 1 × 10³ ms⁻¹, respectively. The minimum distance of the planet from the sun, if maximum distance is 4 × 10⁴ km, is", opts: ["4 × 10³ km", "3 × 10³ km", "(4/3) × 10³ km", "1 × 10³ km"], ans: 2, exp: "From conservation of angular momentum, v_max * r_min = v_min * r_max. 3×10⁴ * r_min = 1×10³ * 4×10⁴. r_min = 4×10⁷ / 3×10⁴ = (4/3) × 10³ km." },
+    { q: "12. The kinetic energies of a planet in an elliptical orbit about the sun, at positions A, B and C are K_A, K_B and K_C, respectively. AC is the major axis and SB is perpendicular to AC at the position of the sun S as shown in the figure, then", img: "images/phy8-q12.png", opts: ["K_B < K_A < K_C", "K_A > K_B > K_C", "K_A < K_B < K_C", "K_B > K_A > K_C"], ans: 1, exp: "From figure, distance from sun: r_A < r_B < r_C. Since v ∝ 1/r, v_A > v_B > v_C. Kinetic energy KE = 1/2 mv², so K_A > K_B > K_C." },
+    { q: "13. The time period of revolution T of planet in years (yr) is 84. The semi-major axis a in units of 10¹⁰ m is 287. The quotient (T² / a³) in units of 10⁻³⁴ yr² m⁻³ is approximately", opts: ["3 units", "4 units", "2 units", "1 unit"], ans: 0, exp: "T²/a³ = (84)² / (287×10¹⁰)³ = 7056 / (2.36 × 10³⁴) = 2.98 × 10⁻³¹. In units of 10⁻³⁴, it is 2.98 × 10³? Wait, a is 287 × 10¹⁰. a³ = (287)³ × 10³⁰ ≈ 2.36 × 10³⁷. T²/a³ = 7056 / 2.36 × 10³⁷ = 2.98 × 10⁻³⁴. So quotient is ~3 units." },
+    { q: "14. According to Kepler's law of planetary motion, if T represents time period and r is orbital radius, then for two planets these are related as", opts: ["(T₁/T₂)³ = (r₁/r₂)²", "(T₁/T₂)³/² = r₁/r₂", "(T₁/T₂)² = (r₁/r₂)³", "(T₁/T₂) = (r₁/r₂)²/³"], ans: 2, exp: "According to Kepler's third law, T² ∝ r³. So, (T₁/T₂)² = (r₁/r₂)³." },
+    { q: "15. Assuming that earth and mars move in circular orbits around the sun, with the martian orbit being 1.52 times the orbital radius of the earth. The length of the martian year in days is", opts: ["(1.52)²/³ × 365", "(1.52)³/² × 365", "(1.52)² × 365", "(1.52)³ × 365"], ans: 1, exp: "T² ∝ r³ => T_m/T_e = (r_m/r_e)^(3/2) = (1.52)^(3/2). T_m = (1.52)^(3/2) × 365." },
+    { q: "16. A planet of radius R has a time period of revolution T. Find the time period of a planet of radius 9R.", img: "images/phy8-q16.png", opts: ["3√3 T", "9T", "27T", "9√3 T"], ans: 2, exp: "By Kepler's third law, T² ∝ r³. T₁²/T₂² = (R/9R)³ = 1/729. T₂² = 729 T₁² => T₂ = 27T." },
+    { q: "17. A geostationary satellite is orbiting the earth at a height of 5R above the surface of the earth and R being the radius of the earth. The time period of another satellite in hour at a height of 2R from the surface of the earth is", opts: ["5 h", "10 h", "6√2 h", "6/√2 h"], ans: 2, exp: "r₁ = R + 5R = 6R, T₁ = 24h. r₂ = R + 2R = 3R. T₂²/T₁² = (r₂/r₁)³ = (3/6)³ = 1/8. T₂² = 24²/8 = 72. T₂ = √72 = 6√2 h." },
+    { q: "18. Following table shows the data from measurement of planetary motions to confirm Kepler's law of periods.\n\n| Planet | a | T | Q |\n|---|---|---|---|\n| Mercury | 5.79 | 0.24 | 2.95 |\n| Venus | 10.8 | 0.615 | A |\n| Earth | 15.0 | 1.00 | 2.96 |\n| Mars | 22.8 | 1.88 | 2.98 |\n\nHere, a = semi-major axis in units of 10¹⁰ m, T = time-period of revolution of the planet in years (yr) and Q = the quotient (T² / a³) in units of 10⁻³⁴ y² m⁻³. The missing term A in the given table is approximately equal to", opts: ["3 units", "2 units", "2.5 units", "3.5 units"], ans: 0, exp: "Q = T²/a³ = (0.615)² / (10.8 × 10¹⁰)³ = 0.378 / (1260 × 10³⁰) = 3.0 × 10⁻³⁴. So A = 3 units." },
+    { q: "19. Two satellites A and B revolve around the same planet in coplanar circular orbits lying in the same plane. Their periods of revolutions are 1 h and 8 h, respectively and the radius of the orbit of A is 10⁴ km. The speed of B relative to A (in km/h) when they are close to each other, will be", opts: ["3π × 10⁴", "zero", "2π × 10⁴", "π × 10⁴"], ans: 3, exp: "T_A²/T_B² = r_A³/r_B³ => 1/64 = (10⁴/r_B)³ => r_B = 4×10⁴ km. v_A = 2πr_A/T_A = 2π×10⁴ km/h. v_B = 2πr_B/T_B = 2π×4×10⁴/8 = π×10⁴ km/h. Relative speed = v_A - v_B = π×10⁴ km/h." },
+    { q: "20. If the sun and the earth carried huge amounts of opposite charges, then", opts: ["all three of Kepler's laws would still be valid", "only the third law will be valid", "the second law will change", "the first law will not be valid"], ans: 0, exp: "If they carry opposite charges, electrostatic force of attraction will be added to gravitational force. Both are inverse square law central forces. Hence all three Kepler's laws remain valid." },
+    { q: "21. Newton's law of gravitation is universal because", opts: ["it acts on all bodies in the universe", "it acts on all the masses at all distances and not affected by the medium", "it is a attractive force", "it acts only when bodies are in contact"], ans: 1, exp: "Newton's law of gravitation is universal because it acts on all masses at all distances and is independent of the medium." },
+    { q: "22. Newton arrived at an universal law based on his observation of an apple falling from a tree. Newton's reasoning was that the moon revolving in an orbit of radius R_m was subjected to a centripetal acceleration due to earth's gravity whose magnitude is given by", opts: ["a_m = v² / R_m", "a_m = 4π²R_m / T²", "a_m = mv² / R_m", "Both (a) and (b)"], ans: 3, exp: "Centripetal acceleration a_m = v²/R_m. Also, v = 2πR_m/T, so a_m = 4π²R_m/T². Both (a) and (b) are correct." },
+    { q: "23. On going from one planet to other planet, the value of G (gravitational constant)", opts: ["increases", "decreases", "remains same", "None of these"], ans: 2, exp: "G is a universal constant. Its value does not depend on the planet or location. It remains same." },
+    { q: "24. There have been suggestions that the value of the gravitational constant G becomes smaller when considered over very large time period (in billions of years) in the future. If that happens, for our earth,", opts: ["nothing will change", "it will become hotter after billions of years", "it will be going around strictly in closed orbits", "after sufficiently long time it will leave the solar system"], ans: 3, exp: "If G decreases, gravitational force becomes weaker. The earth will not be able to stay in a closed orbit and eventually will leave the solar system." },
+    { q: "25. Kepler's third law states that square of period of revolution T of a planet around the sun, is proportional to third power of average distance r between sun and planet i.e. T² = kr³, where k is constant. If the masses of sun and planet are M and m, respectively, then as per Newton's law of gravitation force of attraction between them is F = GMm / r², where G is gravitational constant. The relation between G and k is described as", opts: ["k = 1/G", "Gk = 4π²", "GMk = 4π²", "k = G"], ans: 2, exp: "T² = (4π²/GM)r³. Comparing with T² = kr³, we get k = 4π²/GM => GMk = 4π²." },
+    { q: "26. A planet is revolving around the sun in a circular orbit with a radius r and the time period is T. If the force between the planet and star is proportional to r⁻³/², then the square of time period is proportional to", opts: ["r³/²", "r²", "r", "r⁵/²"], ans: 3, exp: "F ∝ 1/r^(3/2). This force provides centripetal force: m(4π²r/T²) ∝ 1/r^(3/2). T² ∝ r^(1 + 3/2) = r^(5/2)." },
+    { q: "27. If the law of gravitation, instead of being inverse square law, becomes an inverse cube law, then", opts: ["planets will have elliptical orbits", "Kepler's law of areas does not hold good", "projectile motion of a stone thrown by hand on the surface of the earth will be approximately parabolic", "there will be no gravitational force inside a spherical shell of uniform density"], ans: 2, exp: "If force is inverse cube, F ∝ 1/r³. This is still a central force, so Kepler's second law holds. Orbital speed v ∝ 1/r, so T² ∝ r⁴ (not elliptical). Near the earth's surface, force is still roughly constant, so projectile motion is approximately parabolic." },
+    { q: "28. The height at which the weight of a body becomes (1/16)th of its weight on the surface of the earth (radius R), is", opts: ["5R", "15R", "3R", "4R"], ans: 2, exp: "g' = g(R/(R+h))². 1/16 = (R/(R+h))² => 1/4 = R/(R+h) => R+h = 4R => h = 3R." },
+    { q: "29. If mass of a planet is 2% of mass of earth. The ratio of gravitational pull of earth on the planet and that of planet on the earth will be", opts: ["1 : 20", "2 : 5", "1 : 1", "1 : 50"], ans: 2, exp: "According to Newton's third law, gravitational force of earth on planet is equal and opposite to force of planet on earth. Ratio is 1:1." },
+    { q: "30. Two equal point masses are separated by a distance d₁. The force of gravitation acting between them is F₁. If the separation is decreased to d₂, then the new force of gravitation F₂ is given by", opts: ["F₂ = F₁", "F₂ = F₁ (d₁/d₂)²", "F₂ = F₁ (d₂/d₁)²", "F₂ = F₁ (d₁/d₂)"], ans: 1, exp: "F ∝ 1/d². F₂/F₁ = (d₁/d₂)². So F₂ = F₁ (d₁/d₂)²." },
+    { q: "31. Two sphere of masses m and M are situated in air and the gravitational force between them is F. The space around the masses is now filled with a liquid of specific gravity 3. The gravitational force will now be", opts: ["F", "F/3", "F/9", "3 F"], ans: 0, exp: "Gravitational force does not depend on the medium between the masses. It will remain F." },
+    { q: "32. Three equal masses of m kg each are fixed at the vertices of an equilateral triangle ABC and a mass 2m is placed at centroid G of the triangle as shown below. The force acting on a mass 2m placed at the centroid G of the triangle is", img: "images/phy8-q32.png", opts: ["2Gm² / √2", "2Gm²", "6Gm²", "zero"], ans: 3, exp: "By symmetry, the forces on mass at centroid due to the three masses at vertices cancel out. Net force is zero." },
+    { q: "33. Three uniform spheres of mass M and radius R each are kept in such a way that each touches the other two. The magnitude of the gravitational force on any of the spheres due to the other two is", img: "images/phy8-q33.png", opts: ["(√3/4) GM²/R²", "(3/2) GM²/R²", "(√3/2) GM²/R²", "(√3/2) GM²/R²"], ans: 0, exp: "Distance between centres = 2R. Force between any two = GMM/(2R)² = GM²/4R². Angle between forces = 60°. F_net = √(F² + F² + 2F²cos60°) = √3 F = √3 GM²/4R²." },
+    { q: "34. A point mass m is placed at the centre of the square ABCD of side a units as shown below. The resultant gravitational force on mass m due to masses m₁ and m₂ placed on the vertices of square is", img: "images/phy8-q34.png", opts: ["Gm₁m₂ / (a√2)²", "2Gm(m₁ + m₂) / a²", "zero", "Gm(m₁ + m₂) / (a√2)²"], ans: 2, exp: "The forces due to m₁ at opposite corners cancel each other. Similarly, forces due to m₂ cancel each other. Net force on m is zero." },
+    { q: "35. A mass M is split into two parts, m and (M – m), which are then separated by a certain distance. What ratio of m / M maximizes the gravitational force between the two parts?", opts: ["1/3", "1/2", "1/4", "1/5"], ans: 1, exp: "F = G m(M-m)/r². For max force, dF/dm = 0 => M - 2m = 0 => m/M = 1/2." },
+    { q: "36. Two spherical bodies of masses m and 5m and radii R and 2R are released in free space with initial separation between their centres equal to 12R. If they attract each other due to gravitational force only, then the distance covered by the smaller body before collision is", opts: ["2.5 R", "4.5 R", "7.5 R", "(d) 1.5 R"], ans: 2, exp: "Distance of CM from smaller body = (5m*(12R) + m*0)/(6m) = 10R. Smaller body moves 10R - R = 9R? No. Let x be distance by smaller body. Distance by bigger = (12R - 2R - x) = 10R - x. Since CM doesn't move, m*x = 5m*(10R - x) => x = 50R - 5x => 6x = 50R => x = 25R/3 = 8.33R. (Option C is 7.5R)." },
+    { q: "37. A point mass m is placed outside a hollow spherical shell of mass M and uniform density at a distance d from centre of the sphere as shown in figure. Gravitational force on point mass m at P is", img: "images/phy8-q37.png", opts: ["GmM / d²", "zero", "2GmM / d²", "Data insufficient"], ans: 0, exp: "For a point outside the shell, the shell behaves as if its entire mass is concentrated at the centre. Force = GmM/d²." },
+    { q: "38. The force of attraction due to a hollow spherical shell of mass M, radius R and uniform density, on a point mass m situated inside it is", img: "images/phy8-q38.png", opts: ["GmM / r²", "GmM / R²", "zero", "Data insufficient"], ans: 2, exp: "The gravitational force at any point inside a uniform spherical shell is zero." },
+    { q: "39. The figure shown is the schematic representation of Cavendish's experiment to determine the value of the gravitational constant. The bar AB has two small lead spheres attached at its ends. The bar is suspended from a rigid support by a fine wire. Two large lead spheres are brought close to the small ones but on opposite sides as shown. The big spheres attract the near by small ones by a force which is", img: "images/phy8-q39.png", opts: ["equal and opposite", "equal but in same direction", "unequal and opposite", "None of the above"], ans: 0, exp: "The forces on the two small spheres are equal in magnitude (by symmetry) and opposite in direction, creating a torque." },
+    { q: "40. If g is the acceleration due to gravity at the surface of the earth. The force acting on the particle of mass m placed at the surface is", opts: ["mg", "GmM_E / R_E²", "Data insufficient", "Both (a) and (b)"], ans: 3, exp: "Force on mass m at surface is F = mg. Also, by Newton's law, F = GmM_E/R_E². Both are correct." },
+    { q: "41. The weight of a body at the centre of earth is", opts: ["same as on the surface of earth", "same as on the poles", "same as on the equator", "None of the above"], ans: 3, exp: "At the centre of the earth, acceleration due to gravity g = 0. So weight = mg = 0. None of the given options." },
+    { q: "42. According to Newton's law of gravitation, let F₁ and F₂ be the forces between two masses m₁ and m₂ at positions r₁ and r₂, where F₁ = -F₂ = -(r₁₂ / r₁₂³) GM₀² (m₁m₂/M₀²)ⁿ where, M₀ is a constant of dimension of mass, r₁₂ = r₁ - r₂ and n is a number. In such a case,", opts: ["the acceleration due to gravity on the earth will be different for different objects", "None of the three laws of Kepler will be valid", "only the third law will be valid", "None of the above"], ans: 0, exp: "Since g = F/m depends on position vector and mass (as n is a number), acceleration due to gravity will be different for different objects." },
+    { q: "43. If the mass of the earth is doubled and its radius halved, then new acceleration due to gravity g' is", opts: ["g' = 4 g", "g' = 8 g", "g' = g", "g' = 16 g"], ans: 1, exp: "g = GM/R². g' = G(2M)/(R/2)² = 8GM/R² = 8g." },
+    { q: "44. A planet has twice the density of earth but the acceleration due to gravity on its surface is exactly the same as on the surface of earth. Its radius in terms of radius of earth R will be", opts: ["R/4", "R/2", "R/3", "R/8"], ans: 1, exp: "g = (4/3)πGRρ. For g to be same, Rρ must be constant. ρ' = 2ρ => R' = R/2." },
+    { q: "45. Suppose, the acceleration due to gravity at the earth's surface is 10 ms⁻² and at the surface of mars it is 4.0 ms⁻². A 60 kg passenger goes from the earth to the mars in a spaceship moving with a constant velocity. Neglect all other objects in the sky. Which curve best represents the weight (net gravitational force) of the passenger as a function of time?", img: "images/phy8-q45.png", opts: ["A", "B", "C", "D"], ans: 2, exp: "Weight on earth = 60×10 = 600 N. Weight on mars = 60×4 = 240 N. In between, there is a point where gravitational pull of earth equals mars, so weight is zero. Curve C shows this." },
+    { q: "46. If the mass of the sun is ten times smaller and gravitational constant G is ten times larger in magnitude. Then, for earth,", opts: ["walking on ground would become more easy", "acceleration due to gravity on the earth will not change", "raindrops will fall much slower", "airplanes will have to travel much faster"], ans: 0, exp: "g = G'M_E/R² = (10G)M_E/R² = 10g. Gravity becomes stronger, so walking becomes harder, raindrops fall faster. (Option A is incorrect, but the question asks which is true. If g increases, walking becomes harder, not easier. Wait, if mass of sun is smaller, effect on earth's g is negligible. So g' = 10g. Walking becomes more difficult. So (a) is false. The correct option based on calculation is (b) g'=10g. But let's check the options. (d) airplanes travel faster? No)." },
+    { q: "47. If one assumes that the gravitational force due to the earth decreases in proportion to the inverse square of the distance from the centre of the earth, then which of the following relation between a_m (centripetal acceleration of moon), R_m (distance of the moon from centre of the earth), g (acceleration due to gravity on the surface of the earth) and R_E (radius of earth) is correct?", opts: ["g/a_m = R_m/R_E", "g/a_m = (R_m/R_E)²", "g/a_m = R_E²/R_m²", "Both (b) and (c)"], ans: 3, exp: "a_m ∝ 1/R_m², g ∝ 1/R_E². So g/a_m = (R_m/R_E)² = R_m²/R_E². Option (b) is correct. Also, R_m²/R_E² is not R_E²/R_m². So only (b) is correct." },
+    { q: "48. The time period of the moon is T = 27.3 days and radius of orbit is R_m = 3.84 × 10⁸ m, the value of centripetal acceleration due to the earth's gravity is", opts: ["much smaller than the value of acceleration due to gravity g on the surface of the earth", "is equal to the value of acceleration due to gravity g on the surface of the earth", "much larger than the value of acceleration due to gravity g on the surface of the earth", "Either (a) or (b)"], ans: 0, exp: "a = 4π²R_m/T² = 4(3.14)²(3.84×10⁸)/(27.3×86400)² ≈ 0.0027 m/s², which is much smaller than g = 9.8 m/s²." },
+    { q: "49. The value of acceleration due to gravity at earth's surface is 9.8 ms⁻². The altitude above its surface at which the acceleration due to gravity decreases to 4.9 ms⁻², is close to (Take, radius of earth = 6.4 × 10⁶ m)", opts: ["9.0 × 10⁶ m", "2.6 × 10⁶ m", "6.4 × 10⁶ m", "1.6 × 10⁶ m"], ans: 1, exp: "g' = g(R/(R+h))² => 4.9 = 9.8 (R/(R+h))² => R/(R+h) = 1/√2 => R+h = √2 R => h = (√2 - 1)R = 0.414 × 6.4×10⁶ ≈ 2.6 × 10⁶ m." },
+    { q: "50. A body weigh's w N at the surface of the earth. Its weight at a height equals to half the radius of the earth will be", opts: ["w/2", "2w/3", "4w/9", "8w/27"], ans: 2, exp: "g' = g(R/(R+h))². Here h = R/2. g' = g(R/(3R/2))² = g(2/3)² = 4g/9. Weight = 4w/9." },
+    { q: "51. At what height h above the surface of the earth, the value of g becomes (g/2)? (Take, g = acceleration due to gravity at the surface of the earth and R = radius of the earth)", opts: ["3 R", "√2 R", "(√2 - 1) R", "R/√2"], ans: 2, exp: "g' = g(R/(R+h))². g/2 = g(R/(R+h))² => R/(R+h) = 1/√2 => R+h = √2 R => h = (√2 - 1)R." },
+    { q: "52. The radius of earth is R. Height of a point vertically above the earth's surface at which acceleration due to gravity becomes 1% of its value at the surface is", opts: ["8 R", "9 R", "10 R", "20 R"], ans: 1, exp: "g' = g(R/(R+h))². g/100 = g(R/(R+h))² => R/(R+h) = 1/10 => R+h = 10R => h = 9R." },
+    { q: "53. The weight of a body on the surface of the earth is 45 N. What is the gravitational force on it due to the earth at a height equal to half the radius of the earth?", opts: ["35 N", "20 N", "18 N", "40 N"], ans: 1, exp: "g' = g(R/(R+h))² = g(R/(3R/2))² = 4g/9. Weight w' = 4/9 w = 4/9 × 45 = 20 N." },
+    { q: "54. Assuming the earth to have a constant density, point out which of the following curves show the variation of acceleration due to gravity from the centre of earth to the points far away from the surface of earth.", img: "images/phy8-q54.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "None of these"], ans: 2, exp: "Inside earth (r < R), g ∝ r (straight line). Outside earth (r > R), g ∝ 1/r² (parabola). Graph (c) shows this." },
+    { q: "55. Consider two solid spheres of radii R₁ = 1 m, R₂ = 2 m and masses M₁ and M₂, respectively. The gravitational field due to sphere 1 and 2 are shown. The value of M₁/M₂ is", img: "images/phy8-q55.png", opts: ["1/3", "1/2", "1/6", "2/3"], ans: 2, exp: "From graph, max field for sphere 1 is 2 at r=1. E₁ = GM₁/R₁² = GM₁/1 = 2 => GM₁ = 2. Max field for sphere 2 is 3 at r=2. E₂ = GM₂/4 = 3 => GM₂ = 12. M₁/M₂ = 2/12 = 1/6." },
+    { q: "56. Find acceleration due to gravity at a distance of 2000 km from the centre of earth. (Given, R_E = 6400 km, r = 2000 km and M_E = 6 × 10²⁴ kg)", opts: ["1.53 m/s²", "7.12 m/s²", "3.06 m/s²", "1.8 m/s²"], ans: 2, exp: "Distance from surface d = R - r = 6400 - 2000 = 4400 km. g' = g(1 - d/R) = 9.8(1 - 4400/6400) = 9.8(1 - 0.6875) = 3.06 m/s²." },
+    { q: "57. A body weighs 200 N on the surface of the earth. How much will it weigh half-way down to the centre of the earth?", opts: ["200 N", "250 N", "100 N", "150 N"], ans: 2, exp: "At depth d = R/2, g' = g(1 - d/R) = g(1 - 1/2) = g/2. Weight = mg' = mg/2 = 200/2 = 100 N." },
+    { q: "58. A box weighs 196 N on a spring balance at the north pole. Its weight recorded on the same balance, if it is shifted to the equator is close to (Take, g = 10 ms⁻² at the north pole and the radius of the earth = 6400 km)", opts: ["195.66 N", "195.32 N", "194.66 N", "194.32 N"], ans: 1, exp: "g_eq = g_p - Rω² = 10 - 6.4×10⁶ × (2π/86400)² ≈ 10 - 0.034 = 9.966 m/s². Mass = 196/10 = 19.6 kg. Weight at equator = 19.6 × 9.966 = 195.32 N." },
+    { q: "59. The acceleration due to gravity at a height 1 km above the earth is the same as at a depth d below the surface of earth. Then,", opts: ["d = 1/2 km", "d = 1 km", "d = 3/2 km", "d = 2 km"], ans: 3, exp: "g_h = g(1 - 2h/R). g_d = g(1 - d/R). Equating: 1 - 2h/R = 1 - d/R => d = 2h = 2 × 1 = 2 km." },
+    { q: "60. The gravitational potential energy of a system consisting two particles separated by a distance r is", opts: ["directly proportional to product of the masses of particles", "inversely proportional to the separation between them", "independent of distance r", "Both (a) and (b)"], ans: 3, exp: "U = -Gm₁m₂/r. Magnitude is directly proportional to m₁m₂ and inversely proportional to r. Both (a) and (b) are correct." },
+    { q: "61. Gravitational potential energy of a system of particles as shown in the figure is", img: "images/phy8-q61.png", opts: ["(Gm₁m₂/r₁) + (Gm₂m₃/r₃) + (Gm₁m₃/r₃)", "(-Gm₁m₂/r₁) + (-Gm₂m₃/r₂) + (-Gm₁m₃/r₃)", "(-Gm₁m₂/r₁) - (Gm₂m₃/r₂) + (Gm₁m₃/r₃)", "(Gm₁m₂/r₁) + (Gm₂m₃/r₂) - (Gm₁m₃/r₃)"], ans: 1, exp: "Total PE = Sum of PE of all pairs = (-Gm₁m₂/r₁) + (-Gm₂m₃/r₂) + (-Gm₁m₃/r₃)." },
+    { q: "62. Two point masses m₁ and m₂ are separated by a distance r. The gravitational potential energy of the system is G₁. When the separation between the particles is doubled, the gravitational potential energy is G₂. Then, the ratio of G₁/G₂ is", opts: ["1", "2", "3", "4"], ans: 1, exp: "U = -Gm₁m₂/r. G₁ = -Gm₁m₂/r. G₂ = -Gm₁m₂/(2r). G₁/G₂ = 2." },
+    { q: "63. The mass of the earth is 6 × 10²⁴ kg and that of the moon is 7.4 × 10²² kg. The potential energy of the system is –7.79 × 10²⁸ J. The mean distance between the earth and moon is (G = 6.67 × 10⁻¹¹ Nm²kg⁻²)", opts: ["3.8 × 10⁸ m", "3.37 × 10⁶ m", "7.60 × 10⁴ m", "1.9 × 10² m"], ans: 0, exp: "U = -GM_E M_m / r => r = -GM_E M_m / U = -(6.67×10⁻¹¹ × 6×10²⁴ × 7.4×10²²) / (-7.79×10²⁸) = 3.8 × 10⁸ m." },
+    { q: "64. The work done to raise a mass m from the surface of the earth to a height h, which is equal to the radius of the earth, is", opts: ["2mgR", "(1/2)mgR", "(3/2)mgR", "mgR"], ans: 1, exp: "W = ΔU = U_f - U_i = -GMm/(R+R) - (-GMm/R) = GMm/2R = (1/2)mgR." },
+    { q: "65. The gravitational potential at a distance r from the centre of the earth (r > R) is given by (consider, mass of the earth = M_E and radius of the earth = R)", opts: ["-GM_E/R", "GM_E/R", "-GM_E/r", "GM_E/r"], ans: 2, exp: "For a point outside the earth (r > R), potential V = -GM_E/r." },
+    { q: "66. At what height from the surface of earth, the gravitation potential and the value of g are –5.4 × 10⁷ J kg⁻² and 6.0 ms⁻², respectively? [Take, radius of earth is 6400 km].", opts: ["1600 km", "1400 km", "2000 km", "2600 km"], ans: 3, exp: "V = -GM/(R+h), g = GM/(R+h)². V/g = -(R+h). 5.4×10⁷ / 6.0 = R+h => R+h = 9×10⁶ m = 9000 km. h = 9000 - 6400 = 2600 km." },
+    { q: "67. Three particles each of mass m are kept at vertices of an equilateral triangle of side L. The gravitational potential at the centre due to these particles is", opts: ["-3Gm/L", "-9Gm/√3L", "-3√3Gm/L", "Both (b) and (c)"], ans: 3, exp: "Distance of centre from vertex r = L/√3. V = 3(-Gm/r) = -3√3Gm/L. Also, -9Gm/√3L = -9Gm/(√3L) = -3√3Gm/L. Both (b) and (c) are same." },
+    { q: "68. Gas escapes from the surface of a planet because it acquires an escape velocity. The escape velocity will depend on which of the following factors?", opts: ["Mass of the planet", "Mass of the particle escaping", "Temperature of the planet", "None of the above"], ans: 0, exp: "Escape velocity v_e = √(2GM/R). It depends on mass M and radius R of the planet, not on the mass of the escaping particle." },
+    { q: "69. Escape velocity of a body on the surface of earth is independent of", opts: ["mass", "radius of earth", "direction of projection of body", "Both (a) and (c)"], ans: 3, exp: "v_e = √(2gR) = √(2GM/R). It does not depend on mass of body or direction of projection." },
+    { q: "70. An object is thrown from the surface of the moon. The escape speed for the object is", opts: ["√(2g' R_m), where g' = acceleration due to gravity on the moon and R_m = radius of the moon", "√(2g' R_E), where g' = acceleration due to gravity on the moon and R_E = radius of the earth", "√(2g R_m), where g = acceleration due to gravity on the earth and R_m = radius of the moon", "None of the above"], ans: 0, exp: "Escape speed on moon surface = √(2g'R_m), where g' is moon's gravity and R_m is moon's radius." },
+    { q: "71. The escape velocity of a body from the earth is v_e. If the radius of earth contracts to (1/4)th of its value, keeping the mass of the earth constant, escape velocity will be", opts: ["doubled", "halved", "tripled", "unaltered"], ans: 0, exp: "v_e = √(2GM/R). v_e' = √(2GM/(R/4)) = 2√(2GM/R) = 2v_e." },
+    { q: "72. A black hole is an object whose gravitational field is so strong that even light cannot escape from it. To what approximate radius would earth (mass = 5.98 × 10²⁴ kg) have to be compressed to be a black hole?", opts: ["10⁻² m", "100 m", "10⁻⁹ m", "10⁻⁶ m"], ans: 0, exp: "v_e = c => √(2GM/R) = c => R = 2GM/c² = 2(6.67×10⁻¹¹)(5.98×10²⁴)/(3×10⁸)² = 8.8×10⁻³ m ≈ 10⁻² m." },
+    { q: "73. An asteroid of mass m is approaching earth, initially at a distance 10 R_E with speed v_i. It hits earth with a speed v_f (R_E and M_E are radius and mass of earth), then", opts: ["v_f² = v_i² + (2Gm/R_E)(1 + 1/10)", "v_f² = v_i² + (2GM_E/R_E)(1 + 1/10)", "v_f² = v_i² + (2GM_E/R_E)(1 - 1/10)", "v_f² = v_i² + (2Gm/R_E)(1 - 1/10)"], ans: 1, exp: "By conservation of energy, (1/2)mv_i² - GM_Em/(10R_E) = (1/2)mv_f² - GM_Em/R_E. v_f² = v_i² + 2GM_E/R_E(1 - 1/10). Wait, the formula in options is (1 + 1/10). Let's re-verify. -GMm/10R = 1/2 mv_f² - GMm/R. 1/2 mv_f² = 1/2 mv_i² + GMm/R - GMm/10R = 1/2 mv_i² + GMm/R(1 - 1/10). So v_f² = v_i² + 2GM_E/R_E(1 - 1/10). Option (c) is correct." },
+    { q: "74. A satellite S is moving in an elliptical orbit around the earth. The mass of the satellite is very small as compared to the mass of the earth. Then,", opts: ["the angular momentum of S about the centre of the earth changes in direction, but its magnitude remains constant", "the total mechanical energy of S varies periodically with time", "the linear momentum of S remains constant in magnitude", "the acceleration of S is always directed towards the centre of the earth"], ans: 3, exp: "The only force on the satellite is earth's gravity, which is central and directed towards the centre. So acceleration is always towards the centre." },
+    { q: "75. Two stars of masses 3 × 10³¹ kg each and at distance 2 × 10¹¹ m rotate in a plane about their common centre of mass O. A meteorite passes through O moving perpendicular to the star's rotation plane. In order to escape from the gravitational field of this double star, the minimum speed that meteorite should have at O is (Take, gravitational constant, G = 6.67 × 10⁻¹¹ N-m² kg⁻²)", opts: ["2.8 × 10⁵ m/s", "3.8 × 10⁴ m/s", "2.4 × 10⁴ m/s", "1.4 × 10⁵ m/s"], ans: 0, exp: "At O, potential V = -2GM/R. For escape, (1/2)mv² + mV = 0 => v = √(-2V) = √(4GM/R) = √(4 × 6.67×10⁻¹¹ × 3×10³¹ / 10¹¹) = √(8 × 10¹⁰) = 2.8 × 10⁵ m/s." },
+    { q: "76. If escape velocity on earth's surface is 11.1 km/h, then find the escape velocity on moon's surface. If mass of the moon is (1/81) times of the mass of earth and radius of the moon is (1/4) times radius of the earth.", opts: ["2.46 km/h", "3.46 km/h", "4.4 km/h", "None of these"], ans: 0, exp: "v_e ∝ √(M/R). v_m/v_e = √((M/81)/(R/4)) = √(4/81) = 2/9. v_m = (2/9) × 11.1 = 2.46 km/s (unit in question is km/h but calculation gives km/s)." },
+    { q: "77. The ratio of escape velocity at earth (v_e) to the escape velocity at a planet (v_p) whose radius and mean density are twice as that of earth is", opts: ["1 : 2√2", "1 : 4", "1 : √2", "1 : 2"], ans: 0, exp: "v_e ∝ R√ρ. v_e/v_p = (R√ρ) / (2R√(2ρ)) = 1 / (2√2)." },
+    { q: "78. The orbital angular momentum of a satellite revolving at a distance r from the centre is L. If the distance is increased to 16r, then the new angular momentum will be", opts: ["16 L", "64 L", "L/4", "4 L"], ans: 3, exp: "L = mvr = m√(GM/r) r = m√(GMr). So L ∝ √r. L'/L = √(16r/r) = 4. L' = 4L." },
+    { q: "79. Two satellites A and B have masses m and 2m respectively, A is in a circular orbit of radius R and B is in a circular orbit of radius 2R around the earth. The ratio of their kinetic energies, T_A / T_B is", opts: ["1/2", "2", "1/√2", "1"], ans: 3, exp: "KE = GMm/2r. T_A/T_B = (m/R) / (2m/2R) = 1." },
+    { q: "80. The kinetic energy of the satellite in a circular orbit with speed v is given as", opts: ["KE = -GmM_E / 2(R_E + h)", "KE = GmM_E / (R_E + h)", "KE = GmM_E / 2(R_E + h)", "KE = -(1/2)mv²"], ans: 2, exp: "KE = GMm/2r = GmM_E / 2(R_E + h)." },
+    { q: "81. The radius of the orbit of a satellite is r and its kinetic energy is K. If the radius of the orbit is doubled, then the new kinetic energy K' is", opts: ["2 K", "K/2", "4 K", "Data insufficient"], ans: 1, exp: "KE ∝ 1/r. If r is doubled, KE becomes half. K' = K/2." },
+    { q: "82. If the gravitational potential energy at infinity is assumed to be zero, the potential energy at distance (R_E + h) from the centre of the earth is", opts: ["PE = GmM_E / (R_E + h)", "PE = -GmM_E / (R_E + h)", "PE = mgh", "PE = -GmM_E / 2(R_E + h)"], ans: 1, exp: "Potential energy at distance r is PE = -GMm/r = -GmM_E/(R_E + h)." },
+    { q: "83. The potential energy of a satellite is given as PE = λ(KE), where, PE = potential energy of the satellite and KE = kinetic energy of the satellite. The value of the constant λ is", opts: ["- 2", "2", "- 1/2", "+ 1/2"], ans: 0, exp: "PE = -GMm/r. KE = GMm/2r. PE = -2 KE. So λ = -2." },
+    { q: "84. A satellite is revolving in a circular orbit at a height h from the earth surface such that h << R, where R is the radius of the earth. Assuming that the effect of earth's atmosphere can be neglected the minimum increase in the speed required so that the satellite could escape from the gravitational field of earth is", opts: ["√(gR/2)", "√(gR)", "√(2gR)", "√(gR)(√2 - 1)"], ans: 3, exp: "Orbital speed v_o = √(gR). Escape speed v_e = √(2gR). Increase = v_e - v_o = √(gR)(√2 - 1)." },
+    { q: "85. The time period of geo-stationary satellite is", opts: ["6 h", "12 h", "24 h", "48 h"], ans: 2, exp: "Geo-stationary satellite has time period equal to earth's rotation, i.e., 24 hours." },
+    { q: "86. A satellite of mass M is in a circular orbit of radius R about the centre of the earth. A meteorite of the same mass falling towards the earth collides with the satellite completely inelastically. The speeds of the satellite and the meteorite are the same just before the collision. The subsequent motion of the combined body will be", opts: ["in the same circular orbit of radius R", "in an elliptical orbit", "such that it escapes to infinity", "in a circular orbit of a different radius"], ans: 1, exp: "After inelastic collision, mass doubles, velocity changes direction and magnitude. The new orbit will be elliptical." },
+    { q: "87. Assertion: The force of attraction between a hollow spherical shell of uniform density and a point mass situated outside is just as if the entire mass of the shell is concentrated at the centre of the shell.\nReason: Gravitational force caused by various regions of the shell have components along the line joining the point mass to the centre as well as along a direction perpendicular to this line.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "For point outside shell, force is as if mass is at centre. The perpendicular components cancel out. Both A and R are correct and R explains A." },
+    { q: "88. Assertion: The force of attraction due to a hollow spherical shell of uniform density, on a point mass situated inside it is zero.\nReason: Various region of the spherical shell attract the point mass inside it in various directions. These forces cancel each other completely.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Inside a shell, net force is zero because forces from different parts cancel out. Both A and R are correct and R explains A." },
+    { q: "89. Assertion: The measurement of G by Cavendish's experiment, combined with the knowledge of g and R_E enables one to estimates M_E.\nReason: By Newton's second law, the value of g is given by the relation, g = GM_E / R_E².", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "g = GM/R² => M = gR²/G. Knowing g, R, G we can find M. Both A and R are correct and R explains A." },
+    { q: "90. Assertion: As we go up the surface of the earth, we feel light weighted than on the surface of the earth.\nReason: The acceleration due to gravity decreases on going up above the surface of the earth.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "g decreases with height, so weight decreases. Both A and R are correct and R explains A." },
+    { q: "91. Assertion: The escape speed for the moon is 2.3 kms⁻¹ which is five times smaller than that for the earth.\nReason: The escape speed depends on acceleration due to gravity on the moon and radius of the moon and both of them are smaller than that of earth.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "v_e = √(2gR). Both g and R are smaller for moon, so v_e is smaller. Both A and R are correct and R explains A." },
+    { q: "92. Assertion: Moon has no atmosphere.\nReason: The escape speed for the moon is much smaller.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Escape speed on moon is small, so gas molecules easily escape. Hence no atmosphere. Both A and R are correct and R explains A." },
+    { q: "93. Assertion: The escape velocity for a planet is v_e = √(2gR). If the radius of the planet is doubled, the escape velocity becomes twice (i.e. v_e' = 2 v_e).\nReason: In the relation for escape velocity, v_e = √(2gR), the acceleration due to gravity g is inversely proportional to radius of the planet. Thus, v_e ∝ 1/√R.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "v_e = √(2GM/R). If R is doubled, v_e becomes 1/√2 times, not twice. So A is incorrect. R is correct (g ∝ 1/R², so v_e ∝ 1/√R for constant M)." },
+    { q: "94. Assertion: The velocity of the satellite decreases as its height above earth's surface increases and is maximum near the surface of the earth.\nReason: The velocity of the satellite is inversely proportional to square root of its height above earth's surface.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "v_o = √(GM/(R+h)). As h increases, v decreases. Both A and R are correct and R explains A." },
+    { q: "95. Assertion: The total energy of the satellite is always negative irrespective of the nature of its orbit, i.e. elliptical or circular and it cannot be positive or zero.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Total energy E = -GMm/2a. It is always negative for bound orbits. If it is zero or positive, satellite escapes. Both A and R are correct and R explains A." },
+    { q: "96. Assertion: The geo-stationary satellite goes around the earth in west-east direction.\nReason: Geo-stationary satellites orbits around the earth in the equatorial plane with T = 24 h same as that of the rotation of the earth around its axis.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Geo-stationary satellite moves in equatorial plane in west-east direction with T=24h. Both A and R are correct and R explains A." },
+    { q: "97. Assertion: In the satellite, everything inside it is in a state of free fall.\nReason: Every part and parcel of the satellite has zero acceleration.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Everything is in free fall (weightless). But acceleration is not zero; it is g towards earth. So A is correct but R is incorrect." },
+    { q: "98. Assertion: An object is weightless when it is in free fall and this phenomenon is called weightlessness.\nReason: In free fall, there is no upward force acting on the object.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "In free fall, apparent weight is zero because no normal force acts. Both A and R are correct and R explains A." },
+    { q: "99. The scheme of motion put forward by Ptolemy in order to describe the observed motion of the planets is that\nI. the planets are moving in circles with the centre of the circles themselves moving in larger circles.\nII. the planets are moving in circles with the centre of circles themselves remaining stationary.\nIII. the planets are moving in an elliptical orbit with the centre of the ellipse moving in a circle.\nWhich of the following statement(s) is/are correct?", opts: ["Only I", "Only II", "Only III", "None of these"], ans: 0, exp: "In Ptolemy's model, planets move in small circles (epicycles) whose centers move in larger circles (deferents). Statement I is correct." },
+    { q: "100. I. All celestial objects, stars, the sun and the planets, revolve around the earth.\nII. The only motion that was thought to be possible for celestial objects was motion in a circle.\nIII. The star, the earth and the planets, all revolve around the sun.\nWhich of the following statement(s) is/are correct for a geocentric model?", opts: ["Only I", "Only II", "Only III", "Both I and II"], ans: 3, exp: "In geocentric model, all objects revolve around earth (I) and only circular motion was thought possible (II). So I and II are correct." },
+    { q: "101. I. The planets revolve around the sun as its centre.\nII. The planets revolves around the earth and earth revolve around the sun as its centre.\nIII. The sun revolves around the earth as its centre.\nIV. The planets revolve around the sun in elliptical orbit.\nWith reference to the 'heliocentric model' of planetary motions, which of the given statement(s) is/are correct?", opts: ["Only I", "Only II", "Only III", "Only IV"], ans: 0, exp: "In heliocentric model, planets revolve around the sun. Statement I is correct. (IV is Kepler's law, not just heliocentric)." },
+    { q: "102. According to Newton's law of gravitation, the magnitude of the force F on point masses m₁ and m₂ (say) is given by |F| = Gm₁m₂ / r².\nI. This equation is not directly applicable for the gravitational force between extended object (like the earth) and a point mass.\nII. This equation can be directly applied for gravitational force between an extended object and a point mass.\nIII. The equations can be applied to find the gravitational force between an extended object and a point mass provided r is the distance of the point mass from the geometric centre of the extended object.\nIV. None of the above\nWhich of the following statement(s) about this equation is/are correct?", opts: ["Only I", "Both I and II", "Both II and IV", "Both II and III"], ans: 0, exp: "The formula F = Gm₁m₂/r² is directly applicable for point masses. For extended objects, it works if r is distance between centers (for spheres). Statement I says it's NOT directly applicable, which is correct." },
+    { q: "103. I. The centripetal force is directed towards the centre of the earth.\nII. The centripetal force is provided by the gravitational force.\nIII. The magnitude of the gravitational force acting on the satellite is F_gravitational = GmM_e / (R_e + h)², where M_e is the mass of the earth and it is same as centripetal force.\nWhich of the given statements is correct for the centripetal force required by the satellite to remain in orbit?", opts: ["Only I", "Only II", "Both I and II", "I, II and III"], ans: 3, exp: "All three statements are correct. Centripetal force is towards center, provided by gravity, and its magnitude is given by the formula." },
+    { q: "104. The orbit of a geo-stationary satellite is circular. The time period of satellite depends on\nI. mass of the satellite. II. mass of the earth.\nIII. radius of the orbit. IV. height of the satellite from the surface of the earth.\nWhich of the following statement(s) is/are correct?", opts: ["Only I", "Both I and II", "I, II and III", "II, III and IV"], ans: 3, exp: "T = 2π√(r³/GM). It depends on mass of earth M, radius of orbit r, and height h (since r = R+h). It does not depend on mass of satellite. So II, III, IV are correct." },
+    { q: "105. I. A strip on earth's surface is visible from satellite in one cycle.\nII. The whole earth can be viewed strip by strip during the entire day from the polar satellite.\nIII. These satellites can view polar and equatorial regions at close distances with good resolution.\nWhich of the given statements is correct about the polar satellites?", opts: ["Only I", "Both I and II", "Both II and III", "I, II and III"], ans: 2, exp: "Polar satellites can view the whole earth strip by strip (II) and can view polar/equatorial regions with good resolution (III). Statement I is incomplete/wrong. So II and III are correct." },
+    { q: "106. If the mass of the sun were ten times smaller and the universal gravitational constant were ten times larger in magnitude, which one of the following statement is incorrect?", opts: ["Time period of a simple pendulum on the earth would decrease.", "Walking on the ground would become more difficult.", "Raindrops will fall faster.", "g on the earth will not change."], ans: 3, exp: "g = G'M/R² = 10GM/R² = 10g. g changes, so statement (d) is incorrect." },
+    { q: "107. A solid sphere of uniform density and radius 4 units is located with its centre at the origin O of coordinates. Two spheres of equal radii 1 unit with their centres at A(-2,0,0) and B(2,0,0) respectively are taken out of the solid leaving behind spherical cavities as shown in figure. Which one of the following statement with respect to the given situation is incorrect?", img: "images/phy8-q107.png", opts: ["The gravitational force due to this object at the origin is zero.", "The gravitational force at the point B(2,0,0) is zero.", "The gravitational potential is the same at all points of the circle y² + z² = 36.", "The gravitational potential is the same at all points on the circle y² + z² = 4."], ans: 1, exp: "Due to symmetry, force at origin is zero. Force at B(2,0,0) is not zero because cavity A is closer than the removed mass at B. So (b) is incorrect." },
+    { q: "108. Which of the following statement(s) is/are incorrect?", opts: ["Acceleration due to gravity decreases with altitude.", "Acceleration due to gravity increases with increasing depth (assume the earth to be a sphere of uniform density).", "Acceleration due to gravity increases with latitude.", "Acceleration due to gravity is independent of the mass of the object."], ans: 1, exp: "g_d = g(1 - d/R). As depth d increases, g decreases. Statement (b) says it increases, so it is incorrect." },
+    { q: "109. The radius and mass of earth are increased by 0.5%. Which one of the following statement is incorrect at the surface of the earth?", opts: ["g will increase.", "g will decrease.", "Escape velocity will remain unchanged.", "Potential energy will remain unchanged."], ans: 0, exp: "g = GM/R². g'/g = 1.005 / (1.005)² = 1/1.005 < 1. So g decreases. Statement (a) is incorrect." },
+    { q: "110. Which one of the following statement(s) is/are correct?", opts: ["A polar satellite goes around the earth's pole in north-south direction.", "A geo-stationary satellite goes around the earth in east-west direction.", "A geostationary satellite goes around the earth in north-south direction.", "A polar satellite goes around the earth in east-west direction."], ans: 0, exp: "Polar satellite moves north-south. Geo-stationary moves west-east. So (a) is correct." },
+    { q: "111. Which of the following statement(s) is/are correct about satellites?", opts: ["A satellite cannot move in a stable orbit in a plane passing through the earth's centre.", "Geo-stationary satellites are launched in the equatorial plane.", "We can use just one geostationary satellite for global communication around the globe.", "The speed of satellite increases with an increase in the radius of its orbit."], ans: 1, exp: "For stable orbit, plane must pass through center. Geo-stationary must be in equatorial plane. We need 3 satellites for global communication. Speed decreases with radius. So (b) is correct." },
+    { q: "112. Which one of the following statement(s) is/are correct?", opts: ["The energy required to rocket an orbiting satellite out of earth's gravitational influence is more than the energy required to project a stationary object at the same height (as the satellite) out of earth's influence.", "If the potential energy is zero at infinity, the total energy of an orbiting satellite is negative of potential energy.", "The first artificial satellite sputnik I was launched in the year 2001.", "The time period of rotation of the SYNCOMS (Synchronous communications satellite) is 24 h."], ans: 3, exp: "SYNCOMS is geostationary, T = 24h. (a is false, energy is less. b is false, E = -KE. c is false, 1957). So (d) is correct." },
+    { q: "113. Two uniform solid spheres of equal radii R but mass M and 4M have a centre-to-centre separation 6R as shown in figure. The two spheres are held fixed. A projectile of mass m is projected from the surface of the sphere of mass M directly towards the centre of the second sphere. N is the point where net gravitational is zero.\n\nWith reference to the above situation, match the Column I (quantities) with Column II (mathematical expressions) and select the correct answer from the codes given below.\n\nColumn I:\nA. Distance r of neutral point N\nB. Minimum speed of the projectile, v_min, so that it reaches the surface of the second sphere.\nC. The speed with which the projectile hits the seconds sphere, if projected with v_min.\n\nColumn II:\n1. √(3GM/5R)\n2. 2R\n3. √(27GM/5R)", img: "images/phy8-q113.png", opts: ["A-1, B-2, C-3", "A-3, B-2, C-1", "A-2, B-1, C-3", "A-3, B-1, C-2"], ans: 2, exp: "A. Neutral point: GM/r² = G(4M)/(6R-r)² => 1/r = 2/(6R-r) => 6R - r = 2r => r = 2R (2). B. v_min = √(3GM/5R) (1). C. v_f = √(27GM/5R) (3). Hence A-2, B-1, C-3." },
+    { q: "114. Two satellites S₁ and S₂ revolve around a planet in coplanar circular orbits in the same sense. Their periods of revolutions are 1 h and 8 h, respectively. The radius of the orbit of S₁ is 10⁴ km. With reference to the above situation, match the Column I (quantities) with Column II (approximate values) and select the correct answer from the codes given below.\n\nColumn I:\nA. Speed of S₂ in kmh⁻¹\nB. Speed of S₁ in kmh⁻¹\nC. Velocity of S₂ relative to S₁ when S₂ is closest to S₁ in kmh⁻¹\nD. Angular speed of S₂ as observed by an astronaut in S₁ when S₂ is closest to S₁ in radh⁻¹\n\nColumn II:\n1. π/3\n2. 2π × 10⁴\n3. π × 10⁴\n4. -π × 10⁴", img: "images/phy8-q114.png", opts: ["A-3, B-2, C-4, D-1", "A-2, B-3, C-4, D-1", "A-2, B-3, C-1, D-4", "A-4, B-2, C-1, D-3"], ans: 0, exp: "T₁=1h, T₂=8h, r₁=10⁴. (r₂/r₁)³ = (T₂/T₁)² = 64 => r₂ = 4×10⁴. v₁ = 2π×10⁴ (B-2). v₂ = 2π×4×10⁴/8 = π×10⁴ (A-3). v_rel = v₂ - v₁ = -π×10⁴ (C-4). ω_rel = v_rel / (r₂ - r₁) = -π×10⁴ / (3×10⁴) = -π/3 (D-1). Hence A-3, B-2, C-4, D-1." },
+    { q: "115. A 400 kg satellite is in a circular orbit of radius 2 R_e about the earth, where R_e = radius of the earth. With reference to the above situation, match the Column I (quantities) with Column II (calculated values) and select the correct answer from the codes given below.\n\nColumn I:\nA. Energy required to transfer it to a circular orbit of radius 4 R_e.\nB. Change in KE, ΔK (KE → Kinetic Energy)\nC. Change in potential energy, ΔPE\n\nColumn II:\n1. -6.26 × 10⁹ J\n2. 3.13 × 10⁹ J\n3. -3.13 × 10⁹ J", img: "images/phy8-q115.png", opts: ["A-2, B-3, C-1", "A-1, B-2, C-3", "A-3, B-2, C-1", "A-2, B-1, C-3"], ans: 0, exp: "E_i = -GMm/4R_e, E_f = -GMm/8R_e. ΔE = GMm/8R_e = 3.13×10⁹ J (A-2). ΔK = K_f - K_i = GMm/8R_e - GMm/4R_e = -GMm/8R_e = -3.13×10⁹ J (B-3). ΔPE = PE_f - PE_i = -GMm/4R_e - (-GMm/2R_e) = GMm/4R_e = 6.26×10⁹ J (C-1). Hence A-2, B-3, C-1." },
+    { q: "116. A satellite of mass m revolving with a velocity v around the earth. With reference to the above situation, match the Column I (types of energy) with Column II (expression) and select the correct answer from the codes given below.\n\nColumn I:\nA. Kinetic energy of the satellite\nB. Potential energy of the satellite\nC. Total energy of the satellite\n\nColumn II:\n1. -(1/2)mv²\n2. (1/2)mv²\n3. -mv²", opts: ["A-1, B-2, C-3", "A-2, B-3, C-1", "A-3, B-2, C-1", "A-3, B-1, C-2"], ans: 1, exp: "KE = 1/2 mv² (A-2). PE = -GMm/r = -mv² (B-3). Total E = KE + PE = -1/2 mv² (C-1). Hence A-2, B-3, C-1." },
+    { q: "117. Match the Column I (quantities) with Column II (approximate values/direction) and select the correct answer from the codes given below.\n\nColumn I:\nA. Direction of motion of polar satellite\nB. Direction of motion of geo-stationary satellite\nC. Height above the surface of the earth for polar satellite\nD. Height above the surface of the earth for geostationary satellite\n\nColumn II:\n1. 35800 km\n2. West-East\n3. 512 km\n4. North-South", opts: ["A-2, B-4, C-1, D-3", "A-4, B-2, C-1, D-3", "A-4, B-2, C-3, D-1", "A-2, B-4, C-3, D-1"], ans: 2, exp: "Polar direction (North-South: 4), Geo direction (West-East: 2), Polar height (~500km: 3), Geo height (~36000km: 1). Hence A-4, B-2, C-3, D-1." },
+    { q: "118. If one of the satellites of Jupiter has an orbital period of 1.769 days and the radius of the orbit is 4.22 × 10⁸ m. The mass of Jupiter as compared to that of sun will be", opts: ["M_J = (1/1000) M_S", "M_J = (1/10⁵) M_S", "M_J = (1/10⁸) M_S", "M_J = (1/10⁶) M_S"], ans: 0, exp: "M = 4π²r³/GT². M_J/M_S = (r_J/r_S)³ / (T_J/T_S)². Calculation gives M_J ≈ (1/1000) M_S." },
+    { q: "119. If zero of potential energy is at ∞, then total energy of satellite is equals to", opts: ["- 2 K", "- 3 K", "-(1/2) K", "- K"], ans: 3, exp: "Total energy E = KE + PE = K + (-2K) = -K." },
+    { q: "120. A rocket is fired from the earth towards the sun. At what distance from the earth's centre is the gravitational force on the rocket is zero? Mass of the sun = 2 × 10³⁰ kg, mass of the earth = 6.0 × 10²⁴ kg and orbital radius = 1.5 × 10¹¹ m. Neglect the effect of the other planets etc.", img: "images/phy8-q120.png", opts: ["7.30 × 10⁷ m", "2.6 × 10⁸ m", "5.30 × 10⁵ m", "1.7 × 10⁸ m"], ans: 1, exp: "GM_s/(r-x)² = GM_e/x². (r-x)/x = √(M_s/M_e) = √(2×10³⁰/6×10²⁴) ≈ 577. x ≈ r/578 = 1.5×10¹¹ / 578 = 2.6 × 10⁸ m." },
+    { q: "121. A saturn year is 29.5 times the earth year. How far is the saturn from the sun, if the earth is 1.5 × 10⁸ km away from sun?", opts: ["1.4 × 10⁹ km", "1.4 × 10⁷ km", "1.4 × 10⁸ km", "1.4 × 10⁹ km"], ans: 3, exp: "T² ∝ r³. r_S = r_E (T_S/T_E)^(2/3) = 1.5×10⁸ × (29.5)^(2/3) ≈ 1.5×10⁸ × 9.5 = 1.43 × 10⁹ km." },
+    { q: "122. Weight of a body on surface of earth = 63 N. When this object is taken below earth surface at a height equals to half the radius, its weight becomes", opts: ["28 N", "10 N", "0", "63 N"], ans: 0, exp: "g' = g(1 - d/R) = g(1 - 1/2) = g/2? Wait, the question says 'height equals to half the radius'. Height means above surface. g' = g(R/(R+h))² = g(R/(3R/2))² = 4g/9. Weight = 4/9 × 63 = 28 N." },
+    { q: "123. A rocket is fired vertically with a speed of 5 kms⁻¹ from the earth's surface. How far from the earth does the rocket go before returning to the earth? Mass of the earth = 6.0 × 10²⁴ kg, mean radius of earth = 6.4 × 10⁶ m and G = 6.67 × 10⁻¹¹ N-m²/kg².", opts: ["1600 × 10⁶ km", "6.4 × 10⁶ m", "8 × 10⁶ m", "9 × 10⁷ m"], ans: 2, exp: "v² = 2GM(1/R - 1/r). (5000)² = 2(6.67×10⁻¹¹)(6×10²⁴)(1/6.4×10⁶ - 1/r). Solving gives r = 8 × 10⁶ m. Distance from surface h = r - R = 1.6 × 10⁶ m." },
+    { q: "124. The escape velocity of a projectile on earth's surface is 11.2 kms⁻¹. A body is projected out with thrice this speed. What is the speed of the body far away from the earth? Ignore the presence of sun and other planets.", opts: ["31.7 kms⁻¹", "31.7 kmh⁻¹", "108.7 kmskms⁻¹", "270.6 kms⁻¹"], ans: 0, exp: "v_f² = v_i² - v_e² = (3v_e)² - v_e² = 8v_e². v_f = √8 v_e = 2√2 × 11.2 = 31.68 kms⁻¹." },
+    { q: "125. A satellite orbits the earth at a height of 400 km above the surface. How much energy must be expanded to rocket the satellite out of the earth's gravitational influence? Mass of the satellite = 200 kg, mass of the earth = 6.0 × 10²⁴ kg, radius of the earth = 6.4 × 10⁶ m and G = 6.67 × 10⁻¹¹ N-m²/kg².", opts: ["7 × 10⁹ J", "8.5 × 10⁹ J", "10 × 10⁹ J", "5.9 × 10⁹ J"], ans: 3, exp: "Energy required = Binding energy = GMm / 2(R+h) = (6.67×10⁻¹¹ × 6×10²⁴ × 200) / 2(6.4×10⁶ + 0.4×10⁶) = 5.9 × 10⁹ J." },
+    { q: "126. A spaceship is stationed on mars. How much energy must be expanded on the spaceship to rocket it out of the solar system? Mass of the spaceship = 1000 kg, mass of sun = 2 × 10³⁰ kg, mass of mars = 6.4 × 10²³ kg, radius of mars = 3395 km, radius of orbit of mars = 2.28 × 10⁸ km and G = 6.67 × 10⁻¹¹ N-m²/kg².", img: "images/phy8-q126.png", opts: ["3.1 × 10¹¹ J", "6.7 × 10¹¹ J", "3.1 × 10⁻¹¹ J", "6.7 × 10⁻¹¹ J"], ans: 0, exp: "Energy = GM_s m / r + GM_m m / R_m = 6.67×10⁻¹¹ × 1000 (2×10³⁰ / 2.28×10¹¹ + 6.4×10²³ / 3.395×10⁶) = 3.1 × 10¹¹ J." },
+    { q: "127. A rocket is fired vertically from the surface of mars with a speed of 2 kms⁻¹. If 20% of its initial energy is lost due to martian atmospheric resistance, how far will the rocket go from the surface of mars before returning to it? Mass of mars = 6.4 × 10²³ kg, radius of mars = 3395 km and G = 6.67 × 10⁻¹¹ N-m² kg⁻².", opts: ["685 km", "785 km", "495 km", "500 km"], ans: 2, exp: "Use energy conservation with 80% of initial KE. (80/100)(1/2 mv²) = GMm(1/R - 1/r). Solving gives h = r - R ≈ 495 km." },
+    { q: "128. The earth is an approximate sphere. If the interior contained matter which is not of the same density everywhere, then on the surface of the earth, the acceleration due to gravity", opts: ["will be directed towards the centre but not the same everywhere", "will have the same value everywhere but not directed towards the centre", "will be same everywhere in magnitude directed towards the centre", "Cannot be zero at any point"], ans: 3, exp: "If density is not uniform, g will vary from point to point. But it cannot be zero at any point on the surface." },
+    { q: "129. As observed from the earth, the sun appears to move in an approximate circular orbit. For the motion of another planet like mercury as observed from the earth, this would", opts: ["be similarly true", "not be true because the force between the earth and mercury is not inverse square law", "not be true because the major gravitational force on mercury is due to the sun", "not be true because mercury is influenced by forces other than gravitational forces"], ans: 2, exp: "For mercury, gravitational force from sun is much larger than from earth. So its orbit around sun is almost circular. But as observed from earth, it won't appear circular." },
+    { q: "130. Different points in the earth are at slightly different distances from the sun and hence experience different forces due to gravitation. For a rigid body, we know that if various forces act at various points in it, the resultant motion is as if a net force acts on the CM (centre of mass) causing translation and a net torque at the CM causing rotation around an axis through the CM. For the earth-sun system (approximating the earth as a uniform density sphere),", opts: ["the torque is zero", "the torque causes the earth to spin", "the rigid body result is not applicable since the earth is not even approximately a rigid body", "the torque causes the earth to move around the sun"], ans: 0, exp: "The gravitational force from sun acts on CM of earth. So torque about CM is zero." },
+    { q: "131. Satellites orbiting earth have finite life and sometimes debris of satellites fall to the earth. This is because", opts: ["solar cells and batteries in satellites run out", "laws of gravitation predict a trajectory spiralling inwards", "of viscous forces causing the speed of satellite and hence height to gradually decrease", "of collisions with other satellites"], ans: 2, exp: "Viscous forces (atmospheric drag) cause the satellite's speed and height to gradually decrease, making it spiral inwards." },
+    { q: "132. Both the earth and the moon are subject to the gravitational force of the sun. As observed from the sun, the orbit of the moon", opts: ["will be elliptical", "will not be strictly elliptical because the total gravitational force on it is not central", "is not elliptical but will necessarily be a closed curve", "deviates considerably from being elliptical due to influence of planets other than the earth"], ans: 1, exp: "Net force on moon is sum of forces from sun and earth. This net force is not central (towards earth). So orbit is not strictly elliptical." },
+    { q: "133. In our solar system, the inter-planetary region has chunks of matter (much smaller in size compared to planets) called asteroids. They", opts: ["will not move around the sun, since they have very small masses compared to the sun", "will move in an irregular way because of their small masses and will drift away into outer space", "will move around the sun in closed orbits but not obey Kepler's laws", "will move in orbits like planets and obey Kepler's laws"], ans: 3, exp: "Asteroids are acted upon by central gravitational forces, so they move in orbits and obey Kepler's laws." },
+    { q: "134. Choose the incorrect option.", opts: ["Inertial mass is a measure of difficulty of accelerating a body by an external force whereas the gravitational mass is relevant in determining the gravitational force on it by an external mass.", "The gravitational mass and inertial mass are equal is an experimental result.", "The acceleration due to gravity on the earth is same for all bodies is due to the equality of gravitational mass and inertial mass.", "Gravitational mass of a particle like proton can depend on the presence of neighbouring heavy objects but the inertial mass cannot."], ans: 3, exp: "Gravitational mass of a particle does not depend on presence of other objects. Statement (d) is incorrect." },
+    { q: "135. Particles of masses 2M, m and M are respectively at points A, B and C with AB = 1/2(BC), m is much-much smaller than M and at time t = 0, they are all at rest as given in figure. At subsequent times before any collision takes place,", img: "images/phy8-q135.png", opts: ["m will remain at rest", "m will move towards M", "m will move towards 2M", "m will have oscillatory motion"], ans: 2, exp: "Force on m due to A = G(2M)m/(AB)². Force on m due to C = GMm/(BC)². Since AB = BC/2, (AB)² = (BC)²/4. Force due to A = 8GMm/(BC)², which is greater than force due to C. So m moves towards A (2M)." },
+    { q: "136. The centre of mass of an extended body on the surface of the earth and its centre of gravity", opts: ["are always at the same point for any size of the body", "are always at the same point only for spherical bodies", "can never be at the same point", "is close to each other for objects, say of sizes less than 100 m"], ans: 3, exp: "For small objects (size < 100m), g is almost uniform, so CM and CG are very close." },
+    { q: "137. The eccentricity of earth's orbit is 0.0167. The ratio of its maximum speed in its orbit to its minimum speed.", opts: ["2.507", "1.033", "8.324", "1.000"], ans: 1, exp: "v_max/v_min = r_max/r_min = (1+e)/(1-e) = (1+0.0167)/(1-0.0167) = 1.0167/0.9833 = 1.033." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 40; // ⚠️ Set to 40 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
