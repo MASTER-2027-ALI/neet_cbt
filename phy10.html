@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 42: Mechanical Properties of Fluids - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 42: Mechanical Properties of Fluids</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. The key property of fluids is that", opts: ["they offer very little resistance to shear stress", "their shape changes", "they offer very large resistance to shear stress", "Both (a) and (b)"], ans: 0, exp: "Fluids are substances that flow, meaning they offer very little resistance to shear stress and their shape changes according to the container. However, the most defining property is low shear resistance." },
+    { q: "2. Metal nails and metal pins are made to have pointed ends because", opts: ["it transmit large pressure", "it transmit large force", "it can easily penetrate the surface", "All of the above"], ans: 0, exp: "Pointed ends have very small area. When force is applied, it transmits large pressure (P = F/A) on the surface, hence easily penetrates." },
+    { q: "3. When an object is submerged in a fluid at rest, then fluid exerts a force on its surface. This force is always", opts: ["normal to the objects surface", "parallel to the objects surface", "along 45° to the objects surface", "None of the above"], ans: 0, exp: "The fluid pressure always acts normal to the surface of the object at every point." },
+    { q: "4. The two thin bones (femurs), each of cross-sectional area 10 cm² support the upper part of human body of mass 40 kg. Estimate the average pressure sustained by the femurs.", opts: ["2 × 10⁵ Nm⁻²", "3 × 10⁴ Nm⁻²", "2.5 × 10³ Nm⁻²", "6 × 10⁴ Nm⁻²"], ans: 0, exp: "Total area A = 2 × 10 cm² = 20 × 10⁻⁴ m². Force F = mg = 40 × 10 = 400 N. Pressure = F/A = 400 / (20×10⁻⁴) = 2 × 10⁵ Nm⁻²." },
+    { q: "5. If two forces in the ratio 1 : 7 act on two pistons of areas in the ratio 3 : 2, then the pressure exerted by the forces is in ratio", opts: ["2 : 21", "3 : 14", "6 : 7", "4 : 21"], ans: 0, exp: "P = F/A. P₁/P₂ = (F₁/F₂) × (A₂/A₁) = (1/7) × (2/3) = 2/21." },
+    { q: "6. If two liquids of same masses but densities ρ₁ and ρ₂ respectively are mixed, then density of mixture is given by", opts: ["ρ = (ρ₁ + ρ₂) / 2", "ρ = (ρ₁ + ρ₂) / (2ρ₁ρ₂)", "ρ = (2ρ₁ρ₂) / (ρ₁ + ρ₂)", "ρ = (ρ₁ρ₂) / (ρ₁ + ρ₂)"], ans: 2, exp: "Total mass = 2m. Total volume = m/ρ₁ + m/ρ₂. ρ_mix = 2m / [m(1/ρ₁ + 1/ρ₂)] = 2ρ₁ρ₂ / (ρ₁ + ρ₂)." },
+    { q: "7. Pressure at a point inside a liquid does not depend on", opts: ["the depth of the point below the surface of the liquid", "the nature of the liquid", "the acceleration due to gravity at that point", "total weight of fluid in the beaker"], ans: 3, exp: "P = ρgh. It depends on depth, density, and g. It does not depend on the total weight or shape of the container." },
+    { q: "8. Pascal's law states that pressure in a fluid at rest is the same at all points, if", opts: ["they are at the same height", "they are along same plane", "they are along same line", "Both (a) and (b)"], ans: 0, exp: "Pascal's law says that pressure is same at all points at the same horizontal level (height) in a fluid at rest." },
+    { q: "9. Figure given below shows an element in the interior of a fluid at rest. This elemental volume is in the shape of a right angled prism. Let the elemental volume is small enough that we can ignore the effect of gravity, but it is drawn in an enlarged scale for the sake of clarity. For equilibrium of elemental volume, which of these are correct?", img: "images/phy10-q9.png", opts: ["F_b sin θ = F_c", "F_c cos θ = F_b", "F_b cos θ = F_c", "F_a cos θ = F_b"], ans: 0, exp: "Resolving forces along the surfaces. From equilibrium equations, F_b sin θ = F_c and F_b cos θ = F_a. Option (a) is correct." },
+    { q: "10. A uniformly tapering vessel is filled with a liquid of density 900 kgm⁻³. The force that acts on the base of the vessel due to the liquid is (take, g = 10 ms⁻²)", img: "images/phy10-q10.png", opts: ["3.6 N", "7.2 N", "9.0 N", "14.4 N"], ans: 1, exp: "Force on base F = P × A = (hρg) × A = 0.4 × 900 × 10 × (2 × 10⁻³) = 7.2 N." },
+    { q: "11. The heart of a man pumps 5 L of blood through the arteries per minute at a pressure of 150 mm of mercury. If the density of mercury be 13.6 × 10³ kgm⁻³ and g = 10 ms⁻², then the power of heart in watt is", opts: ["1.70", "2.35", "3.0", "1.50"], ans: 0, exp: "P = pressure × volume rate = (ρgh) × (ΔV/Δt) = (13.6×10³ × 10 × 0.15) × (5×10⁻³ / 60) = 2040 × 8.33×10⁻⁵ ≈ 1.70 W." },
+    { q: "12. The approximate depth of an ocean is 2700 m. The compressibility of water is 45.4 × 10⁻¹¹ Pa⁻¹ and density of water is 10³ kgm⁻³. What fractional compression of water will be obtained at the bottom of the ocean?", opts: ["0.8 × 10⁻²", "1.0 × 10⁻²", "1.2 × 10⁻²", "1.4 × 10⁻²"], ans: 2, exp: "ΔP = ρgh = 10³ × 10 × 2700 = 2.7×10⁷ Pa. Fractional compression = Compressibility × ΔP = 45.4×10⁻¹¹ × 2.7×10⁷ = 1.22 × 10⁻²." },
+    { q: "13. A long cylindrical vessel is half-filled with a liquid. When the vessel is rotated about its own vertical axis, the liquid rises up near the wall. If the radius of vessel is 5 cm and its rotational speed is 2 rotations per second, then the difference in the heights between the centre and the sides (in cm) will be", opts: ["0.1", "1.2", "0.4", "2.0"], ans: 3, exp: "h = ω²r² / (2g) = (2π×2)² × (0.05)² / (2×10) = (16π² × 0.0025) / 20 = 0.02 m = 2 cm." },
+    { q: "14. In a U-tube as shown in a figure, water and oil are in the left side and right side of the tube, respectively. The heights from the bottom for water and oil columns are 15 cm and 20 cm, respectively. The density of the oil is [take ρ_water = 1000 kgm⁻³]", img: "images/phy10-q14.png", opts: ["1200 kgm⁻³", "750 kgm⁻³", "1000 kgm⁻³", "1333 kgm⁻³"], ans: 1, exp: "Pressure at same level is equal: ρ_w h_w g = ρ_o h_o g. 1000 × 15 = ρ_o × 20 => ρ_o = 750 kg/m³." },
+    { q: "15. A U-tube with both ends open to the atmosphere is partially filled with water. Oil which is immiscible with water, is poured into one side until it stands at a distance of 10 mm above the water level on the other side. Meanwhile the water rises by 65 mm from its original level (see diagram), the density of the oil is", img: "images/phy10-q15.png", opts: ["650 kgm⁻³", "425 kgm⁻³", "800 kgm⁻³", "928 kgm⁻³"], ans: 3, exp: "Equating pressure at bottom level: ρ_oil × (65+65+10) = ρ_water × (65+65). ρ_oil = 1000 × 130 / 140 = 928 kg/m³." },
+    { q: "16. Find density of ethyl alcohol. Using information given in the diagram below", img: "images/phy10-q16.png", opts: ["0.83 gcm⁻³", "0.5 gcm⁻³", "1.83 gcm⁻³", "0.12 gcm⁻³"], ans: 0, exp: "P_left = P_atm + ρ_w g (10 cm). P_right = P_atm + ρ_alc g (12 cm). ρ_alc = (10/12) × 1 = 0.833 g/cm³." },
+    { q: "17. A liquid of density ρ is coming out of a hose pipe of radius a with horizontal speed v and hits a mesh. 50% of the liquid passes through the mesh unaffected 25% loses all of its momentum and 25% comes back with the same speed. The resultant pressure on the mesh will be", opts: ["ρv²", "(1/2)ρv²", "(1/4)ρv²", "(3/4)ρv²"], ans: 3, exp: "Force = (dm/dt) × v. For 50%: 0.5 × (dm/dt)v. For 25% stop: 0.25 × (dm/dt)v. For 25% rebound: 0.25 × (dm/dt)(2v). Total force = 1.25 × (dm/dt)v = (5/4) ρ A v². Pressure = 5/4 ρv²? Wait, options have 3/4. Let's re-evaluate: 50% passes -> 0 change. 25% stops -> momentum change = 0.25 ρAv². 25% rebounds -> 0.25 ρA(2v)v = 0.5 ρAv². Total force = 0.75 ρAv². So P = 3/4 ρv²." },
+    { q: "18. A student measures pressure of a gas in a container using a mercury manometer and she also measures atmospheric pressure using a mercury barometer. She gave following representation. If p₁ = atmospheric pressure, and p₂ = absolute pressure, then", img: "images/phy10-q18.png", opts: ["gauge pressure = h₁ + h₂", "gauge pressure = h₃ - h₁", "gauge pressure = h₃", "absolute pressure = h₁"], ans: 1, exp: "p₂ = p₁ + ρgh_above. Gauge pressure = p₂ - p₁ = ρgh. From diagram, height difference is h₃ - h₁. So gauge pressure = ρg(h₃ - h₁)." },
+    { q: "19. A hydraulic lift has 2 limbs of areas A and 2A. Force F is applied over limb of area A to lift a heavy car. If distance moved by piston P₁ is x, then distance moved by piston P₂ is", img: "images/phy10-q19.png", opts: ["x", "2x", "x/2", "4x"], ans: 2, exp: "Volume displaced is same: A₁x₁ = A₂x₂. A × x = 2A × x₂ => x₂ = x/2." },
+    { q: "20. Two syringes of different cross-sections (without needles) filled with water are connected with a tightly fitted rubber tube filled with water. Diameters of the smaller piston and larger piston are 1.0 cm and 3.0 cm, respectively. If the smaller piston is pushed in through 6.0 cm, how much does the larger piston move out?", opts: ["0.67 cm", "0.5 cm", "0.75 cm", "1.00 cm"], ans: 0, exp: "A₁x₁ = A₂x₂. x₂ = x₁(A₁/A₂) = 6.0 × (1/3)² = 6/9 = 0.67 cm." },
+    { q: "21. A car of mass 500 kg is lifted by a hydraulic jack that consist of two pistons. If the diameter of large and small pistons are 2 m and 20 cm respectively, then force required to lift the car by smaller piston is (take, g = 10 ms⁻²)", opts: ["5000 N", "25 N", "500 N", "50 N"], ans: 3, exp: "F₂ = F₁(A₂/A₁) = mg(r₂/r₁)² = 5000 × (0.1/1)² = 50 N." },
+    { q: "22. Consider a solid sphere of radius R and mass density ρ(r) = ρ₀(1 - r²/R²), 0 < r ≤ R. The minimum density of a liquid in which it will float is", opts: ["ρ₀ / 3", "2ρ₀ / 5", "2ρ₀ / 3", "ρ₀ / 5"], ans: 1, exp: "Mass of sphere M = ∫ρdV = ∫ρ₀(1 - r²/R²) 4πr² dr = (8/15)πρ₀R³. Volume = 4/3 πR³. Density of sphere = M/V = (8/15) / (4/3) ρ₀ = 2/5 ρ₀. For floating, ρ_liquid ≥ 2/5 ρ₀. Minimum density is 2ρ₀/5." },
+    { q: "23. An ice cube floats on water in a beaker with (9/10)th of its volume submerged under water. What fraction of its volume will be submerged, if the beaker of water is taken to the moon where the gravity is (1/6)th that on the earth?", opts: ["9/10", "27/50", "2/3", "Zero"], ans: 0, exp: "The fraction submerged depends on the ratio of densities (ρ_ice/ρ_water), which is independent of g. So it remains 9/10." },
+    { q: "24. A cubical block of steel of each side equal to l is floating on mercury in a vessel. The densities of steel and mercury are ρ_s and ρ_m. The height of the block above the mercury level is given by", img: "images/phy10-q24.png", opts: ["l(1 + ρ_s/ρ_m)", "l(1 - ρ_s/ρ_m)", "l(1 + ρ_m/ρ_s)", "l(1 - ρ_m/ρ_s)"], ans: 1, exp: "Let height above mercury be h. Submerged volume = l²(l-h). Weight of block = Weight of displaced mercury. ρ_s l³ g = ρ_m l²(l-h) g => l - h = l(ρ_s/ρ_m) => h = l(1 - ρ_s/ρ_m)." },
+    { q: "25. Two non-mixing liquids of densities ρ and nρ(n > 1) are put in a container. The height of each liquid is h. A solid cylinder of length L and density d is put in this container. The cylinder floats with its axis vertical and length pL (p < 1) in the denser liquid. The density d is equal to", img: "images/phy10-q25.png", opts: ["{2 + (n + 1)p}ρ", "{2 + (n - 1)p}ρ", "{1 + (n - 1)p}ρ", "{1 + (n + 1)p}ρ"], ans: 2, exp: "Weight = Buoyant force. A L d g = A(pL)(nρ)g + A(L - pL)ρg. d = pnρ + (1-p)ρ = ρ(1 + p(n - 1))." },
+    { q: "26. In a streamline flow,", opts: ["the speed of a particle always change", "the velocity of each particle always remains same at a given point", "the kinetic energies of all the particles arriving at a given point are the same", "the potential energies of all the particles arriving at a given point are the same"], ans: 1, exp: "In streamline flow, the velocity of every particle passing through a given point is the same at all times." },
+    { q: "27. In a turbulent flow, the velocity of the liquid molecules in contact with the walls of the tube is", opts: ["zero", "maximum", "equal to critical velocity", "may have any value"], ans: 0, exp: "Even in turbulent flow, the layer of fluid in contact with the solid wall is at rest (no-slip condition)." },
+    { q: "28. In a laminar flow, the velocity of the liquid in contact with the walls of the tube is", opts: ["zero", "maximum", "in between zero and maximum", "equal to critical velocity"], ans: 0, exp: "In laminar flow, the velocity of the liquid layer in contact with the wall is zero." },
+    { q: "29. In case of streamline flow of a fluid (which is incompressible), consider these streamlines A, B and C (as shown in the figure). Let P, Q and R are 3 planes perpendicular to the direction of flow of streamlines, then which of the following is correct?", img: "images/phy10-q29.png", opts: ["m_P > m_Q > m_R, where m = mass flow per second.", "v_P > v_Q > v_R", "n_P > n_Q > n_R, where n = number of fluid particles crossing area per unit time.", "m_P < m_Q < m_R"], ans: 1, exp: "From continuity equation, Av = constant. Streamlines are closer at P, farther at R. So area A_P < A_Q < A_R. Hence v_P > v_Q > v_R." },
+    { q: "30. An ideal fluid flows (laminar flow) through a pipe of non-uniform diameter. The maximum and minimum diameters of the pipes are 6.4 cm and 4.8 cm, respectively. The ratio of the minimum and the maximum velocities of fluid in this pipe is", opts: ["9/16", "81/256", "√3/2", "3/4"], ans: 0, exp: "v_min / v_max = A_max / A_min = (d_max / d_min)² = (4.8 / 6.4)² = (3/4)² = 9/16." },
+    { q: "31. A liquid flows through a pipe of varying diameter. The velocity of the liquid is 2 ms⁻¹ at a point, where the diameter is 6 cm. The velocity of the liquid at a point, where the diameter is 3 cm will be", opts: ["1 ms⁻¹", "4 ms⁻¹", "8 ms⁻¹", "16 ms⁻¹"], ans: 2, exp: "A₁v₁ = A₂v₂. v₂ = v₁(d₁/d₂)² = 2 × (6/3)² = 2 × 4 = 8 m/s." },
+    { q: "32. An incompressible liquid flows through a horizontal tube as shown (areas of tubes is marked), then the velocity v of the fluid is", img: "images/phy10-q32.png", opts: ["3.0 ms⁻¹", "1.5 ms⁻¹", "1.0 ms⁻¹", "2.25 ms⁻¹"], ans: 2, exp: "A₁v₁ = A₂v₂ + A₃v₃. A × 3 = A × 1.5 + 1.5A × v. 3 = 1.5 + 1.5v => 1.5v = 1.5 => v = 1.0 m/s." },
+    { q: "33. The cylindrical tube of a spray pump has radius R, one end of which has n fine holes, each of radius r. If the speed of the liquid in the tube is v, the speed of the ejection of the liquid through the holes is", opts: ["vR² / (n²r²)", "vR² / (nr²)", "vR² / (n³r²)", "v²R / (nr)"], ans: 1, exp: "A_tube × v = n × A_hole × v'. πR² × v = n × πr² × v' => v' = vR² / (nr²)." },
+    { q: "34. According to Bernoulli's equation, p/ρg + h + (1/2)(v²/g) = constant. The terms, p/ρg, h and (1/2)(v²/g) are generally called respectively:", opts: ["Gravitational head, pressure head and velocity head", "Gravity, gravitational head and velocity head", "Pressure head, gravitational head and velocity head", "Gravity, pressure and velocity head"], ans: 2, exp: "p/ρg is pressure head, h is gravitational head, and v²/2g is velocity head." },
+    { q: "35. Air is streaming past a horizontal airplane's wing such that its speed is 120 ms⁻¹ over the upper surface and 90 ms⁻¹ at the lower surface. If the density of air is 1.3 kgm⁻³ and the wing is 10 m long and has an average width of 2 m, then the difference of the pressure on the two sides of the wing is", opts: ["40950 Pa", "409.50 Pa", "40950 Pa", "4095.0 Pa"], ans: 0, exp: "ΔP = (1/2)ρ(v₂² - v₁²) = 0.5 × 1.3 × (120² - 90²) = 0.65 × (14400 - 8100) = 0.65 × 6300 = 4095 Pa." },
+    { q: "36. A wind with speed 40 ms⁻¹ blows parallel to the roof of a house. The area of the roof is 250 m². Assuming that the pressure inside the house is atmospheric pressure, the force exerted by the wind on the roof and the direction of the force will be (ρ_air = 1.2 kgm⁻³)", opts: ["2.4 × 10⁵ N, downwards", "4.8 × 10⁵ downwards", "4.8 × 10⁵ N, upwards", "2.4 × 10⁵ N, upwards"], ans: 3, exp: "ΔP = (1/2)ρv² = 0.5 × 1.2 × 40² = 960 Pa. Force = ΔP × A = 960 × 250 = 2.4 × 10⁵ N. Pressure above roof is less, so force is upwards." },
+    { q: "37. Determine the pressure difference in tube of non-uniform cross sectional area as shown in figure. Δp = ?, d₁ = 5 cm, v₁ = 4 m/s, d₂ = 2 cm.", img: "images/phy10-q37.png", opts: ["304200 Pa", "304500 Pa", "302500 Pa", "303500 Pa"], ans: 1, exp: "A₁v₁ = A₂v₂ => v₂ = v₁(d₁/d₂)² = 4 × (5/2)² = 25 m/s. ΔP = (1/2)ρ(v₂² - v₁²) = 0.5 × 1000 × (625 - 16) = 304500 Pa." },
+    { q: "38. A sealed tank has 2-openings as shown below. One at near top and other at near bottom. Let height of water filled above the bottom opening is h and a compressor producing a pressure p is connected to top opening. Velocity of water obtained from lower opening is (take, atmospheric pressure p_a such that p - p_a = ρgh)", img: "images/phy10-q38.png", opts: ["√(2gh)", "√(gh)", "2√(gh)", "0"], ans: 2, exp: "Apply Bernoulli's equation: p + ρgh = p_a + (1/2)ρv². v² = 2(p - p_a)/ρ + 2gh = 2(ρgh)/ρ + 2gh = 4gh => v = 2√(gh)." },
+    { q: "39. Water stands at a depth H in a tank whose side walls are vertical. A hole is made in one of the walls at a height h below the water surface. The stream of water emerging from the hole strikes the floor at a distance R from the tank, where R is given by", opts: ["R = √(h(H - h))", "R = √(h(H + h))", "R = 2√(h(H - h))", "R = 2√(h(H + h))"], ans: 2, exp: "v = √(2gh). Time to fall (H-h) is t = √(2(H-h)/g). R = v × t = √(2gh) × √(2(H-h)/g) = 2√(h(H-h))." },
+    { q: "40. If a small orifice is made at a height of 0.25 m from the ground as shown in figure below, the horizontal range of water stream will be", img: "images/phy10-q40.png", opts: ["46.5 cm", "56.6 cm", "76.6 cm", "(d) 86.6 cm"], ans: 3, exp: "H = 1m, h = 1 - 0.25 = 0.75 m. R = 2√(h(H-h)) = 2√(0.75 × 0.25) = 2√0.1875 = 2 × 0.433 = 0.866 m = 86.6 cm." },
+    { q: "41. A small hole of area of cross-section 2 mm² is present near the bottom of a fully filled open tank of height 2 m. Taking g = 10 m/s², the rate of flow of water through the open hole would be nearly", opts: ["8.9 × 10⁻⁶ m³/s", "2.23 × 10⁻⁶ m³/s", "6.4 × 10⁻⁶ m³/s", "12.6 × 10⁻⁶ m³/s"], ans: 3, exp: "v = √(2gh) = √(40) = 6.32 m/s. Q = A × v = 2×10⁻⁶ × 6.32 = 12.64 × 10⁻⁶ m³/s." },
+    { q: "42. A cylinder of height 20 m is completely filled with water. The velocity of efflux of water (in ms⁻¹) through a small hole on the side wall of the cylinder near its bottom is", opts: ["10", "20", "25.5", "5"], ans: 1, exp: "v = √(2gh) = √(2 × 10 × 20) = √400 = 20 m/s." },
+    { q: "43. A hole is made at the bottom of the tank filled with water (density 1000 kgm⁻³). If the total pressure at the bottom of the tank is 3 atm (1 atm = 10⁵ Nm⁻²), then the velocity of efflux is", opts: ["√200 ms⁻¹", "√400 ms⁻¹", "√500 ms⁻¹", "√800 ms⁻¹"], ans: 1, exp: "P_total = P_atm + ρgh. 3×10⁵ = 10⁵ + 10³×10×h => h = 20m. v = √(2gh) = √(2×10×20) = √400 m/s." },
+    { q: "44. The applications of venturimeter is/are", opts: ["carburetor of an automobile", "sprayers", "filler pumps", "All of the above"], ans: 3, exp: "Venturimeter is used in carburetors, sprayers, and filler pumps." },
+    { q: "45. The flow of blood in a large artery of an anaesthetised dog is diverted through a venturimeter. The wider part of the meter has a cross-sectional area equal to that of the artery, A = 8 mm². The narrower part has an area, a = 4 mm² and density of blood, ρ = 1.06 × 10³ kgm⁻³. The pressure drop in the artery is 24 Pa, then what is the speed of the blood in the artery?", opts: ["0.5 ms⁻¹", "0.125 ms⁻¹", "1.25 ms⁻¹", "2.5 ms⁻¹"], ans: 1, exp: "v = √(2ΔP / ρ((A/a)² - 1)) = √(2×24 / (1060×((8/4)² - 1))) = √(48 / (1060×3)) = √(48/3180) = √0.0151 ≈ 0.123 m/s." },
+    { q: "46. Just before 'Heart attack', velocity of blood flow through the affected 'artery'", opts: ["increases", "decreases", "remains same", "stopped"], ans: 0, exp: "Due to constriction of artery, area decreases, so velocity increases (continuity equation)." },
+    { q: "47. A ball is moving without spinning in a straight line through a fluid (as shown). If p_A and p_B are pressure values at A and B, then", img: "images/phy10-q47.png", opts: ["p_A < p_B", "p_B < p_A", "p_A × p_B = 1", "p_A / p_B = 1"], ans: 0, exp: "Streamlines are closer at B, so velocity is higher at B. By Bernoulli's principle, higher velocity means lower pressure. So p_B < p_A." },
+    { q: "48. A ball is moving in a straight line through a fluid which is spinning around its own centre of mass as shown. Then, the ball experiences", img: "images/phy10-q48.png", opts: ["an upward force", "a downward force", "a leftward force", "no force at all"], ans: 0, exp: "Due to spinning, velocity of fluid is higher above the ball and lower below. By Bernoulli's theorem, pressure is lower above, resulting in an upward force (Magnus effect)." },
+    { q: "49. A fully loaded boeing aircraft has a mass of 3.3 × 10⁵ kg. Its total wing area is 500 m². It is in level flight with a speed of 960 kmh⁻¹. (i) Estimate the pressure difference between the lower and upper surfaces of the wings (ii) Estimate the fractional increase in the speed of the air on the upper surface of the wing relative to the lower surface. The density of air is ρ = 1.2 kgm⁻³.", opts: ["6.5 × 10³ Nm⁻², 0.01", "6.5 × 10³ Nm⁻², 0.09", "6.5 × 10³ Nm⁻², 0.08", "2.5 × 10³ Nm⁻², 0.02"], ans: 1, exp: "ΔP = mg/A = (3.3×10⁵ × 9.8) / 500 = 6.468 × 10³ Pa ≈ 6.5×10³ Nm⁻². Fractional increase = ΔP / (0.5ρv²) = 6.5×10³ / (0.5×1.2×(267)²) ≈ 0.08." },
+    { q: "50. As the temperature of water increases, its viscosity", opts: ["remains unchanged", "decreases", "increases", "increases or decreases depending on the external pressure"], ans: 1, exp: "For liquids, viscosity decreases with increase in temperature." },
+    { q: "51. The coefficient of viscosity for hot air is", opts: ["greater than the coefficient of viscosity for cold air", "smaller than the coefficient of viscosity for cold air", "same as the coefficient of viscosity for cold air", "increases or decreases depending on the external pressure"], ans: 0, exp: "For gases, viscosity increases with temperature. So hot air has greater viscosity." },
+    { q: "52. We have three beakers A, B and C containing three different liquids. They are stirred vigorously and placed on a table, then liquid which is", opts: ["most viscous comes to rest at the earliest", "most viscous comes to rest at the last", "most viscous slows down earliest but comes to rest at the last", "All of them come to rest at the same time"], ans: 1, exp: "Most viscous liquid offers maximum resistance, so it takes the longest time to come to rest (energy dissipates slowly)." },
+    { q: "53. A metal block of area 0.10 m² is connected to a 0.010 kg mass via a string that passes over an ideal pulley (considered massless and frictionless), as in figure. A liquid with a film thickness of 0.30 mm is placed between the block and the table. When released the block moves to the right with a constant speed of 0.085 ms⁻¹, find the coefficient of viscosity of the liquid.", img: "images/phy10-q53.png", opts: ["4 × 10⁻² Pa·s", "3.45 × 10⁻³ Pa·s", "5 × 10⁻² Pa·s", "7 × 10⁻⁷ Pa·s"], ans: 1, exp: "F = mg = 0.01 × 9.8 = 0.098 N. Stress = F/A = 0.098 / 0.1 = 0.98 N/m². Velocity gradient = v/x = 0.085 / (0.3×10⁻³) = 283.3. η = Stress / gradient = 0.98 / 283.3 = 3.45 × 10⁻³ Pa·s." },
+    { q: "54. A rain drop of radius 0.3 mm has a terminal velocity in air 1 ms⁻¹. The viscosity of air is 18 × 10⁻⁵ poise. Find the viscous force on the rain drops.", opts: ["5.02 × 10⁻⁷ N", "1.018 × 10⁻⁷ N", "1.05 × 10⁻⁷ N", "2.058 × 10⁻⁷ N"], ans: 1, exp: "F = 6πηrv = 6 × 3.14 × (18 × 10⁻⁶ Pa·s) × (0.3 × 10⁻³ m) × 1 m/s = 1.018 × 10⁻⁷ N." },
+    { q: "55. Which one shows the variation of the velocity v with time t for a small sized spherical body falling in a column of a viscous liquid?", img: "images/phy10-q55.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 3, exp: "Initially velocity increases, but viscous drag increases. Finally it reaches a constant terminal velocity. Graph (d) shows this." },
+    { q: "56. A small drop of water falls from rest through a large height h in air, the final velocity is proportional to", opts: ["√h", "h", "1/h", "h⁰"], ans: 3, exp: "The final velocity is the terminal velocity, which is independent of the height of fall (as long as it's large enough to reach terminal velocity). v ∝ h⁰." },
+    { q: "57. The terminal velocity of a copper ball of radius 2.0 mm falling through a tank of oil at 20°C is 6.5 cms⁻¹. Compute the viscosity of the oil at 20°C. Density of oil is 1.5 × 10³ kgm⁻³ and density of copper is 8.9 × 10³ kgm⁻³.", opts: ["1 × 10⁻¹ kgm⁻¹s⁻¹", "9.9 × 10⁻¹ kgm⁻¹s⁻¹", "24.3 × 10⁻² kgm⁻¹s⁻¹", "2 × 10⁻² kgm⁻¹s⁻¹"], ans: 1, exp: "η = 2r²(ρ - σ)g / (9v) = 2 × (2×10⁻³)² × (8900 - 1500) × 9.8 / (9 × 0.065) = 9.9 × 10⁻¹ kg/m·s." },
+    { q: "58. If ratio of terminal velocity of two drops falling in air is 3 : 4, then what is the ratio of their surface area?", opts: ["2/3", "3/4", "4/3", "3/2"], ans: 1, exp: "v_t ∝ r². r₁/r₂ = √(v₁/v₂) = √(3/4) = √3/2. Area A ∝ r². A₁/A₂ = (r₁/r₂)² = 3/4." },
+    { q: "59. Consider two solid spheres P and Q each of density 8 g cm⁻³ and diameters 1 cm and 0.5 cm, respectively. Sphere P is dropped into a liquid of density 0.8 g cm⁻³ and viscosity η = 3 poiseuille. Sphere Q is dropped into a liquid of density 1.6 g cm⁻³ and viscosity η = 2 poiseuille. The ratio of the terminal velocities of P and Q is", opts: ["3 : 1", "9 : 1", "2 : 4", "4 : 2"], ans: 1, exp: "v_t ∝ r²(ρ - σ)/η. v_P/v_Q = (r_P/r_Q)² × [(ρ - σ_P)/(ρ - σ_Q)] × (η_Q/η_P) = (1/0.5)² × [(8 - 0.8)/(8 - 1.6)] × (2/3) = 4 × (7.2/6.4) × (2/3) = 4 × 1.125 × 0.667 = 3. So 3:1." },
+    { q: "60. Two small spherical metal balls, having equal masses are made from materials of densities ρ₁ and ρ₂ (ρ₁ = 8ρ₂) and have radii of 1 mm and 2 mm, respectively. They are made to fall vertically (from rest) in viscous medium whose coefficient of viscosity equals η and whose density is 0.1ρ₂. The ratio of their terminal velocities would be", opts: ["79/72", "19/36", "39/72", "79/36"], ans: 0, exp: "v_t ∝ r²(ρ - σ)/η. v₁/v₂ = (r₁/r₂)² × (ρ₁ - σ)/(ρ₂ - σ) = (1/2)² × (8ρ₂ - 0.1ρ₂)/(ρ₂ - 0.1ρ₂) = (1/4) × (7.9/0.9) = 79/36." },
+    { q: "61. A small sphere of radius r falls from rest in a viscous liquid. As a result, heat is produced due to viscous force. The rate of production of heat when the sphere attains its terminal velocity, is proportional to", opts: ["r⁵", "r²", "r³", "r⁴"], ans: 0, exp: "Rate of heat = F_v × v_t = (6πηrv_t) × v_t = 6πηr v_t². Since v_t ∝ r², rate ∝ r × (r²)² = r⁵." },
+    { q: "62. Surface tension is due to", opts: ["frictional forces between molecules", "cohesive forces between molecules", "adhesive forces between molecules", "Both (b) and (c)"], ans: 1, exp: "Surface tension arises primarily due to cohesive forces between the molecules of the liquid." },
+    { q: "63. The surface tension of a liquid at its boiling point", opts: ["becomes zero", "becomes infinity", "is equal to the value at room temperature", "is half to the value at room temperature"], ans: 0, exp: "At boiling point, the liquid and vapour are in equilibrium, the cohesive forces effectively vanish, so surface tension becomes zero." },
+    { q: "64. A liquid film is formed over a frame ABCD as shown in figure. Wire CD can slide without friction. Maximum value of mass that can be hanged from CD without breaking the liquid film is", img: "images/phy10-q64.png", opts: ["Tl / g", "2Tl / g", "g / 2Tl", "T × l"], ans: 1, exp: "Upward force due to surface tension = 2Tl (two surfaces). For equilibrium, mg = 2Tl => m = 2Tl/g." },
+    { q: "65. The force required to separate two glass plates of 10⁻² m² with a film of water 0.05 mm thick between them, is (surface tension of water is 70 × 10⁻³ Nm⁻¹)", opts: ["28 N", "14 N", "50 N", "38 N"], ans: 0, exp: "F = 2TA / t = 2 × (70×10⁻³) × 10⁻² / (0.05×10⁻³) = 28 N." },
+    { q: "66. A 10 cm long wire is placed horizontally on the surface of water and is gently pulled up with a force of 2 × 10⁻² N. To keep the wire in equilibrium, the surface tension in Nm⁻¹ of water is", opts: ["0.1", "0.2", "0.001", "0.002"], ans: 0, exp: "F = 2Tl => T = F/(2l) = 2×10⁻² / (2 × 0.1) = 0.1 N/m." },
+    { q: "67. A wooden stick 2 m long is floating on the surface of water. The surface tension of water is 0.07 Nm⁻¹. By putting soap solution on one side of the stick, the surface tension is reduced to 0.06 Nm⁻¹. The net force on the stick will be", opts: ["0.07 N", "0.06 N", "0.01 N", "0.02 N"], ans: 3, exp: "Net force = (T₁ - T₂) × L = (0.07 - 0.06) × 2 = 0.02 N." },
+    { q: "68. A thin liquid film is formed between a U-shaped wire and a light slider, supporting a weight of 1.5 × 10⁻² N as shown in the figure. The length of the slider is 30 cm and its weight is negligible. The surface tension of the liquid film is", img: "images/phy10-q68.png", opts: ["0.0125 Nm⁻¹", "0.1 Nm⁻¹", "0.05 Nm⁻¹", "0.025 Nm⁻¹"], ans: 3, exp: "Weight = 2Tl => 1.5×10⁻² = 2 × T × 0.3 => T = 1.5×10⁻² / 0.6 = 0.025 N/m." },
+    { q: "69. The shape of drops and bubbles are spherical due to its", opts: ["surface with minimum energy", "surface with maximum energy", "high pressure", "low pressure"], ans: 0, exp: "A liquid drop tends to minimize its surface area to minimize surface energy. The shape with the minimum surface area for a given volume is a sphere." },
+    { q: "70. A spherical drop of radius r is in equilibrium. The extra surface energy, if radius of bubble is increased by Δr, is (S = surface tension)", opts: ["4πr Δr S", "8πr Δr S", "2πr Δr S", "10πr Δr S"], ans: 1, exp: "ΔE = S × ΔA = S × (4π(r+Δr)² - 4πr²) = S × 8πrΔr (neglecting Δr²)." },
+    { q: "71. In figure below, pressure inside a spherical drop is more than pressure outside. If a liquid drop is in equilibrium, then the pressure difference between the inside and outside of the drop is", img: "images/phy10-q71.png", opts: ["2S_la / r", "S_la / r", "4S_la / r", "2r / S_la"], ans: 0, exp: "Excess pressure inside a liquid drop is ΔP = 2S/r (one surface)." },
+    { q: "72. A small spherical droplet of density d is floating exactly half immersed in a liquid of density ρ and surface tension T. The radius of the droplet is (take note that the surface tension applies an upward force on the droplet)", img: "images/phy10-q72.png", opts: ["r = √(3T / (2d - ρ)g)", "r = √(T / (d - ρ)g)", "r = √(T / (d + ρ)g)", "r = √(2T / (3(d + ρ)g))"], ans: 0, exp: "Weight = Buoyant force + Surface tension force. d(4/3)πr³g = ρ(1/2)(4/3)πr³g + T(2πr). Solving gives r² = 3T / (g(2d - ρ))." },
+    { q: "73. A soap bubble of radius r is blown up to form a bubble of radius 3r under isothermal conditions. If σ is the surface tension of soap solution, the energy spent in blowing is", opts: ["3πσr²", "6πσr²", "12πσr²", "64πσr²"], ans: 3, exp: "Energy = 2 × S × 4π(R² - r²) = 8πσ((3r)² - r²) = 8πσ(8r²) = 64πσr²." },
+    { q: "74. Two small drops of mercury, each of radius r, coalesce to form a single large drop of radius R. The ratio of the total surface energies before and after the change is", opts: ["1 : 2^(1/3)", "2^(1/3) : 1", "2 : 1", "1 : 2"], ans: 1, exp: "Volume conservation: 2(4/3 πr³) = 4/3 πR³ => R = 2^(1/3)r. E_i/E_f = (2 × 4πr²) / (4πR²) = 2(r/R)² = 2(1/2^(2/3)) = 2^(1/3)." },
+    { q: "75. A certain number of spherical drops of a liquid of radius r coalesce to form a single drop of radius R and volume V. If T is the surface tension of the liquid, then", opts: ["energy = 3VT(1/r - 1/R) is released", "energy is neither released nor absorbed", "energy = 4VT(1/r - 1/R) is released", "energy = 3VT(1/r + 1/R) is absorbed"], ans: 0, exp: "Volume V = n(4/3)πr³ = (4/3)πR³. Energy released = S × ΔA = T(4πR² - n4πr²). Simplifying gives 3VT(1/r - 1/R)." },
+    { q: "76. In a soap bubble, pressure difference is", img: "images/phy10-q76.png", opts: ["2S_la / r", "4S_la / r", "S_la / r", "8S_la / r"], ans: 1, exp: "Soap bubble has two surfaces. Excess pressure = 4S/r." },
+    { q: "77. The excess pressure inside an air bubble of radius r just below the surface of water is p₁. The excess pressure inside a drop of the same radius just outside the surface is p₂. If T is the surface tension, then", opts: ["p₁ = 2p₂", "p₁ = p₂", "p₂ = 2p₁", "p₂ = 0, p₁ ≠ 0"], ans: 1, exp: "Air bubble inside water has 1 surface (p₁ = 2T/r). Drop outside has 1 surface (p₂ = 2T/r). So p₁ = p₂." },
+    { q: "78. The surface tension of water at temperature of the experiment is 7.30 × 10⁻² Nm⁻¹. (1 atm pressure = 1.01 × 10⁵ Pa, density of water = 1000 kgm⁻³ and g = 980 ms⁻²). Calculate the pressure inside a bubble of radius 1mm.", opts: ["3 × 10² Pa", "8 × 10⁴ Pa", "(c) 1.01 × 10⁵ Pa", "7 × 10³ Pa"], ans: 2, exp: "P = P_atm + 2T/r = 1.01×10⁵ + (2 × 7.3×10⁻²) / 10⁻³ = 1.01×10⁵ + 146 = 1.01146 × 10⁵ Pa." },
+    { q: "79. A soap bubble, blown by a mechanical pump at the mouth of a tube, increases in volume, with time, at a constant rate. The graph that correctly depicts the time dependence of pressure inside the bubble is given by", img: "images/phy10-q79.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 1, exp: "V = (4/3)πr³ = kt => r ∝ t^(1/3). P = 4T/r ∝ t^(-1/3). So P decreases with time. Slope dP/dt is negative and decreasing in magnitude. Graph (b) is a straight line p vs 1/t, wait. The question asks for time dependence, P = k/t^(1/3)." },
+    { q: "80. A soap bubble having radius of 1 mm is blown from a detergent solution having a surface tension of 2.5 × 10⁻² N/m. The pressure inside the bubble equals at a point Z₀ below the free surface of water in a container. Taking, g = 10 m/s² and density of water = 10³ kg/m³, the value of Z₀ is", img: "images/phy10-q80.png", opts: ["10 cm", "1 cm", "0.5 cm", "100 cm"], ans: 1, exp: "P_bubble = P_atm + 4T/r. At depth Z₀, P = P_atm + ρgZ₀. 4T/r = ρgZ₀. Z₀ = 4(2.5×10⁻²) / (10³ × 10 × 10⁻³) = 0.1/10 = 0.01 m = 1 cm." },
+    { q: "81. If the air bubble of radius r is formed at a depth h inside the container of soap solution of density ρ, the total pressure inside the bubble is (here, p_o denotes the atmospheric pressure and σ denotes surface tension)", opts: ["2σ/r + hρg", "2σ/r - hρg", "2σ/r + p_o + hρg", "2σ/r + p_o - hρg"], ans: 2, exp: "Total pressure = P_atm + hρg + 2σ/r (since it's an air bubble in liquid, 1 surface)." },
+    { q: "82. The lower end of a capillary tube of diameter 2.00 mm is dipped 8.00 cm below the surface of water in a beaker. What is the pressure required in the tube in order to blow a hemispherical bubble at its end in water?", img: "images/phy10-q82.png", opts: ["2 × 10⁵ Pa", "1.01784 × 10⁵ Pa", "3 × 10³ Pa", "2.438 × 10⁵ Pa"], ans: 1, exp: "P = P_atm + hρg + 2T/r = 1.01×10⁵ + 0.08×1000×9.8 + (2×0.073)/0.001 = 1.01×10⁵ + 784 + 146 = 1.0178 × 10⁵ Pa." },
+    { q: "83. Water rises to a height h in capillary tube. If the length of capillary tube above the surface of water is less than h, then", img: "images/phy10-q83.png", opts: ["water rises upto the tip of capillary tube and then starts overflowing like a fountain", "water rises upto the top of capillary tube and stays there without overflowing", "water rises upto a point a little below the top and stays there", "water does not rise at all"], ans: 1, exp: "If tube length is less than h, the water reaches the top but does not overflow. The meniscus flattens to adjust the radius of curvature." },
+    { q: "84. Find the height of liquid in capillary tube, if surface tension of liquid = S, radius of capillary tube = r and acceleration due to gravity = g.", img: "images/phy10-q84.png", opts: ["2S cos θ / (ρrg)", "2S / (ρrg cos θ)", "2S sin θ / (ρrg)", "None of these"], ans: 0, exp: "Height h = 2S cos θ / (ρrg)." },
+    { q: "85. A capillary tube A is dipped in water. Another identical tube B is dipped in soap-water solution. Which of the following shows the relative nature of the liquid columns in the two tubes?", img: "images/phy10-q85.png", opts: ["Figure (a)", "Figure (b)", "Figure (c)", "Figure (d)"], ans: 3, exp: "Soap solution has lower surface tension than water, so capillary rise is less in B. Figure (d) shows this." },
+    { q: "86. Two capillaries made of same material but of different radii are dipped in a liquid. The rise of liquid in one capillary is 2.2 cm and that in the other is 6.6 cm. The ratio of their radii is", opts: ["9 : 1", "1 : 9", "3 : 1", "1 : 3"], ans: 3, exp: "h ∝ 1/r. r₁/r₂ = h₂/h₁ = 6.6/2.2 = 3. So r₁:r₂ = 3:1." },
+    { q: "87. If M is the mass of water that rises in a capillary tube of radius r, then mass of water which will rise in a capillary tube of radius 2r is", opts: ["2M", "4M", "M/2", "M"], ans: 0, exp: "h ∝ 1/r. Mass m = ρ × πr²h ∝ r² × (1/r) = r. So if radius is doubled, mass is doubled. m' = 2M." },
+    { q: "88. The lower end of a capillary tube of radius r is placed vertically in water. Then, with the rise of water in the capillary, heat evolved is", img: "images/phy10-q88.png", opts: ["+ (π²r²h²dg)/2", "− (π²r²h²dg)/2", "− (π²r²h²dg)/2", "− (π²r²h²dg)/2"], ans: 1, exp: "Loss of potential energy = heat evolved. PE = mg(h/2) = (πr²hρ) g (h/2) = (1/2)πr²h²ρg. So heat evolved = (1/2)πr²h²dg." },
+    { q: "89. Assertion: Pressure is not a vector quantity.\nReason: No direction can be assigned to pressure.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Pressure is a scalar quantity because it acts equally in all directions and no specific direction can be assigned. Both A and R are correct and R explains A." },
+    { q: "90. Assertion: In steady flow, the velocity of each passing fluid particle remains constant in time.\nReason: Each particle follows a smooth path and the paths of the particle do not cross each other.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Steady flow means velocity at a given point is constant. Streamlines don't cross. Both A and R are correct and R explains A." },
+    { q: "91. Assertion: In streamline flow, A × v is constant.\nReason: For incompressible flow, mass in = mass out.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Equation of continuity (Av = constant) comes from conservation of mass. Both A and R are correct and R explains A." },
+    { q: "92. Assertion: The stream of water flowing at high speed from a garden horse pipe tend to spread like a fountain when held vertically up, but tends to narrow down when held vertically down.\nReason: Speed of upstream decreases as its area of cross-section increases and speed of downstream increases as its area of cross-section decreases.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Upward: velocity decreases (gravity), area increases (spreads). Downward: velocity increases, area decreases. Both A and R are correct and R explains A." },
+    { q: "93. Assertion: The steady flow of a liquid over a horizontal surface in the form of layers of different velocity is called turbulent flow.\nReason: When a fluid is flowing in a pipe, then velocity of the liquid layer along the axis of tube is maximum and decreases gradually as it move towards wall.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Steady flow in layers is laminar flow, not turbulent. Assertion is incorrect. Reason is correct." },
+    { q: "94. Assertion: The shape of an automobile is so designed that its front resembles the streamline pattern of the fluid through which it moves.\nReason: The resistance offered by the fluid is not maximum.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "Streamlined shape reduces drag. Both A and R are correct but R is not the correct explanation (it's a consequence, not the reason)." },
+    { q: "95. Assertion: The machine parts are jammed in winter.\nReason: The viscosity of the lubricants used in the machine increases at low temperature.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Viscosity increases at low temperature, making the lubricant thick and jamming the machine. Both A and R are correct and R explains A." },
+    { q: "96. Assertion: Water flows faster than honey.\nReason: The coefficient of viscosity of water is less than honey.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Low viscosity means less resistance to flow, so water flows faster. Both A and R are correct and R explains A." },
+    { q: "97. Assertion: All the rain drops hit the surface of the earth with the same constant velocity.\nReason: An object falling through a viscous medium eventually attains a terminal velocity.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "Raindrops hit with terminal velocity, but it depends on the size of the drop (v_t ∝ r²). So not all have the same velocity. Both A and R are correct but R is not the correct explanation of A." },
+    { q: "98. Assertion: No net force acts on a body falling in a liquid with a velocity equal to the terminal velocity.\nReason: The weight of the body is balanced by the upward buoyant force.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "At terminal velocity, net force is zero. But weight is balanced by buoyant force PLUS viscous force, not just buoyant force. Assertion is correct but Reason is incorrect." },
+    { q: "99. Assertion: A fluid will stick to a solid surface.\nReason: Surface energy between fluid and solid is smaller than the sum of surface energies between solid-air and liquid-air interface.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "If S_sl < S_sa + S_la, the liquid wets the solid. Both A and R are correct and R explains A." },
+    { q: "100. Assertion: Sometimes insects can walk on the surface of water.\nReason: The gravitational force on insect is balanced by force due to surface tension.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Surface tension provides the upward force to balance the insect's weight. Both A and R are correct and R explains A." },
+    { q: "101. Assertion: A bubble differs from a drop as it has two interfaces.\nReason: Excess pressure inside a drop is directly proportional to its surface area.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Bubble has 2 interfaces (inside and outside), drop has 1. Assertion is correct. Excess pressure P = 2S/r, so it is inversely proportional to radius, not directly proportional to area. Reason is incorrect." },
+    { q: "102. Assertion: The surface of water in the capillary tube is concave.\nReason: The pressure difference between two sides of the top surface of water is (2S/a) cos θ.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Water meniscus is concave because pressure just below is less than atmospheric. Both A and R are correct and R explains A." },
+    { q: "103. Assertion: Smaller drop of water resist deformation forces better than the larger drops.\nReason: Excess pressure inside drop is inversely proportional to its radius.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Excess pressure is higher for smaller drops (P ∝ 1/r), so they resist deformation better. Both A and R are correct and R explains A." },
+    { q: "104. Assertion: Ploughing a field reduces evaporation of water from the ground beneath.\nReason: Ploughing results in lowering of surface area open to sunlight.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Ploughing breaks capillaries so water doesn't reach the surface. But it INCREASES surface area open to sunlight. So Assertion is correct but Reason is incorrect." },
+    { q: "105. Assertion: Washing with water does not remove grease stains.\nReason: Water does not wet greasy dirt.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Water does not wet grease because adhesive force is less than cohesive force. So it doesn't remove stains. Both A and R are correct and R explains A." },
+    { q: "106. I. Atoms or molecules in a fluid are arranged in a random manner.\nII. A fluid can withstand tangential or shearing stress for an indefinite period.\nIII. A fluid has no definite shape of its own.\nWhich of the following statement (s) is/are correct?", opts: ["Only I", "Both I and III", "Only III", "I, II and III"], ans: 1, exp: "Statements I and III are correct. Fluids cannot withstand shearing stress for an indefinite period (they flow). II is incorrect." },
+    { q: "107. In streamline flow, which of the following statement(s) is/are correct?\nI. Every fluid particle follows the path of its preceding particle with same velocity.\nII. Eddies and whirls are formed.\nIII. Speed of particle is less than the critical speed.", opts: ["Only I", "Both I and II", "Only III", "Both II and III"], ans: 2, exp: "In streamline flow, speed is less than critical speed (III). Eddies are formed in turbulent flow. I is partially correct but not the best definition." },
+    { q: "108. I. Turbulence dissipates kinetic energy in the form of heat.\nII. Turbulence like friction is sometimes desirable.\nIII. Turbulence promotes mixing and increases the rate of transfer of mass, momentum and energy.\nWhich of the following statement(s) is/are correct?", opts: ["Only I", "Both II and III", "Both I and III", "I, II and III"], ans: 3, exp: "All three statements are correct. Turbulence dissipates energy as heat, can be desirable (mixing), and increases transfer rates." },
+    { q: "109. I. Bernoulli's equation ideally applies to non-viscous fluids.\nII. Fluid must be compressible in Bernoulli's theorem.\nIII. Bernoulli's equation does not hold for non-steady flow.\nWhich of the following statement(s) is/are correct?", opts: ["Both I and II", "Only I", "Both I and III", "Only II"], ans: 2, exp: "Bernoulli's applies to non-viscous (I) and incompressible fluids. It holds for steady flow, so III is correct. II is incorrect. Hence I and III are correct." },
+    { q: "110. For an aerofoil, which of the following are correct?\nI. The orientation of the wing relative to flow direction causes the streamlines to crowd above wing surface.\nII. Flow speed on top is lower than that below it.\nIII. Upward force results in a dynamic lift of the wings.", opts: ["Only I", "Both I and II", "Only III", "Both I and III"], ans: 3, exp: "Streamlines crowd above (I), speed on top is higher (II is wrong), resulting in upward lift (III). So I and III are correct." },
+    { q: "111. I. Stress depends on the rate of change of strain or strain rate.\nII. The coefficient of viscosity for a fluid is defined as the ratio of shearing stress to the strain rate.\nIII. The SI unit of viscosity is Poiseuille (PI).\nWhich of the following statement(s) is/are correct?", opts: ["Only I", "Both I and II", "Only II", "I, II and III"], ans: 3, exp: "Viscosity relates shearing stress to strain rate (I, II). SI unit is Poiseuille (III). All statements are correct." },
+    { q: "112. I. Viscous force is proportional to the velocity of the object.\nII. Viscous is a dragging force which acts opposite to the direction of motion.\nIII. Viscous force depends on viscosity η of the fluids and radius r of the sphere.\nWhich of following statement(s) is/are correct?", opts: ["Only I", "Both I and II", "Only III", "I, II and III"], ans: 3, exp: "By Stokes' law, F = 6πηrv. It is proportional to v, opposite to motion, and depends on η and r. All are correct." },
+    { q: "113. A thin uniform cylindrical sheet, closed at both ends,is partially filled with water. It is floating vertically in water in half-submerged state. If ρ_c is the relative density of the material of the shell with respect to water, then the correct statement is that the shell is", opts: ["more than half filled, if ρ_c is less than 0.5.", "more than half filled, if ρ_c is more than 1.0.", "half filled, if ρ_c is more than 0.5.", "less than half filled, if ρ_c is less than 0.5."], ans: 0, exp: "Let V be total volume, V_water be water volume. For half submerged: ρ_c V + ρ_w V_water = ρ_w(V/2). V_water/V = 0.5 - ρ_c. Since V_water > 0, ρ_c < 0.5. If ρ_c < 0.5, V_water > 0 (more than half filled? No, V_water is fraction. If ρ_c=0.4, V_water=0.1V. This means less than half filled. So (a) is wrong)." },
+    { q: "114. A hydraulic lift has limbs of areas A₁ and A₂ (A₁ >> A₂). A piston creates a force F₂ in small limb to balance a large force F₁. Which of the following statement is correct?", img: "images/phy10-q114.png", opts: ["F₂ ∝ A₁ / A₂", "Work done by F₁ > Work done by F₂", "Pressure in small area limb is more than pressure in large area limb.", "If piston of small area limb has velocity v₂ and piston of large area limb as velocity v₁, then v₂/v₁ = A₁/A₂"], ans: 3, exp: "A₁v₁ = A₂v₂ => v₂/v₁ = A₁/A₂. (F₂ is small, work done is same, pressure is same)." },
+    { q: "115. Which amongst the following statement is incorrect?", opts: ["A jet of air striking a plate placed perpendicular to it is an example of turbulent flow.", "The carburetor of automobile has a venturi channel (nozzle) through which air flows with a high speed.", "Ball moving without spinning inside a fluid experiences a net upward force.", "None of the above"], ans: 2, exp: "A non-spinning ball in a uniform fluid experiences no net upward force (streamlines are symmetric). Statement (c) is incorrect." },
+    { q: "116. An object is moving through a viscous fluid. Which of the following statement is incorrect?", img: "images/phy10-q116.png", opts: ["Viscous force on object decreases with increase in temperature.", "Viscous force depends on velocity of object.", "Viscous force decreases if object is made pointed.", "Viscous force is directed anti-parallel to velocity of flow."], ans: 0, exp: "For liquids, viscosity decreases with temperature, so viscous force decreases. For gases, it increases. Statement (a) is not universally true, but (d) is anti-parallel. Let's check: force is opposite to velocity, so (d) is correct. (a) is incorrect for gases." },
+    { q: "117. A liquid is kept in a bowl opened to atmosphere. Consider two consecutive layers A and B as shown above, which of the following statement(s) is/are correct?", img: "images/phy10-q117.png", opts: ["Total energy of surface A = Total energy of surface B.", "Number of molecules in surface A > Number of molecules in surface B.", "Energy of a molecule of layer B is nearly half of energy of layer A.", "Net force on a molecule of surface B is zero."], ans: 3, exp: "Molecules at surface A have higher potential energy. Layer B is inside, forces are balanced (net force zero). So (d) is correct." },
+    { q: "118. A small drop is formed using a dropper over a clean solid surface, then which of the following statement(s) is/are correct? Where, S_la = surface force of liquid and air, S_sa = surface force of solid and air and S_ls = surface force of liquid and solid.", img: "images/phy10-q118.png", opts: ["If S_ls > S_la, then angle of contact is less than 90°.", "If S_ls > S_la, then angle of contact is equal to 90°.", "If S_ls > S_la, then liquid spreads over solid surface.", "If S_ls > S_la, then liquid does not spread on solid surface."], ans: 3, exp: "If S_ls > S_la, then cos θ = (S_sa - S_ls)/S_la < 0, so θ > 90°. Liquid does not wet/spread. Statement (d) is correct." },
+    { q: "119. Match the Column I (terms or quantities) with Column II (dimensions) and select the correct answer from the codes given below.\n\nColumn I:\nA. Coefficient of viscosity\nB. Density\nC. Surface tension\nD. Reynold's number\n\nColumn II:\n1. [ML⁰T⁻²]\n2. [M⁰L⁰T⁰]\n3. [ML⁻¹T⁻¹]\n4. [ML⁻³T⁰]", img: "images/phy10-q119.png", opts: ["A-2, B-3, C-4, D-1", "A-3, B-4, C-1, D-2", "A-3, B-4, C-1, D-2", "A-1, B-2, C-3, D-4"], ans: 1, exp: "Viscosity (3), Density (4), Surface tension (1), Reynolds number (2). Hence A-3, B-4, C-1, D-2." },
+    { q: "120. Match the Column I (situation) with Column II (reason or principle) and select the correct answer from the codes given below.\n\nColumn I:\nA. Hydraulic lift\nB. A razor blade can be made to float on water surface in a tray.\nC. The dam of water reservoir is made thick at the bottom level.\nD. Ship is floating on ocean water.\n\nColumn II:\n1. Archimedes' principle\n2. Pascal's law\n3. Surface tension\n4. Pressure", img: "images/phy10-q120.png", opts: ["A-2, B-3, C-4, D-1", "A-4, B-3, C-2, D-1", "A-4, B-1, C-3, D-2", "A-1, B-2, C-3, D-4"], ans: 0, exp: "Hydraulic lift (Pascal: 2), Razor floating (Surface tension: 3), Dam thick at bottom (Pressure: 4), Ship floating (Archimedes: 1). Hence A-2, B-3, C-4, D-1." },
+    { q: "121. Match the Column I (situation) with Column II (value or changes) and select the correct answer from the codes given below.\n\nColumn I:\nA. When a single drop splits into n-identical drops, then\nB. When n-identical drops combine to form a single drop, then\nC. The surface tension of a liquid drop decreases, for\nD. The surface tension of water at boiling temperature is\n\nColumn II:\n1. Zero\n2. Temperature increase\n3. Energy absorbed\n4. Energy released", img: "images/phy10-q121.png", opts: ["A-3, B-4, C-1, D-2", "A-3, B-4, C-2, D-1", "A-4, B-3, C-1, D-2", "A-1, B-2, C-3, D-4"], ans: 1, exp: "Splitting -> energy absorbed (A-3). Combining -> energy released (B-4). Surface tension decreases with temperature increase (C-2). At boiling, zero (D-1). Hence A-3, B-4, C-2, D-1." },
+    { q: "122. A 50 kg girl wearing high heel shoes balances on a single heel. The heel is circular with the diameter 1.0 cm. What is the pressure exerted on the horizontal floor?", opts: ["3 × 10⁶ Pa", "2 × 10⁴ Pa", "6.24 × 10⁶ Pa", "9 × 10³ Pa"], ans: 2, exp: "A = πr² = π(0.005)² = 7.85 × 10⁻⁵ m². P = F/A = 50 × 9.8 / 7.85×10⁻⁵ = 6.24 × 10⁶ Pa." },
+    { q: "123. Torricelli's barometer used mercury. Pascal duplicated it using French wine of density 984. Determine the height of the wine column for normal atmospheric pressure.", opts: ["9 m", "10.5 m", "11.5 m", "7.5 m"], ans: 1, exp: "ρ_Hg h_Hg = ρ_wine h_wine. 13.6 × 10³ × 0.76 = 984 × h. h = 10.5 m." },
+    { q: "124. A vertical off-shore structure is built to withstand a maximum stress of 10⁹ Pa. What is the suitable pressure exerted by water column? Take, the depth of the ocean to be roughly 3 km and ignore ocean current.", opts: ["4 × 10⁴ Pa", "2.94 × 10⁷ Pa", "2.0 × 10⁶ Pa", "3 × 10⁵ Pa"], ans: 1, exp: "P = ρgh = 10³ × 9.8 × 3000 = 2.94 × 10⁷ Pa." },
+    { q: "125. A hydraulic automobile lift is designed to lift cars with a maximum mass of 3000 kg. The area of cross-section of the piston carrying the load is 425 cm². What maximum pressure would the smaller piston can bear?", opts: ["9 × 10⁵ Pa", "6.92 × 10⁵ Pa", "5 × 10⁵ Pa", "3 × 10⁴ Pa"], ans: 1, exp: "P = F/A = 3000 × 9.8 / (425 × 10⁻⁴) = 6.92 × 10⁵ Pa." },
+    { q: "126. A U-tube contains water and methylated spirit separated by mercury. The mercury columns in the two arms are in level with 10 cm of water in one arm and 12.5 cm of spirit in the other, what is the specific gravity of spirit?", img: "images/phy10-q126.png", opts: ["0.6", "0.7", "0.8", "0.9"], ans: 2, exp: "Pressure at same level: ρ_w g h_w = ρ_s g h_s. 1 × 10 = ρ_s × 12.5 => ρ_s = 0.8 g/cm³. Specific gravity = 0.8." },
+    { q: "127. In a U-tube, mercury column in the two arms are in level, with 10 cm of water in one arm and 12.5 cm of spirit in the other. If 15 cm of water and spirit each are further poured into the respective arms of the tube, then what is the difference in the levels of mercury in the two arms? (Specific gravity of mercury = 13.6)", img: "images/phy10-q127.png", opts: ["0.106 cm", "0.221 cm", "0.302 cm", "0.136 cm"], ans: 1, exp: "New heights: h_w = 25 cm, h_s = 27.5 cm. Pressure difference = (ρ_s h_s - ρ_w h_w)g = (0.8×27.5 - 1×25)g = (22 - 25)g = -3g. This is balanced by mercury column h. 13.6 × h = 3 => h = 3/13.6 = 0.221 cm." },
+    { q: "128. Glycerin flows steadily through a horizontal tube of length 1.5 m and radius 1.0 cm. If the amount of glycerin flowing per second at one end is 4.0 × 10⁻³ kg s⁻¹, then what is the pressure difference between two ends of the tube? (Density of glycerin = 1.3 × 10³ kgm⁻³ and viscosity of glycerin = 0.83 Pa·s).", opts: ["5 × 10² Pa", "9.75 × 10² Pa", "4 × 10⁴ Pa", "2 × 10⁵ Pa"], ans: 1, exp: "Poiseuille's formula: V/t = πPr⁴ / (8ηL). P = (m/t) × 8ηL / (πρr⁴) = (4×10⁻³) × 8 × 0.83 × 1.5 / (π × 1300 × (10⁻²)⁴) = 9.75 × 10² Pa." },
+    { q: "129. In a test experiment on a model aeroplane in a wind tunnel, the flow speeds on the upper and lower surfaces of the wing are 70 ms⁻¹ and 63 ms⁻¹, respectively. What is the lift on the wing, if its area is 2.5 m²? (Take, the density of air to be 1.3 kgm⁻³)", opts: ["2 × 10³ N", "4 × 10² N", "1.51 × 10³ N", "6 × 10³ N"], ans: 2, exp: "ΔP = (1/2)ρ(v₁² - v₂²) = 0.5 × 1.3 × (70² - 63²) = 605.15 Pa. Lift = ΔP × A = 605.15 × 2.5 = 1.51 × 10³ N." },
+    { q: "130. The cylindrical tube of a spray pump has a cross-section of 8.0 cm², one end of which has 40 fine holes each of diameter 1.0 mm. If the liquid flow inside the tube is 1.5 m/min, what is the speed of ejection of the liquid through the holes?", opts: ["0.94 ms⁻¹", "0.64 ms⁻¹", "0.25 ms⁻¹", "0.50 ms⁻¹"], ans: 1, exp: "A₁v₁ = A₂v₂. (8×10⁻⁴) × (1.5/60) = 40 × π(0.5×10⁻³)² × v₂. 2×10⁻⁵ = 3.14×10⁻⁵ × v₂ => v₂ = 0.64 m/s." },
+    { q: "131. A U-shaped wire is dipped in a soap solution and removed. The thin soap film formed between the wire and a light slider supports a weight of 1.5 × 10⁻² N (which includes the small weight of the slider). The length of the slider is 30 cm, then what is the surface tension of the film?", opts: ["2.5 × 10⁻² Nm⁻¹", "5 × 10⁻³ Nm⁻¹", "6 × 10⁻⁴ Nm⁻¹", "9 × 10⁻² Nm⁻¹"], ans: 0, exp: "F = 2Tl => T = F/(2l) = 1.5×10⁻² / (2 × 0.3) = 2.5 × 10⁻² N/m." },
+    { q: "132. The drop of mercury has radius 3.00 mm at room temperature. Surface tension of mercury at that temperature is 4.65 × 10⁻¹ Nm⁻¹. The atmospheric pressure is 1.01 × 10⁵ Pa, then what is the excess pressure inside the drop at that temperature?", opts: ["410 Pa", "210 Pa", "540 Pa", "310 Pa"], ans: 3, exp: "ΔP = 2T/r = 2 × 0.465 / (3×10⁻³) = 310 Pa." },
+    { q: "133. What is the excess pressure inside a bubble of soap solution of radius 5.00 mm, given that the surface tension of soap solution at the temperature 20°C is 2.50 × 10⁻² Nm⁻¹? If an air bubble of the same dimension were formed at a depth of 40.0 cm inside a container containing the soap solution (relative density of 1.20), what would be the pressure inside the bubble? (1 atmospheric pressure is 1.01 × 10⁵ Pa)", opts: ["10 Pa, 2 × 10⁴ Pa", "20 Pa, 1.06 × 10⁵ Pa", "20 Pa, 3 × 10⁴ Pa", "30 Pa, 5 × 10³ Pa"], ans: 1, exp: "ΔP_soap = 4T/r = 4 × 0.025 / 0.005 = 20 Pa. Pressure inside air bubble = P_atm + hρg + 2T/r = 1.01×10⁵ + 0.4×1200×9.8 + 2(0.025)/0.005 = 1.01×10⁵ + 4704 + 10 = 1.06 × 10⁵ Pa." },
+    { q: "134. A tank with a square base of area 1.0 m² is divided by a vertical partition in the middle. The bottom of the partition has a small hinged door of area 20 cm². The tank is filled with water in one compartment and an acid (of relative density 1.7) in the other, both to a height of 4.0 m. Compute the force necessary to keep the door closed.", opts: ["55 N", "27 N", "20 N", "60 N"], ans: 0, exp: "P_w = 1000×9.8×4 = 39200 Pa. P_a = 1700×9.8×4 = 66640 Pa. ΔP = 27440 Pa. F = ΔP × A = 27440 × 20×10⁻⁴ = 54.88 ≈ 55 N." },
+    { q: "135. A manometer reads the pressure of a gas in an enclosure as shown in Fig. (a). When a pump removes some of the gas, the manometer reads as in Fig. (b). The liquid used in the manometers is mercury and the atmospheric pressure is 76 cm of mercury. Give the absolute and gauge pressure of the gas in the enclosure for cases (a) and (b) in units of cm of mercury.", img: "images/phy10-q135.png", opts: ["96 and 20, 58 and -18 cm", "84 and 10, 40 and -20 cm", "30 and 20, 30 and 40 cm", "85 and 40, 20 and 40 cm"], ans: 0, exp: "(a) P_abs = 76 + 20 = 96 cm, P_gauge = 20 cm. (b) P_abs = 76 - 18 = 58 cm, P_gauge = -18 cm." },
+    { q: "136. During blood transfusion, the needle is inserted in a vein where the gauge pressure is 2000 Pa. At what minimum height must the blood container be placed so that blood may just enter the vein? The density of whole blood is 1.06 × 10³ kgm⁻³.", opts: ["0.6 m", "0.5 m", "0.3 m", "0.2 m"], ans: 3, exp: "P = hρg => h = P/(ρg) = 2000 / (1.06×10³ × 9.8) = 0.1925 m ≈ 0.2 m." },
+    { q: "137. (i) What is the largest average velocity of blood flow in an artery of radius 2 × 10⁻³ m, if the flow must remain laminar? (ii) What is the corresponding flow rate? (Take, viscosity of blood to be 2.084 × 10⁻³ Pa·s and density of blood is 1.06 × 10³ kgm⁻³.)", img: "images/phy10-q137.png", opts: ["0.98 ms⁻¹, 1.23 × 10⁻⁵ m³s⁻¹", "2 ms⁻¹, 1.23 × 10⁻⁵ m³s⁻¹", "1.2 ms⁻¹, 2 × 10⁻⁵ m³s⁻¹", "3 ms⁻¹, 1.23 × 10³ m³s⁻¹"], ans: 0, exp: "v_c = R_e η / (ρD) = (2000 × 2.084×10⁻³) / (1.06×10³ × 4×10⁻³) = 0.98 m/s. Flow rate Q = A × v = π(2×10⁻³)² × 0.98 = 1.23 × 10⁻⁵ m³/s." },
+    { q: "138. A plane is in level flight at constant speed and each of its two wings has an area of 25 m². If the speed of the air is 180 kmh⁻¹ over the lower wing and 234 kmh⁻¹ over the upper wing surface, determine the mass of plane. (Take, air density to be 1 kgm⁻³.)", opts: ["4000 kg", "5400 kg", "(c) 4400 kg", "5000 kg"], ans: 2, exp: "v₁ = 50 m/s, v₂ = 65 m/s. ΔP = 0.5 × 1 × (65² - 50²) = 862.5 Pa. Lift = ΔP × 2A = 862.5 × 50 = 43125 N. Mass = Lift/g = 43125 / 9.8 = 4400 kg." },
+    { q: "139. In Millikan's oil drop experiment, what is the terminal speed of an uncharged drop of radius of 2.0 × 10⁻⁵ m and density 1.2 × 10³ kgm⁻³? Take the viscosity of air at the temperature of the experiment to be 1.8 × 10⁻⁵ Pa·s and how much is the viscous force on the drop at that speed? Neglect buoyancy of the drop due to air.", img: "images/phy10-q139.png", opts: ["3.9 × 10⁻³ ms⁻¹, 4 × 10⁻² N", "5.8 × 10⁻² ms⁻¹, 3.93 × 10⁻¹⁰ N", "2 × 10⁻³ ms⁻¹, 6 × 10⁻³ N", "5.8 × 10⁻² ms⁻¹, 7 × 10⁻⁴ N"], ans: 1, exp: "v_t = 2r²ρg / 9η = 2(2×10⁻⁵)²(1.2×10³)(9.8) / (9 × 1.8×10⁻⁵) = 5.8 × 10⁻² m/s. F = 6πηrv = 6π(1.8×10⁻⁵)(2×10⁻⁵)(5.8×10⁻²) = 3.93 × 10⁻¹⁰ N." },
+    { q: "140. Mercury has an angle of contact equal to 140° with soda lime glass. A narrow tube of radius 1.00 mm made of this glass is dipped in a trough containing mercury. By what amount does the mercury dip down in the tube relative to the liquid's surface outside? Surface tension of mercury at the temperature of the experiment is 0.465 Nm⁻¹. (Density of mercury is 13.6 × 10³ kgm⁻³ and cos 140° = -0.7660)", img: "images/phy10-q140.png", opts: ["2.34 mm", "4.34 mm", "5.34 mm", "6.34 mm"], ans: 2, exp: "h = 2T cos θ / (ρgr) = 2 × 0.465 × (-0.766) / (13.6×10³ × 9.8 × 10⁻³) = -0.712 / 133.28 = -0.00534 m = -5.34 mm." },
+    { q: "141. Two narrow bores of diameters 3.0 mm and 6.0 mm are joined together to form a U-tube opened at both ends. If the U-tube contains water, what is the difference in its levels in the two limbs of the tube? Surface tension of water at the temperature of the experiment is 7.3 × 10⁻² Nm⁻². Take the angle of contact to be zero, density of water to be 1.0 × 10³ kgm⁻³ and g = 9.8 ms⁻².", img: "images/phy10-q141.png", opts: ["2.4 mm", "5.4 mm", "4.9 mm", "6.3 mm"], ans: 2, exp: "h₁ = 2T/(ρgr₁) = 2(0.073)/(1000×9.8×1.5×10⁻³) = 9.93 mm. h₂ = 2(0.073)/(1000×9.8×3×10⁻³) = 4.96 mm. Difference = 9.93 - 4.96 = 4.97 ≈ 4.9 mm." },
+    { q: "142. A tall cylinder is filled with viscous oil. A round pebble is dropped from the top with zero initial velocity. From the plot shown in figure, indicate the one that represents the velocity v of the pebble as a function of time t.", img: "images/phy10-q142.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 2, exp: "Initially velocity increases, then it attains a constant terminal velocity. Graph (c) correctly shows this." },
+    { q: "143. Which of the following diagram does not represent a streamline flow?", img: "images/phy10-q143.png", opts: ["Figure (a)", "Figure (b)", "Figure (c)", "Figure (d)"], ans: 3, exp: "In streamline flow, two streamlines cannot cross each other. Figure (d) shows streamlines crossing, which is impossible." },
+    { q: "144. Along a streamline,", opts: ["the velocity of all fluid particles remains constant", "the velocity of all fluid particles crossing a given position is constant", "the velocity of all fluid particles at a given instant is constant", "the speed of all fluid particles remains constant"], ans: 1, exp: "Along a streamline, the velocity of all fluid particles crossing a given position is constant at all times." },
+    { q: "145. An ideal fluid flows through a pipe of circular cross-section made of two sections with diameters 2.5 cm and 3.75 cm. The ratio of the velocities in the two pipes is", img: "images/phy10-q145.png", opts: ["9 : 4", "3 : 2", "√3 : √2", "√2 : √3"], ans: 0, exp: "A₁v₁ = A₂v₂ => v₁/v₂ = (d₂/d₁)² = (3.75/2.5)² = (1.5)² = 2.25 = 9/4." },
+    { q: "146. The angle of contact at the interface of water-glass is 0°, ethyl alcohol-glass is 0°, mercury-glass is 140° and methyliodide-glass is 30°. A glass capillary is put in a trough containing one of these four liquids. It is observed that the meniscus is convex. The liquid in the trough is", img: "images/phy10-q146.png", opts: ["water", "ethylalcohol", "(c) mercury", "methyliodide"], ans: 2, exp: "Convex meniscus occurs when angle of contact is obtuse (>90°). Mercury has 140°." },
+    { q: "147. For a surface molecule,", img: "images/phy10-q147.png", opts: ["the net force on it is zero", "there is a net downward force", "the potential energy is less than that of a molecule inside", "the potential energy is equal to that of a molecule inside"], ans: 1, exp: "Surface molecules experience a net inward (downward) force because there are fewer molecules above them." },
+    { q: "148. Pressure is a scalar quantity, because", opts: ["it is the ratio of force to area and both force and area are vectors", "it is the ratio of the magnitude of the force to area", "it is the ratio of the component of the force parallel to the area", "it does not depend on the size of the area chosen"], ans: 1, exp: "Pressure is defined as the ratio of the magnitude of the normal force to the area. It has no specific direction, hence scalar." },
+    { q: "149. With increase in temperature, the viscosity of liquids", opts: ["decreases", "increases", "remains same", "None of the above"], ans: 0, exp: "For liquids, viscosity decreases with increase in temperature." },
+    { q: "150. Streamline flow is more likely for liquids with", opts: ["high density", "high viscosity", "low density", "Both (b) and (c)"], ans: 1, exp: "High viscosity means more resistance to flow, which damps out turbulence and promotes streamline flow." },
+    { q: "151. If a drop of liquid breaks into smaller droplets, it results in lowering of temperature of the droplets. Let a drop of radius R breaks into N small droplets each of radius r. Estimate the drop in temperature.", opts: ["(3S/ρs)(1/R² - 1/r²)", "(3S/ρs)(1/R - 1/r)", "(2S/ρs)(1/R - 1/r)²", "(4S/ρs)(1/R² - 1/r²)"], ans: 1, exp: "Energy released = S(4πR² - N4πr²) = msΔT. With N r³ = R³, solving gives ΔT = (3S/ρs)(1/r - 1/R)." },
+    { q: "152. The surface tension and vapour pressure of water at 20°C is 7.28 × 10⁻² Nm⁻¹ and 2.33 × 10³ Pa, respectively. What is the radius of the smallest spherical water droplet which can be formed without evaporating at 20°C?", img: "images/phy10-q152.png", opts: ["5 × 10⁻⁴ m", "6.25 × 10⁻⁵ m", "9 × 10⁻² m", "3 × 10⁻⁵ m"], ans: 1, exp: "For a drop to not evaporate, excess pressure 2S/R must equal vapour pressure. R = 2S/P_vap = 2 × 7.28×10⁻² / 2.33×10³ = 6.25 × 10⁻⁵ m." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 42; // ⚠️ Set to 42 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
