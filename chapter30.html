@@ -518,6 +518,8 @@ window.addEventListener('load', function() {
           userRole: _currentUser.role,
           chapterNum: CHAPTER_NUM,
           chapterTitle: "Chapter 30: Organisms and Populations", // Added Chapter Title
+          attempted: correctCount + wrongCount, // Kitne attempt kiye
+          skipped: totalQ - (correctCount + wrongCount), // Kitne chhoot gaye
           correct: correctCount,
           wrong: wrongCount,
           total: totalQ,
