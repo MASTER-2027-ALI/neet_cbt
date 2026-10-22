@@ -456,17 +456,37 @@ window.addEventListener('load', function() {
         const marks = correctCount * 1 - wrongCount * 0.25;
         const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
         
-        const attemptData = {
-          userName: _currentUser.name,
-          userRole: _currentUser.role,
-          chapterNum: CHAPTER_NUM,
-          correct: correctCount,
-          wrong: wrongCount,
-          total: totalQ,
-          marks: parseFloat(marks.toFixed(2)),
-          percent: percent,
-          timestamp: new Date().toISOString()
-        };
+        // Collect wrong questions
+const wrongQuestions = [];
+for (let i = 0; i < totalQ; i++) {
+  if (userAnswers[i] !== null && userAnswers[i] !== questions[i].ans) {
+    wrongQuestions.push({
+      qIndex: i,
+      question: questions[i].q,
+      options: questions[i].opts,
+      correctAns: questions[i].ans,
+      userAns: userAnswers[i],
+      correctText: questions[i].opts[questions[i].ans],
+      userText: questions[i].opts[userAnswers[i]],
+      exp: questions[i].exp || '',
+      img: questions[i].img || ''
+    });
+  }
+}
+
+const attemptData = {
+  userName: _currentUser.name,
+  userRole: _currentUser.role,
+  chapterNum: CHAPTER_NUM,
+  correct: correctCount,
+  wrong: wrongCount,
+  total: totalQ,
+  marks: parseFloat(marks.toFixed(2)),
+  percent: percent,
+  chapterTitle: "Chapter 40: Gravitation",
+  wrongQuestions: wrongQuestions,   // 👈 YE NAYI LINE
+  timestamp: new Date().toISOString()
+};
         
         // 1. Save to localStorage
         const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
