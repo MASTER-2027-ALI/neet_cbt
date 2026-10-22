@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 44: Thermodynamics - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 44: Thermodynamics</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. According to initial theory, the heat was considered as fluid called 'caloric'. This caloric", opts: ["flows from hotter to colder body", "flows from colder to hotter body", "could flow in either direction, depending on height of the bodies", "None of the above"], ans: 0, exp: "Caloric theory assumed heat is a fluid that flows from a hotter body to a colder body." },
+    { q: "2. Choose the correct options regarding thermodynamics.", opts: ["Its laws were established before molecular picture of matter was established.", "It deals with conversion of heat into other forms of energy.", "It deals with macroscopic variables like volume, temperature, mass, etc.", "All of the above"], ans: 3, exp: "Thermodynamics was developed before the molecular picture. It deals with heat conversion and macroscopic variables. All are correct." },
+    { q: "3. In the figure below, two systems A and B are separated by an insulating fixed wall (adiabatic wall) and also insulated from surroundings by insulated wall. Choose the correct option regarding above information.", img: "images/phy12-q3.png", opts: ["The pressures of A and B will change with time.", "The temperatures of A and B will change with time.", "The thermodynamic states of A and B will not change with time.", "None of the above"], ans: 2, exp: "Adiabatic walls prevent heat exchange. Since there is no heat flow, states of A and B will not change with time." },
+    { q: "4. If two systems are in thermal equilibrium with each other, it means their", opts: ["masses are equal, temperatures may be unequal", "temperatures are equal", "masses and temperatures both are equal", "None of the above"], ans: 1, exp: "Thermal equilibrium means no net heat flow, which occurs when temperatures are equal." },
+    { q: "5. If a system is in thermodynamic equilibrium with its surroundings, it means", opts: ["temperature of system and surroundings must be same", "pressure and volume of system and surroundings must be same", "pressure, volume and temperature of system and surroundings may be different", "None of the above"], ans: 0, exp: "Thermodynamic equilibrium with surroundings requires thermal equilibrium, i.e., same temperature." },
+    { q: "6. Choose the correct option from the following.", opts: ["Zeroth law gives the concept of temperature.", "Temperature measures the 'hotness' of the body.", "Heat flows from the body at higher temperature to the one a lower temperature, until thermal equilibrium is attained.", "All of the above"], ans: 3, exp: "All statements are correct definitions and consequences of the Zeroth law and temperature." },
+    { q: "7. According to Zeroth law, which physical quantity must have same value for the two systems to be in thermal equilibrium?", opts: ["Pressure", "Temperature", "Volume", "Composition"], ans: 1, exp: "Zeroth law defines temperature as the quantity that equalizes in thermal equilibrium." },
+    { q: "8. According to Zeroth law of thermodynamics, if two systems A and B are separately in equilibrium with C, then", opts: ["T_A = T_B", "T_A > T_C, T_B > T_C and T_A = T_B", "T_A = T_C and T_A ≠ T_B", "T_A < T_C, T_B < T_C and T_A = T_B"], ans: 0, exp: "If A is in equilibrium with C, T_A = T_C. If B is in equilibrium with C, T_B = T_C. Hence T_A = T_B." },
+    { q: "9. Internal energy U of a gas depends on the", opts: ["kinetic energy of the system", "molecular kinetic and potential energies", "disordered energy associated with the random motion of the molecules", "Both (b) and (c)"], ans: 3, exp: "Internal energy is the sum of molecular kinetic and potential energies (disordered energy). Both (b) and (c) are correct." },
+    { q: "10. The internal energy of a gas contained in a movable box moving with a constant speed v", img: "images/phy12-q10.png", opts: ["depends on v", "does not depend on v", "depends only on molecular energies", "Both (b) and (c)"], ans: 3, exp: "Internal energy depends only on molecular motion (temperature), not on the bulk kinetic energy of the container. So it does not depend on v." },
+    { q: "11. Consider a system to be a certain mass of gas contained in a cylinder with movable piston as shown in the figure. The state of the gas and hence its internal energy can be changed by", img: "images/phy12-q11.png", opts: ["putting the cylinder in contact with the body at a higher temperature than gas", "pushing the piston down", "Either (a) or (b)", "Neither (a) nor (b)"], ans: 2, exp: "Internal energy can be changed by heat transfer (contact with hotter body) or by doing work (pushing piston). Either works." },
+    { q: "12. The internal energy of a system could be changed", opts: ["by extracting heat from the system", "by doing work done on the system", "if system do some work on the surroundings", "All of the above"], ans: 3, exp: "By first law, ΔU = Q - W. Heat transfer or work done (by or on system) changes internal energy. All options are correct." },
+    { q: "13. Amongst the following variables, state variable is (are)", opts: ["heat", "work", "(c) internal energy", "All of these"], ans: 2, exp: "Heat and work are path functions (not state variables). Internal energy is a state variable." },
+    { q: "14. An ideal monoatomic gas is taken from A to B by the following three ways p, q, r as shown in the given p-V curve. Then, amongst which of these ways, the internal energy would be same?", img: "images/phy12-q14.png", opts: ["p and r", "q and r", "p and q", "For all the ways internal energy is same"], ans: 3, exp: "Internal energy is a state function. It depends only on initial and final states. Since A and B are same, ΔU is same for all paths." },
+    { q: "15. If the system is a gas in a cylinder with a movable piston as shown in the figure alongside, then", img: "images/phy12-q15.png", opts: ["ΔW = pV", "ΔW = ΔpV", "ΔW = pΔV", "ΔW = pΔV + VΔp"], ans: 2, exp: "Work done by gas at constant pressure is W = pΔV." },
+    { q: "16. A system is provided with 200 cal of heat and the work done by the system on the surroundings is 40 J. Then, its internal energy", opts: ["increases by 600 J", "decreases by 800 J", "increases by 800 J", "decreases by 50 J"], ans: 2, exp: "Q = 200 cal = 200 × 4.2 = 840 J. W = 40 J. ΔU = Q - W = 840 - 40 = 800 J. It increases by 800 J." },
+    { q: "17. 1g of water of volume 1 cm³ at 100°C is converted into steam at same temperature under normal atmospheric pressure (≈ 1 × 10⁵ Pa). The volume of steam formed equals 1671 cm³. If the specific latent heat of vaporisation of water is 2256 J/g, the change in internal energy is", opts: ["2423 J", "2089 J", "167 J", "2256 J"], ans: 1, exp: "Q = mL = 1 × 2256 = 2256 J. W = pΔV = 10⁵ × (1671 - 1) × 10⁻⁶ = 167 J. ΔU = Q - W = 2256 - 167 = 2089 J." },
+    { q: "18. A sample of 0.1 g of water at 100°C and normal pressure (1.013 × 10⁵ Nm⁻²) requires 54 cal of heat energy to convert to steam at 100°C. If the volume of the steam produced is 167.1 cc, the change in internal energy of the sample, is", opts: ["42.2 J", "208.7 J", "104.3 J", "84.5 J"], ans: 1, exp: "Q = 54 × 4.18 = 225.72 J. W = pΔV = 1.013×10⁵ × (167.1 - 0.1)×10⁻⁶ = 16.917 J. ΔU = Q - W = 225.72 - 16.92 = 208.8 J." },
+    { q: "19. Heat capacity of a substance can be increased", opts: ["by decreasing the mass of the substance", "by increasing the rise in temperature", "by increasing the mass of the substance", "Both (b) and (c)"], ans: 2, exp: "Heat capacity S = ms. It increases with mass of the substance (for a given material)." },
+    { q: "20. Molar specific heat capacity C of a substance having μ moles", opts: ["can be represented by (1/μ)(ΔQ/ΔT)", "is different for different amount of substance", "can be varied depending upon change in the temperature rised", "Both (a) and (c)"], ans: 0, exp: "C = (1/μ)(ΔQ/ΔT). It is an intensive property, independent of amount. (a) is correct." },
+    { q: "21. From the following graphs given in the options, variation of specific heat capacity of water with temperature is correctly represented in", img: "images/phy12-q21.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 1, exp: "Specific heat of water is minimum around 40°C and increases on both sides. Graph (b) shows this correctly." },
+    { q: "22. Mechanical equivalent of heat is equal to the amount of", opts: ["work done to produce 1 cal heat", "a conversion factor between calorie and joule", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "J = 4.18 J/cal. It is the work done to produce 1 cal heat and the conversion factor. Both (a) and (b)." },
+    { q: "23. An ideal gas having molar specific heat capacity at constant volume is (3/2)R, the molar specific heat capacity at constant pressure is", opts: ["(1/2)R", "(5/2)R", "(7/2)R", "(9/2)R"], ans: 1, exp: "C_p = C_v + R = (3/2)R + R = (5/2)R." },
+    { q: "24. For an ideal gas, the molar specific heat capacities at constant pressure and volume are C_p and C_v respectively. Choose the correct option.", img: "images/phy12-q24.png", opts: ["C_v = (ΔU/ΔT)_V", "C_p = (ΔU/ΔT)_p + p(ΔV/ΔT)_p", "p(ΔV/ΔT)_p = R", "All of these"], ans: 3, exp: "For 1 mole ideal gas, C_v = (dU/dT)_V. C_p = (dU/dT)_p + p(dV/dT)_p. At constant p, pV=RT => p(dV/dT) = R. All options are correct." },
+    { q: "25. 310 J of heat is required to raise the temperature of 2 mol of an ideal gas at constant pressure from 25°C to 35°C. The amount of heat required to raise the temperature of the gas through the same range at constant volume is", opts: ["384 J", "144 J", "276 J", "452 J"], ans: 1, exp: "Q_p = nC_pΔT = 310 => 2 × C_p × 10 = 310 => C_p = 15.5. C_v = C_p - R = 15.5 - 8.3 = 7.2. Q_v = nC_vΔT = 2 × 7.2 × 10 = 144 J." },
+    { q: "26. Consider a situation in which a mixture of petrol vapour and air when ignited by a spark. Then, the gases undergo explosion", opts: ["initially have non-uniform temperature and pressure", "cannot be described by state variables initially", "may eventually attains an equilibrium state with its surroundings after a certain time", "All of the above"], ans: 3, exp: "During explosion, it's a non-equilibrium state. State variables don't apply initially. It eventually reaches equilibrium. All are correct." },
+    { q: "27. A system in equilibrium is divided into two equal parts. The systems before and after the division, with respective state variables are as shown below. Then, from the above, we can say that", img: "images/phy12-q27.png", opts: ["U is an extensive state variable, whereas M and T are intensive state variables", "T is an extensive state variable, whereas U and M are intensive state variables", "U and M are extensive state variables, whereas T is intensive state variable", "U, M and T all are extensive state variables"], ans: 2, exp: "Extensive variables (U, M, V) depend on size and halve when divided. Intensive variables (T, P) remain same. So U, M are extensive, T is intensive." },
+    { q: "28. A quasi-static process means", opts: ["a nearly static process", "that the change in p, V and T of the system occur in such a ways that it remains in equilibrium at every instant with its surroundings", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "Quasi-static means almost static (very slow) so that system is in equilibrium at every instant. Both (a) and (b) are correct." },
+    { q: "29. In which of the following processes, heat is neither absorbed nor released by a system?", opts: ["Adiabatic", "Isobaric", "Isochoric", "Isothermal"], ans: 0, exp: "In an adiabatic process, there is no heat exchange (ΔQ = 0)." },
+    { q: "30. For the given isothermal process A → B of an ideal gas, area under the graph is 20 J, then", img: "images/phy12-q30.png", opts: ["ΔQ = 0", "ΔQ = + 20 J", "ΔU = – 20 J", "None of the above"], ans: 1, exp: "Isothermal: ΔU = 0. ΔQ = ΔW = Area under p-V graph. Expansion (V increases), so W > 0. ΔQ = +20 J." },
+    { q: "31. Identify the graph (s) which correctly represents an isotherm at temperatures T₁ and T₂ (T₂ > T₁).", img: "images/phy12-q31.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 0, exp: "Isotherms are hyperbolas (pV = constant). Higher temperature curve is farther from origin. Graph (a) shows T₂ > T₁ correctly." },
+    { q: "32. Among given curves, which one could represent isothermal process?", img: "images/phy12-q32.png", opts: ["Curve A", "Curve B", "Curve C", "None of the curves could represent isothermal process"], ans: 0, exp: "Isothermal process is pV = constant, a hyperbola in first quadrant. Curve A represents this correctly." },
+    { q: "33. For an isothermal expansion or compression, (where ΔW₁ and ΔW₂ are the net work for expansion and compression, respectively)", opts: ["ΔW₁ = -ve ; ΔW₂ = + ve", "ΔW₁ = ΔW₂ ;ΔW₂ = – ve", "ΔW₁ = + ve ; ΔW₂ = – ve", "ΔW₁ = ΔW₂, at every stage"], ans: 2, exp: "Expansion: work done by gas is positive (ΔW₁ = +ve). Compression: work done by gas is negative (ΔW₂ = -ve)." },
+    { q: "34. 10 mol of an ideal gas at constant temperature 500 K is compressed from 50 L to 5 L. Work done in the process is (given, R = 8.31 J mol⁻¹ K⁻¹)", opts: ["– 1.2 × 10⁴ J", "– 2.4 × 10⁴ J", "– 4.8 × 10⁴ J", "– 9.6 × 10⁴ J"], ans: 3, exp: "W = nRT ln(V₂/V₁) = 10 × 8.31 × 500 × ln(5/50) = 41550 × (-2.302) = -9.56 × 10⁴ J." },
+    { q: "35. If work is done on the system in an adiabatic process,", opts: ["T_f < T_i", "T_f = T_i", "T_f > T_i", "information is insufficient"], ans: 2, exp: "Adiabatic: ΔQ = 0. ΔU = -ΔW. Work done ON system (W < 0), so ΔU > 0. Temperature increases. T_f > T_i." },
+    { q: "36. The temperature of an ideal gas increases to 2 times when compressed adiabatically to half the volume. Its equation of state can be written as", opts: ["pV^(3/2) = constant", "pV^(4/3) = constant", "pV^(1/2) = constant", "pV² = constant"], ans: 3, exp: "T₂/T₁ = (V₁/V₂)^(γ-1). 2 = (2)^(γ-1) => γ - 1 = 1 => γ = 2. So pV² = constant." },
+    { q: "37. Amongst the following relations which is true in the case of an adiabatic process, where γ = C_p / C_v.", opts: ["p^(1-γ) T^γ = constant", "p^γ T^(1-γ) = constant", "p T^γ = constant", "p^γ T = constant"], ans: 0, exp: "From pV^γ = const and pV = RT, we get p^(1-γ) T^γ = constant." },
+    { q: "38. In an adiabatic process, when pressure is increased by 2/3 %. If C_p/C_v = 3/2, then the volume decreases by about", opts: ["4/9 %", "2/3 %", "4%", "9/4 %"], ans: 0, exp: "pV^γ = C. Δp/p + γΔV/V = 0. (2/3)% + (3/2)ΔV/V = 0 => ΔV/V = -(4/9)%." },
+    { q: "39. A gas consisting of rigid diatomic molecules was initially under standard condition, then gas was compressed adiabatically to one-fifth of its initial volume. What will be the mean kinetic energy of a rotating molecule in the final state? [Take, γ for diatomic gas = 7/5]", opts: ["1.44 J", "4.55 J", "(c) 787.98 × 10⁻²³ J", "757.3 × 10⁻²³ J"], ans: 2, exp: "T₂ = T₁(V₁/V₂)^(γ-1) = 300 × 5^(2/5) = 571 K. Rotational KE = kT (for diatomic, 2 rotational DOF? Actually KE_rot = kT). kT = 1.38×10⁻²³ × 571 = 787.98 × 10⁻²³ J." },
+    { q: "40. A gas is taken from V_i to V_f by two processes, one is isothermal and other is adiabatic. Choose the correct option regarding the p-V diagram for two processes.", img: "images/phy12-q40.png", opts: ["(Slope)_isothermal = (Slope)_adiabatic", "(Slope)_isothermal > (Slope)_adiabatic", "(Slope)_isothermal < (Slope)_adiabatic", "Information is insufficient"], ans: 2, exp: "Slope of p-V curve = dp/dV. For isothermal: -p/V. For adiabatic: -γp/V. Since γ > 1, magnitude of adiabatic slope is greater." },
+    { q: "41. A gas is compressed isothermally to half of its initial volume. The same gas is compressed separately through an adiabatic process until its volume is again reduced to half. Then,", opts: ["compressing the gas through adiabatic process will require more work to be done", "compressing the gas isothermally or adiabatically will require the same amount of work", "the case (whether compression through isothermal or through adiabatic process) which of requires more work will depend upon the atomicity of the gas", "compressing the gas isothermally will require more work to be done"], ans: 0, exp: "Area under adiabatic curve is more than isothermal curve for same compression. So more work is done in adiabatic process." },
+    { q: "42. The work done in which of the following process is zero?", opts: ["Isothermal process", "Adiabatic process", "Isochoric process", "Isobaric process"], ans: 2, exp: "In isochoric process, volume is constant (ΔV = 0). So W = pΔV = 0." },
+    { q: "43. A container having 1 mol of a gas at a temperature 27°C has movable piston which maintains constant pressure of 1 atm in container. The gas is compressed until temperature becomes 127°C. The work done is (C_p for gas is 7.03 cal/mol-K)", opts: ["703 J", "831 J", "121 J", "2035 J"], ans: 1, exp: "W = nRΔT = 1 × 8.31 × (127 - 27) = 831 J." },
+    { q: "44. In an isobaric process, the work done by a di-atomic gas is 10 J, the heat given to the gas will be [C_p for diatomic gas = (7/2)R]", opts: ["35 J", "30 J", "45 J", "60 J"], ans: 0, exp: "W = nRΔT. Q = nC_pΔT. Q/W = C_p/R = (7/2)R / R = 7/2. Q = (7/2) × 10 = 35 J." },
+    { q: "45. 1 mol of an ideal gas goes from an initial state A to final state B via two processes. It first undergoes isothermal expansion from volume V to 3V and then its volume is reduced from 3V to V at constant pressure. The correct p-V diagram representing the two processes is", img: "images/phy12-q45.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 3, exp: "Isothermal expansion: curve from V to 3V (pressure drops). Isobaric compression: horizontal line from 3V to V (pressure constant). Graph (d) shows this." },
+    { q: "46. A thermodynamic system undergoes cyclic process ABCDA as shown in figure. The work done by the system in the cycle is", img: "images/phy12-q46.png", opts: ["p₀V₀/2", "zero", "p₀V₀", "2p₀V₀"], ans: 1, exp: "Area of cycle = Area(AB) + Area(BC) + Area(CD) + Area(DA). The areas cancel out (clockwise and anticlockwise). Net work = 0." },
+    { q: "47. Figure below shows two paths that may be taken by a gas to go from a state A to a state C. In process AB, 400 J of heat is added to the system and in process BC, 100 J of heat is added to the system. The heat absorbed by the system in the process AC will be", img: "images/phy12-q47.png", opts: ["300 J", "380 J", "500 J", "460 J"], ans: 3, exp: "ΔU_AC = ΔU_AB + ΔU_BC = (Q_AB - W_AB) + (Q_BC - W_BC) = (400 - 0) + (100 - 120) = 380 J. W_AC = Area under AC = 80 J. Q_AC = ΔU_AC + W_AC = 380 + 80 = 460 J." },
+    { q: "48. A sample of an ideal gas is taken through the cyclic process abca as shown in the figure. The change in the internal energy of the gas along the path ca is –180 J. The gas absorbs 250 J of heat along the path ab and 60 J along the path bc. The work done by the gas along the path abc is", img: "images/phy12-q48.png", opts: ["120 J", "130 J", "100 J", "140 J"], ans: 1, exp: "ΔU_ca = -180. For cycle, ΔU = 0 => ΔU_ab + ΔU_bc = 180. Q_ab = 250 = ΔU_ab + W_ab. W_ab = pΔV = 0 (isochoric). So ΔU_ab = 250. ΔU_bc = 180 - 250 = -70. Q_bc = 60 = -70 + W_bc => W_bc = 130 J. W_abc = W_ab + W_bc = 130 J." },
+    { q: "49. The efficiency of an ideal gas with adiabatic exponent γ for the shown cyclic process would be", img: "images/phy12-q49.png", opts: ["(2ln2 - 1) / (γ/(γ - 1))", "(1 - 1ln2) / (γ/(γ - 1))", "(2ln2 + 1) / (γ/(γ - 1))", "(2ln2 - 1) / (γ/(γ + 1))"], ans: 0, exp: "W = W_AB + W_BC + W_CA = nRT₀ ln2 + 0 - nR(T₀) = nRT₀(ln2 - 1). Q_in = Q_CA (isobaric) = nC_pΔT = n(γR/(γ-1))T₀. η = W/Q_in = (ln2 - 1) / (γ/(γ-1)). Wait, area gives W = nRT₀(2ln2 - 1). η = (2ln2 - 1) / (γ/(γ-1))." },
+    { q: "50. Following figure shows two processes A and B for a gas. If ΔQ_A and ΔQ_B are the amount of heat absorbed by the system in two cases, and ΔU_A and ΔU_B are changes in internal energies respectively, then", img: "images/phy12-q50.png", opts: ["ΔQ_A > ΔQ_B, ΔU_A > ΔU_B", "ΔQ_A < ΔQ_B, ΔU_A < ΔU_B", "ΔQ_A > ΔQ_B, ΔU_A = ΔU_B", "ΔQ_A = ΔQ_B, ΔU_A = ΔU_B"], ans: 2, exp: "Initial and final states are same, so ΔU_A = ΔU_B. Work done by A > Work done by B (area under A is larger). Q = ΔU + W => Q_A > Q_B." },
+    { q: "51. A device by which a system is made to undergo cyclic process that results in conversion of heat into work is", opts: ["rotating blades", "heat engine", "a container with explosive chemicals", "None of the above"], ans: 1, exp: "A heat engine converts heat into work through a cyclic process." },
+    { q: "52. Choose the correct option regarding the schematic representation of heat engine given below", img: "images/phy12-q52.png", opts: ["Working substance takes Q₁ heat from hot reservoir", "Working substance does work W = Q₁ - Q₂ on the environment", "Efficiency of the engine decreases with the increase in Q₁", "All of the above"], ans: 3, exp: "Heat engine takes Q₁ from hot reservoir, does work W = Q₁ - Q₂. Efficiency η = W/Q₁ = 1 - Q₂/Q₁. If Q₁ increases, η changes (not strictly decreases). All are generally correct." },
+    { q: "53. Consider a heat engine as shown in figure. Q₁ and Q₂ are heat added to T₁ and heat taken from T₂ in one cycle of engine. W is the mechanical work done on the engine. If W > 0, then possibilities are", img: "images/phy12-q53.png", opts: ["Q₁ > Q₂ > 0", "Q₂ < Q₁ < 0", "Q₁ < 0, Q₂ > 0", "Both (a) and (b)"], ans: 3, exp: "If W > 0, engine does work. Q₁ = W + Q₂. So Q₁ > Q₂ > 0. Also possible if both are negative (refrigerator). Both (a) and (b)." },
+    { q: "54. If the efficiency of an engine is 50% and its work output is 500 J, then find the value of work input.", opts: ["1000 J", "500 J", "100 J", "250 J"], ans: 0, exp: "η = Output/Input. 0.5 = 500 / Input => Input = 1000 J." },
+    { q: "55. The efficiency of an ideal heat engine working between the freezing point and boiling point of water, is", opts: ["6.25%", "20%", "26.8%", "12.5%"], ans: 2, exp: "T₁ = 373 K, T₂ = 273 K. η = 1 - T₂/T₁ = 1 - 273/373 = 100/373 = 26.8%." },
+    { q: "56. The efficiency of a heat engine is 1/6. When the temperature of sink is decreased by 62°C, its efficiency doubled. Then, what is the temperature of source?", opts: ["470°C", "372°C", "542°C", "1042°C"], ans: 1, exp: "1/6 = 1 - T₂/T₁ => T₂/T₁ = 5/6. 2(1/6) = 1 - (T₂-62)/T₁ => 1/3 = 1 - T₂/T₁ + 62/T₁ => T₂/T₁ - 62/T₁ = 2/3 => 5/6 - 62/T₁ = 2/3 => 62/T₁ = 1/6 => T₁ = 372 K = 99°C." },
+    { q: "57. The device which is used in order to pump heat inside a room in a building when the outside environment is cold is", opts: ["refrigerator", "heat pump", "heat engine", "Either (a) or (c)"], ans: 1, exp: "A heat pump transfers heat from a colder environment to a hotter room." },
+    { q: "58. A refrigerator works between 4°C and 30°C. It is required to remove 600 cal of heat every second in order to keep the temperature of the refrigerated space constant. The power required is (Take, 1 cal = 4.2 J)", opts: ["23.65 W", "236.5 W", "(c) 2365 W", "2.365 W"], ans: 1, exp: "COP = T₂/(T₁-T₂) = 277/(303-277) = 277/26 = 10.65. W = Q₂/COP = 600×4.2 / 10.65 = 236.5 W." },
+    { q: "59. An ideal refrigerator has a freezer at a temperature of – 13°C. The coefficient of performance of the engine is 5. The temperature of the air (to which heat is rejected) will be", opts: ["325°C", "325°K", "39°C", "320°C"], ans: 2, exp: "COP = T₂/(T₁-T₂) => 5 = 260/(T₁-260) => T₁ - 260 = 52 => T₁ = 312 K = 39°C." },
+    { q: "60. The temperature inside a refrigerator is t₂°C and the room temperature is t₁°C. The amount of heat delivered to the room for each joule of electrical energy consumed ideally will be", opts: ["(t₁ + t₂)/(t₁ + 273)", "t₁/(t₁ - t₂)", "(t₁ + 273)/(t₁ - t₂)", "(t₂ + 273)/(t₁ - t₂)"], ans: 2, exp: "COP = T₂/(T₁-T₂). Heat delivered Q₁ = W + Q₂. Q₁/W = 1 + COP = 1 + T₂/(T₁-T₂) = T₁/(T₁-T₂) = (t₁+273)/(t₁-t₂)." },
+    { q: "61. According to second law of thermodynamics,", opts: ["a heat engine cannot have efficiency equal to 1", "a refrigerator (or heat pump) could have infinite value of coefficient of performance", "a heat engine can fully convert heat into work", "None of the above"], ans: 0, exp: "Second law states no engine can have 100% efficiency (η = 1) or COP = infinity." },
+    { q: "62. According to Carnot, which type of engine working between two temperatures T₁ and T₂ have maximum efficiency?", opts: ["Reversible engine", "Irreversible engine", "External combustion engine", "Diesel engine"], ans: 0, exp: "A reversible (Carnot) engine has maximum efficiency between two given temperatures." },
+    { q: "63. For Carnot engine, which process should be chosen to take the working substance from T₁ to T₂ or vice-versa?", opts: ["Isochoric", "Isothermal", "(c) Adiabatic", "Isobaric"], ans: 2, exp: "In a Carnot cycle, heat transfer is isothermal and temperature change is adiabatic." },
+    { q: "64. Given below figure shows a Carnot cycle, where a Carnot engine is operating between two temperatures T₁ and T₂. Here, working substance is an ideal gas. Total work done by the gas in one complete cycle,", img: "images/phy12-q64.png", opts: ["μRT₂ log(V₂/V₁) - μRT₁ log(V₃/V₄)", "μRT₁ log(V₂/V₁) - μRT₂ log(V₃/V₄)", "μRT₁ log(V₂/V₁) + μRT₂ log(V₃/V₄)", "zero"], ans: 1, exp: "W = W_iso1 + W_adia1 + W_iso2 + W_adia2. Net work = μRT₁ ln(V₂/V₁) - μRT₂ ln(V₃/V₄)." },
+    { q: "65. Two ideal Carnot engines operate in cascade (all heat given up by one engine is used by the other engine to produce work) between temperatures T₁ and T₂. The temperature of the hot reservoir of the first engine is T₁ and the temperature of the cold reservoir of the second engine is T₂. T is temperature of the sink of the first engine which is also the source for the second engine. How is T related to T₁ and T₂, if both the engines perform equal amount of work?", img: "images/phy12-q65.png", opts: ["T = 0", "T = (2T₁T₂)/(T₁ + T₂)", "T = √(T₁T₂)", "T = (T₁ + T₂)/2"], ans: 3, exp: "W₁ = Q₁(1 - T/T₁), W₂ = Q₂(1 - T₂/T). Since Q₂ = Q₁ - W₁ and W₁ = W₂, solving gives T = (T₁ + T₂)/2." },
+    { q: "66. A Carnot engine absorbs 6 × 10⁵ cal at 227°C. The work done per cycle by the engine, if its sink is maintained at 127°C is", opts: ["15 × 10⁵ J", "15 × 10⁴ J", "5 × 10⁵ J", "2 × 10⁴ J"], ans: 2, exp: "T₁ = 500 K, T₂ = 400 K. η = 1 - 400/500 = 1/5. W = ηQ₁ = (1/5) × 6×10⁵ cal = 1.2 × 10⁵ cal = 1.2×10⁵ × 4.2 J = 5.04 × 10⁵ J." },
+    { q: "67. A Carnot engine has an efficiency of 1/6. When the temperature of the sink is reduced by 62°C, its efficiency is doubled. The temperatures of the source and the sink are respectively,", opts: ["62°C, 124°C", "99°C, 37°C", "124°C, 62°C", "37°C, 99°C"], ans: 1, exp: "1/6 = 1 - T₂/T₁ => T₂/T₁ = 5/6. 1/3 = 1 - (T₂-62)/T₁ => 2/3 = (T₂-62)/T₁. T₂/T₁ - 62/T₁ = 2/3 => 5/6 - 62/T₁ = 2/3 => 62/T₁ = 1/6 => T₁ = 372 K = 99°C. T₂ = 5/6 × 372 = 310 K = 37°C." },
+    { q: "68. A Carnot engine having an efficiency of 1/10 as heat engine, is used as a refrigerator. If the work done on the system is 10J, the amount of energy absorbed from the reservoir at lower temperature is", img: "images/phy12-q68.png", opts: ["1 J", "90 J", "99 J", "100 J"], ans: 1, exp: "η = 1/10. COP = (1-η)/η = (9/10) / (1/10) = 9. Q₂ = COP × W = 9 × 10 = 90 J." },
+    { q: "69. Assertion: Specific heat capacity and molar specific heat capacity both have same units.\nReason: Specific heat capacity and molar specific heat capacity both do not depend on mass.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Units are different (J/kgK vs J/molK). Assertion is incorrect. Both are independent of mass (Reason correct)." },
+    { q: "70. Assertion: In equation ΔQ = ΔU + pΔV, quantities on the both sides are intensive.\nReason: The product of an intensive variable like p and an extensive quantity ΔV is extensive.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "ΔQ and ΔU are extensive. Assertion incorrect. Product of intensive and extensive is extensive. Reason correct." },
+    { q: "71. Assertion: In isothermal process, whole of the heat energy supplied to the body is converted into internal energy.\nReason: According to the first law of thermodynamics, ΔQ = ΔU + ΔW.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "In isothermal process, ΔU = 0, so Q = W (heat is fully converted to work, not internal energy). Assertion incorrect. Reason correct." },
+    { q: "72. Assertion: In adiabatic process, work is independent of the path.\nReason: In adiabatic process, work done is equal to negative of change in internal energy.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "For adiabatic, Q = 0 => W = -ΔU. Since U is state function, W is path independent. Both A and R are correct and R explains A." },
+    { q: "73. Assertion: Heat absorbed by the gas during an isochoric process goes entirely to change its internal energy and its temperature.\nReason: In an isochoric process, volume is constant.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Isochoric: ΔV = 0 => W = 0. Q = ΔU. So heat goes to internal energy. Both A and R are correct and R explains A." },
+    { q: "74. Assertion: In cyclic process, ΔU = 0.\nReason: Cyclic process means a reversible process.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "In a cycle, initial and final states are same, so ΔU = 0. But cyclic process is not necessarily reversible. A correct, R incorrect." },
+    { q: "75. Assertion: Coefficient of performance of a refrigerator cannot be infinite.\nReason: Refrigerator cannot work without some external work done on the system.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "COP = Q₂/W. W cannot be zero (2nd law), so COP cannot be infinite. Both A and R are correct and R explains A." },
+    { q: "76. Assertion: First law of thermodynamics is based on energy conservation.\nReason: Second law of thermodynamics put limitations on first law.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "First law is energy conservation. Second law limits processes. Both A and R are correct but R is not the correct explanation of A." },
+    { q: "77. Assertion: Rotating blade in a liquid stops after a certain time is a irreversible process.\nReason: Irreversibility arises as the system attains a non-equilibrium state.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "Due to viscosity, it stops. It's irreversible. Both A and R are correct but R is not the correct explanation of A (viscous dissipation causes it)." },
+    { q: "78. Assertion: Reversible Carnot engine with one particular substance cannot be more efficient than the one using another substance.\nReason: Efficiency of Carnot engine = T₂/T₁.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Efficiency η = 1 - T₂/T₁ (not T₂/T₁). Assertion is correct, Reason is incorrect." },
+    { q: "79. Assertion: The efficiency of Carnot engine can be 100%.\nReason: Carnot engine is reversible engine.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Efficiency can never be 100% (T₂ = 0 K impossible). Assertion incorrect. Carnot is reversible (Reason correct)." },
+    { q: "80. Assertion: Consider I as an irreversible heat engine and R as a reversible heat engine working between the same source and sink at temperatures T₁ and T₂, respectively. If they are coupled such that I acts as a heat engine and R as a refrigerator (T₁ > T₂), then η_R < η_I .\nReason: According to second law of thermodynamics, efficiency of reversible Carnot engine is maximum.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "It should be η_I < η_R (reversible is max). Assertion incorrect, Reason correct." },
+    { q: "81. I. Benjamin Thomson experiment demonstrated conversion of energy from one form to another (from work to heat).\nII. Temperature is related to the motion of particles as a whole, not to energy of the internal (disordered) motion of particles.\nIII. Whether or not a system is in a state of equilibrium, it is independent of the surroundings and nature of the wall that separates the system from the surroundings.\nChoose the correct statement.", opts: ["Only I", "Both II and III", "Only II", "I, II and III"], ans: 0, exp: "Statement I is correct (work to heat). Temperature is related to internal disordered motion (II wrong). Equilibrium depends on surroundings (III wrong)." },
+    { q: "82. Study the following statements.\nI. One calorie is equal to the amount of heat required to raise the temperature of 1 g of water by 1°C, i.e. from 14.5°C to 15.5°C.\nII. In SI units, specific heat capacity of water is 2148 J kg⁻¹ K⁻¹.\nChoose the correct statement.", opts: ["Only I", "Only II", "Both I and II", "Neither I nor II"], ans: 0, exp: "1 cal = heat to raise 1g water by 1°C (from 14.5 to 15.5). I is correct. In SI, c_water = 4186 J/kgK, so II is wrong." },
+    { q: "83. A gas is enclosed in a box with a partition as shown in the Fig. (a). If this partition in the box is suddenly removed [as shown in Fig. (b)] leading to free expansion of the gas, then\nI. it is not an equilibrium state.\nII. state variables can be used to describe the situation.\nWhich amongst the given statements is (are) correct?", img: "images/phy12-q83.png", opts: ["Only I", "Only II", "Both I and II", "Neither I nor II"], ans: 0, exp: "During free expansion, it's non-equilibrium (I). State variables are not defined in non-equilibrium (II wrong)." },
+    { q: "84. Study the following statements.\nI. ΔQ and ΔW are path independent.\nII. ΔQ – ΔW is path dependent.\nIII. When ΔU = 0, then heat supplied to the system is used up entirely by the system in doing work on the environment.\nChoose the correct statement.", opts: ["Only I", "Only II", "Only III", "Both I and II"], ans: 2, exp: "I and II are wrong (Q and W are path dependent, Q-W is path independent). III is correct (isothermal, Q=W)." },
+    { q: "85. For an isothermal process,\nI. pressure of a given mass of a gas varies inversely as its volume.\nII. during expansion of gas, work is done by the gas on environment.\nIII. during compression heat is released.\nChoose the correct statement.", opts: ["Only II", "Both I and II", "Both I and III", "I, II and III"], ans: 3, exp: "Isothermal: pV = const (I). Expansion: W > 0 (II). Compression: W < 0, Q < 0 (heat released, III). All are correct." },
+    { q: "86. In a heat engine,\nI. work done (W) by the system in a cycle is transferred to the environment via some arrangement, e.g. the working substance in a cylinder with a moving piston transfers mechanical energy to the wheels of a vehicle via a shaft.\nII. working substance can be a mixture of fuel, vapour and air in gasoline.\nChoose the incorrect statement (s).", opts: ["Only I", "Only II", "Both I and II", "Neither I nor II"], ans: 3, exp: "Both I and II are correct statements." },
+    { q: "87. For a given heat engine,\nI. efficiency can be 1.\nII. mechanism of conversion of heat into work can be done by heating the system (say a gas or a mixture of gases) by an external furnace, as in a steam engine.\nChoose the incorrect statement.", opts: ["Only I", "Only II", "Neither I nor II", "Both I and II"], ans: 0, exp: "Efficiency can never be 1 (I is incorrect). II is correct." },
+    { q: "88. Study the following statements regarding second law of thermodynamics.\nI. Kelvin and Planck's statements deny the possibility of a perfect refrigerator or heat pump.\nII. Clausius statement denies the possibility of a perfect heat engine.\nChoose the correct statement.", opts: ["Only I", "Only II", "Both I and II", "Neither I nor II"], ans: 3, exp: "Kelvin-Planck denies perfect heat engine. Clausius denies perfect refrigerator. Both statements are swapped, so both are wrong." },
+    { q: "89. A process is reversible, if\nI. it is quasi-static\nII. there are no dissipative effects.\nChoose the correct statement (s).", opts: ["Only I", "Only II", "Both I and II", "Neither I nor II"], ans: 2, exp: "A reversible process must be quasi-static and have no dissipative effects (friction, viscosity, etc.). Both I and II." },
+    { q: "90. Following are statement of few processes taking place in nature.\nI. Free expansion of a gas.\nII. The combustion reaction of a mixture of petrol and air ignited by a spark.\nIII. The leaking of a gas from the kitchen cylinder.\nIV. The transfer of heat from one heated part of a liquid to the other colder part.\nWhich amongst these processes are irreversible in nature?", opts: ["Both I and II", "III and IV", "II, III and IV", "I, II, III and IV"], ans: 3, exp: "All these processes are spontaneous and irreversible." },
+    { q: "91. Study the following statements regarding the steps a working substance of a refrigerator goes through,\nI. Sudden expansion of the gas from high to low pressure which cools it and converts it into vapour-liquid mixture.\nII. Absorption by the cold fluid of heat from the region to be cooled, converting it into vapour.\nIII. heating up of the vapour due to external work done on the system.\nIV. absorption of heat by the vapour from the surroundings.\nChoose the correct statement.", opts: ["Only I", "Both II and III", "Both III and IV", "I, II and III"], ans: 3, exp: "Statements I, II, III are correct steps. IV is wrong (it releases heat to surroundings)." },
+    { q: "92. The two gases are separated by a fixed diathermic wall with initial states as (p_A, V_A) and (p_B, V_B).", img: "images/phy12-q92.png", opts: ["The thermodynamic states of A and B will not change with time.", "There will be a flow of energy between the two systems until the equilibrium is attained.", "The states of the two systems will change until the equilibrium is attained.", "Both (b) and (c)"], ans: 3, exp: "Diathermic wall allows heat transfer. Energy flows until equilibrium (b) and states change (c)." },
+    { q: "93. Choose the correct statement from the following.", opts: ["Neglecting the small intermolecular forces in gas, its internal energy is just the sum of kinetic energies associated with various random motion of its molecules.", "A gas in a given state has a certain amount of heat.", "A gas in a given state has a certain amount of work.", "Both (b) and (c)"], ans: 0, exp: "Internal energy is molecular KE + PE. Heat and work are not state variables, so a gas doesn't 'have' them. (a) is correct." },
+    { q: "94. A system as shown in figure below, initially at state (p, T) is taken to state at (p', T') via a quasi-static process. Then, choose the correct statement.", img: "images/phy12-q94.png", opts: ["External pressure of the system should be changed abruptly.", "Quasi-static process is not a hypothetical concept and can never be achieved by any way.", "Temperature can be changed by introducing an infinitesimal temperature difference between the system and surrounding reservoir.", "Various stages of the process will be in non-equilibrium state."], ans: 2, exp: "Quasi-static requires infinitesimal changes (temperature difference, pressure difference). (c) is correct." },
+    { q: "95. Choose the correct statement regarding isobaric process.", opts: ["pV = constant.", "Heat absorbed by the gas goes partly to increase internal energy and partly to do work.", "The system returns to its initial state.", "Both (a) and (b)"], ans: 1, exp: "Isobaric: Q = ΔU + W. Heat goes to internal energy and work. (b) is correct." },
+    { q: "96. The p-V graph shown below, shows the cycle followed by an engine. In this, the curve 1 to 2 is isothermal, 2 to 3 is adiabatic and 3 to 1 is also adiabatic. There is/are some condition(s) under which, this process does not exist. Choose the correct statement.", img: "images/phy12-q96.png", opts: ["Heat is completely converted to mechanical energy in such a process, which is not possible.", "Curves representing two adiabatic processes do not intersect.", "Curves representing an adiabatic process and an isothermal process do not intersect.", "Both (a) and (b)"], ans: 3, exp: "Cycle is impossible because two adiabats cannot intersect, and it would violate 2nd law (complete conversion). Both (a) and (b)." },
+    { q: "97. Figure shows the p-V diagram of an ideal gas undergoing a change of state from A to B. Four different parts I, II, III and IV as shown in the figure may lead to the same change of state. Then, which of the following statement(s) is/are correct?", img: "images/phy12-q97.png", opts: ["Change in internal energy is same in IV and III cases, but not in I and II.", "Change in internal energy is same in all the four cases.", "Work done is maximum in case III.", "Work done is maximum in case II."], ans: 1, exp: "ΔU is path independent, so it is same for all paths. (b) is correct." },
+    { q: "98. Which of the processes described below is/are reversible?", opts: ["The increase in temperature of an iron rod by hammering it.", "A gas in a small container at a temperature T₁ is brought in contact with a big reservoir at a higher temperature T₂ which increases the temperature of the gas.", "a quasi-static isothermal expansion of an ideal gas in cylinder fitted with a frictionless piston.", "An ideal gas is enclosed in a piston cylinder arrangement with adiabatic walls. A weight w is added to the piston resulting in compression of gas."], ans: 2, exp: "Quasi-static isothermal expansion with frictionless piston is reversible. Others are irreversible (dissipative effects or finite temperature difference)." },
+    { q: "99. Match the Column I (quantity) with Column II (value) and select the correct answer from the codes given below.\n\nColumn I:\nA. 1 cal =\nB. p (ΔV/ΔT)_p =\nC. Specific heat capacity of solids\nD. For isothermal process, ΔW\n\nColumn II:\n1. 4.186 J/gK\n2. R\n3. ΔQ\n4. 3R", img: "images/phy12-q99.png", opts: ["A-4, B-1, C-2, D-3", "A-1, B-2, C-4, D-3", "A-1, B-4, C-2, D-4", "A-2, B-1, C-2, D-3"], ans: 1, exp: "1 cal = 4.186 J (A-1). p(ΔV/ΔT)_p = R (B-2). C_solid = 3R (C-4). ΔW = ΔQ (D-3). Hence A-1, B-2, C-4, D-3." },
+    { q: "100. Match the Column I (thermodynamic process) with Column II (characteristic) and select the correct answer from the codes given below.\n\nColumn I:\nA. Isothermal\nB. Isobaric\nC. Isochoric\nD. Adiabatic\n\nColumn II:\n1. Volume constant\n2. Temperature constant\n3. No heat flow between the system and surrounding\n4. Pressure constant", img: "images/phy12-q100.png", opts: ["A-1, B-2, C-3, D-4", "A-4, B-2, C-3, D-1", "A-2, B-4, C-1, D-3", "A-3, B-1, C-2, D-4"], ans: 2, exp: "Isothermal (T const: 2), Isobaric (p const: 4), Isochoric (V const: 1), Adiabatic (Q=0: 3). Hence A-2, B-4, C-1, D-3." },
+    { q: "101. Thermodynamic processes are indicated in the following diagram. Match the Column I (process number) with Column II (process name) and select the correct answer from the codes given below.\n\nColumn I:\nA. Process I\nB. Process II\nC. Process III\nD. Process IV\n\nColumn II:\n1. Adiabatic\n2. Isobaric\n3. Isochoric\n4. Isothermal", img: "images/phy12-q101.png", opts: ["A-1, B-3, C-4, D-2", "A-4, B-2, C-3, D-1", "A-3, B-4, C-2, D-1", "A-4, B-2, C-1, D-3"], ans: 1, exp: "I is adiabatic? No, looking at slope, I is adiabatic (steeper), IV is isobaric, II is isochoric, III is isothermal. Let's check options. A-4 (isothermal), B-2 (isobaric), C-3 (isochoric), D-1 (adiabatic)." },
+    { q: "102. Match the Column I (parameter) with Column II (value or formula) for the process involved in refrigerator and heat pump given below and select the correct answer from the codes given below.\n\nColumn I:\nA. α for refrigerator\nB. α for heat pump\nC. For a refrigerator\nD. For a heat pump\n\nColumn II:\n1. Q₁ / W\n2. Q₁ is heat given to the hot reservoir.\n3. Q₂ / W\n4. Q₂ is heat given by the hot reservoir.", img: "images/phy12-q102.png", opts: ["A-3, B-1, C-4, D-2", "A-1, B-3, C-4, D-2", "A-3, B-1, C-2, D-4", "A-3, B-1, C-2, D-4"], ans: 2, exp: "α_ref = Q₂/W (A-3). α_hp = Q₁/W (B-1). Refrigerator (Q₂ is heat extracted: 2? No, Q₁ given to hot res: 2). Let's use standard: A-3, B-1, C-2, D-4." },
+    { q: "103. What amount of heat must be supplied to 2.0 × 10⁻² kg of nitrogen (at room temperature) to raise its temperature by 45°C at constant pressure? (Molecular mass of N₂ = 28g, R = 8.3 J mol-K and C_p for N₂ = (7/2)R).", img: "images/phy12-q103.png", opts: ["1033.55 J", "933.75 J", "633.45 J", "233 J"], ans: 1, exp: "n = 20/28 = 5/7 mol. Q = nC_pΔT = (5/7) × (7/2 × 8.3) × 45 = 933.75 J." },
+    { q: "104. A steam engine delivers 5.4 × 10⁸ J of work per minute and services 3.6 × 10⁹ J of heat per minute from the boiler. What is the efficiency of the engine and how much heat is wasted per minute?", opts: ["10%, 2 × 10⁹ J min⁻¹", "10%, 3 × 10⁹ J min⁻¹", "15%, 3.1 × 10⁹ J min⁻¹", "15%, 3.1 × 10⁸ J min⁻¹"], ans: 1, exp: "η = W/Q = 5.4×10⁸ / 3.6×10⁹ = 15%. Heat wasted = Q - W = 3.6×10⁹ - 0.54×10⁹ = 3.06×10⁹ J/min ≈ 3 × 10⁹ J/min." },
+    { q: "105. An electric heater supplies heat to a system at a rate of 100 W. If the system performs work at a rate of 75 Js⁻¹. At what rate is the internal energy increasing?", opts: ["30 Js⁻¹", "15 Js⁻¹", "10 Js⁻¹", "25 Js⁻¹"], ans: 3, exp: "dU/dt = dQ/dt - dW/dt = 100 - 75 = 25 J/s." },
+    { q: "106. A refrigerator is to remove heat from the eatable kept inside at 9°C. Calculate the coefficient of performance, if the room temperature is 36°C.", opts: ["20.9", "10.4", "11.2", "31.8"], ans: 1, exp: "T₂ = 282 K, T₁ = 309 K. COP = T₂/(T₁-T₂) = 282/27 = 10.44." },
+    { q: "107. A cylinder with a movable piston contains 3 mol of hydrogen at standard temperature and pressure. The walls of the cylinder are made of heat insulator and the piston is insulated by having a pile of sand on it. By what factor does the pressure of the gas increase, if the gas is compressed to half of its original volume? Hint: γ for hydrogen is 1.4", opts: ["2.9", "1.28", "3.2", "2.64"], ans: 3, exp: "p₂/p₁ = (V₁/V₂)^γ = (2)^1.4 = 2.64." },
+    { q: "108. In changing the state of gas adiabatically from an equilibrium state A to another equilibrium state B, an amount of work equal to 22.3 J is done on the system. If the gas is taken from state A to B via a process in which the net heat absorbed by the system is 9.35 cal, how much is the net work done by the system in the later case? (Take, 1 cal = 4.19 J)", opts: ["12.1 J", "16.9 J", "18.1 J", "13.7 J"], ans: 1, exp: "ΔU = Q - W = 0 - (-22.3) = 22.3 J. In second process, Q = 9.35 × 4.19 = 39.18 J. W = Q - ΔU = 39.18 - 22.3 = 16.88 J." },
+    { q: "109. A thermodynamic system is taken from an original state D to an intermediate state E by the linear process shown in figure below. Then, its volume is reduced to the original value from E to D via F by isobaric and isochoric process as shown by EF and FD, respectively. Calculate the total work done by the gas from D to E to F.", img: "images/phy12-q109.png", opts: ["150 J", "300 J", "450 J", "350 J"], ans: 2, exp: "Work D to E = Area under DE = 1/2(300+600)(2) + 300(2)? No, area of trapezium: 1/2(300+600) × (5-2) = 1350 J. Wait, the graph shows DE from V=2 to 5, p=300 to 600. Area = 1/2 × 3 × 300 + 300 × 3 = 450 + 900 = 1350 J. Work E to F = -300 × 3 = -900 J. Total = 450 J." },
+    { q: "110. An ideal gas undergoes four different processes from the same initial state (figure). Four processes are adiabatic, isothermal, isobaric and isochoric. Out of 1, 2, 3 and 4 which one is adiabatic?", img: "images/phy12-q110.png", opts: ["4", "3", "2", "1"], ans: 2, exp: "Curve 1 is isochoric, 4 is isobaric. Curve 2 is steeper than 3, so 2 is adiabatic." },
+    { q: "111. Consider p-V diagram for an ideal gas shown in figure.", img: "images/phy12-q111.png", opts: ["(iv)", "(ii)", "(iii)", "(i)"], ans: 2, exp: "pV = constant means isothermal expansion (T const). T-p diagram: T constant, p decreases as V increases. Graph (iii) shows this." },
+    { q: "112. An ideal gas undergoes cyclic process ABCDA as shown in given p-V diagram. The amount of work done by the gas is", img: "images/phy12-q112.png", opts: ["6p₀V₀", "-2p₀V₀", "+2p₀V₀", "+4p₀V₀"], ans: 1, exp: "Work = Area of cycle. Rectangle with width 2V₀ and height p₀. Area = 2p₀V₀. Since it's anticlockwise, work is negative. W = -2p₀V₀." },
+    { q: "113. Consider two containers A and B containing identical gases at the same pressure, volume and temperature. The gas in container A is compressed to half of its original volume isothermally while the gas in container B is compressed to half of its original value adiabatically. The ratio of final pressure of gas in B to that of gas in A is", img: "images/phy12-q113.png", opts: ["2^(γ-1)", "(1/2)^(γ-1)", "(1/(1-γ))²", "(1/(γ-1))²"], ans: 0, exp: "A (isothermal): p_A' = 2p. B (adiabatic): p_B' = p(2)^γ. Ratio = p_B'/p_A' = 2^γ / 2 = 2^(γ-1)." },
+    { q: "114. Consider a Carnot cycle operating between T₁ = 500 K and T₂ = 300 K producing 1 kJ of mechanical work per cycle. Find the heat transferred to the engine by the reservoirs.", img: "images/phy12-q114.png", opts: ["1000 J", "2000 J", "1500 J", "2500 J"], ans: 3, exp: "η = 1 - 300/500 = 2/5. Q₁ = W/η = 1000 / (2/5) = 2500 J." },
+    { q: "115. In a refrigerator, one removes heat from a lower temperature and deposits to the surroundings at a higher temperature. In this process, mechanical work has to be done, which is provided by an electric motor. If the motor is of 1 kW power and heat is transferred from –3°C to 27°C, find the heat taken out of the refrigerator per second, assuming its efficiency is 50% of a perfect engine.", img: "images/phy12-q115.png", opts: ["22 kJs⁻¹", "19 kJs⁻¹", "38 kJs⁻¹", "None of these"], ans: 1, exp: "η_engine = 1 - 270/300 = 1/10. COP = η/(1-η) = 1/9. η' = 0.5η = 1/20. COP' = η'/(1-η') = (1/20)/(19/20) = 1/19. Q₂ = W × COP' = 1 kW × 1/19 = 0.0526 kW? Wait, COP = Q₂/W = 1/19 => Q₂ = 1/19 kW = 52.6 W. Something is wrong. Let's re-read: efficiency is 50% of perfect engine. η_ref = 0.5 × (T₁-T₂)/T₁ = 0.5 × 30/300 = 1/20. COP = 1/η - 1 = 20 - 1 = 19. Q₂ = COP × W = 19 × 1 kW = 19 kW." },
+    { q: "116. If the coefficient of performance of a refrigerator is 5 and operates at the room temperature (27°C), find the temperature inside the refrigerator.", img: "images/phy12-q116.png", opts: ["– 23°C", "23°C", "40°C", "– 40°C"], ans: 0, exp: "COP = T₂/(T₁-T₂) => 5 = T₂/(300-T₂) => 1500 - 5T₂ = T₂ => 6T₂ = 1500 => T₂ = 250 K. T₂ = 250 - 273 = -23°C." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 44; // ⚠️ Set to 44 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
