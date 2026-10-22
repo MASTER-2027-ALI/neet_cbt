@@ -271,17 +271,17 @@ async function loadDiary() {
         const savedNote = localStorage.getItem(mId) || '';
         
         mistakesHTML += `
-          <div class="mistake-card">
-            <div class="q-text">Q: ${m.question}</div>
-            <div class="ans-row">
-              <span class="your-ans">❌ Your Answer: ${m.yourAnswer}</span>
-              <span class="correct-ans">✅ Correct: ${m.correctAnswer}</span>
-            </div>
-            <div class="exp">📖 Exp: ${m.explanation}</div>
-            <input type="text" class="note-input" id="input-${mId}" placeholder="Why did you get this wrong? (e.g., Silly mistake, Not studied)" value="${savedNote}">
-            <button class="save-note-btn" onclick="saveNote('${mId}')">Save Note</button>
-          </div>
-        `;
+  <div class="mistake-card">
+    <div class="q-text">Q: ${m.question}</div>
+    <div class="ans-row">
+      <span class="your-ans">❌ Your Answer: ${m.userText || 'N/A'}</span>
+      <span class="correct-ans">✅ Correct: ${m.correctText || 'N/A'}</span>
+    </div>
+    <div class="exp">📖 Exp: ${m.exp || 'No explanation'}</div>
+    <input type="text" class="note-input" id="input-${mId}" placeholder="Why did you get this wrong? (e.g., Silly mistake, Not studied)" value="${savedNote}">
+    <button class="save-note-btn" onclick="saveNote('${mId}')">Save Note</button>
+  </div>
+`;
       });
     }
     document.getElementById('mistakesList').innerHTML = mistakesHTML;
