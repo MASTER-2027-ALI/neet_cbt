@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Progress Diary - NEET 2027 CBT</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .diary-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .diary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 20px 30px;
+    margin-bottom: 25px;
+  }
+  .diary-header h1 {
+    color: #60a5fa;
+    font-size: 24px;
+  }
+  .back-btn {
+    padding: 10px 20px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  .back-btn:hover { background: rgba(59, 130, 246, 0.3); }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  .stat-box {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 25px;
+    text-align: center;
+  }
+  .stat-box .num { font-size: 32px; font-weight: 800; color: #60a5fa; }
+  .stat-box .lbl { color: #94a3b8; font-size: 14px; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
+  .chapter-progress {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 20px;
+  }
+  .chapter-progress h3 { color: #f1f5f9; margin-bottom: 15px; font-size: 18px; border-bottom: 1px solid rgba(148, 163, 184, 0.2); padding-bottom: 10px; }
+  .progress-bar-container { background: #1e293b; border-radius: 10px; height: 12px; margin: 10px 0; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s; }
+  .progress-bar-fill.strong { background: linear-gradient(90deg, #4ade80, #22c55e); }
+  .progress-bar-fill.weak { background: linear-gradient(90deg, #f87171, #ef4444); }
+  .progress-bar-fill.average { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+
+  .weak-chapter { border-left: 4px solid #ef4444; }
+  .strong-chapter { border-left: 4px solid #22c55e; }
+
+  .mistake-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+  }
+  .mistake-card .q-text { font-weight: 600; color: #e2e8f0; margin-bottom: 10px; }
+  .mistake-card .ans-row { display: flex; gap: 20px; margin-bottom: 10px; font-size: 14px; }
+  .mistake-card .your-ans { color: #f87171; }
+  .mistake-card .correct-ans { color: #4ade80; }
+  .mistake-card .exp { font-size: 13px; color: #94a3b8; font-style: italic; margin-bottom: 15px; }
+  
+  .note-input {
+    width: 100%;
+    padding: 10px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-family: inherit;
+  }
+  .note-input:focus { outline: none; border-color: #60a5fa; }
+  .save-note-btn {
+    margin-top: 10px;
+    padding: 8px 15px;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="diary-container">
+  <div class="diary-header">
+    <h1>📔 My Progress Diary</h1>
+    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="num" id="totalTests">0</div>
+      <div class="lbl">Tests Attempted</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" id="avgScore" style="color: #4ade80;">0%</div>
+      <div class="lbl">Overall Average</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" id="strongCount" style="color: #4ade80;">0</div>
+      <div class="lbl">Strong Chapters</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" id="weakCount" style="color: #f87171;">0</div>
+      <div class="lbl">Weak Chapters</div>
+    </div>
+  </div>
+
+  <h2 style="color: #f1f5f9; margin-bottom: 15px;">📊 Chapter Analysis</h2>
+  <div id="chapterAnalysis"></div>
+
+  <h2 style="color: #f1f5f9; margin: 30px 0 15px 0;">❌ My Mistakes (Detailed)</h2>
+  <div id="mistakesList"></div>
+
+</div>
+
+<script src="keys.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Check login
+const userData = localStorage.getItem('cbt_user');
+if (!userData) {
+  window.location.href = 'index.html';
+}
+const user = JSON.parse(userData);
+
+const chapterNames = [
+  "The Living World", "Biological Classification", "Plant Kingdom", "Animal Kingdom",
+  "Morphology of Flowering Plants", "Anatomy of Flowering Plants",
+  "Structural Organisation in Animals", "Cell: The Unit of Life", "Biomolecules",
+  "Cell Cycle and Cell Division", "Photosynthesis in Higher Plants",
+  "Respiration in Plants", "Plant Growth and Development",
+  "Breathing and Exchange of Gases", "Body Fluids and Circulation",
+  "Excretory Products and their Elimination", "Locomotion and Movement",
+  "Neural Control and Coordination", "Chemical Coordination and Integration"
+];
+
+async function loadDiary() {
+  try {
+    const q = query(collection(db, "results"), where("userName", "==", user.name));
+    const snapshot = await getDocs(q);
+    
+    let totalTests = 0;
+    let totalPercent = 0;
+    let chapterData = {}; // { chapterNum: [percent1, percent2] }
+    let allMistakes = [];
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      totalTests++;
+      totalPercent += data.percent;
+      
+      if (!chapterData[data.chapterNum]) chapterData[data.chapterNum] = [];
+      chapterData[data.chapterNum].push(data.percent);
+
+      // Gather mistakes
+      if (data.wrongQuestions && data.wrongQuestions.length > 0) {
+        data.wrongQuestions.forEach(mistake => {
+          allMistakes.push({
+            chapterNum: data.chapterNum,
+            ...mistake
+          });
+        });
+      }
+    });
+
+    // Update Top Stats
+    document.getElementById('totalTests').textContent = totalTests;
+    const avg = totalTests > 0 ? (totalPercent / totalTests).toFixed(1) : 0;
+    document.getElementById('avgScore').textContent = avg + '%';
+
+    // Analyze Chapters
+    let strong = 0;
+    let weak = 0;
+    let analysisHTML = '';
+
+    // Sort chapters by number
+    const sortedChapters = Object.keys(chapterData).sort((a,b) => parseInt(a) - parseInt(b));
+
+    sortedChapters.forEach(chNum => {
+      const percents = chapterData[chNum];
+      const bestPercent = Math.max(...percents); // Highest score in this chapter
+      const attempts = percents.length;
+      const chName = chapterNames[chNum - 1] || "Unknown Chapter";
+
+      let statusClass = '';
+      let statusText = '';
+      let colorClass = '';
+
+      if (bestPercent >= 70) {
+        strong++;
+        statusClass = 'strong-chapter';
+        statusText = '💪 Strong';
+        colorClass = 'strong';
+      } else if (bestPercent < 40) {
+        weak++;
+        statusClass = 'weak-chapter';
+        statusText = '⚠️ Needs Work';
+        colorClass = 'weak';
+      } else {
+        statusClass = '';
+        statusText = '📊 Average';
+        colorClass = 'average';
+      }
+
+      analysisHTML += `
+        <div class="chapter-progress ${statusClass}">
+          <h3>Chapter ${chNum}: ${chName} <span style="float:right; font-size:14px; color:#94a3b8;">${statusText}</span></h3>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill ${colorClass}" style="width: ${bestPercent}%;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; color:#94a3b8;">
+            <span>Best Score: <strong>${bestPercent}%</strong></span>
+            <span>Attempts: ${attempts}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById('strongCount').textContent = strong;
+    document.getElementById('weakCount').textContent = weak;
+    document.getElementById('chapterAnalysis').innerHTML = analysisHTML || '<p style="color:#94a3b8;">No data yet.</p>';
+
+    // Render Mistakes
+    let mistakesHTML = '';
+    if (allMistakes.length === 0) {
+      mistakesHTML = '<p style="color:#4ade80;">🎉 Shabaash! Abhi tak koi galti nahi hui.</p>';
+    } else {
+      // Show latest 20 mistakes to avoid lag
+      const recentMistakes = allMistakes.slice(-20).reverse();
+      
+      recentMistakes.forEach((m, index) => {
+        const mId = `mistake-${index}`;
+        const savedNote = localStorage.getItem(mId) || '';
+        
+        mistakesHTML += `
+          <div class="mistake-card">
+            <div class="q-text">Q: ${m.question}</div>
+            <div class="ans-row">
+              <span class="your-ans">❌ Your Answer: ${m.yourAnswer}</span>
+              <span class="correct-ans">✅ Correct: ${m.correctAnswer}</span>
+            </div>
+            <div class="exp">📖 Exp: ${m.explanation}</div>
+            <input type="text" class="note-input" id="input-${mId}" placeholder="Why did you get this wrong? (e.g., Silly mistake, Not studied)" value="${savedNote}">
+            <button class="save-note-btn" onclick="saveNote('${mId}')">Save Note</button>
+          </div>
+        `;
+      });
+    }
+    document.getElementById('mistakesList').innerHTML = mistakesHTML;
+
+  } catch (e) {
+    console.error("Error loading diary:", e);
+    document.getElementById('chapterAnalysis').innerHTML = '<p style="color:red;">⚠️ Data load nahi hua.</p>';
+  }
+}
+
+window.saveNote = function(id) {
+  const val = document.getElementById('input-' + id).value;
+  localStorage.setItem(id, val);
+  alert('✅ Note saved! (Only visible to you)');
+};
+
+loadDiary();
+</script>
+</body>
+</html>
