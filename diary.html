@@ -156,6 +156,7 @@ if (!userData) {
 const user = JSON.parse(userData);
 
 const chapterNames = [
+  // Biology (1-32)
   "The Living World", "Biological Classification", "Plant Kingdom", "Animal Kingdom",
   "Morphology of Flowering Plants", "Anatomy of Flowering Plants",
   "Structural Organisation in Animals", "Cell: The Unit of Life", "Biomolecules",
@@ -163,8 +164,13 @@ const chapterNames = [
   "Respiration in Plants", "Plant Growth and Development",
   "Breathing and Exchange of Gases", "Body Fluids and Circulation",
   "Excretory Products and their Elimination", "Locomotion and Movement",
-  "Neural Control and Coordination", "Chemical Coordination and Integration"
+  "Neural Control and Coordination", "Chemical Coordination and Integration",
+  // Biology 12th (20-32) - You can add names here later
+  "Reproduction in Organisms", "Sexual Reproduction in Flowering Plants", "Human Reproduction", "Reproductive Health", "Principles of Inheritance and Variation", "Molecular Basis of Inheritance", "Evolution", "Human Health and Disease", "Microbes in Human Welfare", "Biotechnology: Principles and Processes", "Biotechnology and its Applications", "Organisms and Populations", "Ecosystem",
+  // Physics (33-61)
+  "Physical World", "Units and Measurements", "Motion in a Straight Line", "Motion in a Plane", "Laws of Motion", "Work, Energy and Power", "System of Particles and Rotational Motion", "Gravitation"
 ];
+// Note: Chapter 33 to 39 names are assumed. Chapter 40 is Gravitation.
 
 async function loadDiary() {
   try {
