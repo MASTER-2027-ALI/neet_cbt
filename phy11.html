@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 43: Thermal Properties of Matter - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 43: Thermal Properties of Matter</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. A glass of ice-cold water left on a table on a hot summer day eventually warms up, whereas a cup of hot tea on the same table cools down because", opts: ["its surrounding media are at different temperature", "the direction of heat flow depends on the surrounding temperature with respect to the body", "heating or cooling does not depend on surrounding temperature", "Both (a) and (b)"], ans: 3, exp: "When the temperature of a body and its surrounding medium are different, heat transfer takes place. The direction of heat flow depends on the surrounding temperature with respect to the body. Both statements (a) and (b) are correct." },
+    { q: "2. The common physical property which is to be used as the basis for constructing thermometer is", opts: ["the variation of the volume of a liquid with temperature", "the variation of the pressure of a gas with temperature", "the variation of the resistance of a wire with temperature", "All of the above"], ans: 3, exp: "Thermometers can be based on any property that changes with temperature, such as volume of liquid, pressure of gas, or electrical resistance." },
+    { q: "3. The ice point and the steam point of water are two convenient fixed points and are known as the", opts: ["cooling point and heating point, respectively", "heating point and cooling point, respectively", "freezing point and boiling point, respectively", "boiling point and freezing point,respectively"], ans: 2, exp: "The ice point (0°C) is the freezing point and the steam point (100°C) is the boiling point of water." },
+    { q: "4. On a hilly region, water boils at 95°C. The temperature expressed in Fahrenheit is", opts: ["100°F", "20.3°F", "150°F", "203°F"], ans: 3, exp: "(F - 32)/180 = C/100. (F - 32)/9 = 95/5 = 19. F - 32 = 171 => F = 203°F." },
+    { q: "5. The temperature at which centigrade and Fahrenheit scales give the same reading, is", opts: ["– 40°", "40°", "– 30°", "30°"], ans: 0, exp: "Let F = C = x. (x - 32)/180 = x/100 => 5(x - 32) = 9x => 5x - 160 = 9x => 4x = -160 => x = -40." },
+    { q: "6. The graph of Fahrenheit temperature (F) versus Celsius temperature (C) is shown below. The correct relation between F and C which can be deduced from graph, is", img: "images/phy11-q6.png", opts: ["(F - 32)/(T₂ - T₁) = T_C / C", "(F - T₁)/(T₂ - T₁) = C / T_C", "(F - 32)/(T₂ - T₁) = C / T_C", "(C)/(T₁ - T₂) = (F - 32)/T_C"], ans: 1, exp: "From the graph, the slope is (T₂ - T₁)/T_C. For any point (C, F), slope is (F - T₁)/(C - 0). Equating them gives (F - T₁)/(T₂ - T₁) = C/T_C." },
+    { q: "7. On centigrade or Celsius scale (°C), the temperature of a body increases by 30°C. The increase in temperature on Fahrenheit scale (°F) is", opts: ["50°", "40°", "30°", "54°"], ans: 3, exp: "ΔF = (9/5)ΔC = (9/5) × 30 = 54°F." },
+    { q: "8. A thermometer graduated according to a linear scale reads a value x₀, when in contact with boiling water and x₀/3, when in contact with ice. What is the temperature of an object in °C, if this thermometer in the contact with the object reads x₀/2?", opts: ["35", "60", "40", "25"], ans: 3, exp: "(T - 0)/(100 - 0) = (x₀/2 - x₀/3)/(x₀ - x₀/3). T/100 = (x₀/6)/(2x₀/3) = 1/4. T = 25°C." },
+    { q: "9. Two absolute scales A and B have triple points of water defined to be 400 A and 300 B. The relation between T_A and T_B is (triple point of water is 273.16 K temperature and 6.11×10⁻³ atm pressure at which water co-exists in gas, liquid and solid states)", opts: ["T_A = (4/3) T_B", "T_B = (4/7) T_A", "T_A = (4/7) T_B", "T_B = T_A"], ans: 0, exp: "T_A/400 = T_B/300 = 273.16 K. T_A = (400/300) T_B = (4/3) T_B." },
+    { q: "10. When the pressure is held constant, the volume of a quantity of the gas is related to the temperature as V/T = constant. This relationship is known as", opts: ["Boyle's law", "Dalton partial pressure law", "Charles' law", "ideal gas equation"], ans: 2, exp: "At constant pressure, V ∝ T. This is Charles' law." },
+    { q: "11. Measurements on real gases deviate from the values predicted by the ideal gas law at", opts: ["high temperature", "low temperature", "room temperature", "All of these"], ans: 1, exp: "Real gases deviate from ideal behaviour at high pressure and low temperature." },
+    { q: "12. With a constant-volume gas thermometer, temperature is read in terms of", opts: ["volume", "pressure", "heat", "density"], ans: 1, exp: "For a constant-volume gas thermometer, P ∝ T. Temperature is read in terms of pressure." },
+    { q: "13. An ideal gas is contained in a cylinder at pressure p₁ and temperature T₁. The initial moles of the gas is n₁. The gas leaks from the cylinder and attains a final pressure p₂ and temperature T₂. The new moles of the gas present in the cylinder is", opts: ["(p₂T₁ / (p₁n₁T₂))", "(n₁T₂p₂ / (T₁p₁))", "(n₁T₁p₂ / (T₂p₁))", "Data insufficient"], ans: 2, exp: "PV = nRT. Since V and R are constant, p/(nT) = constant. p₁/(n₁T₁) = p₂/(n₂T₂) => n₂ = n₁T₁p₂ / (T₂p₁)." },
+    { q: "14. The absolute minimum temperature for an ideal gas, inferred by extrapolating the straight line to the temperature axis as shown in the given graph, is called as", img: "images/phy11-q14.png", opts: ["Kelvin temperature", "Celsius temperature", "low temperature", "absolute zero"], ans: 3, exp: "The temperature at which the pressure of an ideal gas becomes zero is absolute zero (-273.15°C)." },
+    { q: "15. The absolute zero temperature in Fahrenheit scale is", opts: ["– 273° F", "– 32° F", "– 460° F", "– 132° F"], ans: 2, exp: "0 K = -273.15°C. F = (9/5)C + 32 = (9/5)(-273.15) + 32 ≈ -460°F." },
+    { q: "16. The correct value of 0°C on Kelvin scale will be", opts: ["273.15 K", "273.00 K", "273.05 K", "273.63 K"], ans: 0, exp: "0°C = 273.15 K exactly." },
+    { q: "17. A fully inflated balloon shrinks when it is put into cold water, because", opts: ["water causes lesser pressure from outside on the balloon", "water causes a pull on balloon which presses it", "air inside the balloon contracts due to cooling", "rubber of balloon expands on cooling and compresses air inside"], ans: 2, exp: "Cooling causes the air inside to contract (volume decreases), so the balloon shrinks." },
+    { q: "18. A bimetallic strip consists of metals X and Y. It is mounted rigidly at the base as shown in figure. The metal X has a higher coefficient of expansion compared to that of metal Y. When bimetallic strip is placed in a cold bath, then", img: "images/phy11-q18.png", opts: ["it will bend towards the right", "it will bend towards the left", "it will not bend but shrink", "it will neither bend nor shrink"], ans: 1, exp: "In cold, both shrink. X has higher α, so it shrinks more. The strip bends towards the side of X, i.e., towards the left." },
+    { q: "19. A bar of iron is 10 cm at 20°C. At 19°C, it will be (α of iron = 11 × 10⁻⁶ °C⁻¹)", opts: ["11 × 10⁻⁶ cm, longer", "11 × 10⁻⁵ cm, shorter", "11 × 10⁻⁶ cm, shorter", "11 × 10⁻⁵ cm, longer"], ans: 1, exp: "ΔL = LαΔT = 10 × 11×10⁻⁶ × (19 - 20) = -110 × 10⁻⁶ = -11 × 10⁻⁵ cm. It will be shorter." },
+    { q: "20. A surveyor's 30 m steel tape is correct at a temperature of 20°C. The distance between the two points, as measured by this tape on a day when the temperature is 35°C, is 26 m. The true distance between the points is [α(steel) = 1.2 × 10⁻⁵ /°C]", opts: ["25.9952 m", "26.0046 m", "27.995 m", "24.0046 m"], ans: 0, exp: "Measured length = True length × (1 + αΔT). 26 = L(1 + 1.2×10⁻⁵ × 15). L = 26 / 1.00018 = 25.9952 m." },
+    { q: "21. Two rods A and B of identical dimensions are at temperature 30°C. If A is heated upto 180°C and B upto T°C, then new lengths are the same. If the ratio of the coefficients of linear expansion of A and B is 4 : 3, then the value of T is", opts: ["230°C", "270°C", "200°C", "250°C"], ans: 0, exp: "L(1 + α_A ΔT_A) = L(1 + α_B ΔT_B). α_A(180 - 30) = α_B(T - 30). (α_A/α_B) = (T - 30)/150 = 4/3 => T - 30 = 200 => T = 230°C." },
+    { q: "22. A copper rod of 88 cm and an aluminium rod of unknown length have their increase in length, independent of increase in temperature. The length of aluminium rod is", opts: ["113.9 cm", "88 cm", "68 cm", "6.8 cm"], ans: 2, exp: "ΔL_cu = ΔL_Al => L_cu α_cu = L_Al α_Al. L_Al = 88 × (1.7×10⁻⁵ / 2.2×10⁻⁵) = 68 cm." },
+    { q: "23. How much should the temperature of a brass rod be increased so as to increase its length by 1%? (Given, α for brass is 0.00002°C⁻¹).", opts: ["300°C", "400°C", "500°C", "550°C"], ans: 2, exp: "ΔL/L = αΔT. 0.01 = 0.00002 × ΔT => ΔT = 500°C." },
+    { q: "24. Two rods, one of aluminium and the other made of steel, having initial length l₁ and l₂ are connected together to form a single rod of length l₁ + l₂. The coefficients of linear expansion for aluminium and steel are α_a and α_s, respectively. If the length of each rod increases by the same amount when their temperatures are raised by t°C, then find the ratio of l₁ with l₁ + l₂.", opts: ["α_s / α_a", "α_a / α_s", "α_s / (α_a + α_s)", "α_a / (α_a + α_s)"], ans: 2, exp: "l₁α_a = l₂α_s => l₁/l₂ = α_s/α_a. l₁/(l₁+l₂) = α_s / (α_a + α_s)." },
+    { q: "25. Coefficient of volumetric expansion α_V is not a constant. It depends on temperature. Variation of α_V with temperature T for metals is", img: "images/phy11-q25.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 2, exp: "For metals, α_V increases with temperature and becomes constant at higher temperatures. Graph (c) represents this." },
+    { q: "26. The coefficient of volume expansion of glycerine is 49 × 10⁻⁵ °C⁻¹. What is the fractional change in density for a 30°C rise in temperature?", opts: ["0.0155", "0.0145", "0.0255", "0.0355"], ans: 1, exp: "Δρ/ρ = -γΔT = -49×10⁻⁵ × 30 = -0.0147. Magnitude is 0.0145." },
+    { q: "27. The value of coefficient of volume expansion of glycerin is 5 × 10⁻⁴ K⁻¹. The fractional change in the density of glycerin for a rise of 40°C in its temperature is", opts: ["0.015", "0.020", "0.025", "0.010"], ans: 1, exp: "Δρ/ρ = -γΔT = -5×10⁻⁴ × 40 = -0.020. Fractional change is 0.020." },
+    { q: "28. For an ideal gas, coefficient of volume expansion is given by", opts: ["nRΔT / P", "ΔT / T", "RΔT / T", "1 / T"], ans: 3, exp: "PV = nRT. At constant P, V ∝ T. γ = (1/V)(dV/dT) = 1/T." },
+    { q: "29. When temperature of water is raised from 0°C to 4°C, it", opts: ["expands", "contracts", "expands upto 2°C and then contracts upto 4°C", "contracts upto 2°C and then expands upto 4°C"], ans: 1, exp: "Water has anomalous expansion. Between 0°C and 4°C, it contracts." },
+    { q: "30. Which of the following graph shows the variation of volume of water with increase in temperature?", img: "images/phy11-q30.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 1, exp: "Water contracts from 0 to 4°C (volume decreases), then expands (volume increases). Graph (b) shows this." },
+    { q: "31. Temperature of atmosphere in Kashmir falls below – 10°C in winter. Due to this water, animal and plant life of Dal-lake", opts: ["is destroyed in winters", "frozen in winter and regenerated in summers", "survives as only top layer of lake in frozen", "None of the above"], ans: 2, exp: "Ice forms on the top and acts as an insulator. Water below remains liquid at 4°C. So aquatic life survives." },
+    { q: "32. A brass wire 1.8 m long at 27°C is held taut with little tension between two rigid supports. If the wire is cooled to a temperature of – 39°C, what is the tension developed in the wire, if its diameter is 2.0 mm? Coefficient of linear expansion of brass = 2.0 × 10⁻⁵ °C⁻¹ and Young's modulus of brass = 0.91 × 10¹¹ Nm⁻².", opts: ["3.77 × 10² N", "5.3 × 10² N", "2.5 × 10² N", "4.3 × 10² N"], ans: 0, exp: "F = YAαΔT = (0.91×10¹¹) × π(10⁻³)² × (2×10⁻⁵) × (27 - (-39)) = 377 N = 3.77 × 10² N." },
+    { q: "33. Two rods of different materials having coefficients of thermal expansion α₁ and α₂ and Young's modulii Y₁ and Y₂, respectively are fixed between two rigid walls. The rods are heated, such that they undergo the same increase in temperature. There is no bending of rods. If α₁ / α₂ = 2/3 and stresses developed in the two rods are equal, then Y₁ / Y₂ is", opts: ["3/2", "1", "2/3", "1/2"], ans: 0, exp: "Stress = YαΔT. For equal stress, Y₁α₁ = Y₂α₂ => Y₁/Y₂ = α₂/α₁ = 3/2." },
+    { q: "34. A wire 3 m in length and 1 mm in diameter at 30°C is kept in a low temperature – 170°C and is stretched by hanging a weight of 10 kg at one end, so the change in length of the wire is (Y = 2 × 10¹¹ Nm⁻², g = 10 ms⁻² and α = 1.2 × 10⁻⁵ °C⁻¹)", opts: ["– 5.2 mm", "– 2.5 mm", "– 52 mm", "– 25 mm"], ans: 0, exp: "ΔL_thermal = LαΔT = 3 × 1.2×10⁻⁵ × (-200) = -7.2 × 10⁻³ m = -7.2 mm. ΔL_stress = FL/AY = (100×3) / (π/4 × 10⁻⁶ × 2×10¹¹) = 300 / (1.57×10⁵) = +2 × 10⁻³ m = +2 mm. Total = -7.2 + 2 = -5.2 mm." },
+    { q: "35. Amount of heat required to warm an object depends on", opts: ["mass of object", "temperature change", "nature of substance", "All of the above"], ans: 3, exp: "Q = m × s × ΔT. It depends on mass, specific heat (nature of substance), and temperature change." },
+    { q: "36. Water is used as a coolant because of", opts: ["low specific heat capacity", "high specific heat capacity", "warms up quickly", "None of the above"], ans: 1, exp: "Due to its high specific heat capacity, water absorbs a lot of heat with a small rise in temperature." },
+    { q: "37. Time taken to heat water upto a temperature of 40°C (from room temperature) is t₁ and time taken to heat mustard oil (of same mass and at room temperature) upto a temperature of 40°C is t₂, then (given mustard oil has smaller heat capacity)", opts: ["t₁ = t₂", "t₁ > t₂", "t₂ > t₁", "t₁ and t₂ both are less than 10 min"], ans: 1, exp: "Q = msΔT. Since s_water > s_oil, water requires more heat, so t₁ > t₂ for the same rate of heating." },
+    { q: "38. Which of the substances A, B and C has the lowest heat capacity? If heat is supplied to all of them at equal rates, the temperature versus time graph is shown below.", img: "images/phy11-q38.png", opts: ["A", "B", "C", "All have equal specific heat"], ans: 2, exp: "For same heat Q, temperature change ΔT is inversely proportional to heat capacity C. From graph, at a given time, ΔT_C is minimum, so C has the highest heat capacity? Wait, the slope of T-t graph is dT/dt = P/C. Lowest heat capacity means highest slope. Substance A has the highest slope, so A has lowest heat capacity." },
+    { q: "39. A normal diet furnishes 200 kcal to a 60 kg person in a day. If this energy was used to heat the person with no losses to the surroundings, how much would the person's temperature increases? The specific heat of the human body is 0.83 cal g⁻¹°C⁻¹.", opts: ["8.2°C", "4.01°C", "6.0°C", "5.03°C"], ans: 1, exp: "Q = msΔT => 200 × 10³ = 60 × 10³ × 0.83 × ΔT => ΔT = 200000 / 49800 = 4.01°C." },
+    { q: "40. Certain amount of heat is given to 100 g of copper to increase its temperature by 21°C. If the same amount of heat is given to 50 g water, then the rise in its temperature is (specific heat capacity of copper = 400 Jkg⁻¹K⁻¹ and that of water = 4200 Jkg⁻¹K⁻¹)", opts: ["4°C", "5.25°C", "8°C", "6°C"], ans: 0, exp: "m₁s₁ΔT₁ = m₂s₂ΔT₂ => 0.1 × 400 × 21 = 0.05 × 4200 × ΔT₂ => 840 = 210 ΔT₂ => ΔT₂ = 4°C." },
+    { q: "41. A certain substance has a mass of 50 g for 1 mole. When 300 J of heat is added to 25 g of sample of this material, its temperature rises from 25°C to 45°C. Calculate specific heat capacity and molar heat capacity of the sample.", opts: ["600 Jkg⁻¹°C⁻¹, 45 Jmol⁻¹°C⁻¹", "450 Jkg⁻¹°C⁻¹, 30 Jmol⁻¹°C⁻¹", "600 Jkg⁻¹°C⁻¹, 30 Jmol⁻¹°C⁻¹", "700 Jkg⁻¹°C⁻¹, 80 Jmol⁻¹°C⁻¹"], ans: 2, exp: "s = Q/(mΔT) = 300 / (0.025 × 20) = 600 J/kg°C. Molar heat = s × M = 600 × 0.05 = 30 J/mol°C." },
+    { q: "42. Two similar bodies of equal masses are heated to temperatures θ₁ and θ₂ (θ₁ > θ₂) and are mixed together. If temperature of mixture is θ, then", opts: ["θ = (θ₁ + θ₂)/2", "θ is never equal to (θ₁ + θ₂)/2", "θ is conditionally equal to (θ₁ + θ₂)/2", "θ > (θ₁ + θ₂)/2"], ans: 2, exp: "If specific heats are equal, θ = (θ₁ + θ₂)/2. If specific heats are different, it's not equal. So conditionally equal." },
+    { q: "43. A metal block is made from a mixture of 2.4 kg of aluminium, 1.6 kg of brass and 0.8 kg of copper. The amount of heat required to raise the temperature of this block from 20°C to 80°C is (specific heats of aluminium, brass and copper are 0.216, 0.0917 and 0.0931 calg⁻¹°C⁻¹, respectively)", opts: ["96.2 cal", "44.4 cal", "86.2 cal", "62.8 cal"], ans: 1, exp: "Q = (m₁s₁ + m₂s₂ + m₃s₃)ΔT = (2400×0.216 + 1600×0.0917 + 800×0.0931) × 60 = (518.4 + 146.72 + 74.48) × 60 = 739.6 × 60 = 44376 cal = 44.4 kcal." },
+    { q: "44. The temperature of equal masses of three different liquids A, B and C are 12°C, 19°C and 28°C, respectively. The temperature when A and B are mixed is 16°C and when B and C are mixed is 23°C. The temperature when A and C are mixed, is", opts: ["18.2°C", "22°C", "20.2°C", "(d) 25.2°C"], ans: 2, exp: "A+B: s_A(16-12) = s_B(19-16) => s_A/s_B = 3/4. B+C: s_B(23-19) = s_C(28-23) => s_B/s_C = 5/4. A+C: s_A(θ-12) = s_C(28-θ). (s_A/s_C) = (3/4)(5/4) = 15/16. 15/16 = (28-θ)/(θ-12) => 15θ - 180 = 448 - 16θ => 31θ = 628 => θ = 20.2°C." },
+    { q: "45. A block of ice at 0°C is slowly heated and converted into steam at 100°C. Which of these curves represent the phenomenon qualitatively?", img: "images/phy11-q45.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 0, exp: "The temperature remains constant at 0°C during melting and at 100°C during boiling. Graph (a) shows this." },
+    { q: "46. If a wire is pressed over a slab of ice as shown, then", img: "images/phy11-q46.png", opts: ["it cuts the slab into 2 parts and pass to other side after some time", "it passes through the ice slab and the slab does not split", "it remains over the slab (as initially placed)", "ice slab melts completely"], ans: 1, exp: "Due to pressure, ice melts below the wire. The wire passes through, and the water above refreezes. This is regelation. The slab does not split." },
+    { q: "47. At atmospheric pressure, water boils at 100°C. If pressure is reduced, then", opts: ["it still boils at same temperature", "it now boils at a lower temperature", "it now boils at a higher temperature", "it does not boil at all"], ans: 1, exp: "Boiling point decreases with decrease in pressure." },
+    { q: "48. A liquid boils when its vapour pressure is equal to", opts: ["6.0 cm of Hg column", "atmospheric pressure", "double of atmospheric pressure", "1000 Pa or more"], ans: 1, exp: "A liquid boils when its saturated vapour pressure equals the external atmospheric pressure." },
+    { q: "49. Cooking is difficult on hills because", opts: ["atmospheric pressure is higher", "atmospheric pressure is lower", "boiling point of water is reduced", "Both (b) and (c)"], ans: 3, exp: "At high altitudes, atmospheric pressure is low, so boiling point of water decreases. Food cooks slower." },
+    { q: "50. For the phase diagram of water given in figure, curves OA, AB and AC are respectively", img: "images/phy11-q50.png", opts: ["sublimation curve, vaporisation curve and fusion curve", "sublimation curve, fusion curve and vaporisation curve", "fusion curve, vaporisation curve and sublimation curve", "fusion curve, sublimation curve and vaporisation curve"], ans: 1, exp: "OA: Solid to vapour (sublimation). AB: Solid to liquid (fusion). AC: Liquid to vapour (vaporisation)." },
+    { q: "51. When water boils or freezes, its state changes but its temperature", opts: ["increases", "decreases", "does not change", "sometimes increase and sometimes decrease"], ans: 2, exp: "During phase change, temperature remains constant (latent heat is used)." },
+    { q: "52. The latent heat of vaporisation of a substance is always", opts: ["greater than its latent heat of fusion", "greater than its latent heat of sublimation", "equals to its latent heat of sublimation", "less than its latent heat of fusion"], ans: 0, exp: "Latent heat of vaporisation (liquid to gas) is greater than latent heat of fusion (solid to liquid) because more energy is needed to completely separate molecules." },
+    { q: "53. Steam burns are more serious in comparison to those caused from boiling water because", opts: ["steam at 100°C carries same heat as that of water at 100°C", "steam is more reactive", "steam has less surface tension, so it burns surface more rapidly", "steam at 100°C carries more heat than water at 100°C"], ans: 3, exp: "Steam has additional latent heat of vaporisation, so it releases more heat when it condenses on the skin." },
+    { q: "54. A piece of ice (heat capacity = 2100 Jkg⁻¹°C⁻¹ and latent heat = 3.36 × 10⁵ Jkg⁻¹) of mass m grams is at –5°C at atmospheric pressure. It is given 420 J of heat, so that the ice starts melting. Finally, when the ice-water mixture is in equilibrium, it is found that 1 g of ice has melted. Assuming there is no other heat exchange in the process, then find the value of m.", opts: ["8 g", "2 g", "4 g", "6 g"], ans: 0, exp: "Q = mcΔT + mL. 420 = m × 2.1 × 5 + 1 × 336. 420 = 10.5m + 336 => 10.5m = 84 => m = 8g." },
+    { q: "55. 0.15 kg of ice at 0°C is mixed with 0.30 kg of water at 50°C in a container. The resulting temperature is 6.7°C. Heat of fusion of ice is (given, specific heat of water is 4186 Jkg⁻¹K⁻¹)", opts: ["3.34 × 10⁵ Jkg⁻¹", "(b) 3.34 × 10⁴ Jkg⁻¹", "3.34 × 10² Jkg⁻¹", "3.34 × 10⁶ Jkg⁻¹"], ans: 0, exp: "Heat lost by water = Heat gained by ice. 0.3 × 4186 × (50 - 6.7) = 0.15 × L + 0.15 × 4186 × (6.7 - 0). 54376 = 0.15L + 4206 => 0.15L = 50170 => L = 3.34 × 10⁵ J/kg." },
+    { q: "56. Calculate the heat required to convert 3 kg of ice at –12°C kept in a calorimeter to steam at 100°C at atmospheric pressure. Given specific heat capacity of ice is 2100 Jkg⁻¹ K⁻¹, specific heat capacity of water is 4186 Jkg⁻¹ K⁻¹, latent heat of fusion of ice is 3.35 × 10⁵ Jkg⁻¹ and latent heat of steam is 2.256 × 10⁶ Jkg⁻¹.", opts: ["8 × 10⁴ J", "9.1 × 10⁶ J", "4 × 10³ J", "7 × 10⁶ J"], ans: 1, exp: "Q = 3(2100)(12) + 3(3.35×10⁵) + 3(4186)(100) + 3(2.256×10⁶) = 75600 + 1005000 + 1255800 + 6768000 = 9104400 J ≈ 9.1 × 10⁶ J." },
+    { q: "57. The rate of heat flow (or heat current) in a bar is proportional to", opts: ["temperature difference", "area of cross-section", "inversely to length of bar", "All of the above"], ans: 3, exp: "Rate of heat flow H = KA(ΔT)/L. It is proportional to ΔT, A, and inversely proportional to L." },
+    { q: "58. Cooking pots have copper coating at the bottom. This is because", opts: ["copper is a good conductor of heat", "copper is a good conductor of electricity", "copper promotes the distribution of heat over the bottom of a pot", "Both (a) and (c)"], ans: 3, exp: "Copper is a good conductor of heat, so it distributes heat quickly and uniformly at the bottom." },
+    { q: "59. Calculate the rate of loss of heat through a glass window of area 1000 cm² and thickness 0.4 cm, when temperature inside is 37°C and outside is –5°C. Coefficient of thermal conductivity of glass is 2.2 × 10⁻³ cal s⁻¹cm⁻¹K⁻¹.", opts: ["450 cal s⁻¹", "231 cal s⁻¹", "439 cal s⁻¹", "650 cal s⁻¹"], ans: 1, exp: "H = KAΔT/L = 2.2×10⁻³ × 1000 × (37 - (-5)) / 0.4 = 2.2 × 42 / 0.4 = 231 cal/s." },
+    { q: "60. The two ends of a metal rod are maintained at temperatures 100°C and 110°C. The rate of heat flow in the rod is found to be 4 Js⁻¹. If the ends are maintained at temperatures 200°C and 210°C, the rate of heat flow will be", opts: ["44.0 Js⁻¹", "16.8 Js⁻¹", "8.0 Js⁻¹", "4.0 Js⁻¹"], ans: 3, exp: "Rate of heat flow H = KAΔT/L. Since ΔT is same (10°C) in both cases, the rate of heat flow remains same, i.e., 4 Js⁻¹." },
+    { q: "61. Heat is flowing steadily from A to B. Temperature T at P, at distance x from A is such that", img: "images/phy11-q61.png", opts: ["T decreases linearly with x", "T increases linearly with x", "T decreases exponentially with x", "T increases with x as T ∝ x²"], ans: 0, exp: "In steady state, H = KA(T_A - T)/x = constant. So T decreases linearly with x." },
+    { q: "62. Water is boiled in a rectangular steel tank of thickness 2 cm by a constant temperature furnace. Due to vaporisation, water level falls at a steady rate of 1 cm in 9 min. Calculate the temperature of the furnace. Given, K for steel = 0.2 cals⁻¹m⁻¹°C⁻¹.", opts: ["150°C", "110°C", "130°C", "200°C"], ans: 1, exp: "Rate of heat = KA(T - 100)/L. Heat for evaporation = (A × 1 × 1) × 540 cal in 540s. KA(T-100)/0.02 = 540A/540 => 0.2(T-100)/0.02 = 1 => 10(T-100) = 1 => T-100 = 10 => T = 110°C." },
+    { q: "63. A deep rectangular pond of surface area A, containing water (density = ρ, specific heat capacity = s), is located in a region where the outside air temperature is a steady at – 26°C. The thickness of the frozen ice layer in this pond, at a certain instant is x. Taking the thermal conductivity of ice as K and its specific latent heat of fusion as L, the rate of increase of the thickness of ice layer, at this instant would be given by", img: "images/phy11-q63.png", opts: ["26K / ρ(L - 4s)", "26K / ρx² - L", "26K / ρxL", "26K / ρ(L + 4s)"], ans: 2, exp: "Rate of heat flow = KA(0 - (-26))/x = 26KA/x. This heat freezes mass dm in time dt. dm = ρA dx. Heat = dm × L = ρA dx L. 26KA/x = ρA L dx/dt => dx/dt = 26K / ρxL." },
+    { q: "64. One rod of length 2 m and thermal conductivity 50 units is attached to another rod of length 1 m and thermal conductivity 100 units. Temperature of free ends are 70°C and 50°C respectively, then temperature of junction point will be", opts: ["60°C", "54°C", "64°C", "68°C"], ans: 1, exp: "K₁(70-T)/2 = K₂(T-50)/1 => 50(70-T)/2 = 100(T-50) => 25(70-T) = 100(T-50) => 70-T = 4T - 200 => 5T = 270 => T = 54°C." },
+    { q: "65. Three bars of equal lengths and equal area of cross-sections are connected in series. Their thermal conductivities are in the ratio of 2 : 4 : 3. If the open ends of the first and the last bars are at temperature 200°C and 18°C, respectively in the steady state, then calculate the temperatures of both the junctions.", opts: ["116°C, 74°C", "120°C, 180°C", "125°C, 50°C", "130°C, 40°C"], ans: 0, exp: "2K(200-T₁) = 4K(T₁-T₂) = 3K(T₂-18). 2(200-T₁) = 4(T₁-T₂) => 100 - 0.5T₁ = T₁ - T₂ => 1.5T₁ - T₂ = 100. 4(T₁-T₂) = 3(T₂-18) => 4T₁ - 4T₂ = 3T₂ - 54 => 4T₁ - 7T₂ = -54. Solving gives T₁ = 116°C, T₂ = 74°C." },
+    { q: "66. Two rods A and B of different materials are welded together as shown in figure and their thermal conductivities are K₁ and K₂. The thermal conductivity of the composite rod will be", img: "images/phy11-q66.png", opts: ["(K₁ + K₂)/2", "3(K₁ + K₂)/2", "K₁ + K₂", "2(K₁ + K₂)"], ans: 0, exp: "For parallel combination, K_eq = (K₁A₁ + K₂A₂)/(A₁+A₂) = (K₁ + K₂)/2." },
+    { q: "67. Two rods of same length and material transfer a given amount of heat in 12 s, when they are joined end to end (i.e. in series). But when they are joined in parallel, they will transfer same heat under same temperature difference across their ends in", opts: ["24 s", "3 s", "38 s", "1.5 s"], ans: 1, exp: "In series, H = K_eq A ΔT/L where K_eq = K/2. In parallel, K_eq = 2K. So heat flow is 4 times faster. Time = 12/4 = 3s." },
+    { q: "68. A solid cylinder of radius R, made of a material of thermal conductivity K₁ is surrounded by a hollow cylinder of inner radius R and outer radius 2R made of material of thermal conductivity K₂. The two ends of the combined system are maintained at two different temperatures. There is no loss of heat across the cylindrical surface and the system is in steady state. The effective thermal conductivity of the system is", opts: ["K₁ + K₂", "(K₁ + 3K₂)/4", "K₁K₂/(K₁ + K₂)", "(3K₁ + K₂)/4"], ans: 1, exp: "Parallel combination: H = H₁ + H₂. K_eq A = K₁A₁ + K₂A₂. K_eq (π(2R)²) = K₁(πR²) + K₂(π(4R² - R²)). 4K_eq = K₁ + 3K₂ => K_eq = (K₁ + 3K₂)/4." },
+    { q: "69. Three rods made of the same material and having the same cross-section have been joined as shown in the figure. Each rod is of the same length. The left and right ends are kept at 0°C and 90°C, respectively. The temperature of the junction of the three rods will be", img: "images/phy11-q69.png", opts: ["45°C", "90°C", "30°C", "60°C"], ans: 3, exp: "Let junction temperature be T. Heat in from one rod = heat out from two rods. KA(90-T)/L = KA(T-0)/L + KA(T-0)/L. 90 - T = 2T => 3T = 90 => T = 30°C." },
+    { q: "70. The equatorial and polar regions of the earth receive unequal solar heat. The convection current arising is called", opts: ["land breeze", "sea breeze", "trade wind", "tornado"], ans: 2, exp: "Unequal heating of equatorial and polar regions causes convection currents in the atmosphere, leading to trade winds." },
+    { q: "71. The amount of heat that a body can absorb by radiation", opts: ["depend on both colour and temperature of body", "depends on colour of body only", "depends on temperature of body only", "depends on density of body"], ans: 0, exp: "Absorptive power depends on colour (black absorbs more). Emission/absorption also depend on temperature (Kirchhoff's law, Stefan's law)." },
+    { q: "72. The bottom of utensils for cooking food are blackened to", opts: ["absorb minimum heat from fire", "absorb maximum heat from fire", "emit radiations", "reflect heat to surroundings"], ans: 1, exp: "Black bodies absorb more heat by radiation from the fire." },
+    { q: "73. The plots of intensity of radiation versus wavelength of three black bodies at temperature T₁, T₂ and T₃ are shown. Then,", img: "images/phy11-q73.png", opts: ["T₃ > T₂ > T₁", "T₁ > T₂ > T₃", "T₂ > T₃ > T₁", "T₁ > T₃ > T₂"], ans: 0, exp: "From Wien's displacement law, λ_m T = constant. From graph, λ_m(T₁) is maximum, so T₁ is minimum. λ_m(T₃) is minimum, so T₃ is maximum. T₃ > T₂ > T₁." },
+    { q: "74. A black body is at a temperature of 5760 K. The energy of radiation emitted by the body at wavelength 250 nm is U₁, at wavelength 500 nm is U₂ and that at 1000 nm is U₃ and Wien's constant, b = 2.88 × 10⁶ nm-K. Which of the following is correct?", opts: ["U₃ = 0", "U₁ > U₂", "U₂ > U₁", "U₁ = 0"], ans: 2, exp: "λ_m = b/T = 2.88×10⁶ / 5760 = 500 nm. At 500 nm, energy is maximum (U₂). So U₂ > U₁." },
+    { q: "75. The wavelength λ_m = 55 × 10⁻⁷ m corresponds to a temperature of the sun of 5500 K. If the furnace has wavelength λ_m equal to 11 × 10⁻⁷ m, then temperature of furnace is", opts: ["5000 K", "1750 K", "(c) 3750 K", "2750 K"], ans: 3, exp: "T_f = T_s × (λ_ms / λ_mf) = 5500 × (5.5/11) = 2750 K." },
+    { q: "76. The intensity of radiation emitted by the sun has its maximum value at a wavelength of 510 nm and that emitted by the north star has the maximum value at wavelength of 350 nm. If these stars behave like black bodies, then the ratio of surface temperature of the sun and north star is", opts: ["1.46", "0.69", "1.21", "0.83"], ans: 1, exp: "T_sun/T_ns = λ_m(ns) / λ_m(sun) = 350/510 = 0.69." },
+    { q: "77. On observing light from three different stars P, Q and R, it was found that intensity of violet colour is maximum in the spectrum of P, the intensity of green colour is maximum in the spectrum of R and the intensity of red colour is maximum in the spectrum of Q. If T_P, T_Q and T_R are the respective absolute temperature of P, Q and R, then it can be concluded from the above observations that", opts: ["T_P > T_Q > T_R", "T_P > T_R > T_Q", "T_P < T_R < T_Q", "T_P < T_Q < T_R"], ans: 1, exp: "Wavelength: λ_violet < λ_green < λ_red. Temperature is inversely proportional to wavelength. T_P (violet) > T_R (green) > T_Q (red)." },
+    { q: "78. If the radius of a star is R and it acts as a black body, what would be the temperature of the star, in which rate of energy production is Q? (σ is Stefan's constant)", img: "images/phy11-q78.png", opts: ["Q / (4πR²σ)", "[Q / (4πR²σ)]^(1/2)", "[Q / (4πR²σ)]^(1/4)", "[4πR²Q / σ]^(1/4)"], ans: 2, exp: "Q = σAT⁴ = σ(4πR²)T⁴. T = [Q / (4πR²σ)]^(1/4)." },
+    { q: "79. The temperature of two bodies A and B are 727°C and 327°C respectively, the ratio H_A : H_B of the rates of heat radiated by them is", opts: ["727 : 327", "5 : 3", "25 : 9", "625 : 81"], ans: 3, exp: "T_A = 727 + 273 = 1000 K. T_B = 327 + 273 = 600 K. H ∝ T⁴. H_A/H_B = (1000/600)⁴ = (5/3)⁴ = 625/81." },
+    { q: "80. Calculate radiation power for sphere whose temperature is 227°C, radius is 2 m and emissivity is 0.8.", opts: ["142.5 kW", "1500 W", "1255 W", "1575 W"], ans: 0, exp: "T = 500 K. P = eσAT⁴ = 0.8 × 5.67×10⁻⁸ × 4π(2)² × (500)⁴ = 142.5 kW." },
+    { q: "81. At what temperature will the filament of 100 W lamp operate, if it is supposed to be perfectly black body of area 1.0 cm²?", opts: ["3449 K", "2049 K", "3000 K", "3010 K"], ans: 1, exp: "P = σAT⁴ => 100 = 5.67×10⁻⁸ × 10⁻⁴ × T⁴ => T⁴ = 100 / (5.67×10⁻¹²) = 1.76 × 10¹³ => T = 2049 K." },
+    { q: "82. A spherical black body with a radius of 12 cm radiates 450 W power at 500 K. If the radius were halved and the temperature doubled, the power radiated in watt would be", opts: ["225", "450", "1000", "1800"], ans: 3, exp: "P ∝ AT⁴ ∝ r²T⁴. P₂/P₁ = (r/2 / r)² × (2T/T)⁴ = (1/4) × 16 = 4. P₂ = 4 × 450 = 1800 W." },
+    { q: "83. Due to the change in main voltage, the temperature of an electric bulb rises from 3000 K to 4000 K. What is the percentage rise in electric power consumed?", opts: ["216", "100", "150", "178"], ans: 0, exp: "P ∝ T⁴. P₂/P₁ = (4000/3000)⁴ = (4/3)⁴ = 256/81. Percentage rise = (256-81)/81 × 100 = 216%." },
+    { q: "84. Three very large plates of same area are kept parallel and close to each other. They are considered as ideal black surfaces and have very high thermal conductivity. The first and third plate is maintained at temperature 2T and 3T, respectively. The temperature of the middle (second) plate under steady state condition is", opts: ["(65/2)^(1/4) T", "(97/4)^(1/4) T", "(97/2)^(1/4) T", "(97)^(1/4) T"], ans: 2, exp: "Let T' be middle plate. Energy in = Energy out. σA(3T)⁴ + σA(2T)⁴ = 2σA(T')⁴. (T')⁴ = (81 + 16)T⁴/2 = 97T⁴/2. T' = (97/2)^(1/4) T." },
+    { q: "85. The power radiated by a black body is P and it radiates maximum energy at wavelength λ₀. If the temperature of the black body is now changed, so that it radiates maximum energy at wavelength (3/4)λ₀, the power radiated by it becomes nP. The value of n is", opts: ["256/81", "4/3", "3/4", "81/256"], ans: 0, exp: "λ_m T = constant. T₂/T₁ = λ₁/λ₂ = λ₀/((3/4)λ₀) = 4/3. P ∝ T⁴. P₂/P₁ = (4/3)⁴ = 256/81." },
+    { q: "86. If temperature of sun = 6000 K, radius of sun = 7.2 × 10⁵ km, radius of earth = 6000 km and distance between earth and sun = 15 × 10⁷ km. Find intensity of light on earth.", opts: ["19.2 × 10¹⁶", "12.2 × 10¹⁶", "18.3 × 10¹⁶", "9.2 × 10¹⁶"], ans: 0, exp: "I = (σT⁴ × 4πR_s²) / (4πd²) = 5.67×10⁻⁸ × (6000)⁴ × (7.2×10⁵)² / (15×10⁷)² = 19.2 × 10¹⁶ W/m²." },
+    { q: "87. Which of the following is not a greenhouse gas?", opts: ["CO₂", "CH₄", "O₃", "H₂O"], ans: 3, exp: "H₂O is not considered a greenhouse gas in the context of global warming (although it is a greenhouse gas, it's not the primary focus of human-induced warming)." },
+    { q: "88. Hot water or milk, when left on a table begins to cool gradually, because", opts: ["temperature of surroundings is higher", "everything cools down with time irrespective of the temperature of the surroundings", "temperature of surroundings is lesser", "None of the above"], ans: 2, exp: "Heat flows from higher temperature to lower. Since surroundings are cooler, it cools down." },
+    { q: "89. The rate of loss of heat depends on", opts: ["the sum of temperature of the body and its surroundings", "the difference in temperature of the body and its surroundings", "the product of temperature of the body and its surroundings", "the ratio of temperature of the body and its surroundings"], ans: 1, exp: "By Newton's law of cooling, rate of loss of heat ∝ temperature difference." },
+    { q: "90. In equation -dQ/dt = k(T₂ - T₁), where k is a positive constant which depends upon", opts: ["the area of exposed surface", "the nature of the surface of the body", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "k depends on area (A) and nature of surface. k = eσA for radiation." },
+    { q: "91. Suppose a body of mass m and specific heat capacity s is at temperature T₂. Let T₁ be the temperature of the surroundings. If the temperature falls by a small amount dT₂ in time dt, then the amount of heat lost is", opts: ["dQ = – 4 ms dT₂", "dQ = 2 ms dT₂", "dQ = ms dT₂", "dQ = – 2 ms dT₂"], ans: 0, exp: "Heat lost dQ = ms dT₂ (where dT₂ is magnitude of change). But dT₂ is negative (fall), so dQ = -ms dT₂. Option (a) has -4, which might be a typo. Correct is -ms dT₂." },
+    { q: "92. Certain quantity of water cools from 70°C to 60°C in the first 5 min and to 54°C in the next 5 min. The temperature of the surroundings is", opts: ["45°C", "20°C", "42°C", "10°C"], ans: 0, exp: "Newton's law: (70-60)/5 = k(65 - T₀). (60-54)/5 = k(57 - T₀). 2 = 65-T₀ / (1.2 = 57-T₀). 10(57-T₀) = 6(65-T₀) => 570 - 10T₀ = 390 - 6T₀ => 4T₀ = 180 => T₀ = 45°C." },
+    { q: "93. A body cools in 7 min from 60°C to 40°C, then what will be its temperature after the next 7 min? The temperature of the surroundings is 10°C.", opts: ["40°C", "30°C", "15°C", "28°C"], ans: 3, exp: "(60-40)/7 = k(50 - 10). (40-T)/7 = k((40+T)/2 - 10). 20/7 = 40k => k = 1/14. (40-T)/7 = (1/14)(T/2 + 10) => 2(40-T) = T/2 + 10 => 80 - 2T = T/2 + 10 => 70 = 2.5T => T = 28°C." },
+    { q: "94. A cup of tea cools from 81°C to 79°C in 1 min. The ambient temperature is 30°C. What time is needed for cooling of same cup of tea in same ambience from 61°C to 59°C?", opts: ["1 min 40 s", "1 min 6 s", "1 min 22 s", "4 min 3 s"], ans: 0, exp: "2/t₁ = k(80 - 30) = 50k. 2/t₂ = k(60 - 30) = 30k. t₂/t₁ = 50/30 = 5/3. t₂ = (5/3) × 60 = 100s = 1 min 40s." },
+    { q: "95. An object kept in a large room having air temperature of 25°C takes 12 min to cool from 80°C to 70°C. The time taken to cool for the same object from 70°C to 60°C would be nearly", opts: ["10 min", "12 min", "20 min", "15 min"], ans: 3, exp: "(80-70)/12 = k(75 - 25) => 10/12 = 50k => k = 1/60. (70-60)/t = k(65 - 25) => 10/t = 40/60 = 2/3 => t = 15 min." },
+    { q: "96. A liquid in a beaker has temperature θ(t) at time t and θ₀ is temperature of surroundings, then according to Newton's law of cooling, the correct graph between log_e(θ - θ₀) and t is", img: "images/phy11-q96.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 0, exp: "dθ/dt = -k(θ - θ₀). Integrating gives ln(θ - θ₀) = -kt + C. This is a straight line with negative slope. Graph (a)." },
+    { q: "97. Assertion: A hotter body has more heat content than a colder body.\nReason: Temperature is the measure of degree of hotness of a body.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "A hotter body doesn't necessarily have more heat content (depends on mass and specific heat). Assertion is incorrect. Reason is correct." },
+    { q: "98. Assertion: When heat transfer takes place between a system and surroundings, the total heat content of system or surroundings separately remains same.\nReason: Heat is a form of energy which follows the principle of conservation of energy.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Total heat content of system + surroundings is conserved, not separately. Assertion is incorrect. Reason is correct." },
+    { q: "99. Assertion: Houses made of concrete roofs get very hot during summer days.\nReason: Thermal conductivity of concrete is much smaller than that of metal.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "Concrete roofs get hot due to solar radiation. Reason is true (K is smaller), but it's not the reason for getting hot (in fact, low K would keep inside cool). Both are true but R is not explaining A." },
+    { q: "100. Assertion: When temperature difference across the two sides of a wall is increased, its thermal conductivity increases.\nReason: Thermal conductivity depends on the nature of material of the wall.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Thermal conductivity is a material property, independent of temperature difference. Assertion is incorrect, Reason is correct." },
+    { q: "101. Assertion: If equal amount of heat is added to equal masses of different substances, the resulting change in temperature is also equal.\nReason: Every substance requires a unique value of heat to change its temperature per unit mass, per degree centigrade (or per kelvin).", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Different substances have different specific heats, so equal heat causes different ΔT. Assertion is incorrect. Reason is correct." },
+    { q: "102. Assertion: Water kept in an open vessel will quickly evaporate on the surface of the moon.\nReason: The temperature at the surface of the moon is much higher than boiling point of water.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Water evaporates quickly due to lack of atmosphere (zero pressure), not because of high temperature (moon temp varies). Assertion correct, Reason incorrect." },
+    { q: "103. Assertion: When a rod is heated freely, it expands and thermal strain set up in rod due to heating.\nReason: Strain is a change in length per unit original length.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "When heated freely, there is no thermal stress/strain. Assertion is incorrect. Reason is correct." },
+    { q: "104. Assertion: Desert regions are hotter in day and colder at night.\nReason: Desert sand is dry.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Dry sand has low specific heat capacity, so it heats up and cools down quickly. Both A and R are correct and R explains A." },
+    { q: "105. Assertion: NH₃ is liquified more easily than CO₂.\nReason: Critical temperature of NH₃ is more than CO₂.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Higher critical temperature means easier to liquefy. T_c(NH₃) > T_c(CO₂). Both A and R are correct and R explains A." },
+    { q: "106. Assertion: The triple point of water is a standard fixed point in modern thermometry.\nReason: Melting point of ice and the boiling point of water changes due to change in atmospheric pressure.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Triple point is unique (occurs at a single pressure and temperature), so it's a standard. Melting/boiling points vary with pressure. Both A and R are correct and R explains A." },
+    { q: "107. Assertion: A black body at higher temperature T radiates energy U. When temperature falls to one-third, the radiated energy will be U/81.\nReason: U² ∝ T⁴.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "U ∝ T⁴ (not U²). If T' = T/3, U' = U/81. Assertion is correct, Reason is incorrect." },
+    { q: "108. Assertion: The SI unit of Stefan's constant is Wm⁻² K⁻⁴.\nReason: This follows from Stefan's law, E = σT⁴.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Stefan's law is E = σT⁴ (E is energy radiated per unit area per unit time, W/m²). So σ unit is Wm⁻²K⁻⁴. Assertion is correct, Reason is incorrect." },
+    { q: "109. Assertion: The radiation from the sun's surface varies as the fourth power of its absolute temperature.\nReason: Sun is not a black body.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Sun behaves approximately as a black body. E ∝ T⁴ is Stefan's law. Assertion correct, Reason incorrect." },
+    { q: "110. Assertion: For higher temperatures, the peak emission wavelength of a black body shifts to lower wavelengths.\nReason: Peak emission wavelength of a black body is proportional to the four power of temperature.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Wien's law: λ_m ∝ 1/T (inversely proportional). Assertion correct, Reason incorrect." },
+    { q: "111. Assertion: The rate of loss of heat of a body at 300 K is R. At 900 K, the rate of loss becomes 81 R.\nReason: This is as per Newton's law of cooling.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "This is Stefan's law (E ∝ T⁴), not Newton's law of cooling. (900/300)⁴ = 81. Assertion correct, Reason incorrect." },
+    { q: "112. A body A is at a temperature T_A and a body B is at a temperature T_B such that T_A > T_B. Bodies A and B are connected. Which of the following statements is correct related to two bodies?\nI. Body A is hotter than body B.\nII. Heat flows from A to B.\nIII. Heat flows from B to A.", opts: ["Both I and II", "Only I", "Both II and III", "Both I and III"], ans: 0, exp: "Since T_A > T_B, A is hotter (I) and heat flows from A to B (II)." },
+    { q: "113. During vaporisation,\nI. the change of state from liquid to vapour state occurs.\nII. the temperature remains constant.\nIII. both liquid and vapour states co-exist in equilibrium.\nIV. specific heat of substance increases.\nWhich of the following statement(s) is/are correct?", opts: ["I, II and IV", "II, III and IV", "I, III and IV", "I, II, III and IV"], ans: 0, exp: "During vaporisation, state changes (I), temp is constant (II), liquid and vapour co-exist (III). Specific heat doesn't increase (IV is wrong)." },
+    { q: "114. I. Gases are poor thermal conductors.\nII. Liquids have conductivities intermediate between solids and gases.\nIII. Heat conduction can take place from cold body to hotter body.\nWhich of the following statement (s) is/are correct?", opts: ["Only I", "Only II", "Only III", "Both I and II"], ans: 3, exp: "Gases are poor conductors (I). Liquids are intermediate (II). Heat cannot flow from cold to hot (III is wrong)." },
+    { q: "115. I. Convection is a mode of heat transfer by actual motion of matter.\nII. Convection is possible only in gases.\nIII. Convection can be natural or forced.\nWhich of the following statement(s) is/are correct?", opts: ["Only I", "Both I and III", "Only II", "I, II and III"], ans: 1, exp: "Convection involves bulk motion (I) and can be natural or forced (III). It occurs in liquids and gases, not just gases (II is wrong)." },
+    { q: "116. I. Thermos bottle consists of a double-walled glass vessel with inner and outer walls coated with silver.\nII. In flask, space between the walls is evacuated to reduce conduction and convection losses.\nIII. Thermos bottle is useful for preventing hot contents (like milk) from getting cold or to store cold content (like ice).\nWhich of the following statement(s) is/are correct?", opts: ["Only I", "Only II", "Both I and II", "I, II and III"], ans: 3, exp: "All three statements correctly describe a thermos flask." },
+    { q: "117. I. Conduction of heat takes place in solids and liquids like mercury and molten metals.\nII. In radiation, energy directly flows from heat source to the given body at a speed of 3 × 10⁸ ms⁻¹.\nIII. Convection of heat takes place in liquids only.\nWhich of the following statement(s) is/are correct?", opts: ["Only I", "Both II and III", "Only III", "Both I and II"], ans: 3, exp: "I is correct (conduction in solids and liquid metals). II is correct (radiation speed = c). III is wrong (convection in liquids and gases)." },
+    { q: "118. I. It is the phenomenon which keeps the earth's surface cool at night.\nII. The wavelength of thermal radiation lies in infrared region.\nIII. A large portion of thermal radiation is absorbed by greenhouse gases like CO₂, CH₄, N₂O, CFCs and O₃, which heats up the atmosphere and give more energy to earth, resulting in warmer surface.\nWhich of the following statement(s) is/are correct regarding with greenhouse effect?", img: "images/phy11-q118.png", opts: ["Both I and II", "Both II and III", "Both III and I", "I, II and III"], ans: 1, exp: "Greenhouse effect keeps earth warm (I is wrong). Thermal radiation is IR (II). Greenhouse gases absorb IR (III)." },
+    { q: "119. Gulab jamuns (assumed to be spherical) are to be heated in an oven. They are available in two sizes, one twice bigger (in radius) than the other. Pizzas (assumed to be discs) are also to be heated in oven. They are also in two sizes, one twice bigger (in radius) than the other. All four are put together to be heated to oven temperature. Choose the correct statement from the following.", opts: ["Both size gulab jamuns will get heated in the same time.", "Smaller gulab jamuns are heated before bigger ones.", "Bigger pizzas are heated before smaller ones.", "Bigger pizzas are heated before smaller gulab jamuns."], ans: 1, exp: "Rate of heating depends on surface area to volume ratio. Smaller objects have larger surface area to volume ratio, so they heat faster." },
+    { q: "120. Which one of the following statement is correct for dependance of the coefficient of linear expansion of a metal rod?", opts: ["The original length of the rod.", "The change in temperature of the rod.", "The specific heat of the metal.", "The nature of the metal."], ans: 3, exp: "Coefficient of linear expansion (α) is a characteristic property of the material (nature of the metal). It doesn't depend on length or ΔT." },
+    { q: "121. A bimetallic strip is formed out of two identical strips, one of copper and other of brass. The coefficients of linear expansion of the two metals are α_c and α_b. On heating, the temperature of the strip goes up by ΔT and the strip bends to form an arc of radius of curvature R. Then, which of the following statement is correct about the radius of curvature?", img: "images/phy11-q121.png", opts: ["It is proportional to ΔT.", "It is inversely proportional to ΔT.", "It is proportional to |α_b - α_c|.", "It is inversely proportional to |α_b + α_c|."], ans: 1, exp: "R = d / ((α_b - α_c)ΔT). R ∝ 1/ΔT." },
+    { q: "122. A uniform metallic circular disc of mass M and radius R, mounted on frictionless bearings, is rotating (with angular frequency ω) about an axis passing through its centre and perpendicular to its plane. The temperature of the disc is then increased by ΔT. If α is the coefficient of linear expansion of the metal, then which of the following statement is correct?", img: "images/phy11-q122.png", opts: ["The moment of inertia increases by MR²αΔT.", "The moment of inertia remains unchanged.", "The angular frequency increases by 2αω ΔT.", "The angular frequency decreases by αω ΔT."], ans: 0, exp: "I = (1/2)MR². ΔI = (1/2)M(2RΔR) = MR(RαΔT) = MR²αΔT. So I increases by MR²αΔT." },
+    { q: "123. The coefficient of volume expansion of a liquid is 49 × 10⁻⁵ K⁻¹. When temperature is raised by 30°C, then which of the following statement is correct?", opts: ["Its density decreases.", "Its density increases.", "Its fractional decrease in density is 2.5 × 10⁻².", "Its fractional increase in density is 2.5 × 10⁻²."], ans: 0, exp: "Volume increases, so density decreases. Δρ/ρ = -γΔT = -49×10⁻⁵ × 30 = -1.47 × 10⁻². Density decreases." },
+    { q: "124. Refer to the plot of temperature versus time (figure) showing the changes in the state, if ice on heating (not to scale). Which of the following statement is correct?", img: "images/phy11-q124.png", opts: ["The region AB represents ice and water in thermal equilibrium.", "At B water starts boiling.", "At C all the water gets converted into steam.", "C to D represents water and steam in equilibrium below boiling point."], ans: 0, exp: "AB is the melting region (0°C), where ice and water coexist. BC is heating of water. CD is boiling (100°C)." },
+    { q: "125. The graph shows the variation of temperature T of one kilogram of a material with the heat H supplied to it. At point O, the substance is in the solid state. From the graph, which of the following statement is correct?", img: "images/phy11-q125.png", opts: ["T₂ is the melting point of the solid.", "AB represents the change of state from solid to liquid.", "(H₂ + H₁) represents the latent heat of fusion of the substance.", "(H₃ - H₁) represents the total latent heat of vaporisation of the liquid."], ans: 1, exp: "AB is the first plateau, representing melting (solid to liquid change). T₁ is melting point." },
+    { q: "126. If 10g of oxygen are subjected to a pressure of 3 atm at a temperature of 10°C. Heating at a constant pressure, the gas is expanded to 10L. With reference to the given situation, match the Column I (physical quantity) with Column II (value) and select the correct answer from the codes given below. (R = 0.0821 atm-litre K⁻¹ mol⁻¹)\n\nColumn I:\nA. The volume of the gas before expansion (in litres)\nB. The temperature of the gas after expansion (in kelvin)\nC. The density of gas before expansion (in gL⁻¹)\nD. The density of gas after expansion (in gL⁻¹)\n\nColumn II:\n1. 4.13\n2. 1.0\n3. 2.42\n4. 1169.4", img: "images/phy11-q126.png", opts: ["A-3, B-4, C-2, D-1", "A-4, B-3, C-1, D-2", "A-3, B-4, C-1, D-2", "A-4, B-2, C-3, D-1"], ans: 0, exp: "n = 10/32 = 0.3125. V₁ = nRT₁/P = 0.3125×0.0821×283 / 3 = 2.42 L (A-3). P constant, V/T = const. T₂ = T₁(V₂/V₁) = 283 × 10/2.42 = 1169.4 K (B-4). Density before = 10/2.42 = 4.13 g/L (C-1). Density after = 10/10 = 1.0 g/L (D-2). Hence A-3, B-4, C-1, D-2." },
+    { q: "127. Match the Column I (physical quantity) with Column II (temperature) as per the anomalous behaviour of water and select the correct answer from the codes given below.\n\nColumn I:\nA. Density maximum\nB. Volume increases\nC. Volume decreases\n\nColumn II:\n1. 4°C\n2. 27°C to 10°C\n3. 4°C to 0°C", img: "images/phy11-q127.png", opts: ["A-1, B-3, C-2", "A-1, B-2, C-3", "A-1, B-3, C-2", "A-1, B-2, C-3"], ans: 0, exp: "Density max at 4°C (A-1). Volume increases from 4°C upwards (B-2). Volume decreases from 4°C to 0°C (C-3)." },
+    { q: "128. Match the Column I (mixture) with Column II (temperature) and select the correct answer from the codes given below. Three liquids A, B and C having same specific heat and masses m, 2m and 3m at temperatures 20°C, 40°C and 60°C, respectively. Temperature of the mixture when\n\nColumn I:\nA. A and B are mixed\nB. A and C are mixed\nC. B and C are mixed\nD. A, B and C all three are mixed\n\nColumn II:\n1. 33.3°C\n2. 52°C\n3. 50°C\n4. None", img: "images/phy11-q128.png", opts: ["A-1, B-3, C-2, D-4", "A-1, B-2, C-3, D-4", "A-1, B-3, C-4, D-2", "A-1, B-3, C-2, D-4"], ans: 0, exp: "A+B: (m×20 + 2m×40)/3m = 100/3 = 33.3°C (A-1). A+C: (m×20 + 3m×60)/4m = 200/4 = 50°C (B-3). B+C: (2m×40 + 3m×60)/5m = 260/5 = 52°C (C-2). ABC: (20 + 80 + 180)/6 = 280/6 = 46.67°C (D-4)." },
+    { q: "129. Match the Column I (quantity) with Column II (dimension) and select the correct answer from the codes given below.\n\nColumn I:\nA. Thermal resistance\nB. Stefan's constant\nC. Wien's constant\nD. Heat current\n\nColumn II:\n1. [MT⁻³K⁻⁴]\n2. [M⁻¹L⁻²T³K]\n3. [ML²T⁻³]\n4. [LK]", img: "images/phy11-q129.png", opts: ["A-2, B-1, C-4, D-3", "A-1, B-2, C-3, D-4", "A-2, B-1, C-3, D-4", "A-2, B-1, C-4, D-3"], ans: 0, exp: "Thermal resistance = L/KA = [M⁻¹L⁻²T³K] (A-2). Stefan's constant = [MT⁻³K⁻⁴] (B-1). Wien's constant = [LK] (C-4). Heat current = [ML²T⁻³] (D-3)." },
+    { q: "130. Two ideal gas thermometers A and B use oxygen and hydrogen, respectively. The following observations are made\n\n| Temperature | Pressure thermometer A | Pressure thermometer B |\n|---|---|---|\n| Triple point of water | 1.25 × 10⁵ Pa | 0.2 × 10⁵ Pa |\n| Normal melting point of sulphur | 1.797 × 10⁵ Pa | 0.287 × 10⁵ Pa |\n\nThe absolute temperature of normal melting point of sulphur as read by thermometer A is", img: "images/phy11-q130.png", opts: ["292.60 K", "392.69 K", "362.00 K", "491.98 K"], ans: 1, exp: "T = T_tr × (P/P_tr) = 273.16 × (1.797×10⁵ / 1.25×10⁵) = 273.16 × 1.4376 = 392.69 K." },
+    { q: "131. A steel tape 1 m long is correctly calibrated for a temperature of 27.0°C. The length of a steel rod measured by this tape is found to be 63.0 cm on a hot day, when the temperature is 45.0°C. What is the actual length of the steel rod on that day? Coefficient of linear expansion of steel is 1.20 × 10⁻⁵ K⁻¹.", img: "images/phy11-q131.png", opts: ["63 cm", "more than 63 cm but less than 64 cm", "less than 63 cm", "62 cm"], ans: 1, exp: "Tape expands. Actual length = Measured × (1 + αΔT) = 63 × (1 + 1.2×10⁻⁵ × 18) = 63 × 1.000216 = 63.0136 cm. It is more than 63 but less than 64." },
+    { q: "132. A large steel wheel is to be fitted on a shaft of the same material. At 27°C, the outer diameter of the shaft is 8.70 cm and the diameter of the central hole in the wheel is 8.69 cm. The shaft is cooled using dry ice. At what temperature of the shaft does the wheel slip on the shaft? Assume the coefficient of linear expansion of the steel to be constant over the required temperature range. α_steel = 1.20 × 10⁻⁵ K⁻¹.", img: "images/phy11-q132.png", opts: ["0°C", "– 50°C", "– 70°C", "– 20°C"], ans: 2, exp: "D_shaft = D0(1 + αΔT). 8.69 = 8.70(1 + 1.2×10⁻⁵ × (T - 27)). 8.69/8.70 - 1 = 1.2×10⁻⁵(T - 27). -0.00115 = 1.2×10⁻⁵(T - 27). T - 27 = -95.8. T = -68.8°C ≈ -70°C." },
+    { q: "133. A brass wire 1.8 m long at 27°C is held taut with negligible tension between two rigid supports. Diameter of the wire is 2 mm, its coefficient of linear expansion, α_brass = 2 × 10⁻⁵ °C⁻¹ and its Young's modulus, Y_brass = 0.91 × 10¹¹ Nm⁻². If the wire is cooled to a temperature – 39°C, then tension developed in the wire is", img: "images/phy11-q133.png", opts: ["2.7 × 10² N", "3.7 × 10² N", "4.7 × 10² N", "5.7 × 10² N"], ans: 1, exp: "F = YAαΔT = 0.91×10¹¹ × π(10⁻³)² × 2×10⁻⁵ × (27 - (-39)) = 377 N = 3.7 × 10² N." },
+    { q: "134. A cubical thermocole ice box of side 30 cm has a thickness 5 cm. If 4 kg of ice is put in the box, the amount of ice remaining after 6 h is (the outside temperature is 45°C, the coefficient of thermal conductivity of thermocole is 0.01 Js⁻¹m⁻¹K⁻¹ and latent heat of fusion of ice is 335 × 10³ Jkg⁻¹)", img: "images/phy11-q134.png", opts: ["3.7 kg", "3.9 kg", "4.7 kg", "4.9 kg"], ans: 0, exp: "A = 6 × (0.3)² = 0.54 m². Q = KAΔT t / L = 0.01 × 0.54 × 45 × (6×3600) / 0.05 = 104976 J. Mass melted = Q/L = 104976 / 335000 = 0.313 kg. Remaining = 4 - 0.313 = 3.687 ≈ 3.7 kg." },
+    { q: "135. Two absolute scales A and B have freezing points of water defined to be 200 A and 350 B. What is the relation between T_A and T_B?", img: "images/phy11-q135.png", opts: ["T_A = (2/7) T_B", "T_A = (4/7) T_B", "T_A = (5/7) T_B", "T_A = (6/7) T_B"], ans: 1, exp: "Freezing point is same (273.16 K). T_A/200 = T_B/350 => T_A = (200/350) T_B = (4/7) T_B." },
+    { q: "136. The electrical resistance (in ohms) of a certain thermometer varies with temperature according to the approximate law is R = R₀ [1 + α (T - T₀)], where α = constant. The resistance is 101.6 Ω at the triple point of water 273.16 K and 165.5 Ω at the normal melting point of lead (600.5 K). The temperature when the resistance is 123.4 Ω, is", img: "images/phy11-q136.png", opts: ["358.4 K", "384.8 K", "278.8 K", "111.67 K"], ans: 1, exp: "R - R₀ = R₀α(T - T₀). (165.5 - 101.6) = R₀α(600.5 - 273.16). (123.4 - 101.6) = R₀α(T - 273.16). Ratio: 21.8/63.9 = (T - 273.16) / 327.34. T - 273.16 = 111.67. T = 384.83 K." },
+    { q: "137. A 10 kW drilling machine is used to drill a bore in an aluminium block of mass 8.0 kg. Block is worked on by machine for 2.5 min to drill a hole and 50% of power is used up in heating the aluminium block. Specific heat of aluminium is 0.91 Jg⁻¹K⁻¹. Rise in temperature of block due to drilling will be", img: "images/phy11-q137.png", opts: ["100°C", "103°C", "103°C", "50°C"], ans: 1, exp: "Total energy = 10000 × 150 = 1.5 × 10⁶ J. Heat used = 0.5 × 1.5 × 10⁶ = 7.5 × 10⁵ J. ΔT = Q/ms = 7.5 × 10⁵ / (8 × 910) = 103°C." },
+    { q: "138. A copper block of mass 2.5 kg is heated in a furnace to a temperature of 500°C and then placed on a large ice block. Specific heat of copper is 0.39 Jg⁻¹K⁻¹ and heat of fusion of water is 335 Jg⁻¹. Maximum amount of ice that can be melted is", img: "images/phy11-q138.png", opts: ["1 kg", "1.5 kg", "2 kg", "2.5 kg"], ans: 1, exp: "Heat lost by copper = Heat gained by ice. m_c s_c ΔT = m_ice L. 2.5 × 390 × 500 = m_ice × 335. m_ice = 487500 / 335 = 1455 g = 1.45 kg ≈ 1.5 kg." },
+    { q: "139. In an experiment on the specific heat of a metal, a 0.20 kg block of the metal at 150°C is dropped in a copper calorimeter (of water equivalent 0.025 kg) containing 150 cm³ of water at 27°C. The final temperature is 40°C. The specific heat of the metal is", img: "images/phy11-q139.png", opts: ["1 Jg⁻¹K⁻¹", "1.5 Jg⁻¹K⁻¹", "0.43 Jg⁻¹K⁻¹", "0.8 Jg⁻¹K⁻¹"], ans: 2, exp: "m_m s_m (150 - 40) = (m_w + W)s_w(40 - 27). 0.2 s_m (110) = (0.15 + 0.025)(4186)(13). 22 s_m = 0.175 × 4186 × 13 = 9522. s_m = 9522 / 22 = 432 J/kgK = 0.43 J/gK." },
+    { q: "140. A brass boiler has a base area 0.15 m² and thickness 1.0 cm. It boils water at the rate of 6.0 kg min⁻¹ when placed on a gas stove. Estimate the temperature of the part of the flame in contact with the boiler. Thermal conductivity of brass is 109 J/s-m-K and heat of vaporisation of water is 2256 × 10³ J kg⁻¹.", img: "images/phy11-q140.png", opts: ["205°C", "268°C", "238°C", "280°C"], ans: 2, exp: "Rate of heat = KA(T-100)/L = (dm/dt)L_v = 0.1 × 2256×10³ = 225600 W. 109 × 0.15 × (T-100) / 0.01 = 225600. 1635(T-100) = 225600. T-100 = 138. T = 238°C." },
+    { q: "141. A body cools from 80°C to 50°C in 5 min. Calculate the time it takes to cool from 60°C to 30°C, if the temperature of the surroundings is 20°C.", img: "images/phy11-q141.png", opts: ["7 min", "9 min", "16 min", "20 min"], ans: 1, exp: "(80-50)/5 = K(65 - 20) => 6 = 45K => K = 2/15. (60-30)/t = K(45 - 20) => 30/t = 25 × 2/15 = 10/3 => t = 30 × 3 / 10 = 9 min." },
+    { q: "142. p-T phase diagram for CO₂ gas is given. Which of these are correct according to p-T graph?", img: "images/phy11-q142.png", opts: ["Both I and II", "Both II and III", "Both III and IV", "I, II, III and IV"], ans: 1, exp: "I is wrong (at 1 atm, CO₂ sublimates, doesn't form liquid). II is correct (at 4 atm, cooling from room temp goes to solid directly). III is correct." },
+    { q: "143. A bimetallic strip is made of aluminium and steel (α_Al > α_steel). On heating, the strip will", img: "images/phy11-q143.png", opts: ["remain straight", "get twisted", "bend with aluminium on concave side", "bend with steel on concave side"], ans: 3, exp: "Aluminium expands more, so it forms the outer (convex) curve. Steel is on the inner (concave) side." },
+    { q: "144. A uniform metallic rod rotates about its perpendicular bisector with constant angular speed. If it is heated uniformly to raise its temperature slightly, then", img: "images/phy11-q144.png", opts: ["its speed of rotation increases", "its speed of rotation decreases", "its speed of rotation remains same", "its speed increases because its moment of inertia increases"], ans: 1, exp: "By conservation of angular momentum, Iω = constant. Heating increases length (I increases), so ω decreases." },
+    { q: "145. The graph between two temperature scales A and B is shown in figure between upper fixed point and lower fixed point. There are 150 equal division on scale A and 100 on scale B. The relationship for conversion between the two scales is given by", img: "images/phy11-q145.png", opts: ["(t_A - 180)/100 = t_B/150", "(t_A - 30)/150 = t_B/100", "(t_B - 180)/150 = t_A/100", "(t_B - 40)/100 = t_A/180"], ans: 1, exp: "Lower fixed point A=30, B=0. Upper fixed point A=180, B=100. (t_A - 30)/(180 - 30) = (t_B - 0)/(100 - 0). (t_A - 30)/150 = t_B/100." },
+    { q: "146. An aluminium sphere is dipped into water. Which of the following is true?", img: "images/phy11-q146.png", opts: ["Buoyancy will be less in water at 0°C than that in water at 4°C.", "Buoyancy will be more in water at 0°C than that in water at 4°C.", "Buoyancy in water at 0°C will be same as that in water at 4°C.", "Buoyancy may be more or less in water at 4°C depending on the radius of the sphere."], ans: 0, exp: "Water has maximum density at 4°C. Buoyant force = ρVg. Since ρ(4°C) > ρ(0°C), buoyancy is more at 4°C." },
+    { q: "147. As the temperature is increased, the period of a pendulum", img: "images/phy11-q147.png", opts: ["increases as its effective length increases even though its centre of mass still remains at the centre of the bob", "decreases as its effective length increases even though its centre of mass still remains at the centre of the bob", "increases as its effective length increases due to shifting to centre of mass below the centre of the bob", "decreases as its effective length remains same but the centre of mass shifts above the centre of the bob"], ans: 0, exp: "T = 2π√(L/g). As temperature increases, L increases (thermal expansion). So T increases." },
+    { q: "148. Heat is associated with", img: "images/phy11-q148.png", opts: ["kinetic energy of random motion of molecules", "kinetic energy of orderly motion of molecules", "total kinetic energy of random and orderly motion of molecules", "kinetic energy of random motion in some cases and kinetic energy of orderly motion in other"], ans: 0, exp: "Heat is the energy in transit due to temperature difference. It is associated with random motion of molecules." },
+    { q: "149. The radius of a metal sphere at room temperature T is R and the coefficient of linear expansion of the metal is α. The sphere heated a little by a temperature ΔT, so that its new temperature is T + ΔT. The increase in the volume of the sphere is approximately", img: "images/phy11-q149.png", opts: ["2πRαΔT", "πR²αΔT", "4πR³αΔT / 3", "4πR³αΔT"], ans: 3, exp: "V = (4/3)πR³. ΔV = 4πR²ΔR = 4πR²(RαΔT) = 4πR³αΔT." },
+    { q: "150. 100 g of water is supercooled to –10°C. At this point, due to some disturbance mechanised or otherwise some of it suddenly freezes to ice. What will be the temperature of the resultant mixture and how much mass would freeze? (s_w = 1 cal/g/°C and L_w(Fusion) = 80 cal/g)", img: "images/phy11-q150.png", opts: ["0°C, 12.5 g", "20°C, 50 g", "30°C, 30 g", "50°C, 10 g"], ans: 0, exp: "Heat released by cooling water to 0°C = 100 × 1 × 10 = 1000 cal. Mass frozen m = Q/L = 1000/80 = 12.5 g. Final temp is 0°C." },
+    { q: "151. Find out the increase in moment of inertia I of a uniform rod (coefficient of linear expansion α) about its perpendicular bisector when its temperature is slightly increased by ΔT.", img: "images/phy11-q151.png", opts: ["2IαΔT", "4IαΔT", "6IαΔT", "3IαΔT"], ans: 0, exp: "I = ML²/12. ΔI = (M/12)(2LΔL) = 2(ML²/12)(ΔL/L) = 2IαΔT." },
+    { q: "152. Calculate the stress developed inside a tooth cavity filled with copper when hot tea at temperature of 57°C is drunk. You can take body (tooth) temperature to be 37°C, α = 1.7 × 10⁻⁵ /°C and bulk modulus for copper is 140 × 10⁹ Nm⁻².", img: "images/phy11-q152.png", opts: ["5 × 10⁴ Nm⁻²", "3 × 10² Nm⁻²", "1.428 × 10⁸ Nm⁻²", "3.46 × 10⁵ Nm⁻²"], ans: 2, exp: "ΔT = 20°C. γ = 3α = 5.1 × 10⁻⁵ /°C. Volumetric strain = γΔT = 5.1×10⁻⁵ × 20 = 1.02 × 10⁻³. Stress = B × strain = 140 × 10⁹ × 1.02 × 10⁻³ = 1.428 × 10⁸ N/m²." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 43; // ⚠️ Set to 43 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
