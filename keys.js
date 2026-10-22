@@ -9,7 +9,7 @@ const MASTER_KEY = "MASTER-2027-ALI";
 const FRIEND_KEYS = {
   "friend01": { key: "NEET-2027-A1X9", name: "Friend 1" },
   "friend02": { key: "NEET-2027-B2Y8", name: "Friend 2" },
-  "friend03": { key: "NEET-2027-C3Z7", name: "Dr. Parth" },
+  "friend03": { key: "NEET-2027-C3Z7", name: "Dr.Parth" },
   "friend04": { key: "NEET-2027-D4W6", name: "Friend 4" },
   "friend05": { key: "NEET-2027-E5V5", name: "Friend 5" },
   "friend06": { key: "NEET-2027-F6U4", name: "Friend 6" },
