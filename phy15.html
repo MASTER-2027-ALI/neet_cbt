@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 47: Waves - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 47: Waves</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. The correct possible order of interconversion of waves when our sound is transferred to the receiver via a mobile phone is", opts: ["sound waves → electric current signal → electromagnetic waves (radio waves)", "sound waves → electromagnetic waves → electric current signal", "sound waves → electric current signal → sound wave", "None of the above"], ans: 0, exp: "Sound -> electric signal (microphone) -> EM waves (transmitted) -> electric signal (receiver) -> sound." },
+    { q: "2. Which of the following waves require a medium for their propagation?", opts: ["Light waves", "Radiowaves", "X-rays", "Seismic waves"], ans: 3, exp: "Seismic waves are mechanical waves and require a medium. The rest are electromagnetic." },
+    { q: "3. Matter waves used in electron microscopes are associated with", opts: ["electrons", "protons", "neutrons", "atoms"], ans: 0, exp: "Electron microscopes use electron matter waves." },
+    { q: "4. The wave generated from up and down jerk given to the string or by up and down motion of the piston at end of the pipe is", opts: ["transverse or longitudinal", "progressive", "standing", "Both (a) and (b)"], ans: 3, exp: "It can be either (string = transverse, pipe = longitudinal) and it is progressive (travels). Both (a) and (b)." },
+    { q: "5. In which of the following cases, the material medium as a whole does not move?", opts: ["A stream", "A wind", "Water wave", "Both (a) and (c)"], ans: 2, exp: "In a water wave, only the disturbance moves, not the water as a whole. Streams and wind involve bulk motion." },
+    { q: "6. For mathematical description of a travelling wave, we need a function of both position x and time t. Such a function describes", opts: ["shape of the wave", "motion of the constituent of the medium", "Both (a) and (b)", "None of the above"], ans: 2, exp: "y(x,t) describes both the shape (at fixed t) and motion of particles (at fixed x). Both." },
+    { q: "7. The displacement of an elastic wave is given by the function y = 3 sin ωt + 4 cos ωt, where y is in cm and t is in second. The resultant amplitude will be", opts: ["15 cm", "4 cm", "5 cm", "3 cm"], ans: 2, exp: "A = √(3² + 4²) = √(9+16) = 5 cm." },
+    { q: "8. A simple wave motion is represented by y = 5 (sin 4πt + √3 cos 4πt). Its amplitude is", opts: ["5", "5√3", "10√3", "10"], ans: 3, exp: "A = 5√(1² + (√3)²) = 5√(1+3) = 5×2 = 10." },
+    { q: "9. The propagation of a harmonic wave is shown in figure below along positive X-axis at different times. Then, the number of waves or oscillations crossed origin O in 4 s are", img: "images/phy15-q9.png", opts: ["1", "2", "3", "4"], ans: 0, exp: "From graph, at t=0 crest is at origin. At t=4s, next crest is at origin. So 1 wave crossed." },
+    { q: "10. The displacement as a function of position x and time t is given by y(x, t) = a sin (kx - ωt + φ). The range of possible value of y(x, t), if a is a positive constant, is", opts: ["-a ≤ y(x, t) ≤ a", "-a/2 ≤ y(x, t) ≤ a/2", "-1 ≤ y(x, t) ≤ 1", "0 ≤ y(x, t) ≤ a"], ans: 0, exp: "Sine function varies between -1 and 1. So y varies between -a and a." },
+    { q: "11. The equation of a wave is given by y = 10 sin(2πt/45 + α). If the displacement is 5 cm at t = 0, then the total phase at t = 7.5 s is", opts: ["π", "π/6", "π/2", "π/3"], ans: 2, exp: "5 = 10 sin α => sin α = 1/2 => α = π/6. Phase at 7.5s = 2π(7.5)/45 + π/6 = π/3 + π/6 = π/2." },
+    { q: "12. The displacement of the wave is given by equation y(x, t) = a sin (kx - ωt + φ). Taking φ = 0 at point x and t = 0, the displacement is y'. The point at which the displacement is same as that of x is", opts: ["x + 2π", "x + 2π/k", "kx + 2ππ", "Both (a) and (b)"], ans: 1, exp: "Same displacement when phase differs by 2π. k(x' - x) = 2π => x' = x + 2π/k." },
+    { q: "13. A wave equation is given by y = 4 sin[π(x/9 - t/5 + 1/6)] where, x is in cm and t is in second. The wave number of the wave is", opts: ["π/9 rad cm⁻¹", "1/6 rad cm⁻¹", "π/5 rad cm⁻¹", "2π/9 rad cm⁻¹"], ans: 0, exp: "k = coefficient of x = π/9 rad/cm." },
+    { q: "14. Equation of a progressive wave is y = a sin(10πx + 11πt + π/3). The wavelength of the wave is", opts: ["0.2 unit", "0.1 unit", "0.5 unit", "1 unit"], ans: 0, exp: "k = 10π. λ = 2π/k = 2π/10π = 0.2 unit." },
+    { q: "15. The equation of a wave is given as y = 0.07 sin (12πx - 300πt) where, x and y are in metre and t is in second, then the correct option is", opts: ["λ = (1/6) m", "a = 0.07 m", "Both (a) and (b)", "None of these"], ans: 2, exp: "A = 0.07 m. k = 12π => λ = 2π/12π = 1/6 m. Both are correct." },
+    { q: "16. A plane progressive wave equation is given by y = 2 cos 2π (330t - x). What is the period of the wave?", opts: ["1/330 s", "2π × 330 s", "(2π × 330)⁻² s", "6.284/330 s"], ans: 0, exp: "ω = 2π × 330. T = 2π/ω = 1/330 s." },
+    { q: "17. In a sinusoidal wave, the time required for a particular point to move from maximum displacement to zero displacement is 0.14 s. The frequency of the wave is", opts: ["0.42 Hz", "2.75 Hz", "1.79 Hz", "0.56 Hz"], ans: 2, exp: "Time from max to zero = T/4. T = 4 × 0.14 = 0.56 s. f = 1/T = 1.79 Hz." },
+    { q: "18. The equation of a progressive wave can be given by y = 15 cos (660πt - 0.02πx) cm. The frequency of the wave is", opts: ["330 Hz", "342 Hz", "365 Hz", "660 Hz"], ans: 0, exp: "ω = 660π. f = ω/2π = 330 Hz." },
+    { q: "19. A wave travelling in the positive x-direction having displacement along y-direction 1 m, wavelength (2π) m and frequency of (1/π) Hz is represented by", opts: ["y = sin (x - 2t)", "y = sin (2πx - 2πt)", "y = sin (10πx - 20πt)", "y = sin (2πx + 2πt)"], ans: 0, exp: "k = 2π/λ = 2π/2π = 1. ω = 2πf = 2π(1/π) = 2. y = 1 sin(x - 2t)." },
+    { q: "20. The angle between particle velocity and wave velocity in a transverse wave is", opts: ["zero", "π/4", "π/2", "π"], ans: 2, exp: "In a transverse wave, particles oscillate perpendicular to wave propagation. Angle is 90° (π/2)." },
+    { q: "21. The displacement y of a particle in a medium can be expressed as y = 10⁻⁶ sin(100t + 20x + π/4) m, where t is in second and x is in metre. The speed of the wave is", opts: ["2000 ms⁻¹", "5 ms⁻¹", "20 ms⁻¹", "5π ms⁻¹"], ans: 1, exp: "v = ω/k = 100/20 = 5 m/s." },
+    { q: "22. The equation of progressive wave is y = 0.2 sin 2π(t/0.01 - x/0.3), where x and y are in metres and t is in second. The velocity of propagation of the wave is", opts: ["30 ms⁻¹", "40 ms⁻¹", "300 ms⁻¹", "400 ms⁻¹"], ans: 0, exp: "v = (coefficient of t) / (coefficient of x) = (1/0.01) / (1/0.3) = 100/3.33 = 30 m/s." },
+    { q: "23. The speed of transverse wave on a stretched string depends on", opts: ["properties of the medium (both T and μ)", "wavelength of the wave", "frequency of the wave", "Both (b) and (c)"], ans: 0, exp: "v = √(T/μ). It depends on tension and linear mass density, not on wavelength or frequency." },
+    { q: "24. A transverse wave travels on a taut steel wire with a velocity of v when tension in it is 2.06 × 10⁴ N. When the tension is changed to T, the velocity changed to v/2. The value of T is close to", img: "images/phy15-q24.png", opts: ["10.2 × 10² N", "5.15 × 10³ N", "2.50 × 10⁴ N", "30.5 × 10⁴ N"], ans: 1, exp: "v ∝ √T. v' = v/2 => T' = T/4 = 2.06×10⁴ / 4 = 5.15 × 10³ N." },
+    { q: "25. A string wave equation is given by y = 0.002 cos(300t - 15x) and mass density is μ = 0.1 kg/m. Then find the tension in the string.", opts: ["30 N", "20 N", "40 N", "45 N"], ans: 2, exp: "v = ω/k = 300/15 = 20 m/s. v = √(T/μ) => T = μv² = 0.1 × 400 = 40 N." },
+    { q: "26. Two strings A and B, made of same materials are stretched by same tension. The radius of string A is double the radius of B. A transverse wave travels on A with speed v_A and on B with speed v_B. The ratio of v_A / v_B is", opts: ["1/2", "2", "1/4", "4"], ans: 2, exp: "v = √(T/μ). μ = ρπr². v ∝ 1/r. v_A/v_B = r_B/r_A = 1/2. Wait. Option (a) is 1/2. Yes, if radius is double, speed is half." },
+    { q: "27. In a longitudinal wave, the elastic property of the constituents of the medium that determines the stress under compressional strain is", opts: ["Young's modulus Y", "Bulk modulus B", "shear modulus S", "Either (b) or (c)"], ans: 1, exp: "Longitudinal waves in fluids involve volume changes, governed by bulk modulus." },
+    { q: "28. Speed of sound wave in a fluid depends", opts: ["directly on density of the medium", "directly on square of bulk modulus of the medium", "inversely on the square root of density", "inversely on the square root of bulk modulus of the medium"], ans: 2, exp: "v = √(B/ρ). v ∝ 1/√ρ." },
+    { q: "29. Two solid bars having Young's modulus Y₁ and Y₂ is in the ratio of Y₁/Y₂ = 4. If the bars are made up of materials with same density, then the ratio of the speeds of longitudinal waves in the solid bars i.e. v₁/v₂ is", opts: ["2", "1", "3", "4"], ans: 0, exp: "v = √(Y/ρ). v₁/v₂ = √(Y₁/Y₂) = √4 = 2." },
+    { q: "30. The correct order of speed of sound in different media is (consider the speed at constant temperature)", opts: ["v_air > v_solid > v_liquid", "v_solid > v_air > v_liquid", "v_solid > v_liquid > v_air", "None of these"], ans: 2, exp: "Generally v_solid > v_liquid > v_gas." },
+    { q: "31. If the mass of 1 mol of air is 29.0 × 10⁻³ kg, then the speed of sound in air at standard temperature and pressure (using Newton's formula) is", opts: ["250 ms⁻¹", "280 ms⁻¹", "300 ms⁻¹", "380 ms⁻¹"], ans: 1, exp: "v = √(P/ρ). ρ = m/V = 29×10⁻³ / 22.4×10⁻³ = 1.29 kg/m³. v = √(1.01×10⁵ / 1.29) = 279.8 ≈ 280 m/s." },
+    { q: "32. A student plotted the following four graphs representing the variation of velocity of sound in a gas with the pressure p at constant temperature. Which one is correct?", img: "images/phy15-q32.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 3, exp: "v = √(γP/ρ). At constant T, P/ρ is constant. So v is independent of P. Graph (d)." },
+    { q: "33. According to Laplace correction, the pressure variations in the medium during propagation of sound waves are", opts: ["adiabatic", "isothermal", "isobaric", "isochoric"], ans: 0, exp: "Laplace proposed that compressions and rarefactions are so fast that heat exchange is negligible, so process is adiabatic." },
+    { q: "34. When two wave pulses travelling in opposite direction overlap, the resultant displacement is", opts: ["the algebraic sum of the displacement due to each pulse", "always zero", "the vector in the direction of the displacement of right travelling pulse", "Both (a) and (b)"], ans: 0, exp: "Principle of superposition: resultant displacement is algebraic sum." },
+    { q: "35. Two pulses having equal and opposite displacements moving in opposite directions overlap at t = 2 s as shown in figure. The resultant displacement of the wave at t = 2 s is", img: "images/phy15-q35.png", opts: ["twice the displacement of each pulse", "half the displacement of each pulse", "zero", "Either (a) or (c)"], ans: 2, exp: "At t=2s, they overlap exactly. Displacements are equal and opposite, so sum is zero." },
+    { q: "36. If there are n number of waves moving in the medium represented by the wave functions y_i = f_i (x - vt), where i = 1, 2, 3, ..., n, then the resultant wave function describing the disturbance in the medium is", opts: ["y = Σ f_i(x - vt)", "y = f₁ + f₂ + ... + f_n", "y = f₁ - f₂ + f₃ - f₄ + ...", "Both (a) and (b)"], ans: 3, exp: "By superposition, y = f₁ + f₂ + ... + f_n = Σ f_i. Both (a) and (b) represent the same." },
+    { q: "37. Two waves of equal amplitude A and equal frequency travel in the same direction in a medium having phase difference of φ. The amplitude of the resultant wave is", opts: ["0", "A", "2A", "between 0 to 2A"], ans: 3, exp: "A_R = 2A cos(φ/2). Depending on φ, it varies between 0 and 2A." },
+    { q: "38. Two sine waves having equal frequency travel in the same direction in a medium. The amplitude of each wave is A and the phase difference between the two waves is 120°. The resultant amplitude will be", opts: ["A", "2A", "4A", "√2A"], ans: 0, exp: "A_R = 2A cos(120°/2) = 2A cos60° = 2A × 0.5 = A." },
+    { q: "39. Echo is based on which amongst the given phenomenon that sound wave follows?", opts: ["Refraction", "Reflection", "Interference", "Resonance"], ans: 1, exp: "Echo is due to reflection of sound." },
+    { q: "40. When a wave is reflected normally from a rigid boundary, the reflected wave suffers a phase change of (assuming no absorption)", opts: ["π/2", "π/4", "π", "2π"], ans: 2, exp: "Reflection from rigid boundary causes phase change of π (180°)." },
+    { q: "41. Two strings AB and BC having mass densities μ₁ and μ₂ are tied at B and are stretched between A and C. A wave pulse is generated at end A and progresses towards junction B. It is given that (μ₂ > μ₁). If the magnitude of velocity of the reflected wave and transmitted wave are v_r and v_t respectively, then the correct relation is", img: "images/phy15-q41.png", opts: ["v_r > v_t", "v_r < v_t", "v_r > v_t and v_t = 0", "None of the above"], ans: 0, exp: "v = √(T/μ). μ₂ > μ₁ => v_t < v_i. Also v_r = v_i. So v_r > v_t." },
+    { q: "42. Let a wave y(x, t) = a sin (kx - ωt) is reflected from an open boundary and then the incident and reflected waves overlap. Then the amplitude of resultant wave is", opts: ["2a cos kx", "2a sin kx", "2a sin (kx/2)", "a sin kx"], ans: 0, exp: "Open boundary: no phase change. y_r = a sin(kx + ωt). y = 2a cos(ωt) sin(kx). Amplitude = 2a sin kx." },
+    { q: "43. At nodes in stationary waves, change in", opts: ["pressure is maximum", "pressure is minimum", "displacement is maximum", "density is minimum"], ans: 0, exp: "At displacement node, pressure variation is maximum (antinode)." },
+    { q: "44. A stationary wave equation is given as y = 20 sin 20x cos 1000 t. What will be the speed of stationary wave?", opts: ["20 m/s", "50 m/s", "2 cm/s", "Cannot be defined"], ans: 3, exp: "Speed of stationary wave is not defined (it doesn't travel)." },
+    { q: "45. A string is clamped at both the ends and it is vibrating in its 4th harmonic. The equation of the stationary wave is Y = 0.3 sin(0.157x)cos(200πt). The length of the string is (All quantities are in SI units)", img: "images/phy15-q45.png", opts: ["60 m", "40 m", "80 m", "20 m"], ans: 2, exp: "k = 0.157 ≈ π/20. λ = 2π/k = 40 m. In 4th harmonic, L = 4(λ/2) = 2λ = 80 m." },
+    { q: "46. A wire under tension vibrates with a fundamental frequency of 600 Hz. If the length of the wire is doubled, the radius is halved and the wire is made to vibrate under one-ninth of the tension, then the fundamental frequency will become", opts: ["400 Hz", "600 Hz", "300 Hz", "200 Hz"], ans: 3, exp: "f ∝ √T / (L r). f' / f = √(1/9) / (2 × 1/2) = (1/3) / 1 = 1/3. f' = 200 Hz." },
+    { q: "47. A string is stretched between fixed points separated by 75 cm. It is observed to have resonant frequencies of 420 Hz and 315 Hz. There are no other resonant frequencies between these two. The lowest resonant frequency for this string is", img: "images/phy15-q47.png", opts: ["155 Hz", "205 Hz", "10.5 Hz", "105 Hz"], ans: 3, exp: "f₂ - f₁ = 105 = f₀. So fundamental is 105 Hz." },
+    { q: "48. A string 2.0 m long and fixed at its ends is driven by a 240 Hz vibrator. The string vibrates in its third harmonic mode. The speed of the wave and its fundamental frequency is", img: "images/phy15-q48.png", opts: ["180 m/s, 80 Hz", "320 m/s, 80 Hz", "320 m/s, 120 Hz", "180 m/s, 120 Hz"], ans: 1, exp: "f₃ = 240 = 3f₀ => f₀ = 80 Hz. v = 2Lf₀ = 2 × 2 × 80 = 320 m/s." },
+    { q: "49. A wire of length L and mass per unit length 6.0 × 10⁻³ kgm⁻¹ is put under tension of 540 N. Two consecutive frequencies that it resonates at are : 420 Hz and 490 Hz. Then, L in metres is", img: "images/phy15-q49.png", opts: ["8.1 m", "2.1 m", "5.1 m", "1.1 m"], ans: 0, exp: "f₂-f₁ = 70 = f₀. f₀ = (1/2L)√(T/μ). L = (1/2f₀)√(T/μ) = (1/140)√(540 / 6×10⁻³) = (1/140)×300 = 2.14 m. Option (b)." },
+    { q: "50. A person blows into an open end of a long pipe. As a result, a high pressure pulse of air travels down the pipe. When this pulse reaches the other end of the pipe,", img: "images/phy15-q50.png", opts: ["a high pressure pulse starts travelling up the pipe, if the other end of the pipe is open", "a low pressure pulse starts travelling up the pipe, if the other end of the pipe is open", "a low pressure pulse starts travelling down the pipe, if the other end of the pipe is closed", "None of the above"], ans: 1, exp: "At open end, reflection with phase change of π (pressure). So compression reflects as rarefaction (low pressure)." },
+    { q: "51. An air column, closed at one end and open at the other, resonates with a tuning fork when the smallest length of the column is 50 cm. The next larger length of the column resonating with the same tuning fork is", img: "images/phy15-q51.png", opts: ["100 cm", "150 cm", "200 cm", "66.7 cm"], ans: 1, exp: "λ/4 = 50 => λ = 200. Next is 3λ/4 = 150 cm." },
+    { q: "52. The two nearest harmonics of a tube closed at one end and open at other end are 220 Hz and 260 Hz. What is the fundamental frequency of the system?", img: "images/phy15-q52.png", opts: ["10 Hz", "20 Hz", "30 Hz", "40 Hz"], ans: 1, exp: "f₂ - f₁ = 40 = 2f₀ => f₀ = 20 Hz." },
+    { q: "53. A pipe of length 85 cm is closed from one end. Find the number of possible natural oscillations of air column in the pipe whose frequencies lie below 1250 Hz. The velocity of sound in air is 340 ms⁻¹.", img: "images/phy15-q53.png", opts: ["12", "8", "6", "4"], ans: 2, exp: "f_n = (2n+1)v / 4L < 1250. (2n+1) < 1250×4×0.85/340 = 12.5. 2n+1 can be 1,3,5,7,9,11 (6 values). So 6 oscillations." },
+    { q: "54. If the speed of sound in air is 330 m/s, then find the number of tones present in an open organ pipe of length 1 m whose frequency is ≤1000 Hz.", img: "images/phy15-q54.png", opts: ["2", "4", "8", "6"], ans: 3, exp: "f₀ = v/2L = 330/2 = 165 Hz. n = 1000/165 = 6.06. So 6 tones." },
+    { q: "55. An open tube is in resonance with string. If tube is dipped in water, so that 75% of length of tube is inside water, then the ratio of the frequency v₀ of tube to string is", img: "images/phy15-q55.png", opts: ["1", "2", "2/3", "3/2"], ans: 1, exp: "Open tube f = v/2L. Closed tube (25% open) f' = v/4(0.25L) = v/L. Ratio f'/f = 2." },
+    { q: "56. A tuning fork with frequency 800 Hz produces resonance in a resonance column tube with upper end open and lower end closed by water surface. Successive resonance are observed at lengths 9.75 cm, 31.25 cm and 52.75 cm. The speed of sound in air is", img: "images/phy15-q56.png", opts: ["500 m/s", "156 m/s", "344 m/s", "172 m/s"], ans: 2, exp: "λ/2 = 31.25 - 9.75 = 21.5 cm => λ = 43 cm. v = fλ = 800 × 0.43 = 344 m/s." },
+    { q: "57. An organ pipe open on both ends in the nth harmonic is in resonance with a source of 1000 Hz. The length of pipe is 16.6 cm and speed of sound in air is 332 m/s, then find the value of n.", img: "images/phy15-q57.png", opts: ["3", "2", "1", "4"], ans: 2, exp: "f = nv/2L => 1000 = n × 332 / (2×0.166) => n = 1." },
+    { q: "58. An pipe 30 cm long is open at both ends. The speed of sound in air is 330 ms⁻¹. Which harmonic mode of the pipe resonates at 1.1 kHz source?", img: "images/phy15-q58.png", opts: ["First harmonic", "Third harmonic", "Second harmonic", "Fifth harmonic"], ans: 2, exp: "f₀ = v/2L = 330/0.6 = 550 Hz. 1100/550 = 2. So second harmonic." },
+    { q: "59. The fundamental frequency in an open organ pipe is equal to the third harmonic of a closed organ pipe. If the length of the closed organ pipe is 20 cm, the length of the open organ pipe is", img: "images/phy15-q59.png", opts: ["12.5 cm", "8 cm", "13.3 cm", "16 cm"], ans: 2, exp: "v/2L_open = 3v/4L_closed => L_open = (2/3)L_closed = (2/3)×20 = 13.3 cm." },
+    { q: "60. A tuning fork is used to produce resonance in a glass tube. The length of the air column in this tube can be adjusted by a variable piston. At room temperature of 27°C, two successive resonances are produced at 20 cm and 73 cm of column length. If the frequency of the tuning fork is 320 Hz, the velocity of sound in air at 27°C is", img: "images/phy15-q60.png", opts: ["350 ms⁻¹", "339 ms⁻¹", "330 ms⁻¹", "300 ms⁻¹"], ans: 1, exp: "λ/2 = 73 - 20 = 53 cm => λ = 106 cm. v = fλ = 320 × 1.06 = 339.2 m/s." },
+    { q: "61. The systems such as strings and air columns undergo forced oscillation. If the external frequency of oscillation for forced oscillation is close to one of the natural frequencies, then the system is said to be in", opts: ["resonance", "fundamental mode of oscillation", "simple harmonic motion", "Both (a) and (b)"], ans: 0, exp: "When driving frequency matches natural frequency, it's resonance." },
+    { q: "62. When two harmonic sound waves of close (but not equal) frequencies are heard at the same time, we hear", opts: ["a sound of similar frequency", "a sound of frequency which is the average of two close frequencies", "audibly distinct waxing and waning of the intensity of the sound with a frequency equal to the difference in the two close frequencies", "All of the above"], ans: 2, exp: "This is beats phenomenon. Waxing and waning frequency = f₁ - f₂." },
+    { q: "63. If frequencies are (v - 1) and (v + 1), then find the value of beats.", img: "images/phy15-q63.png", opts: ["2", "1", "3", "4"], ans: 0, exp: "Beat frequency = (v+1) - (v-1) = 2." },
+    { q: "64. Two sitar strings A and B playing the note 'Dha' are slightly out of tune and produce beats of frequency 5 Hz. The tension of the string B is slightly increased and the beat frequency is found to decrease to 3 Hz. The original frequency of B, if the frequency of A is 427 Hz, is", img: "images/phy15-q64.png", opts: ["422 Hz", "420 Hz", "424 Hz", "419 Hz"], ans: 0, exp: "f_B = 427 ± 5. If tension increases, f_B increases. Beat decreases, so f_B must be less than 427. So f_B = 422 Hz." },
+    { q: "65. A source of unknown frequency gives 4 beats/s when sounded with a source of known frequency 250 Hz. The second harmonic of the source of unknown frequency gives 5 beats/s when sounded with a source of frequency 513 Hz. The unknown frequency is", img: "images/phy15-q65.png", opts: ["254 Hz", "246 Hz", "240 Hz", "260 Hz"], ans: 0, exp: "f = 250 ± 4 = 254 or 246. 2f = 513 ± 5 = 518 or 508. If 2f=508, f=254. So f=254 Hz." },
+    { q: "66. When two tuning forks (fork 1 and fork 2) are sounded simultaneously, 4 beats/s are heard. Now, some tape is attached on the prong of the fork 2. When the tuning forks are sounded again, 6 beats/s are heard. If frequency of fork 1 is 200 Hz, then what was the original frequency of fork 2?", img: "images/phy15-q66.png", opts: ["200 Hz", "202 Hz", "196 Hz", "204 Hz"], ans: 2, exp: "f₂ = 200 ± 4. Tape increases mass, so f₂ decreases. Beat increases, so f₂ must be lower. f₂ = 196 Hz." },
+    { q: "67. Doppler effect is a wave phenomenon, which holds for", opts: ["sound waves only", "electromagnetic waves only", "light waves only", "All of the above"], ans: 3, exp: "Doppler effect applies to all types of waves, mechanical and EM." },
+    { q: "68. A siren emitting sound of frequency 500 Hz is fitted on a car moving towards a vertical wall at a speed of 36 kmh⁻¹. A stationary person is standing on the road behind the car listens the siren sound. The apparent frequency of the wave coming directly from the siren to the person is (consider speed of sound = 340 ms⁻¹)", img: "images/phy15-q68.png", opts: ["480 Hz", "486 Hz", "400 Hz", "350 Hz"], ans: 1, exp: "Source moving away from observer: f' = f × v/(v+v_s) = 500 × 340/(340+10) = 485.7 ≈ 486 Hz." },
+    { q: "69. A source of sound S is moving with a velocity of 50 m/s towards a stationary observer. The observer measures the frequency of the source as 1000 Hz. What will be the apparent frequency of the source when it is moving away from the observer after crossing him? (Take, velocity of sound in air is 350 m/s)", img: "images/phy15-q69.png", opts: ["807 Hz", "1143 Hz", "750 Hz", "857 Hz"], ans: 2, exp: "1000 = f × 350/(350-50) => f = 1000 × 300/350 = 857 Hz. Moving away: f' = 857 × 350/(350+50) = 750 Hz." },
+    { q: "70. A siren emitting a sound of frequency 800 Hz moves away from an observer towards a cliff at a speed of 15 ms⁻¹. Then, the frequency of sound that the observer hears in the echo reflected from the cliff is (take, velocity of sound in air = 300 ms⁻¹)", img: "images/phy15-q70.png", opts: ["800 Hz", "838 Hz", "885 Hz", "765 Hz"], ans: 1, exp: "Siren moving towards cliff, so cliff receives f' = 800 × 300/(300-15) = 842 Hz. Reflected frequency heard by observer is same as that received by cliff. So 842 Hz. Closest is 838 Hz." },
+    { q: "71. A rocket is moving at a speed of 220 ms⁻¹ towards a stationary target, emits a sound of frequency 1000 Hz. Some of the sound reaching the target gets reflected back to the rocket as an echo. The frequency of the echo as detected by the rocket is (take, velocity of sound = 330 ms⁻¹)", img: "images/phy15-q71.png", opts: ["3500 Hz", "4000 Hz", "5000 Hz", "3000 Hz"], ans: 2, exp: "f_target = 1000 × 330/(330-220) = 3000 Hz. Reflected wave, rocket is observer moving towards source (target): f_echo = 3000 × (330+220)/330 = 5000 Hz." },
+    { q: "72. A stationary observer receives sound from two identical tuning forks, one of which approaches and the other one recedes with the same speed (much less than the speed of sound). The observer hears 2 beats/s. The oscillation frequency of each tuning fork is v₀ = 1400 Hz and the velocity of sound in air is 350 m/s. The speed of each tuning fork is close to", img: "images/phy15-q72.png", opts: ["1/8 m/s", "1/2 m/s", "(c) 1 m/s", "1/4 m/s"], ans: 3, exp: "f_approach = f₀(1 - v_s/v)⁻¹ ≈ f₀(1 + v_s/v). f_recede ≈ f₀(1 - v_s/v). Beat = 2f₀ v_s/v = 2. v_s = v/f₀ = 350/1400 = 1/4 m/s." },
+    { q: "73. Two cars moving in opposite directions approach each other with speed of 22 m/s and 16.5 m/s, respectively. The driver of the first car blows a horn having a frequency 400 Hz, then the frequency heard by the driver of the second car is [velocity of sound is 340 m/s]", img: "images/phy15-q73.png", opts: ["350 Hz", "361 Hz", "411 Hz", "448 Hz"], ans: 3, exp: "f' = f (v + v_o)/(v - v_s) = 400 (340+16.5)/(340-22) = 400 × 356.5 / 318 = 448 Hz." },
+    { q: "74. A source of sound S emitting waves of frequency 100 Hz and an observer O are located at some distance from each other. The source is moving with a speed of 19.4 ms⁻¹ at an angle of 60° with the source observer line as shown in the figure. The observer is at rest. The apparent frequency observed by the observer (velocity of sound in air 330 ms⁻¹), is", img: "images/phy15-q74.png", opts: ["100 Hz", "103 Hz", "106 Hz", "97 Hz"], ans: 1, exp: "v_s along line = 19.4 cos60 = 9.7. Moving towards: f' = 100 × 330/(330-9.7) = 33000/320.3 = 103.03 Hz." },
+    { q: "75. Assertion: The light emitted by stars, which are hundreds of light years away, reaches us through interstellar space even though the interstellar space is practically a vacuum.\nReason: Light is an electromagnetic wave and do not necessarily require a medium for propagation, so it can even travel in vacuum.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Light travels in vacuum because it is EM wave. Both A and R are correct and R explains A." },
+    { q: "76. Assertion: Transverse waves are possible in solids and strings (under tension) but not in fluids.\nReason: Solids and strings have non-zero shear modulus, but fluids have approximately zero shear modulus.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Fluids cannot support shear stress, so no transverse waves. Both A and R are correct and R explains A." },
+    { q: "77. Assertion: Longitudinal waves can be propagated through solids and fluids both.\nReason: Solids as well as fluids have non-zero bulk modulus, i.e. they can sustain compressive stress.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Longitudinal waves need bulk modulus, which both have. Both A and R are correct and R explains A." },
+    { q: "78. Assertion: Speed of sound is more in liquids and solids than gases.\nReason: Liquids and solids have higher densities than gases.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "Speed is more due to much higher bulk modulus, not just density. Both A and R are correct but R is not the correct explanation of A." },
+    { q: "79. Assertion: The amplitude A(φ) of the resultant of the two light travelling waves given by equations y₁(x, t) = A sin (kx - ωt) and y₂(x, t) = A sin (kx - ωt + φ) decreases as φ increases from 0 to π.\nReason: The amplitude of the resultant of the two above mentioned waves is given by A(φ) = 2A cos(φ/2).", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "A_R = 2A cos(φ/2). As φ goes 0 to π, cos decreases from 1 to 0. Both A and R are correct and R explains A." },
+    { q: "80. Assertion: Superposition of two harmonic waves, one of frequency 11 Hz and the other of frequency 9 Hz give rise to beats of frequency 2 Hz.", img: "images/phy15-q80.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Beat frequency = |11 - 9| = 2 Hz. Both A and R are correct and R explains A." },
+    { q: "81. Assertion: To hear different beats, difference of the frequencies of two sources should be less than 10.\nReason: More the number of beats more is the confusion.", img: "images/phy15-q81.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "We can hear beats if difference is < 10 Hz due to persistence of hearing (1/10 s). Reason is not the exact explanation. Assertion correct, Reason incorrect (or not explaining)." },
+    { q: "82. A pebble is dropped in a pond of still water to disturb the water surface.\nI. The disturbance produced does not remain confined to one place but propagates outward along a circle.\nII. If a cork piece is put on the disturbed surface, it moves along with the disturbance in the same direction.\nIII. The water mass does not flow outward with the circles formed but rather a moving disturbance is created.\nWhich of the given statement(s) is/are correct for the above situation?", img: "images/phy15-q82.png", opts: ["Both I and III", "Both II and III", "Both I and II", "I, II and III"], ans: 0, exp: "Disturbance propagates (I). Water mass doesn't move (III). Cork moves up/down, not outward (II wrong). I and III correct." },
+    { q: "83. I. Waves are patterns of disturbance which move without the actual physical transfer or flow of matter as a whole.\nII. Waves cannot transport energy.\nIII. The pattern of disturbance in the form of waves carries information that propagates from one point to another.\nIV. All our communications essentially depend on transmission of signals through waves.\nWhich of the following statement(s) is/are correct about waves?", img: "images/phy15-q83.png", opts: ["Both I and III", "Only IV", "I, II and III", "I, III and IV"], ans: 3, exp: "Waves transport energy (II wrong). I, III, IV are correct." },
+    { q: "84. I. A steel bar possesses both bulk and shear elastic moduli.\nII. A steel bar can propagate both longitudinal as well as transverse waves having different speeds.\nIII. Air can propagate both longitudinal and transverse wave.\nWhich of the following statement(s) is/are correct?", img: "images/phy15-q84.png", opts: ["Both I and III", "Both II and III", "Both I and II", "I, II and III"], ans: 2, exp: "Air cannot propagate transverse waves (III wrong). I and II correct." },
+    { q: "85. A wave is incident obliquely on the boundary between two different media.\nI. The incident and the refracted waves obey Snell's law of refraction.\nII. The incident and the reflected waves obey the usual laws of reflection.\nIII. The incident wave only gets reflected but not refracted.\nWhich of the following statements is/are incorrect?", img: "images/phy15-q85.png", opts: ["Only I", "Both II and III", "Only II", "Only III"], ans: 3, exp: "Incident wave is both reflected and refracted (III is incorrect)." },
+    { q: "86. I. In a standing wave, the disturbance produced is confined to the region where it is produced.\nII. In a standing wave, all the particles cross their mean position together.\nIII. In a standing wave, energy is transmitted from one region of space to other.\nIV. All the particles are oscillating with same amplitude.\nWhich of the given statement(s) are correct about the standing wave?", img: "images/phy15-q86.png", opts: ["Both I and II", "Both II and IV", "Only III", "I, II, III and IV"], ans: 0, exp: "Energy is not transmitted (III wrong). Amplitude varies (IV wrong). I and II correct." },
+    { q: "87. A standing wave is formed on a string fixed at both the ends. The individual wave, i.e. incident wave and reflected wave are y₁(x, t) = a sin (kx - ωt) and y₂(x, t) = a sin (kx + ωt), respectively. The two waves have same wavelength λ.\nI. The position of nodes is given as x = nλ, where n = 0, 1, 2, 3, ...\nII. The position of anti-nodes is given by the equation, x = (n + 1/2)λ/2, where n = 0, 1, 2, 3, ...\nIII. The distance between any two consecutive anti-nodes is λ/2.\nWhich of the following statement(s) is/are incorrect about the standing wave?", img: "images/phy15-q87.png", opts: ["Only I", "Both I and II", "Both II and III", "(d) I, II and III"], ans: 1, exp: "Nodes at x = nλ/2 (I wrong). Antinodes at x = (2n+1)λ/4 (II wrong)." },
+    { q: "88. A standing wave is generated on a stretched string of length L fixed at both the ends. Taking one end of the string at x = 0, the boundary conditions are that x = 0 and x = L are positions of nodes.\nI. For x = L to be the node, the length L is related to λ by relation given as L = nλ/2, where n = 0, 1, 2, 3, ...\nII. The possible wavelengths of the stationary waves are given by λ = 2L/n, where n = 0, 1, 2, 3, ...\nIII. The natural frequencies or the normal modes of oscillation of the system are given by ν = nv/2L, where n = 0, 1, 2, 3, ... (consider v as the wave velocity).", img: "images/phy15-q88.png", opts: ["Both I and II", "Both II and III", "I, II and III", "I, II, III and IV"], ans: 2, exp: "I, II, III are standard correct formulas for string fixed at both ends. (Wait, n=0 gives zero length/freq, so generally n=1,2,3...)." },
+    { q: "89. I. In a closed organ pipe, longitudinal standing waves can be formed.\nII. In a closed organ pipe (closed at one end), only odd harmonics are present.\nIII. The harmonics which are present in a pipe, open at both ends are odd harmonics only.\nWhich of the following statements related to organ pipe is/are correct?", img: "images/phy15-q89.png", opts: ["Only I", "Both II and III", "Both I and II", "I, II and III"], ans: 2, exp: "Open pipe has all harmonics (III wrong). I and II correct." },
+    { q: "90. Two harmonic waves of slightly different frequency interfere to form beats given by equation S = [2a cos ω_b t] cos ω_a t. If the above equation is represented as S = A(t) cos ω_a t, then which of the given statement(s) is/are correct?\nI. The resultant wave is oscillating with the average angular frequency ω_a.\nII. The amplitude is largest when the term cos ω_b t takes its limit +1 or -1.", img: "images/phy15-q90.png", opts: ["Only I", "Both I and II", "Only II", "Neither I nor II"], ans: 1, exp: "ω_a is average frequency (I). Amplitude max when cos=±1 (II). Both correct." },
+    { q: "91. Which of the following statement(s) is/are incorrect for mechanical waves?\nI. These waves require a medium for propagation, they cannot propagate through vacuum.\nII. They involve oscillations of constituent particles.\nIII. They depend on the elastic properties of the medium.\nIV. They have the same speed in all the media.", img: "images/phy15-q91.png", opts: ["Only I", "Both II and III", "Only III", "Only IV"], ans: 3, exp: "Speed depends on medium, so not same in all media (IV is incorrect)." },
+    { q: "92. A collection of springs connected to one another is fixed at one end as shown in figure below. If the other end A is pulled suddenly and released, then which of the following statement(s) is/are correct?", img: "images/phy15-q92.png", opts: ["The disturbance generating at end A will propagate to the other end but each spring will only executes small oscillations about its equilibrium position.", "Since, the spring II is connected to the I, it will also be stretched or compressed and so on.", "Springs I and III will displace from its equilibrium position while spring II will execute small oscillations about its equilibrium position.", "Both (a) and (b)"], ans: 3, exp: "(a) and (b) are correct. (c) is wrong as all springs will oscillate." },
+    { q: "93. The wave produced on the surface of water are of two types; capillary waves and gravity waves. Which of the following statement is incorrect about them?", img: "images/phy15-q93.png", opts: ["Capillary waves are ripples of fairly short wavelength (few centimeter).", "Gravity waves have wavelength typically ranging from several meter to several hundred meters.", "The restoring force in gravity waves is surface tension while in capillary waves is the pull of gravity.", "The particle motion in water waves involves both motion up & down and back & forth."], ans: 2, exp: "Restoring force in capillary is surface tension, in gravity waves it's gravity. Statement (c) is reversed, so incorrect." },
+    { q: "94. If a propagating wave meets a boundary which is not completely rigid or is an interface between two different elastic media, then which of the statement(s) is/are correct?", img: "images/phy15-q94.png", opts: ["A part of the incident wave is reflected and a part is transmitted into the second medium.", "The incident wave is completely reflected from the boundary.", "Only a part of the wave is reflected and the remaining part disappears.", "None of the above"], ans: 0, exp: "At non-rigid boundary, partial reflection and partial transmission occurs." },
+    { q: "95. A standing wave is generated on a string. Which of the following statement(s) is/are correct for the stationary waves?", img: "images/phy15-q95.png", opts: ["The amplitude of stationary wave varies from point-to-point but each element of the string oscillates with the same angular frequency ω or time period.", "The string as a whole vibrates in phase with differing amplitudes at different points.", "The wave pattern in neither moving to the right nor to the left.", "All of the above"], ans: 3, exp: "All three statements correctly describe a standing wave." },
+    { q: "96. The air column in a pipe open at both ends is oscillating with certain frequency. Which of the given statement (s) is/are correct for the open air column at both ends?", img: "images/phy15-q96.png", opts: ["Each end of the pipe acts as an anti-node.", "An air column open at both ends generates all harmonics.", "Each end of the pipe is a node.", "Both (a) and (b)"], ans: 3, exp: "Ends are antinodes (a). All harmonics present (b). Both (a) and (b)." },
+    { q: "97. A wave travelling along a string is described by y(x, t) = 0.005 sin(80x - 3t) in which the numerical constants are in SI units. With reference to the above equation of wave motion, match the Column I (characteristics of wave) with Column II (respective value) and select the correct answer from the codes given below.\n\nColumn I:\nA. Wave number of the wave\nB. Wavelength of the wave\nC. Frequency of the wave\nD. Displacement y of the wave at a distance x = 30 cm and time t = 20 s\n\nColumn II:\n1. 0.0785 SI units\n2. 0.48 SI units\n3. 0.005 SI units\n4. 80 SI units", img: "images/phy15-q97.png", opts: ["A-4, B-1, C-2, D-3", "A-2, B-1, C-3, D-4", "A-1, B-4, C-3, D-2", "A-3, B-1, C-2, D-4"], ans: 0, exp: "k = 80 (A-4). λ = 2π/80 = 0.0785 (B-1). f = 3/2π = 0.48 (C-2). y = 0.005 sin(80*0.3 - 3*20) = 0.005 (D-3). Hence A-4, B-1, C-2, D-3." },
+    { q: "98. Match the Column I (condition) with Column II (name of process) and select the correct answer from the codes given below.\n\nColumn I:\nA. Constructive interference of two waves of same frequency and amplitude\nB. Destructive interference of two waves of same frequency and amplitude\nC. Interference of two waves of nearly same frequency and equal amplitude\n\nColumn II:\n1. Beats\n2. Nodes\n3. Anti-nodes", img: "images/phy15-q98.png", opts: ["A-1, B-2, C-3", "A-2, B-3, C-1", "A-3, B-2, C-1", "A-3, B-2, C-4"], ans: 2, exp: "Constructive -> Antinodes (3). Destructive -> Nodes (2). Nearly same -> Beats (1). Hence A-3, B-2, C-1." },
+    { q: "99. If the incident travelling wave is given by y(x, t) = a sin (kx - ωt), then match the Column I (condition) with Column II (equation of displacement) and select the correct answer from the codes given below.\n\nColumn I:\nA. Reflected wave from rigid boundary\nB. Reflected wave from open boundary\nC. The resultant displacement at the rigid boundary\nD. The resultant displacement at the open boundary\n\nColumn II:\n1. a sin (kx - ωt)\n2. - a sin (kx - ωt)\n3. 2a sin (kx - ωt)\n4. 0", img: "images/phy15-q99.png", opts: ["A-2, B-1, C-4, D-3", "A-1, B-2, C-3, D-4", "A-2, B-1, C-3, D-4", "A-1, B-2, C-4, D-3"], ans: 0, exp: "Rigid reflection phase π -> y_r = -a sin (A-2). Open reflection phase 0 -> y_r = a sin (B-1). At rigid boundary, y = y_i + y_r = 0 (C-4). At open boundary, y = 2a (D-3)." },
+    { q: "100. Column I has figures showing different modes of oscillation of the system (a string tied at both the ends) and Column II has name of the corresponding modes. Match the Column I with Column II and select the correct answer from the codes given below.", img: "images/phy15-q100.png", opts: ["A-4, B-2, C-3, D-1", "A-4, B-3, C-1, D-2", "A-3, B-2, C-1, D-4", "A-2, B-3, C-1, D-4"], ans: 1, exp: "A has 4 loops => 4th harmonic = 4 (A-4). B has 3 loops => 3rd harmonic = 3 (B-3). C has 1 loop => Fundamental = 1 (C-1). D has 2 loops => 2nd harmonic = 2 (D-2). Hence A-4, B-3, C-1, D-2." },
+    { q: "101. Considering the length of the vibrating air column (which is closed at one end) as L, the possible wavelengths of the standing waves as λ, wave velocity as v and the normal nodes or the natural frequencies of the system as v. Match the Column I (characteristics) with Column II (respective value) and select the correct answer from the codes given below.\n\nColumn I:\nA. v\nB. λ\nC. v₀ (fundamental mode)\nD. Longest wavelength\n\nColumn II:\n1. 2L / (n + 1/2)\n2. (n + 1/2)v / 2L\n3. v / 4L\n4. 4L", img: "images/phy15-q101.png", opts: ["A-2, B-1, C-3, D-4", "A-4, B-2, C-3, D-1", "A-3, B-4, C-2, D-1", "A-2, B-3, C-1, D-4"], ans: 0, exp: "Frequency v = (n+1/2)v/2L (A-2). Wavelength λ = 2L/(n+1/2) (B-1). Fundamental v₀ = v/4L (C-3). Longest λ = 4L (D-4)." },
+    { q: "102. Column I lists the figure for odd harmonic of air column and Column II names the corresponding harmonics. Match the Column I with Column II and select the correct answer from the codes given below.", img: "images/phy15-q102.png", opts: ["A-1, B-2, C-3, D-4", "A-4, B-3, C-2, D-1", "A-2, B-3, C-4, D-1", "A-3, B-2, C-1, D-4"], ans: 2, exp: "A has 3 loops, 5th harmonic (A-2). B has 4 loops, 7th harmonic (B-3). C has 5 loops, 9th harmonic (C-4). D has 1 loop, 3rd harmonic (D-1)." },
+    { q: "103. Beats are produced by frequencies v₁ and v₂ (such that v₁ > v₂). Match the Column I (characteristic) with Column II (respective formula) and select the correct answer from the codes given below.\n\nColumn I:\nA. Beat frequency\nB. Duration of time between two successive maxima or minima\nC. ω₁ - ω₂\n\nColumn II:\n1. 1 / (v₁ - v₂)\n2. v₁ - v₂\n3. 2π(v₁ - v₂)", img: "images/phy15-q103.png", opts: ["A-1, B-2, C-3", "A-2, B-1, C-3", "A-3, B-2, C-1", "A-3, B-1, C-2"], ans: 1, exp: "Beat freq = v₁-v₂ (A-2). Time interval = 1/(v₁-v₂) (B-1). ω₁-ω₂ = 2π(v₁-v₂) (C-3)." },
+    { q: "104. A string of mass 2.5 kg is under tension of 200 N. The length of the stretched string is 20 m. If the transverse jerk is struck at one end of the string, the disturbance will reach the other end in", img: "images/phy15-q104.png", opts: ["1 s", "0.5 s", "2 s", "Data given is insufficient"], ans: 1, exp: "v = √(T/μ) = √(200 / (2.5/20)) = √1600 = 40 m/s. t = L/v = 20/40 = 0.5 s." },
+    { q: "105. A stone dropped from the top of a tower of height 300 m high splashes into the water of a pond near the base of the tower. When is the splash heard at the top given that the speed of sound in air is 340 ms⁻¹? (Take, g = 9.8 ms⁻²)", img: "images/phy15-q105.png", opts: ["2.5 s", "4.3 s", "8.7 s", "15 s"], ans: 2, exp: "t_fall = √(2h/g) = √(600/9.8) = 7.82 s. t_sound = h/v = 300/340 = 0.88 s. Total = 8.7 s." },
+    { q: "106. A steel wire has a length of 12 m and a mass of 2.10 kg. What should be the tension in the wire so that speed of a transverse wave on the wire equals the speed of sound in dry air at 20°C = 343 ms⁻¹?", img: "images/phy15-q106.png", opts: ["2 × 10⁴ N", "4 × 10⁶ N", "6 × 10⁵ N", "8 × 10¹⁰ N"], ans: 0, exp: "T = μv² = (2.1/12) × 343² = 0.175 × 117649 = 20588 N ≈ 2 × 10⁴ N." },
+    { q: "107. A bat emits ultrasonic sound of frequency 100 kHz in air. If this sound meets a water surface, what is the wavelength of (i) the reflected sound, (ii) and the transmitted sound, respectively? Speed of sound in air = 340 ms⁻¹ and in water = 1486 ms⁻¹.", img: "images/phy15-q107.png", opts: ["3.4 × 10⁻³ m, 1.49 × 10⁻² m", "1.4 × 10⁻³ m, 3.4 × 10⁻² m", "5 × 10⁻³ m, 15 × 10⁻² m", "34 × 10⁻³ m, 15 × 10⁻² m"], ans: 0, exp: "λ_air = 340 / 100000 = 3.4 × 10⁻³ m. λ_water = 1486 / 100000 = 1.486 × 10⁻² m." },
+    { q: "108. A hospital uses an ultrasonic scanner to locate tumours in a tissue. What is the wavelength of sound in the tissue in which the speed of sound is 1.7 kms⁻¹? The operating frequency of the scanner is 4.2 MHz.", img: "images/phy15-q108.png", opts: ["2 × 10⁻² m", "4 × 10⁻⁴ m", "5 × 10⁻⁵ m", "6 × 10⁻⁶ m"], ans: 1, exp: "λ = v/f = 1700 / (4.2 × 10⁶) = 4 × 10⁻⁴ m." },
+    { q: "109. A transverse harmonic wave on a string is described by y(x, t) = 3 sin(36t + 0.018x + π/4) where x and y are in cm and t is in second. The positive direction of x is from left to right. Then,", img: "images/phy15-q109.png", opts: ["angular frequency of the wave is 7.5 kHz", "the speed of the wave is 20 ms⁻¹", "frequency of the wave is 7.5 Hz", "the least distance between two successive crests in the wave is 2.5 cm"], ans: 1, exp: "ω = 36, k = 0.018. v = ω/k = 36/0.018 = 2000 cm/s = 20 m/s." },
+    { q: "110. For the travelling harmonic wave y(x, t) = 2 cos 2π(10t - 0.0080x + 0.35) where, x and y are in cm and t in second. Calculate the phase difference between oscillatory motion of two points separated by a distance of 4 m.", img: "images/phy15-q110.png", opts: ["1.4 π rad", "2.8 π rad", "4.5 π rad", "6.4 π rad"], ans: 3, exp: "k = 2π × 0.008 = 0.016π rad/cm. Δφ = kΔx = 0.016π × 400 = 6.4π rad." },
+    { q: "111. The displacement of a string is given by y(x, t) = 0.06 sin(2πx/3) cos(120πt) where, x and y are in metre and t in second. The length of the string is 1.5 m and its mass is 3 × 10⁻² kg, then", img: "images/phy15-q111.png", opts: ["it represents a progressive wave of frequency 60 Hz", "it represents a stationary wave of frequency 60 Hz", "amplitude of this wave is constant", "None of the above"], ans: 1, exp: "It's of form A sin(kx) cos(ωt), so stationary wave. ω = 120π => f = 60 Hz." },
+    { q: "112. The transverse displacement of a string (clamped at its both ends) is given by y(x, t) = 0.06 sin(2πx/3) cos(120πt). For all the points on the string between two consecutive nodes vibration does not have", img: "images/phy15-q112.png", opts: ["same frequency", "same phase", "same energy", "different amplitude"], ans: 2, exp: "Frequency is same, phase is same, amplitude varies. Energy is not same (depends on amplitude)." },
+    { q: "113. A wire stretched between two rigid supports vibrates in its fundamental mode with a frequency of 45 Hz. The mass of the wire is 3.5 × 10⁻² kg and its linear mass density is 4 × 10⁻² kgm⁻¹. What is the speed of a transverse wave on the string (in ms⁻¹)?", img: "images/phy15-q113.png", opts: ["50.75", "218", "78.75", "92.75"], ans: 2, exp: "L = m/μ = 3.5×10⁻² / 4×10⁻² = 0.875 m. v = 2Lf = 2 × 0.875 × 45 = 78.75 m/s." },
+    { q: "114. What is the tension in the string in the Q. 113?", img: "images/phy15-q114.png", opts: ["124 N", "248 N", "442 N", "628 N"], ans: 1, exp: "T = μv² = 4×10⁻² × 78.75² = 4×10⁻² × 6201.5 = 248 N." },
+    { q: "115. A metre-long tube open at one end, with a movable piston at the other end, shows resonance with a fixed frequency source (a tuning fork of frequency 340 Hz), when the tube length is 25.5 cm or 79.3 cm. Estimate the speed of sound in air at the temperature of the experiment. Ignore edge effect.", img: "images/phy15-q115.png", opts: ["366 ms⁻¹", "333 ms⁻¹", "330 ms⁻¹", "370 ms⁻¹"], ans: 0, exp: "λ/2 = 79.3 - 25.5 = 53.8 cm. λ = 107.6 cm. v = fλ = 340 × 1.076 = 365.84 m/s ≈ 366 m/s." },
+    { q: "116. Steel rod 100 cm long is clamped at its middle. The fundamental frequency of longitudinal vibrations of the rod is given to be 2.53 kHz. What is the speed of sound in steel?", img: "images/phy15-q116.png", opts: ["7.08 kms⁻¹", "25.3 kms⁻¹", "5.06 kms⁻¹", "10.74 kms⁻¹"], ans: 2, exp: "L = λ/2 => λ = 2m. v = fλ = 2.53 kHz × 2m = 5.06 km/s." },
+    { q: "117. A pipe 20 cm long is closed at one end. Which harmonic mode of the pipe is resonantly excited by a 430 Hz source? Will this same source be in resonance with the pipe, if both ends are open? (Speed of sound = 340 ms⁻¹)", img: "images/phy15-q117.png", opts: ["Fundamental mode, yes", "Fundamental mode, no", "Second harmonic, yes", "Second harmonic, no"], ans: 1, exp: "Closed pipe f₀ = v/4L = 340/0.8 = 425 Hz. 430 Hz will excite fundamental (approx). Open pipe f₀ = 340/0.4 = 850 Hz. 430 will not resonate." },
+    { q: "118. Two sitar strings A and B playing the note 'Ga' are slightly out of tune and produce beats of frequency 6 Hz. The tension in the string A is slightly reduced and the beat frequency is found to reduce to 3 Hz. If the original frequency of A is 324 Hz, what is the frequency of B?", img: "images/phy15-q118.png", opts: ["200 Hz", "318 Hz", "300 Hz", "330 Hz"], ans: 1, exp: "f_B = 324 ± 6 = 330 or 318. Tension in A reduced => f_A decreases. Beat decreases, so f_A was higher than f_B. So f_B = 318 Hz." },
+    { q: "119. A train, standing at the outer signal of a railway station blows a whistle of frequency 400 Hz in still air. What is the frequency of the whistle for a platform observer when the train approaches the platform with a speed of 10 ms⁻¹? The speed of sound in still air can be taken as 340 ms⁻¹.", img: "images/phy15-q119.png", opts: ["312 Hz", "412 Hz", "512 Hz", "670 Hz"], ans: 1, exp: "f' = 400 × 340/(340-10) = 400 × 340/330 = 412 Hz." },
+    { q: "120. A train, standing in a station yard, blows a whistle of frequency 400 Hz in still air. The wind starts blowing in the direction from the yard to the station with a speed of 10 ms⁻¹. Given that the speed of sound in still air is 340 ms⁻¹, then", img: "images/phy15-q120.png", opts: ["the frequency of sound as heard by an observer standing on the platform is 400 Hz", "the speed of sound for the observer standing on the platform is 340 ms⁻¹", "the frequency of sound as heard by the observer standing on the platform will increase", "the frequency of sound as heard by the observer standing on the platform will decrease"], ans: 0, exp: "Wind changes speed of sound but not frequency (no relative motion between source and observer)." },
+    { q: "121. A travelling harmonic wave on a string is described by y = 7.5 sin(0.0050x + 12t + π/4). What are the displacement and velocity of oscillation of a point at x = 1 cm, and t = 1 s?", img: "images/phy15-q121.png", opts: ["12 cm, 75 cms⁻¹", "10 cm, 50 cms⁻¹", "5 cm, 90 cms⁻¹", "2 cm, 88 cms⁻¹"], ans: 3, exp: "y = 7.5 sin(0.005 + 12 + π/4) = 7.5 sin(12.79) ≈ 1.67 cm. v = dy/dt = 90 cos(...) = 87.76 cm/s." },
+    { q: "122. A SONAR system fixed in a submarine operates at a frequency 40 kHz. An enemy submarine moves towards the SONAR with a speed of 360 kmh⁻¹. What is the frequency of sound reflected by the submarine? Take, the speed of sound in water to be 1450 ms⁻¹.", img: "images/phy15-q122.png", opts: ["20 kHz", "35 kHz", "40 kHz", "46 kHz"], ans: 3, exp: "f' = 40 × (1450+100)/1450 = 42.76 kHz. Reflected back to source: f'' = 42.76 × 1450/(1450-100) = 45.9 kHz ≈ 46 kHz." },
+    { q: "123. Earthquakes generate sound waves inside the earth. Unlike a gas, the earth can experience both transverse S and longitudinal P sound waves. Typically, the speed of S wave is about 4 kms⁻¹ and that of P wave is 8 kms⁻¹. A seismograph records P and S waves from an earthquake. The first P wave arrives 4 min before the first S wave. Assuming the waves travel in straight line, at what distance does the earthquake occur?", img: "images/phy15-q123.png", opts: ["1620 km", "1720 km", "1820 km", "1920 km"], ans: 3, exp: "d/4 - d/8 = 240 s => d/8 = 240 => d = 1920 km." },
+    { q: "124. A bat is flitting about in a cave, navigating via ultrasonic beeps. Assume that the sound emission frequency of the bat is 40 kHz. During one fast swoop directly toward a flat wall surface, the bat is moving at 0.03 times the speed of sound in air. What frequency does the bat hear reflected off the wall?", img: "images/phy15-q124.png", opts: ["24 kHz", "35 kHz", "42 kHz", "50 kHz"], ans: 2, exp: "f' = 40 × v/(v - 0.03v) = 40/0.97 = 41.2 kHz. Reflected: bat moving towards wall, f'' = 41.2 × (v + 0.03v)/v = 41.2 × 1.03 = 42.4 kHz." },
+    { q: "125. Water waves produced by a motorboat sailing in water are", img: "images/phy15-q125.png", opts: ["neither longitudinal nor transverse", "both longitudinal and transverse", "only longitudinal", "only transverse"], ans: 1, exp: "Water waves are complex: particles move in circles, so it's a combination of longitudinal and transverse." },
+    { q: "126. Sound waves of wavelength λ travelling in a medium with a speed of v ms⁻¹ enter into another medium where its speed in 2v ms⁻¹. Wavelength of sound waves in the second medium is", img: "images/phy15-q126.png", opts: ["λ", "λ/2", "2λ", "4λ"], ans: 2, exp: "Frequency is same. λ = v/f. λ' = 2v/f = 2λ." },
+    { q: "127. Speed of sound wave in air", img: "images/phy15-q127.png", opts: ["is independent of temperature", "increases with pressure", "increases with increase in humidity", "decreases with increase in humidity"], ans: 2, exp: "Humidity decreases density, so speed increases (v ∝ 1/√ρ)." },
+    { q: "128. Change in temperature of the medium changes", img: "images/phy15-q128.png", opts: ["frequency of sound waves", "amplitude of sound waves", "wavelength of sound waves", "loudness of sound waves"], ans: 2, exp: "v changes with T, frequency is same, so λ changes." },
+    { q: "129. With propagation of longitudinal waves through a medium, the quantity transmitted is", img: "images/phy15-q129.png", opts: ["matter", "energy", "energy and matter", "energy, matter and momentum"], ans: 1, exp: "Waves transmit energy and momentum, not matter." },
+    { q: "130. A sound wave is passing through air column in the form of compression and rarefaction. In consecutive compressions and rarefaction,", img: "images/phy15-q130.png", opts: ["density remains constant", "Boyle's law is obeyed", "bulk modulus of air oscillates", "there is no transfer of heat"], ans: 3, exp: "Compressions and rarefactions are rapid, so adiabatic (no heat transfer)." },
+    { q: "131. Equation of a plane progressive wave is given by y_i = 0.6 sin 2π(t - x/2). On reflection from a denser medium, its amplitude becomes (2/3) of the amplitude of the incident wave. The equation of the reflected wave is", img: "images/phy15-q131.png", opts: ["y_r = 0.6 sin 2π(t + x/2)", "y_r = -0.4 sin 2π(t + x/2)", "y_r = 0.4 sin 2π(t + x/2)", "y_r = -0.4 sin 2π(t - x/2)"], ans: 1, exp: "Phase change π on denser reflection. Amplitude = 0.6 × 2/3 = 0.4. So y_r = -0.4 sin 2π(t + x/2)." },
+    { q: "132. A train whistling at constant frequency is moving towards a station at a constant speed v. The train goes past a stationary observer on the station. The frequency n of the sound as heard by the observer is plotted as a function of time t (figure). Identify the expected curve.", img: "images/phy15-q132.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 3, exp: "Approaching: high frequency (constant). Passing: sudden drop. Receding: low frequency (constant). Graph (d) shows step-down." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 47; // ⚠️ Set to 47 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
