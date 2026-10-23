@@ -16,7 +16,7 @@ const FRIEND_KEYS = {
   "friend07": { key: "NEET-2027-G7T3", name: "Friend 7" },
   "friend08": { key: "NEET-2027-H8S2", name: "Friend 8" },
   "friend09": { key: "NEET-2027-I9R1", name: "Friend 9" },
-  "friend10": { key: "NEET-2027-J1Q0", name: "Friend 10" },
+  "friend10": { key: "NEET-2027-J1Q0", name: "Dr.Shifa" },
   "friend11": { key: "NEET-2027-K2P9", name: "Friend 11" },
   "friend12": { key: "NEET-2027-L3O8", name: "Friend 12" }
 };
