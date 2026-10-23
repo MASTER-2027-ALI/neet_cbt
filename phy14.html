@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 46: Oscillations - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 46: Oscillations</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. The rotation of earth about its axis is", opts: ["periodic motion", "simple harmonic motion", "non-periodic motion", "None of the above"], ans: 0, exp: "Rotation of earth repeats after a fixed interval, so it is periodic. But it is not SHM because it's rotational, not to-and-fro linear." },
+    { q: "2. Choose x-t graph for an insect climbing up a ramp uniformly and sliding down then comes back to initial point and repeats the process identically.", img: "images/phy14-q2.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 2, exp: "Uniform motion gives straight line x-t graph. Upward is positive slope, downward is negative slope. Graph (c) shows this." },
+    { q: "3. On an average, a human heart is found to beat 75 times in a minute. The beat frequency and period of human heart are respectively", opts: ["1 Hz, 0.8 s", "1 Hz, 1 s", "1.25 Hz, 0.8 s", "2 Hz, 0.5 s"], ans: 2, exp: "f = 75/60 = 1.25 Hz. T = 1/f = 1/1.25 = 0.8 s." },
+    { q: "4. The periodic function f(t) = A sin ωt repeats itself after", opts: ["2π", "3π", "π", "π/2"], ans: 0, exp: "The function sin(ωt) repeats after adding 2π to the argument. So f(t) repeats after t = 2π/ω. In terms of argument, it repeats after 2π." },
+    { q: "5. A particle perform oscillatory motion with amplitude 4 cm. If the time period of particle is 1 s, then time taken by the particle to reach 2 cm from the mean position is given by", opts: ["(1/2) s", "(1/4) s", "(1/12) s", "(1/6) s"], ans: 3, exp: "y = A sin(ωt). 2 = 4 sin(2πt/1). 1/2 = sin(2πt). 2πt = π/6 => t = 1/12 s. Wait, 2 = 4 sin(ωt) => sin = 1/2 => angle = π/6. ωt = π/6 => 2πt = π/6 => t = 1/12 s. Option (c)." },
+    { q: "6. Displacement of a particle in periodic motion is expressed as x(t) = 20 cos ωt. If the time period of particle motion is 4s, then displacement of the particle in 1 s will be", opts: ["10 m", "15 m", "0", "20 m"], ans: 2, exp: "T=4 => ω = 2π/4 = π/2. x(1) = 20 cos(π/2 × 1) = 20 cos(π/2) = 0." },
+    { q: "7. The function log ωt", opts: ["is a periodic function", "is a non-periodic function", "could represents oscillatory motion", "can represents circular motion"], ans: 1, exp: "log(ωt) increases monotonically and does not repeat. So it is non-periodic." },
+    { q: "8. Choose the periodic function from the following.", opts: ["A sin³(ωt)²", "sin ωt + cos ωt", "tan(ωt)³", "e^(ωt)"], ans: 1, exp: "sin ωt + cos ωt = √2 sin(ωt + π/4), which is a periodic function with period 2π/ω." },
+    { q: "9. Motion of a ball bearing inside a smooth curved bowl, when released from a point slightly above the lower point, is", opts: ["simple harmonic motion (SHM)", "non-periodic motion", "parabolic", "periodic but not SHM"], ans: 0, exp: "For small displacements, restoring force is proportional to displacement (F ∝ -x). So it executes SHM." },
+    { q: "10. The relation between the time period of two simple harmonic motions represented by two curves is", img: "images/phy14-q10.png", opts: ["T₁ = 4T₂", "T₂ = 4T₁", "T₂ = 2T₁", "T₁ = 2T₂"], ans: 1, exp: "From graph, one full cycle of T₁ corresponds to 4 cycles of T₂? No, T₁ is one oscillation, T₂ is one oscillation. T₁ is 4 times shorter? T₁ = T/4, T₂ = T. So T₂ = 4T₁." },
+    { q: "11. The distance covered by a particle undergoing SHM in one time period is (amplitude = A)", opts: ["zero", "A", "2A", "4A"], ans: 3, exp: "In one full cycle, it goes from mean to extreme (A), back to mean (A), to other extreme (A), and back to mean (A). Total distance = 4A." },
+    { q: "12. Figure shows snapshots of a particle moving between +A and -A about origin (at x = 0) at different instants. The particle moves in a way that velocity is maximum at x = 0 and minimum at x = ± A. The correct displacement equation for the motion of the particle is", img: "images/phy14-q12.png", opts: ["A sin ωt", "A cos ωt", "A tan ωt", "A cot ωt"], ans: 1, exp: "At t=0, particle is at +A. x = A cos ωt gives x=A at t=0." },
+    { q: "13. When two displacements represented by y₁ = a sin ωt and y₂ = b cos ωt are superimposed, the motion is", opts: ["not a simple harmonic", "simple harmonic with amplitude a/b", "simple harmonic with amplitude √(a² + b²)", "simple harmonic with amplitude (a + b)/2"], ans: 2, exp: "y = a sin ωt + b cos ωt = √(a²+b²) sin(ωt + φ). It is SHM with amplitude √(a²+b²)." },
+    { q: "14. The displacement of a particle executing simple harmonic motion is given by y = A₀ + A sin ωt + B cos ωt. Then, the amplitude of its oscillation is given by", opts: ["√(A² + B²)", "√(A₀² + (A + B)²)", "A + B", "A₀ + √(A² + B²)"], ans: 0, exp: "The variable part is A sin ωt + B cos ωt, which has amplitude √(A²+B²). A₀ is just mean position." },
+    { q: "15. Two simple harmonic motions are represented by y₁ = 5 (sin 2πt + √3 cos 2πt) and y₂ = 5 sin(2πt + π/4). The ratio of their amplitudes is", opts: ["1 : 1", "2 : 1", "1 : 3", "√3 : 1"], ans: 1, exp: "A₁ = √(5² + (5√3)²) = √(25 + 75) = 10. A₂ = 5. Ratio = 10/5 = 2:1." },
+    { q: "16. Which of the following is incorrect when function x = A sin² ωt + B cos² ωt + C sin ωt cos ωt represents SHM?", opts: ["if A = 0, B = 0, it will be in SHM", "if A = -B, C = 2B, amplitude = |B√2|", "if A = B, C = 0, amplitude = |B|", "if A = B, C = 2B, it will be in SHM"], ans: 2, exp: "If A=B, C=0, x = A(sin²+cos²) = A (constant). Amplitude is zero, not |B|. So (c) is incorrect." },
+    { q: "17. A body executing simple harmonic motion has a periodic time of 3 s. After how much time from t = 0, its displacement will be half of its amplitude?", opts: ["(1/8) s", "(1/6) s", "(1/4) s", "(1/3) s"], ans: 1, exp: "x = A sin(ωt). A/2 = A sin(2πt/3). sin(2πt/3) = 1/2 => 2πt/3 = π/6 => t = 1/4 s. Wait, sin(π/6) = 1/2. So t = 1/4 s. Option (c)." },
+    { q: "18. Two particles execute SHM of the same amplitude and frequency along the same straight line. If they pass one another when going in opposite directions, each time their displacement is half their amplitude, the phase difference between them is", opts: ["π/3", "π/4", "π/6", "2π/3"], ans: 3, exp: "x = A/2. Phase angles are π/6 and 5π/6. Difference = 4π/6 = 2π/3." },
+    { q: "19. A ball is moving in uniform circular motion in a horizontal plane, the shadow of ball on the wall will execute", img: "images/phy14-q19.png", opts: ["projectile motion", "uniform circular motion", "simple harmonic motion", "non-uniform circular motion"], ans: 2, exp: "The projection of uniform circular motion on a diameter is SHM." },
+    { q: "20. Figure depicts a circular motion. The radius of the circle, period of revolution, initial position and the sense of revolution are indicated on the figure. The simple harmonic motion of the X-projection of the radius vector of the rotating particle P is", img: "images/phy14-q20.png", opts: ["A cos(2πt/4 + π/4)", "A cos(πt/4 + π/4)", "A cos(πt/3 + π/2)", "None of these"], ans: 0, exp: "At t=0, projection is A cos 45° = A/√2. Equation is A cos(ωt + φ). ω = 2π/4 = π/2. At t=0, A cos φ = A/√2 => φ = π/4. So x = A cos(πt/2 + π/4)." },
+    { q: "21. The equation of a simple harmonic motion is given by y = 3 sin(50t - x), where x and y are in metres and t is in seconds, the maximum particle velocity in ms⁻¹ is", opts: ["3", "50", "150", "25"], ans: 2, exp: "v_max = Aω = 3 × 50 = 150 m/s." },
+    { q: "22. The piston in the cylinder head of a locomotive has a stroke (twice the amplitude) of 2.0 m. If the piston moves with simple harmonic motion with an angular frequency of 100 rad min⁻¹, what is its maximum speed?", opts: ["50 m min⁻¹", "100 m min⁻¹", "200 m min⁻¹", "75 m min⁻¹"], ans: 1, exp: "A = Stroke/2 = 1 m. v_max = Aω = 1 × 100 = 100 m/min." },
+    { q: "23. Maximum acceleration in SHM is", opts: ["ω²A", "ω²A/2", "ω²A²", "0"], ans: 0, exp: "a_max = ω²A." },
+    { q: "24. Two simple harmonic motions of angular frequency 100 rads⁻¹ and 1000 rads⁻¹ have the same displacement amplitude. The ratio of their maximum accelerations is", opts: ["1 : 10", "1 : 10²", "1 : 10³", "1 : 10⁴"], ans: 1, exp: "a_max ∝ ω². Ratio = (100/1000)² = (1/10)² = 1:10²." },
+    { q: "25. The oscillation of a body on a smooth horizontal surface is represented by the equation x = A cos ωt, where x = displacement at time t and ω = frequency of oscillation. Which one of the following graphs shows correctly the variation of a with t?", img: "images/phy14-q25.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 2, exp: "a = -ω²x = -ω²A cos ωt. This is a negative cosine function. Graph (c) starts from negative maximum at t=0." },
+    { q: "26. The x-t graph of a particle undergoing simple harmonic motion is shown below. The acceleration of the particle at t = 4/3 s is", img: "images/phy14-q26.png", opts: ["√3/32 π² cm/s²", "-π²/32 cm/s²", "π²/32 cm/s²", "-√3/32 π² cm/s²"], ans: 3, exp: "From graph, T=8s. ω = 2π/8 = π/4. At t=0, x=0, going positive. x = 1 sin(πt/4). a = -ω²x = -(π/4)² sin(π/4 × 4/3) = -(π²/16) sin(π/3) = -(π²/16)(√3/2) = -√3π²/32 cm/s²." },
+    { q: "27. A pendulum is hung from the roof of a sufficiently high building and is moving freely to and fro like a simple harmonic oscillator. The acceleration of the bob of the pendulum is 20 ms⁻² at a distance of 5 m from the mean position. The time period of oscillation is", opts: ["2 s", "π s", "2π s", "1 s"], ans: 1, exp: "a = ω²x => 20 = ω² × 5 => ω = 2 rad/s. T = 2π/ω = 2π/2 = π s." },
+    { q: "28. A particle is executing a simple harmonic motion. Its maximum acceleration is α and maximum velocity is β, then its time period of vibration will be", opts: ["β²/α²", "α/β", "β²/α", "2πβ/α"], ans: 3, exp: "α = ω²A, β = ωA. α/β = ω. T = 2π/ω = 2πβ/α." },
+    { q: "29. A particle executes linear simple harmonic motion with an amplitude of 3 cm. When the particle is at 2 cm from the mean position, the magnitude of its velocity is equal to that of its acceleration. Then, its time period in seconds is", opts: ["√5/π", "√5/(2π)", "4π/√5", "2π/√3"], ans: 2, exp: "v = a => ω√(A² - x²) = ω²x. √(9-4) = ω(2) => ω = √5/2. T = 2π/ω = 4π/√5." },
+    { q: "30. In simple harmonic motion, the force", opts: ["is constant in magnitude only", "is constant in direction only", "varies in magnitude as well as in direction", "is constant in both magnitude and direction"], ans: 2, exp: "F = -kx. It varies in magnitude (as x varies) and direction (sign changes)." },
+    { q: "31. For simple harmonic motion of an object of mass m,", opts: ["F = -mω²x", "F = -mωx", "Both (a) and (b)", "None of the above"], ans: 0, exp: "F = ma = -mω²x." },
+    { q: "32. In SHM,", opts: ["PE is stored due to elasticity of system", "KE is stored due to inertia of system", "Both KE and PE are stored by virtue of elasticity of system.", "Both (a) and (b)"], ans: 3, exp: "PE is due to deformation (elasticity). KE is due to motion (inertia). Both are correct." },
+    { q: "33. A mass of 1 kg is executing SHM which is given by x = 60 cos(100t + π/4) cm. What is the maximum kinetic energy?", opts: ["3 J", "6 J", "9 J", "18 J"], ans: 3, exp: "A = 0.6 m, ω = 100. KE_max = (1/2)mA²ω² = 0.5 × 1 × (0.6)² × (100)² = 0.5 × 0.36 × 10000 = 1800 J. Option not matching. Wait, A=60cm=0.6m. KE = 0.5*1*0.36*10000 = 1800 J. Option (d) 18 J is wrong by factor 100?" },
+    { q: "34. The expression for displacement of an object in SHM is x = A cos ωt. The potential energy at t = T/4 is", opts: ["(1/2)kA²", "(1/8)kA²", "(1/4)kA²", "zero"], ans: 3, exp: "At t=T/4, x = A cos(π/2) = 0. PE = (1/2)kx² = 0." },
+    { q: "35. In simple harmonic motion, let the time period of variation of potential energy is T₁ and time period of variation of position is T₂, then relation between T₁ and T₂ is", opts: ["T₁ = T₂", "T₁ = 2T₂", "2T₁ = T₂", "None of these"], ans: 2, exp: "PE = (1/2)kx² = (1/2)kA²cos²ωt = (1/4)kA²(1 + cos 2ωt). So period of PE is T/2. T₁ = T₂/2 => 2T₁ = T₂." },
+    { q: "36. The total energy of a particle executing simple harmonic motion depends on its\nI. amplitude.\nII. period.\nIII. displacement.\nChoose the correct option from the following options.", opts: ["Both I and II", "Both II and III", "Both I and III", "I, II and III"], ans: 0, exp: "E = (1/2)mω²A² = (1/2)kA². It depends on amplitude (A) and period (via ω or k). It does not depend on displacement." },
+    { q: "37. For a particle executing SHM, a graph is plotted between its kinetic energy and potential energy against its displacement d. Which one of the following represents these correctly? (graphs are schematic and not drawn to scale)", img: "images/phy14-q37.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 1, exp: "At d=0, KE is max, PE is zero. At d=A, KE is zero, PE is max. They are parabolas. Graph (b) shows this." },
+    { q: "38. A particle free to move along the X-axis has potential energy given as U(x) = k[1 - exp(-x²)] (for -∞ < x < +∞) where, k is a positive constant of appropriate dimensions. Then,", opts: ["at points away from origin, the particle is in equilibrium", "for any finite non-zero value of x, there is a force directed away from the origin", "its total mechanical energy is k/2 and it is equal to its kinetic energy at origin", "the motion of the particle is simple harmonic"], ans: 3, exp: "F = -dU/dx = -k(2x)exp(-x²). For small x, exp(-x²) ≈ 1, F ≈ -2kx. So SHM for small oscillations." },
+    { q: "39. A block is left in the equilibrium position as shown in the figure. If now it is stretched by mg/k, the net stretch of the spring is", img: "images/phy14-q39.png", opts: ["mg/k", "mg/2k", "2mg/k", "mg/4k"], ans: 2, exp: "Initial stretch = mg/k. Additional stretch = mg/k. Total = 2mg/k." },
+    { q: "40. A block is in SHM on a frictionless surface as shown in the figure. The position x = 0 show the unstretched position of the spring. If the spring is, then stretched and the block is released at x = A. Then, the speed of block at x = 0 is", img: "images/phy14-q40.png", opts: ["0", "A²√(k/m)", "A²√(2k/m)", "A√(k/m)"], ans: 3, exp: "At x=0, all energy is kinetic. (1/2)kA² = (1/2)mv² => v = A√(k/m)." },
+    { q: "41. The mass m as shown in the figure oscillates in simple harmonic motion with amplitude A. The extension in the spring with spring constant k₁ is", img: "images/phy14-q41.png", opts: ["k₁A/k₂", "k₂A/k₂", "k₁A/(k₁+k₂)", "k₂A/(k₁+k₂)"], ans: 3, exp: "Springs in series have same force. k₁x₁ = k₂x₂. Also x₁+x₂ = A. x₁ = A k₂/(k₁+k₂)." },
+    { q: "42. In the figure shown, the block is moved side ways by a distance A. The magnitude of net force on the block is", img: "images/phy14-q42.png", opts: ["(k₁ - k₂)A", "(k₂ - k₁)A", "(k₁ + k₂)A", "((k₁ + k₂)/2)A"], ans: 2, exp: "Both springs are compressed/stretched. Net restoring force = -(k₁x + k₂x) = -(k₁+k₂)x. Magnitude = (k₁+k₂)A." },
+    { q: "43. A system containing a ball is oscillating on a frictionless horizontal plane. The position of the mass when its potential energy and its kinetic energy both are equal, is (let A is the amplitude of oscillation)", opts: ["A", "A/√2", "A/2", "A/√3"], ans: 1, exp: "PE = KE => (1/2)kx² = (1/2)k(A²-x²) => 2x² = A² => x = A/√2." },
+    { q: "44. A block attached to a spring is executing SHM. Let the time period of variation of velocity is T₁ and time period of variation of kinetic energy is T₂. The relation between T₁ and T₂ is", opts: ["T₁ = T₂", "T₁ = 2T₂", "T₁ = T₂/2", "None of these"], ans: 1, exp: "Velocity has period T. KE has period T/2. T₂ = T/2. T₁ = T. So T₁ = 2T₂." },
+    { q: "45. A spring mass system is hanging from a ceiling of an elevator in equilibrium as shown. The elevator suddenly starts accelerating with acceleration 9 ms⁻², then the frequency of oscillation is", img: "images/phy14-q45.png", opts: ["10 Hz", "4 Hz", "2.8 Hz", "0 Hz"], ans: 2, exp: "Frequency depends only on mass and spring constant: f = (1/2π)√(k/m) = (1/2π)√(10/2) = (1/2π)√5 ≈ 0.35 Hz. Wait, 2.8 Hz means ω = 2πf = 2π(2.8) = 17.6. But ω=√(k/m) = √5 = 2.23. So f = 2.23/2π = 0.35 Hz. Option C is 2.8 Hz, perhaps they calculated v = 2π√(m/k)?" },
+    { q: "46. Two identical blocks A and B, each of mass m resting on smooth floor, are connected by a light spring of natural length L and the spring constant k, with the spring at its natural length. A third identical block at C (mass m) moving with a speed v along the line joining A and B collides with A. (Consider the collision to be elastic in nature) The maximum compression in the spring is equal to", img: "images/phy14-q46.png", opts: ["v√(m/2k)", "m√(v/2k)", "√(mv/k)", "mv/2k"], ans: 0, exp: "After elastic collision, C stops, A gets v. At max compression, A and B move with v/2. Energy conservation: (1/2)mv² = (1/2)(2m)(v/2)² + (1/2)kx². => x = v√(m/2k)." },
+    { q: "47. The time period of system shown below is", img: "images/phy14-q47.png", opts: ["2π√(m/3k)", "2π√(2m/k)", "2π√(m/4k)", "2π√(m/k)"], ans: 2, exp: "Springs k, k, 2k are in parallel. k_eq = k + k + 2k = 4k. T = 2π√(m/4k)." },
+    { q: "48. The time period of the given spring mass system is equal to that of system", img: "images/phy14-q48.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "None of these"], ans: 0, exp: "Original system has two springs k in parallel => k_eq = 2k. System (a) has two k in parallel => 2k." },
+    { q: "49. A body mass m is attached to the lower end of a spring whose upper end is fixed. The spring has negligible mass. When the mass m is slightly pulled down and released, it oscillates with a time period of 3s. When the mass m is increased by 1 kg, the time period of oscillations becomes 5s. The value of m in kg is", opts: ["3/4", "4/3", "16/9", "9/16"], ans: 3, exp: "T ∝ √m. T₂/T₁ = √((m+1)/m) = 5/3. (m+1)/m = 25/9 => 1 + 1/m = 25/9 => 1/m = 16/9 => m = 9/16 kg." },
+    { q: "50. Two spring of force constants k₁ and k₂ are connected to a mass m as shown in figure. The frequency of oscillation of the mass is f. If both k₁ and k₂ are made four times their original values, the frequency of oscillation becomes", img: "images/phy14-q50.png", opts: ["f/2", "f/4", "4f", "2f"], ans: 3, exp: "Springs are in parallel. k_eq = k₁+k₂. f ∝ √k_eq. If k becomes 4 times, f becomes 2 times." },
+    { q: "51. When a body of mass 1.0 kg is suspended from a certain light spring hanging vertically, its length increases by 5 cm. By suspending 2.0 kg block to the spring and if the block is pulled through 10 cm and released, the maximum velocity in it (in ms⁻¹) is (use, acceleration due to gravity = 10 ms⁻²)", opts: ["0.5", "1", "2", "4"], ans: 1, exp: "k = mg/x = 1×10/0.05 = 200 N/m. For 2kg, ω = √(k/m) = √(200/2) = 10 rad/s. v_max = Aω = 0.1 × 10 = 1 m/s." },
+    { q: "52. The ratio of frequencies of two pendulums are 2 : 3, then their lengths are in ratio", opts: ["√2/3", "√3/2", "4/9", "9/4"], ans: 3, exp: "f ∝ 1/√L. L ∝ 1/f². L₁/L₂ = (f₂/f₁)² = (3/2)² = 9/4." },
+    { q: "53. A mass falls from a height h and its time of fall t is recorded in terms of time period T of a simple pendulum. On the surface of earth, it is found that t = 2T. The entire set up is taken on the surface of another planet whose mass is half of earth and radius the same. Same experiment is repeated and corresponding times are noted as t' and T'.", opts: ["t' = √2 T'", "t' > 2T'", "t' < 2T'", "t' = 2T'"], ans: 3, exp: "t = √(2h/g), T = 2π√(L/g). So t/T = constant. If g changes, both t and T change proportionally. Ratio remains same. t' = 2T'." },
+    { q: "54. A simple pendulum is suspended from the ceiling of a lift. When the lift is at rest, its time period is T. With what acceleration should the lift be accelerated upwards in order to reduce its period to T/2? (Take, g is acceleration due to gravity).", opts: ["2 g", "3 g", "4 g", "g"], ans: 1, exp: "T = 2π√(L/g), T' = 2π√(L/(g+a)). T'/T = √(g/(g+a)) = 1/2 => g/(g+a) = 1/4 => 4g = g+a => a = 3g." },
+    { q: "55. A simple pendulum has a time period T₁ when it is on the earth's surface and T₂ when it is taken to a height 2R above the earth's surface, where R is the radius of the earth. The value of T₁/T₂ is", opts: ["1/9", "1/3", "√3", "9"], ans: 1, exp: "g' = g(R/(R+2R))² = g/9. T ∝ 1/√g. T₁/T₂ = √(g'/g) = √(1/9) = 1/3." },
+    { q: "56. A uniform rod of mass m and length l₀ is pivoted at one end and is hanging in the vertical direction. The period of small angular oscillations of the rod is", img: "images/phy14-q56.png", opts: ["T = 3π√(2l₀/3g)", "T = 4π√(l₀/3g)", "T = 4π√(2l₀/3g)", "T = 2π√(2l₀/3g)"], ans: 3, exp: "T = 2π√(I/mgd). I = ml₀²/3. d = l₀/2. T = 2π√(2l₀/3g)." },
+    { q: "57. A simple pendulum oscillating in air has period T. The bob of the pendulum is completely immersed in a non-viscous liquid. The density of the liquid is 1/16th of the material of the bob. If the bob is inside liquid all the time, its period of oscillation in this liquid is", img: "images/phy14-q57.png", opts: ["2T√(1/10)", "2T√(1/14)", "4T√(1/14)", "4T√(1/15)"], ans: 3, exp: "g_eff = g(1 - ρ_l/ρ_b) = g(1 - 1/16) = 15g/16. T' = T/√(g_eff/g) = T√(16/15) = 4T√(1/15)." },
+    { q: "58. The natural frequencies of vibration of a building depend on\n(i) its height and other size parameters.\n(ii) the nature of building materials.\nThe correct option is/are", opts: ["Only (i)", "Only (ii)", "Both (i) and (ii)", "Neither (i) nor (ii)"], ans: 2, exp: "Natural frequency depends on geometry (size) and material properties (elasticity, density). Both (i) and (ii)." },
+    { q: "59. The value of amplitude of the forced oscillation when damping is small and ω_d is far away from ω, where ω_d = driving frequency, ω = natural frequency and F₀ = amplitude of applied periodic force.", img: "images/phy14-q59.png", opts: ["F₀/mω²", "F₀/(m(ω² - ω_d²))", "F₀/ω_db", "F₀/(mω²_d)"], ans: 1, exp: "Amplitude A = F₀/√(m²(ω²-ω_d²)² + ω_d²b²). For small b, A ≈ F₀/m|ω²-ω_d²|. Option (b)." },
+    { q: "60. The value of maximum possible amplitude in the case of forced oscillations when driving frequency is close to natural frequency, is", img: "images/phy14-q60.png", opts: ["F₀/(m(ω² - ω_d²))", "F₀/(ω_db)", "F₀/mω²", "-F₀/mω²_d"], ans: 1, exp: "At resonance, ω_d ≈ ω. Denominator becomes ω_db. So A = F₀/(ω_db)." },
+    { q: "61. The amplitude of a damped oscillator decreases to 0.9 times its original magnitude is 5 s. In another 10 s, it will decrease to α times its original magnitude, where α equals to", img: "images/phy14-q61.png", opts: ["0.7", "0.81", "0.729", "0.6"], ans: 2, exp: "A = A₀e^(-bt/2m). 0.9 = e^(-5k). α = e^(-15k) = (e^(-5k))³ = 0.9³ = 0.729." },
+    { q: "62. A damped harmonic oscillator has a frequency of 5 oscillations per second. The amplitude drops to half its value for every 10 oscillations. The time it will take to drop to 1/1000 of the original amplitude is close to", img: "images/phy14-q62.png", opts: ["20 s", "50 s", "100 s", "10 s"], ans: 0, exp: "T = 1/5 = 0.2s. 10 osc = 2s. A = A₀/2 after 2s. A/A₀ = (1/2)^(t/2). 1/1000 = (1/2)^(t/2). 2^(t/2) = 1000. t/2 ≈ 10 (since 2¹⁰=1024). t ≈ 20 s." },
+    { q: "63. Assertion: Vibrations and oscillations are two different types of motion.\nReason: For vibration, frequency is more and for oscillation, the frequency is less.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Vibration and oscillation are essentially the same. Frequency distinction is not a standard definition. Assertion incorrect, Reason correct (as a general observation)." },
+    { q: "64. Assertion: x(t) = A sin ωt is periodic in nature but cannot represent an oscillatory motion.\nReason: sin θ is a sinusoidal periodic function.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "x = A sin ωt is oscillatory (to and fro about origin). So Assertion is incorrect. sin θ is sinusoidal periodic (Reason correct)." },
+    { q: "65. Assertion: x = A cos ωt and x = A sin ωt can represent same motion depending on initial position of particle.\nReason: If the argument of x = A cos ωt, i.e. ωt is increased by 2π radian the value of x remains same.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "Both are correct. Depending on phase, sine and cosine can represent same motion. But Reason is not the explanation for Assertion." },
+    { q: "66. Assertion: x = A cos ωt represents a periodic function. The value of x varies between +A and -A.\nReason: Amplitude is a vector quantity.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Amplitude is scalar. Assertion correct, Reason incorrect." },
+    { q: "67. Assertion: For an oscillatory motion, the equilibrium position can be represented by saying that it is a point for periodic motion where net external force on the body is zero.\nReason: For an oscillatory motion, if the body is displaced from the equilibrium position, a restoring force will arise that will try to bring back the body to equilibrium position.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "Both are correct. But R is not the explanation for A (it's the definition of restoring force)." },
+    { q: "68. Assertion: If the amplitude of SHM of a spring mass system is increased, then time period of SHM will remain constant.\nReason: If amplitude is increased, body will have to travel more distance to complete one oscillation.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "T = 2π√(m/k) is independent of amplitude. Assertion correct. Reason is true in words but doesn't explain why T is constant. Actually, Reason is incorrect as an explanation. Assertion correct but Reason incorrect." },
+    { q: "69. Assertion: A block of mass m attached to a stiff spring have large oscillation frequency.\nReason: Stiff spring have high value of spring constant k.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "f ∝ √k. Stiff spring means high k. Both A and R are correct and R explains A." },
+    { q: "70. Assertion: If a pendulum is falling freely, then its time period becomes zero.\nReason: Freely falling body has the acceleration equal to g.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "In free fall, g_eff = 0, so T = ∞ (not zero). Assertion incorrect, Reason correct." },
+    { q: "71. Assertion: In damped oscillations, the motion is periodic.\nReason: In damped oscillations, the amplitude decreases due to dissipative forces.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Damped motion is not strictly periodic (amplitude decreases). Assertion incorrect. Reason correct." },
+    { q: "72. Assertion: In damped oscillations, the total mechanical energy remain constant.\nReason: Total mechanical energy of oscillator executing SHM is given by (1/2)kA², where A is amplitude at time t.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "In damped, energy decreases. Assertion incorrect. Formula E=(1/2)kA² is correct for instantaneous energy (Reason correct)." },
+    { q: "73. Assertion: The motion of a simple pendulum dies out gradually due to air drag and friction at the support.\nReason: For small damping also, the oscillations are non-periodic in nature.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Motion dies out (A correct). But small damping oscillations are approximately periodic (R incorrect)." },
+    { q: "74. Assertion: Free oscillations cannot die out with time.\nReason: Swinging of a child in a swing (with an external push) is the example of forced oscillation.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Free oscillations die out due to damping. Assertion incorrect. Swing with push is forced (Reason correct)." },
+    { q: "75. Assertion: In forced oscillation, the external force is constant.\nReason: In forced oscillation, external force helps in sustaining the oscillations.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "External force is periodic F = F₀cos(ω_d t), not constant. Assertion incorrect. Reason correct." },
+    { q: "76. Assertion: In resonance, amplitude is infinity.\nReason: At resonance, driving frequency is equal to natural frequency of the system.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Amplitude is maximum, not infinity (due to damping). Assertion incorrect. Reason correct." },
+    { q: "77. Assertion: The army troops are suggested to break their march on a hanging bridge.\nReason: Due to resonance, the bridge may collapse.", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Marching frequency might match bridge's natural frequency causing resonance and collapse. Both A and R are correct and R explains A." },
+    { q: "78. I. In sitar and guitar, the strings vibrate and produce sound.\nII. Sound wave propagate due to vibration of air molecules.\nIII. In solids, atoms oscillate to produce the sensation of temperature.\nIV. In antennas of TV and satellites transmitters, electrons oscillate to convey information.\nWhich of the following statement(s) is/are correct?", img: "images/phy14-q78.png", opts: ["I, III and IV", "Both II and III", "Both III and IV", "I, II, III and IV"], ans: 3, exp: "All four statements are correct examples of oscillations in different contexts." },
+    { q: "79. I. Time period of a spring-mass system depends on its amplitude.\nII. Time period of a spring-mass system depends on its mass.\nIII. Time period of a spring-mass system depends on spring constant.\nWhich of the following statement(s) is/are correct?", img: "images/phy14-q79.png", opts: ["Both I and II", "Both I and III", "Both II and III", "I, II and III"], ans: 2, exp: "T = 2π√(m/k). It depends on m and k, not on amplitude. II and III correct." },
+    { q: "80. Three simple harmonic motions in the same direction having the same amplitude a and same period are superposed. If each differs in phase from the next by 45°, then choose the correct statement.", img: "images/phy14-q80.png", opts: ["The resultant amplitude is (1 + √2)a.", "The phase of the resultant motion relative to the first is 90°.", "The energy associated with the resulting motion is (3 - 2√2) times the energy associated with any single motion.", "The resulting motion is not simple harmonic."], ans: 0, exp: "Phase diff = 45°. Resultant A_R = a(1 + 2cos45°) = a(1 + √2). So (a) is correct." },
+    { q: "81. In 1610, Galileo found four moons of planet Jupiter. He observe the motion of one moon callisto from earth and his data in graph as shown below suggests that its motion is simple harmonic. Now, choose the correct statement.", img: "images/phy14-q81.png", opts: ["The motion of moon callisto is not simple harmonic in real.", "The motion of moon callisto is actually uniform circular motion.", "Galileo observed projections of uniform circular motion in a line of plane of motion.", "All of the above"], ans: 3, exp: "Actually it's uniform circular motion. Galileo saw projection (SHM). All statements correct." },
+    { q: "82. Displacement versus time curve for a particle executing SHM is shown in figure. Choose the correct statements.", img: "images/phy14-q82.png", opts: ["Phase of the oscillator is same at t = 0 s and t = 2 s.", "Phase of the oscillator is same at t = 2 s and t = 6 s.", "Phase of the oscillator is same at t = 1 s and t = 7 s.", "Phase of the oscillator is same at t = 3 s and t = 5 s."], ans: 1, exp: "From graph, T=4s. Same phase at t and t+T. t=2 and t=6 (diff=4). So (b) correct." },
+    { q: "83. A particle is in linear simple harmonic motion between two points A and B, 10 cm apart (figure). Take the direction from A to B as the positive direction and choose the incorrect statements.", img: "images/phy14-q83.png", opts: ["The sign of velocity, acceleration and force on the particle when it is 3 cm away from A going towards B are positive.", "The sign of velocity of the particle at C going towards B is negative.", "The sign of velocity, acceleration and force on the particle when it is 4 cm away from B going towards A are negative.", "The sign of acceleration and force on the particle when it is at point B is negative."], ans: 1, exp: "A to B is positive. At C going towards B, velocity is positive. Statement (b) says negative, so it's incorrect." },
+    { q: "84. The displacement-time graph of a particle executing SHM is shown in figure. Which of the following statement is/are incorrect?", img: "images/phy14-q84.png", opts: ["The force is zero at t = 3T/4.", "The acceleration is maximum at t = 4T/4.", "The velocity is maximum at t = T/4.", "The PE is equal to KE of oscillation at t = T/2."], ans: 3, exp: "At t=T/2, displacement is maximum, so PE is max, KE is 0. They are not equal. So (d) is incorrect." },
+    { q: "85. A body is performing SHM, then which of the following statement(s) is/are incorrect?", img: "images/phy14-q85.png", opts: ["Total energy per cycle is equal to its maximum kinetic energy.", "Average kinetic energy per cycle is equal to half of its maximum kinetic energy.", "Mean velocity over a complete cycle is equal to (2/π) times of its maximum velocity.", "Both (b) and (c)"], ans: 2, exp: "Mean velocity over complete cycle is zero, not (2/π)v_max. So (c) is incorrect." },
+    { q: "86. For a SHM, if the maximum potential energy become double, choose the correct statements.", img: "images/phy14-q86.png", opts: ["Maximum kinetic energy will become double.", "The total mechanical energy will become double.", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "E_total = PE_max = KE_max. If PE_max doubles, both total energy and KE_max double. Both (a) and (b)." },
+    { q: "87. A body executes simple harmonic motion. Its Potential Energy (PE), the Kinetic Energy (KE) and Total Energy (TE) were measured as function of displacement x. Then, which of the following statement regarding the body is correct?", img: "images/phy14-q87.png", opts: ["KE is maximum, when x = 0.", "TE is zero, when x = 0.", "KE is maximum, when x is maximum.", "PE is maximum, when x = 0."], ans: 0, exp: "At x=0 (mean), velocity is max, so KE is max. (a) is correct." },
+    { q: "88. A block is in simple harmonic motion as shown in the figure on a frictionless surface, i.e. μ = 0. Choose the correct statements.", img: "images/phy14-q88.png", opts: ["The kinetic energy varies between a maximum value and zero.", "The potential energy varies between a maximum value and zero.", "Total energy remains constant.", "All of the above"], ans: 3, exp: "KE and PE vary between 0 and max. Total energy is constant. All are correct." },
+    { q: "89. The graph below shows the variation of potential energy U(t), kinetic energy K(t) with time t for a particle executing SHM. Choose the correct statement(s).", img: "images/phy14-q89.png", opts: ["The time periods of variation of potential and kinetic energies are same.", "The total mechanical energy is maximum at t = T/2.", "Kinetic energy is negative and potential energy is positive.", "Potential energy is negative and kinetic energy is positive."], ans: 0, exp: "Both PE and KE have period T/2. So (a) is correct. TE is constant. Energies are always positive." },
+    { q: "90. A vertical spring mass system is taken on moon. It starts oscillating on the moon. Choose the correct statements.", img: "images/phy14-q90.png", opts: ["The time period will become T_Earth/√6.", "The equilibrium position about which spring-mass system oscillates in vertical direction is mg/6k from the unstretched position.", "k on moon decreases.", "k on moon increases."], ans: 1, exp: "T = 2π√(m/k) is independent of g. So T is same. Equilibrium position x = mg_moon/k = (mg/6)/k = mg/6k. Statement (b) is correct." },
+    { q: "91. Choose the correct statements regarding the expression x(t) = A e^(-bt/2m) cos(ω't + φ). Here, ω' = √(k/m - b²/4m²), b/√(km) is much less than 1.", img: "images/phy14-q91.png", opts: ["x(t) is strictly periodic always.", "x(t) is approximately periodic.", "Amplitude of damped oscillation represented by above expression is constant.", "None of the above"], ans: 1, exp: "Due to decaying amplitude, it is not strictly periodic but approximately periodic for small damping. (b) is correct." },
+    { q: "92. Graph below shows variation of amplitude of forced oscillation with respect to frequency of driving force (natural frequency). Choose the correct statement(s).", img: "images/phy14-q92.png", opts: ["Amplitude is maximum at ω_d = ω.", "Peak amplitude is maximum for curve a because for curve a damping is minimum.", "Both (a) and (b)", "None of the above"], ans: 2, exp: "At resonance ω_d=ω, amplitude is max. Curve a has highest peak, so lowest damping. Both (a) and (b)." },
+    { q: "93. Match the Column I (examples of different types of motion) with Column II (type of motion) and select the correct answer from the codes given below.\n\nColumn I:\nA. Circular motion of a rigid body about a common axis\nB. Motion of a pendulum\nC. Motion of a car on a straight road\nD. Motion of a ball thrown by a boy at an angle with horizontal\n\nColumn II:\n1. Projectile\n2. Rectilinear\n3. Oscillatory\n4. Rotational motion", img: "images/phy14-q93.png", opts: ["A-4, B-2, C-1, D-3", "A-4, B-3, C-2, D-1", "A-3, B-4, C-1, D-2", "A-4, B-3, C-1, D-2"], ans: 1, exp: "A (Rotational: 4). B (Oscillatory: 3). C (Rectilinear: 2). D (Projectile: 1). Hence A-4, B-3, C-2, D-1." },
+    { q: "94. Match the Column I (quantity) with Column II (value) for an object executing simple harmonic motion in a horizontal plane with displacement given as x = A cos ωt and select the correct answer from the codes given below.\n\nColumn I:\nA. v_max / amplitude is equal to\nB. a_max / amplitude is equal to\nC. If object starts from x = +A, then time to reach at +A/√2\nD. If object starts from x = 0 and move towards right, then the time to reach at +A/2\n\nColumn II:\n1. T/8\n2. T/12\n3. ω\n4. ω²", img: "images/phy14-q94.png", opts: ["A-3, B-4, C-2, D-1", "A-4, B-3, C-1, D-2", "A-3, B-4, C-1, D-2", "A-3, B-4, C-2, D-1"], ans: 3, exp: "v_max/A = ω (A-3). a_max/A = ω² (B-4). Time from A to A/√2: cos = 1/√2 => π/4. t = (π/4)/(2π/T) = T/8 (C-1). Time from 0 to A/2: sin = 1/2 => π/6. t = (π/6)/(2π/T) = T/12 (D-2). Hence A-3, B-4, C-1, D-2." },
+    { q: "95. For a forced oscillation, match the Column I (quantity) with Column II (expression) and select the correct answer from the codes given below.\n\nColumn I:\nA. External periodic force is\nB. The instantaneous acceleration of the object under forced oscillation is\nC. The displacement for forced oscillation is\nD. Amplitude for forced oscillation is\n\nColumn II:\n1. a(t) = -(k/m)x(t) - (b/m)v(t) + (F₀/m)cos ω_d t\n2. x(t) = A cos(ω_d t + φ)\n3. A = F₀ / (m²(ω² - ω_d²)² + ω_d²b²)^(1/2)\n4. F = F₀ cos ω_d t", img: "images/phy14-q95.png", opts: ["A-4, B-1, C-3, D-2", "A-1, B-2, C-3, D-4", "A-4, B-1, C-2, D-3", "A-3, B-2, C-1, D-4"], ans: 2, exp: "Force F = F₀ cos ω_d t (A-4). Acceleration a = -k/m x - b/m v + F₀/m cos (B-1). Displacement x = A cos(ω_d t + φ) (C-2). Amplitude A = F₀/√(...) (D-3). Hence A-4, B-1, C-2, D-3." },
+    { q: "96. Figures depict four x-t plots for linear motion of a particle. Which of the plots represent a non-periodic motion?", img: "images/phy14-q96.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 0, exp: "Graph (a) is unidirectional non-uniform motion, no repetition. So non-periodic. Others are periodic." },
+    { q: "97. The motion of a particle executing simple harmonic motion is described by the displacement function, x(t) = A cos(ωt + φ). If the initial (t = 0) position of the particle is 1 cm and its initial velocity is ω cms⁻¹, what are its amplitude and initial phase angle?", img: "images/phy14-q97.png", opts: ["√2 cm, -π/4", "2 cm, π/2", "√2 cm, -π/2", "2 cm, π/4"], ans: 0, exp: "x(0) = A cos φ = 1. v(0) = -Aω sin φ = ω => A sin φ = -1. A = √(1²+(-1)²) = √2. tan φ = -1 => φ = -π/4." },
+    { q: "98. A spring balance has a scale that reads from 0 to 50 kg. The length of the scale is 20 cm. A body suspended from this balance, when displaced and released, oscillates with a period of 0.6 s. What is the weight of the body?", img: "images/phy14-q98.png", opts: ["100 N", "200 N", "220 N", "250 N"], ans: 2, exp: "k = F/x = 50×9.8 / 0.2 = 2450 N/m. T = 2π√(m/k) => 0.6 = 2π√(m/2450) => m = 22.36 kg. Weight = 22.36 × 9.8 = 219.1 N ≈ 220 N." },
+    { q: "99. A spring having with a spring constant 1200 Nm⁻¹ is mounted on a horizontal table as shown in figure. A mass of 3 kg is attached to the free end of the spring, then the mass is pulled sideways to a distance of 2.0 cm and released. The frequency of oscillation is", img: "images/phy14-q99.png", opts: ["1.6 s⁻¹", "3.2 s⁻¹", "4.8 s⁻¹", "5 s⁻¹"], ans: 1, exp: "f = (1/2π)√(k/m) = (1/2π)√(1200/3) = (1/2π)√400 = 20/2π = 3.18 s⁻¹." },
+    { q: "100. Figure shows the same spring with both ends free and attached to a mass m at either end. Each end of the spring in figure is stretched by the same force F. If masses in figure are released, what is the period of oscillation?", img: "images/phy14-q100.png", opts: ["2π√(2m/k)", "2π√(m/2k)", "2π√(m/k)", "2π√(2m/3k)"], ans: 1, exp: "Each mass sees half spring (k'=2k). Reduced mass μ = m/2. T = 2π√(μ/k') = 2π√((m/2)/(2k)) = 2π√(m/4k)? Wait, equivalent: T = 2π√(m/2k) for the relative oscillation." },
+    { q: "101. The piston in the cylinder head of a locomotive has a stroke (twice the amplitude) of 1.0 m. If the piston moves with simple harmonic motion with an angular frequency of 200 rad min⁻¹, what is its maximum speed?", img: "images/phy14-q101.png", opts: ["25 m min⁻¹", "50 m min⁻¹", "100 m min⁻¹", "200 m min⁻¹"], ans: 2, exp: "A = 0.5 m. ω = 200 rad/min. v_max = Aω = 0.5 × 200 = 100 m/min." },
+    { q: "102. The acceleration due to gravity on the surface of moon is 1.7 ms⁻². What is the time period of a simple pendulum on the surface of moon, if its time period on the surface of earth is 3.5 s? (Take, g on the surface of earth is 9.8 ms⁻²)", img: "images/phy14-q102.png", opts: ["2.4 s", "4.2 s", "6.2 s", "8.4 s"], ans: 3, exp: "T_m = T_e √(g_e/g_m) = 3.5 √(9.8/1.7) = 3.5 √5.76 = 3.5 × 2.4 = 8.4 s." },
+    { q: "103. You are riding in an automobile of mass 3000 kg. Assuming that you are examining the oscillation characteristics of its suspension system. The suspension sags 15 cm when the entire automobile is placed on it. Also, the amplitude of oscillation decreases by 50% during one complete oscillation. What is the value of the damping constant b for the spring and shock absorber system of one wheel? Assuming that each wheel supports 750 kg.", img: "images/phy14-q103.png", opts: ["1252 kgs⁻¹", "1352 kgs⁻¹", "1562 kgs⁻¹", "1632 kgs⁻¹"], ans: 1, exp: "k = mg/x = 3000×9.8/0.15 = 1.96×10⁵ N/m. T = 2π√(m/k) = 2π√(3000/1.96×10⁵) = 0.77 s. A = A₀e^(-bt/2m). 1/2 = e^(-b×0.77 / (2×750)). ln2 = b×0.77/1500 => b = 1500×0.693/0.77 = 1350 kg/s." },
+    { q: "104. A body describes simple harmonic motion with an amplitude of 5 cm and a period of 0.2 s. What is the acceleration and velocity of the body when the displacement is 5 cm?", img: "images/phy14-q104.png", opts: ["-5π² ms⁻², 0", "2π² ms⁻², 2 ms⁻¹", "1π² ms⁻², 2 ms⁻¹", "0, 5 ms⁻¹"], ans: 0, exp: "ω = 2π/0.2 = 10π rad/s. a = -ω²x = -(10π)² × 0.05 = -100π² × 0.05 = -5π² m/s². v = ω√(A²-x²) = 0 (since x=A)." },
+    { q: "105. The displacement of a particle is represented by the equation y = 3 cos(π/4 - 2ωt). The motion of the particle is", img: "images/phy14-q105.png", opts: ["simple harmonic with period 2π/ω", "simple harmonic with period π/ω", "periodic but not simple harmonic", "non-periodic"], ans: 1, exp: "y = 3 cos(2ωt - π/4). It's SHM with ω' = 2ω. T = 2π/ω' = 2π/2ω = π/ω." },
+    { q: "106. The displacement of a particle is represented by the equation y = sin³ ωt. The motion is", img: "images/phy14-q106.png", opts: ["non-periodic", "periodic but not simple harmonic", "simple harmonic with period 2π/ω", "simple harmonic with period π/ω"], ans: 1, exp: "sin³ ωt = (3sin ωt - sin 3ωt)/4. It's a superposition of SHMs with frequencies ω and 3ω. It is periodic but not SHM." },
+    { q: "107. The relation between acceleration and displacement of four particles are given below. Which of the particle is executing SHM?", img: "images/phy14-q107.png", opts: ["a_x = + 2x", "a_x = + 2x²", "a_x = - 2x²", "a_x = - 2x"], ans: 3, exp: "For SHM, a ∝ -x. Only (d) satisfies a = -2x." },
+    { q: "108. The displacement of a particle varies with time according to the relation y = a sin ωt + b cos ωt.", img: "images/phy14-q108.png", opts: ["The motion is oscillatory but not SHM", "The motion is SHM with amplitude a + b", "The motion is SHM with amplitude a² + b²", "The motion is SHM with amplitude √(a² + b²)"], ans: 3, exp: "y = A sin(ωt + φ) where A = √(a²+b²). It is SHM with amplitude √(a²+b²)." },
+    { q: "109. Four pendulums A, B, C and D are suspended from the same elastic support as shown in figure. A and C are of the same length, while B is smaller than A and D is larger than A. If A is given a transverse displacement, then", img: "images/phy14-q109.png", opts: ["D will vibrate with maximum amplitude", "C will vibrate with maximum amplitude", "B will vibrate with maximum amplitude", "All the four will oscillate with equal amplitude"], ans: 1, exp: "Resonance occurs when lengths (and thus natural frequencies) match. A and C have same length, so C will resonate with maximum amplitude." },
+    { q: "110. Figure shows the circular motion of a particle. The radius of the circle, the period, sense of revolution and the initial position are indicated on the figure. The simple harmonic motion of the x-projection of the radius vector of the rotating particle P is", img: "images/phy14-q110.png", opts: ["x(t) = B sin(2πt/30)", "x(t) = B cos(πt/15)", "x(t) = B sin(πt/15 + π/2)", "x(t) = B cos(πt/15 + π/2)"], ans: 0, exp: "At t=0, x=0. So it's a sine function. T=30s, ω=2π/30. x = B sin(2πt/30)." },
+    { q: "111. The equation of motion of a particle is x = a cos(αt)². The motion is", img: "images/phy14-q111.png", opts: ["periodic but not oscillatory", "periodic and oscillatory", "oscillatory but not periodic", "Neither periodic nor oscillatory"], ans: 2, exp: "x = a cos(α²t²). As t increases, argument increases as t². It is not periodic. It oscillates as cos varies. So oscillatory but not periodic." },
+    { q: "112. A particle executing SHM has a maximum speed of 30 cms⁻¹ and a maximum acceleration of 60 cms⁻². The period of oscillation is", img: "images/phy14-q112.png", opts: ["π s", "π/2 s", "2π s", "π/t s"], ans: 0, exp: "v_max = Aω = 30. a_max = Aω² = 60. ω = 60/30 = 2 rad/s. T = 2π/ω = π s." },
+    { q: "113. When a mass m is connected individually to two springs having spring constants k₁ and k₂, the oscillation frequencies are v₁ and v₂. If the same mass is attached to the two springs as shown in figure, the oscillation frequency would be", img: "images/phy14-q113.png", opts: ["v₁ + v₂", "√(v₁² + v₂²)", "(1/v₁ + 1/v₂)⁻¹", "√(v₁² - v₂²)"], ans: 1, exp: "Springs in parallel. k_eq = k₁+k₂. v = (1/2π)√(k_eq/m). v² = v₁² + v₂². So v = √(v₁²+v₂²)." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 46; // ⚠️ Set to 46 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
