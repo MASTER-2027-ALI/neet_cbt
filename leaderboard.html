@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaderboard - NEET 2027 CBT</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .leaderboard-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .lb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 20px 30px;
+    margin-bottom: 25px;
+  }
+  .lb-header h1 {
+    color: #fbbf24;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .back-btn {
+    padding: 10px 20px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  .back-btn:hover { background: rgba(59, 130, 246, 0.3); }
+
+  /* Podium */
+  .podium-grid {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 15px;
+    margin-bottom: 40px;
+    height: 220px;
+  }
+  .podium-card {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    width: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.3s;
+  }
+  .podium-card:hover { transform: translateY(-5px); }
+  
+  .podium-1 { height: 180px; border-color: #fbbf24; background: linear-gradient(180deg, rgba(251, 191, 36, 0.15), rgba(30, 41, 59, 0.85)); }
+  .podium-2 { height: 140px; border-color: #94a3b8; background: linear-gradient(180deg, rgba(148, 163, 184, 0.15), rgba(30, 41, 59, 0.85)); }
+  .podium-3 { height: 120px; border-color: #b45309; background: linear-gradient(180deg, rgba(180, 83, 9, 0.15), rgba(30, 41, 59, 0.85)); }
+
+  .podium-medal { font-size: 30px; margin-bottom: 5px; }
+  .podium-name { color: #f1f5f9; font-weight: 700; font-size: 15px; margin-bottom: 5px; }
+  .podium-score { color: #4ade80; font-weight: 800; font-size: 18px; }
+
+  /* Table list for remaining ranks */
+  .rank-list {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .rank-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 100px 100px;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    transition: background 0.2s;
+  }
+  .rank-row:hover { background: rgba(59, 130, 246, 0.1); }
+  .rank-row:last-child { border-bottom: none; }
+  
+  .rank-num { font-weight: 700; color: #94a3b8; font-size: 16px; }
+  .rank-name { font-weight: 600; color: #f1f5f9; display: flex; align-items: center; gap: 10px;}
+  .rank-avg { font-weight: 800; color: #4ade80; font-size: 16px; text-align: right; }
+  .rank-tests { color: #94a3b8; font-size: 13px; text-align: right; }
+
+  /* Highlight current user */
+  .my-rank { background: rgba(59, 130, 246, 0.2) !important; border-left: 4px solid #3b82f6; }
+
+  @media (max-width: 600px) {
+    .rank-row { grid-template-columns: 40px 1fr 80px; padding: 12px; }
+    .rank-tests { display: none; }
+    .podium-card { width: 90px; }
+  }
+</style>
+</head>
+<body>
+<div class="leaderboard-container">
+  
+  <div class="lb-header">
+    <h1>🏆 Leaderboard</h1>
+    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+  </div>
+
+  <div id="loading" style="text-align:center; color:#94a3b8; padding: 50px;">Loading rankings...</div>
+
+  <div id="podiumSection" class="podium-grid" style="display: none;">
+    <!-- Top 3 will be injected here -->
+  </div>
+
+  <div id="rankListSection" class="rank-list" style="display: none;">
+    <!-- Remaining ranks will be injected here -->
+  </div>
+
+</div>
+
+<script src="keys.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const userData = localStorage.getItem('cbt_user');
+if (!userData) window.location.href = 'index.html';
+const currentUser = JSON.parse(userData);
+
+async function loadLeaderboard() {
+  try {
+    const querySnapshot = await getDocs(collection(db, "results"));
+    
+    let userStats = {};
+
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
+      const name = data.userName;
+      
+      if (!userStats[name]) {
+        userStats[name] = {
+          totalPercent: 0,
+          chaptersCount: 0,
+          chapters: {} // To track best score per chapter
+        };
+      }
+
+      // Track the BEST score for this chapter
+      const ch = data.chapterNum;
+      const percent = Math.max(0, data.percent); // Avoid negative scores
+      
+      if (!userStats[name].chapters[ch] || percent > userStats[name].chapters[ch]) {
+        userStats[name].chapters[ch] = percent;
+      }
+    });
+
+    // Ab average nikaalo (Best scores ka)
+    let leaderboardData = [];
+    for (const name in userStats) {
+      const user = userStats[name];
+      const chapters = Object.values(user.chapters);
+      const totalChapters = chapters.length;
+      
+      if (totalChapters > 0) {
+        const sum = chapters.reduce((a, b) => a + b, 0);
+        const avg = sum / totalChapters;
+        
+        leaderboardData.push({
+          name: name,
+          avgScore: parseFloat(avg.toFixed(1)),
+          testsCount: totalChapters // Here it means chapters attempted
+        });
+      }
+    }
+
+    // Sort by Average Score (Descending)
+    leaderboardData.sort((a, b) => b.avgScore - a.avgScore);
+
+    document.getElementById('loading').style.display = 'none';
+    renderLeaderboard(leaderboardData);
+
+  } catch (e) {
+    console.error("Error loading leaderboard:", e);
+    document.getElementById('loading').innerHTML = '<p style="color:#ef4444;">⚠️ Data load nahi hua. Internet check karein.</p>';
+  }
+}
+
+function renderLeaderboard(data) {
+  if (data.length === 0) {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').innerHTML = '<p>Abhi tak kisi ne test nahi diya.</p>';
+    return;
+  }
+
+  const podiumSection = document.getElementById('podiumSection');
+  const rankListSection = document.getElementById('rankListSection');
+  
+  podiumSection.style.display = 'flex';
+  rankListSection.style.display = 'block';
+
+  let podiumHTML = '';
+  let listHTML = '';
+
+  // 1. Build Podium (Top 3)
+  // Arrange as 2nd, 1st, 3rd
+  if (data.length >= 2) podiumHTML += createPodiumCard(data[1], 2);
+  if (data.length >= 1) podiumHTML += createPodiumCard(data[0], 1);
+  if (data.length >= 3) podiumHTML += createPodiumCard(data[2], 3);
+
+  // 2. Build List (Rank 4 onwards)
+  for (let i = 3; i < data.length; i++) {
+    listHTML += createRankRow(data[i], i + 1);
+  }
+
+  podiumSection.innerHTML = podiumHTML;
+  rankListSection.innerHTML = listHTML;
+}
+
+function createPodiumCard(user, rank) {
+  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+  const isMe = user.name === currentUser.name ? 'border: 2px solid #3b82f6;' : '';
+  
+  return `
+    <div class="podium-card podium-${rank}" style="${isMe}">
+      <div class="podium-medal">${medals[rank]}</div>
+      <div class="podium-name">${user.name} ${user.name === currentUser.name ? '(You)' : ''}</div>
+      <div class="podium-score">${user.avgScore}%</div>
+      <div style="font-size: 11px; color:#94a3b8; margin-top:5px;">${user.testsCount} Chapters</div>
+    </div>
+  `;
+}
+
+function createRankRow(user, rank) {
+  const isMeClass = user.name === currentUser.name ? 'my-rank' : '';
+  
+  return `
+    <div class="rank-row ${isMeClass}">
+      <div class="rank-num">#${rank}</div>
+      <div class="rank-name">${user.name} ${user.name === currentUser.name ? '<span style="font-size:11px; background:#3b82f6; padding:2px 6px; border-radius:4px; color:#fff;">YOU</span>' : ''}</div>
+      <div class="rank-avg">${user.avgScore}%</div>
+      <div class="rank-tests">${user.testsCount} Chapters</div>
+    </div>
+  `;
+}
+
+loadLeaderboard();
+</script>
+</body>
+</html>
