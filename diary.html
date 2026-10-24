@@ -3,34 +3,189 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quick Revision - NEET CBT</title>
+<title>My Progress Diary - NEET 2027 CBT</title>
+<link rel="stylesheet" href="style.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; padding: 20px; }
-  .header { text-align: center; margin-bottom: 20px; }
-  .header h1 { color: #d97706; font-size: 24px; }
-  .container { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 30px; }
-  .q-box { margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; }
-  .q-text { font-weight: 600; font-size: 16px; margin-bottom: 15px; }
-  .option { display: block; padding: 12px; margin-bottom: 10px; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; }
-  .option.correct { border-color: #38a169; background: #c6f6d5; }
-  .option.wrong { border-color: #e53e3e; background: #fed7d7; }
-  .exp-box { display: none; background: #fefcbf; border-left: 4px solid #d69e2e; padding: 15px; margin-top: 15px; border-radius: 4px; font-size: 14px; }
-  .back-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #4299e1; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; }
+  .diary-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .diary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 20px 30px;
+    margin-bottom: 25px;
+  }
+  .diary-header h1 {
+    color: #60a5fa;
+    font-size: 24px;
+  }
+  .back-btn {
+    padding: 10px 20px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  .back-btn:hover { background: rgba(59, 130, 246, 0.3); }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  .stat-box {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 25px;
+    text-align: center;
+  }
+  .stat-box .num { font-size: 32px; font-weight: 800; color: #60a5fa; }
+  .stat-box .lbl { color: #94a3b8; font-size: 14px; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
+  .chapter-progress {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .chapter-progress:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    border-color: rgba(96, 165, 250, 0.4);
+  }
+  .chapter-progress h3 { color: #f1f5f9; margin-bottom: 15px; font-size: 18px; border-bottom: 1px solid rgba(148, 163, 184, 0.2); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .progress-bar-container { background: #1e293b; border-radius: 10px; height: 12px; margin: 10px 0; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s; }
+  .progress-bar-fill.strong { background: linear-gradient(90deg, #4ade80, #22c55e); }
+  .progress-bar-fill.weak { background: linear-gradient(90deg, #f87171, #ef4444); }
+  .progress-bar-fill.average { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+
+  .weak-chapter { border-left: 4px solid #ef4444; }
+  .strong-chapter { border-left: 4px solid #22c55e; }
+
+  .mistake-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+  }
+  .mistake-card .q-text { font-weight: 600; color: #e2e8f0; margin-bottom: 10px; }
+  .mistake-card .ans-row { display: flex; gap: 20px; margin-bottom: 10px; font-size: 14px; flex-wrap: wrap; }
+  .mistake-card .your-ans { color: #f87171; }
+  .mistake-card .correct-ans { color: #4ade80; }
+  .mistake-card .exp { font-size: 13px; color: #94a3b8; font-style: italic; margin-bottom: 15px; }
+  
+  .note-input {
+    width: 100%;
+    padding: 10px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-family: inherit;
+  }
+  .note-input:focus { outline: none; border-color: #60a5fa; }
+  .save-note-btn {
+    margin-top: 10px;
+    padding: 8px 15px;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  /* Modal Styles */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+    padding: 25px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 15px; right: 20px; background: #ef4444; color: white;
+    border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold;
+  }
+  .modal-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; text-align: center; }
+  .modal-stat-box { background: rgba(15, 23, 42, 0.8); padding: 15px; border-radius: 10px; }
+  .modal-stat-box .val { font-size: 22px; font-weight: bold; }
+  .modal-stat-box .lbl { font-size: 12px; color: #94a3b8; }
 </style>
 </head>
 <body>
+<div class="diary-container">
+  <div class="diary-header">
+    <h1>📔 My Progress Diary</h1>
+    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+  </div>
 
-<div class="header">
-    <h1>⚡ Quick Revision</h1>
-    <p>Sirf un sawaalon ka test jo aapne pehle galat kiye the</p>
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="num" id="totalTests">0</div>
+      <div class="lbl">Tests Attempted</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" id="avgScore" style="color: #4ade80;">0%</div>
+      <div class="lbl">Overall Average</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" id="strongCount" style="color: #4ade80;">0</div>
+      <div class="lbl">Strong Chapters</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" id="weakCount" style="color: #f87171;">0</div>
+      <div class="lbl">Weak Chapters</div>
+    </div>
+  </div>
+
+  <h2 style="color: #f1f5f9; margin-bottom: 15px;">📊 Chapter Analysis (Click to view details)</h2>
+  <div id="chapterAnalysis"></div>
+
+  <h2 style="color: #f1f5f9; margin: 30px 0 15px 0;">❌ Recent Mistakes (All Chapters)</h2>
+  <div id="mistakesList"></div>
 </div>
 
-<div class="container" id="quizContainer">
-    <p style="text-align:center; color:#718096;">Loading questions...</p>
-</div>
+<!-- Modal for Detailed Chapter View -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <h2 id="modalTitle" style="color: #60a5fa; margin-bottom: 5px;">Chapter Title</h2>
+    <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">Detailed Analysis of your last attempt.</p>
+    
+    <select id="attemptSelector" onchange="changeAttempt(this.value)" style="width: 100%; padding: 10px; margin-bottom: 15px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 8px; font-weight: 600;">
+    </select>
 
-<a href="diary.html" class="back-btn">← Back to Diary</a>
+    <div class="modal-stats">
+      <div class="modal-stat-box"><div class="val" style="color:#60a5fa;" id="mTotal">0</div><div class="lbl">Total Qs</div></div>
+      <div class="modal-stat-box"><div class="val" style="color:#4ade80;" id="mCorrect">0</div><div class="lbl">Correct</div></div>
+      <div class="modal-stat-box"><div class="val" style="color:#f87171;" id="mWrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="modal-stat-box"><div class="val" style="color:#fbbf24;" id="mSkipped">0</div><div class="lbl">Skipped</div></div>
+    </div>
+
+    <h3 style="color: #e2e8f0; margin: 20px 0 10px 0; border-bottom: 1px solid #334155; padding-bottom: 5px;">Wrong Questions:</h3>
+    <div id="modalMistakesList"></div>
+  </div>
+</div>
 
 <script src="keys.js"></script>
 <script type="module">
@@ -41,104 +196,216 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const userData = localStorage.getItem('cbt_user');
-if (!userData) window.location.href = 'index.html';
+if (!userData) {
+  window.location.href = 'index.html';
+}
 const user = JSON.parse(userData);
 
-const urlParams = new URLSearchParams(window.location.search);
-const chapterNum = parseInt(urlParams.get('ch'));
+const chapterNames = [
+  "The Living World", "Biological Classification", "Plant Kingdom", "Animal Kingdom",
+  "Morphology of Flowering Plants", "Anatomy of Flowering Plants", "Structural Organisation in Animals", "Cell: The Unit of Life", "Biomolecules",
+  "Cell Cycle and Cell Division", "Photosynthesis in Higher Plants", "Respiration in Plants", "Plant Growth and Development", "Breathing and Exchange of Gases", "Body Fluids and Circulation",
+  "Excretory Products and their Elimination", "Locomotion and Movement", "Neural Control and Coordination", "Chemical Coordination and Integration",
+  "Reproduction in Organisms", "Sexual Reproduction in Flowering Plants", "Human Reproduction", "Reproductive Health", "Principles of Inheritance and Variation", "Molecular Basis of Inheritance", "Evolution", "Human Health and Disease", "Microbes in Human Welfare", "Biotechnology: Principles and Processes", "Biotechnology and its Applications", "Organisms and Populations", "Ecosystem",
+  "Physical World", "Units and Measurements", "Motion in a Straight Line", "Motion in a Plane", "Laws of Motion", "Work, Energy and Power", "System of Particles and Rotational Motion", "Gravitation", 
+  "Mechanical Properties of Solids", "Mechanical Properties of Fluids", "Thermal Properties of Matter", "Thermodynamics", "Kinetic Theory", "Oscillations", "Waves", "Electric Charges and Fields", "Electrostatic Potential and Capacitance", "Current Electricity", "Moving Charges and Magnetism", "Magnetism and Matter", "Electromagnetic Induction", "Alternating Current", "Electromagnetic Waves", "Ray Optics and Optical Instruments", "Wave Optics", "Dual Nature of Radiation and Matter", "Atoms", "Nuclei", "Semiconductor Electronics"
+];
 
-const chapterFileMap = {
-    33: "phy1.html", 34: "phy2.html", 35: "phy3.html", 36: "phy4.html", 37: "phy5.html", 38: "phy6.html",
-    39: "phy7.html", 40: "phy8.html", 41: "phy9.html", 42: "phy10.html", 43: "phy11.html", 44: "phy12.html",
-    45: "phy13.html", 46: "phy14.html", 47: "phy15.html", 48: "phy16.html", 49: "phy17.html", 50: "phy18.html",
-    51: "phy19.html", 52: "phy20.html", 53: "phy21.html", 54: "phy22.html", 55: "phy23.html", 56: "phy24.html",
-    57: "phy25.html", 58: "phy26.html", 59: "phy27.html", 60: "phy28.html", 61: "phy29.html"
+let globalChapterData = {}; 
+
+async function loadDiary() {
+  try {
+    const q = query(collection(db, "results"), where("userName", "==", user.name));
+    const snapshot = await getDocs(q);
+    
+    let totalTests = 0;
+    let totalPercent = 0;
+    let chapterData = {}; 
+    let allMistakes = [];
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      totalTests++;
+      
+      let fixedPercent = Math.max(0, data.percent); 
+      totalPercent += fixedPercent;
+      
+      if (!chapterData[data.chapterNum]) chapterData[data.chapterNum] = [];
+      chapterData[data.chapterNum].push(data); 
+
+      if (data.wrongQuestions && data.wrongQuestions.length > 0) {
+        data.wrongQuestions.forEach(mistake => {
+          // Skip old corrupt data
+          if (mistake && mistake.q) {
+            allMistakes.push({ chapterNum: data.chapterNum, ...mistake });
+          }
+        });
+      }
+    });
+
+    globalChapterData = chapterData; 
+
+    document.getElementById('totalTests').textContent = totalTests;
+    const avg = totalTests > 0 ? (totalPercent / totalTests).toFixed(1) : 0;
+    document.getElementById('avgScore').textContent = avg + '%';
+
+    let strong = 0;
+    let weak = 0;
+    let analysisHTML = '';
+    const sortedChapters = Object.keys(chapterData).sort((a,b) => parseInt(a) - parseInt(b));
+
+    sortedChapters.forEach(chNum => {
+      const attemptsArray = chapterData[chNum];
+      const attempts = attemptsArray.length;
+      
+      let bestAttempt = attemptsArray.reduce((prev, current) => (prev.percent > current.percent) ? prev : current);
+      let bestPercent = Math.max(0, bestAttempt.percent);
+      const chName = chapterNames[chNum - 1] || "Unknown Chapter";
+
+      let statusClass = '';
+      let statusText = '';
+      let colorClass = '';
+
+      if (bestPercent >= 70) {
+        strong++;
+        statusClass = 'strong-chapter';
+        statusText = '💪 Strong';
+        colorClass = 'strong';
+      } else if (bestPercent < 40) {
+        weak++;
+        statusClass = 'weak-chapter';
+        statusText = '⚠️ Needs Work';
+        colorClass = 'weak';
+      } else {
+        statusClass = '';
+        statusText = '📊 Average';
+        colorClass = 'average';
+      }
+
+      // NOTE: onclick me openChapterModal use kiya gaya hai
+      analysisHTML += `
+        <div class="chapter-progress ${statusClass}" onclick="openChapterModal(${chNum})">
+          <h3>Chapter ${chNum}: ${chName} <span style="font-size:14px; color:#94a3b8;">${statusText}</span></h3>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill ${colorClass}" style="width: ${bestPercent}%;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; color:#94a3b8;">
+            <span>Best Score: <strong>${bestPercent}%</strong></span>
+            <span>Attempts: ${attempts} (Click for details)</span>
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById('strongCount').textContent = strong;
+    document.getElementById('weakCount').textContent = weak;
+    document.getElementById('chapterAnalysis').innerHTML = analysisHTML || '<p style="color:#94a3b8;">No data yet.</p>';
+
+    let mistakesHTML = '';
+    if (allMistakes.length === 0) {
+      mistakesHTML = '<p style="color:#4ade80;">🎉 Shabaash! Abhi tak koi galti nahi hui.</p>';
+    } else {
+      const recentMistakes = allMistakes.slice(-20).reverse();
+      recentMistakes.forEach((m, index) => {
+        const mId = `mistake-${index}`;
+        const savedNote = localStorage.getItem(mId) || '';
+        mistakesHTML += `
+          <div class="mistake-card">
+            <div class="q-text">Q: ${m.q}</div>
+            <div class="ans-row">
+              <span class="your-ans">❌ Your Answer: ${m.yourAnsText || 'N/A'}</span>
+              <span class="correct-ans">✅ Correct: ${m.correctAnsText || 'N/A'}</span>
+            </div>
+            <div class="exp">📖 Exp: ${m.exp || 'No explanation'}</div>
+            <input type="text" class="note-input" id="input-${mId}" placeholder="Why did you get this wrong?" value="${savedNote}">
+            <button class="save-note-btn" onclick="saveUserNote('${mId}')">Save Note</button>
+          </div>
+        `;
+      });
+    }
+    document.getElementById('mistakesList').innerHTML = mistakesHTML;
+
+  } catch (e) {
+    console.error("Error loading diary:", e);
+    document.getElementById('chapterAnalysis').innerHTML = '<p style="color:red;">⚠️ Data load nahi hua. Console check karein.</p>';
+  }
+}
+
+// Function triggered on clicking Chapter Card
+window.openChapterModal = function(chNum) {
+  const attemptsArray = globalChapterData[chNum];
+  if(!attemptsArray || attemptsArray.length === 0) return;
+
+  const chName = chapterNames[chNum - 1] || "Unknown Chapter";
+  document.getElementById('modalTitle').textContent = `Chapter ${chNum}: ${chName}`;
+  
+  let optionsHTML = '';
+  attemptsArray.slice().reverse().forEach((attempt, index) => {
+    const attemptNum = attemptsArray.length - index;
+    const date = new Date(attempt.timestamp).toLocaleDateString() + ' ' + new Date(attempt.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const isLatest = index === 0 ? ' (Latest)' : '';
+    optionsHTML += `<option value="${attemptNum - 1}">Attempt ${attemptNum}${isLatest} - ${attempt.percent}% (${date})</option>`;
+  });
+  
+  document.getElementById('attemptSelector').innerHTML = optionsHTML;
+  
+  // Load latest attempt by default
+  window.changeAttempt(attemptsArray.length - 1, chNum);
+  document.getElementById('detailModal').classList.add('show');
+}
+
+// Function triggered when Dropdown is changed
+window.changeAttempt = function(attemptIndex, chNum) {
+  // Agar function dropdown se call hua hai, to chNum pass nahi hoga. Title se nikal lo.
+  if(!chNum) {
+      chNum = document.getElementById('modalTitle').textContent.split(':')[0].replace('Chapter ', '').trim();
+  }
+  
+  const attemptsArray = globalChapterData[chNum];
+  if(!attemptsArray || !attemptsArray[attemptIndex]) return;
+  
+  const selectedAttempt = attemptsArray[attemptIndex];
+
+  document.getElementById('mTotal').textContent = selectedAttempt.total;
+  document.getElementById('mCorrect').textContent = selectedAttempt.correct;
+  document.getElementById('mWrong').textContent = selectedAttempt.wrong;
+  document.getElementById('mSkipped').textContent = selectedAttempt.total - selectedAttempt.correct - selectedAttempt.wrong;
+
+  let mHTML = '';
+  // Filter valid questions
+  const validMistakes = (selectedAttempt.wrongQuestions || []).filter(m => m && m.q);
+  
+  if(validMistakes.length > 0) {
+    validMistakes.forEach(m => {
+      mHTML += `
+        <div class="mistake-card" style="border-left: 3px solid #ef4444;">
+          <div class="q-text">${m.q}</div>
+          <div class="ans-row">
+            <span class="your-ans">❌ Your Ans: ${m.yourAnsText || 'N/A'}</span>
+            <span class="correct-ans">✅ Correct Ans: ${m.correctAnsText || 'N/A'}</span>
+          </div>
+          <div class="exp">📖 ${m.exp || 'No explanation'}</div>
+        </div>
+      `;
+    });
+  } else {
+    mHTML = '<p style="color:#4ade80;">Is attempt mein koi galti nahi hui (ya data purana hai)!</p>';
+  }
+
+  document.getElementById('modalMistakesList').innerHTML = mHTML;
+}
+
+window.closeModal = function() {
+  document.getElementById('detailModal').classList.remove('show');
+}
+
+window.saveUserNote = function(id) {
+  const val = document.getElementById('input-' + id).value;
+  localStorage.setItem(id, val);
+  alert('✅ Note saved! (Only visible to you)');
 };
 
-async function loadRevision() {
-    try {
-        const q = query(collection(db, "results"), where("userName", "==", user.name), where("chapterNum", "==", chapterNum));
-        const snapshot = await getDocs(q);
-        
-        let allWrongQuestions = new Set(); 
-        
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.wrongQuestions) {
-                data.wrongQuestions.forEach(m => {
-                    if (m && m.q) allWrongQuestions.add(m.q);
-                });
-            }
-        });
-
-        if (allWrongQuestions.size === 0) {
-            document.getElementById('quizContainer').innerHTML = '<p style="text-align:center; color:#38a169; font-weight:bold;">🎉 Shabaash! Is chapter mein aapki koi galti nahi hai.</p>';
-            return;
-        }
-
-        let fileName = `chapter${chapterNum}.html`; 
-        if (chapterFileMap[chapterNum]) fileName = chapterFileMap[chapterNum];
-
-        const response = await fetch(fileName);
-        if (!response.ok) throw new Error("File not found");
-        const htmlText = await response.text();
-
-        const match = htmlText.match(/const questions = (\[[\s\S]*?\]);/);
-        if (!match) throw new Error("Questions array not found");
-        const allQuestions = eval(match[1]); 
-        let revisionQuestions = allQuestions.filter(q => allWrongQuestions.has(q.q));
-
-        renderQuestions(revisionQuestions);
-
-    } catch (e) {
-        console.error(e);
-        document.getElementById('quizContainer').innerHTML = '<p style="color:red; text-align:center;">⚠️ Data load nahi hua. File ka naam galat ho sakta hai.</p>';
-    }
-}
-
-function renderQuestions(questions) {
-    const container = document.getElementById('quizContainer');
-    container.innerHTML = '';
-    
-    if (questions.length === 0) {
-        container.innerHTML = '<p style="text-align:center;">No questions to revise.</p>';
-        return;
-    }
-
-    questions.forEach((q, idx) => {
-        const qBox = document.createElement('div');
-        qBox.className = 'q-box';
-        
-        let optsHTML = '';
-        q.opts.forEach((opt, oi) => {
-            optsHTML += `<div class="option" onclick="checkAnswer(this, ${oi === q.ans}, '${q.exp.replace(/'/g, "\\'")}')">${String.fromCharCode(65+oi)}. ${opt}</div>`;
-        });
-
-        qBox.innerHTML = `
-            <div class="q-text">Q${idx+1}. ${q.q}</div>
-            ${optsHTML}
-            <div class="exp-box"></div>
-        `;
-        container.appendChild(qBox);
-    });
-}
-
-window.checkAnswer = function(el, isCorrect, exp) {
-    const parent = el.parentElement;
-    parent.querySelectorAll('.option').forEach(o => o.style.pointerEvents = 'none');
-    
-    if (isCorrect) {
-        el.classList.add('correct');
-    } else {
-        el.classList.add('wrong');
-    }
-
-    const expBox = parent.querySelector('.exp-box');
-    expBox.style.display = 'block';
-    expBox.innerHTML = `<strong>Explanation:</strong> ${exp}`;
-}
-
-loadRevision();
+loadDiary();
 </script>
 </body>
 </html>
