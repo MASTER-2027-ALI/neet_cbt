@@ -319,11 +319,11 @@ async function loadDiary() {
         const savedNote = localStorage.getItem(mId) || '';
         mistakesHTML += `
           <div class="mistake-card">
-            <div class="q-text">Q: ${m.question}</div>
-            <div class="ans-row">
-              <span class="your-ans">❌ Your Answer: ${m.userText || 'N/A'}</span>
-              <span class="correct-ans">✅ Correct: ${m.correctText || 'N/A'}</span>
-            </div>
+            <div class="q-text">Q: ${m.q || m.question || 'N/A'}</div>
+<div class="ans-row">
+  <span class="your-ans">❌ Your Answer: ${m.yourAnsText || m.userText || 'N/A'}</span>
+  <span class="correct-ans">✅ Correct: ${m.correctAnsText || m.correctText || 'N/A'}</span>
+</div>
             <div class="exp">📖 Exp: ${m.exp || 'No explanation'}</div>
             <input type="text" class="note-input" id="input-${mId}" placeholder="Why did you get this wrong?" value="${savedNote}">
             <button class="save-note-btn" onclick="saveNote('${mId}')">Save Note</button>
@@ -360,11 +360,11 @@ window.showChapterDetails = function(chNum) {
     latestAttempt.wrongQuestions.forEach(m => {
       mHTML += `
         <div class="mistake-card" style="border-left: 3px solid #ef4444;">
-          <div class="q-text">${m.question}</div>
-          <div class="ans-row">
-            <span class="your-ans">❌ Your Ans: ${m.userText || 'N/A'}</span>
-            <span class="correct-ans">✅ Correct Ans: ${m.correctText || 'N/A'}</span>
-          </div>
+          <div class="q-text">${m.q || m.question || 'N/A'}</div>
+<div class="ans-row">
+  <span class="your-ans">❌ Your Ans: ${m.yourAnsText || m.userText || 'N/A'}</span>
+  <span class="correct-ans">✅ Correct Ans: ${m.correctAnsText || m.correctText || 'N/A'}</span>
+</div>
           <div class="exp">📖 ${m.exp || 'No explanation'}</div>
         </div>
       `;
