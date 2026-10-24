@@ -171,7 +171,8 @@
     <button class="modal-close" onclick="closeModal()">×</button>
     <h2 id="modalTitle" style="color: #60a5fa; margin-bottom: 5px;">Chapter Title</h2>
     <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">Detailed Analysis of your last attempt.</p>
-    
+    <select id="attemptSelector" onchange="changeAttempt(this.value)" style="width: 100%; padding: 10px; margin-bottom: 15px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 8px; font-weight: 600;">
+</select>
     <div class="modal-stats">
       <div class="modal-stat-box"><div class="val" style="color:#60a5fa;" id="mTotal">0</div><div class="lbl">Total Qs</div></div>
       <div class="modal-stat-box"><div class="val" style="color:#4ade80;" id="mCorrect">0</div><div class="lbl">Correct</div></div>
@@ -238,9 +239,12 @@ async function loadDiary() {
       chapterData[data.chapterNum].push(data); 
 
       // Gather mistakes for the main page (Recent Mistakes section)
-      if (data.wrongQuestions && data.wrongQuestions.length > 0) {
+            if (data.wrongQuestions && data.wrongQuestions.length > 0) {
         data.wrongQuestions.forEach(mistake => {
-          allMistakes.push({ chapterNum: data.chapterNum, ...mistake });
+          // Purana kharab data skip karne ke liye check
+          if (mistake && mistake.q) {
+            allMistakes.push({ chapterNum: data.chapterNum, ...mistake });
+          }
         });
       }
     });
@@ -344,37 +348,60 @@ window.showChapterDetails = function(chNum) {
   const attemptsArray = globalChapterData[chNum];
   if(!attemptsArray || attemptsArray.length === 0) return;
 
-  // Get the latest attempt for detailed stats
-  let latestAttempt = attemptsArray[attemptsArray.length - 1];
   const chName = chapterNames[chNum - 1] || "Unknown Chapter";
-
   document.getElementById('modalTitle').textContent = `Chapter ${chNum}: ${chName}`;
   
-  document.getElementById('mTotal').textContent = latestAttempt.total;
-  document.getElementById('mCorrect').textContent = latestAttempt.correct;
-  document.getElementById('mWrong').textContent = latestAttempt.wrong;
-  document.getElementById('mSkipped').textContent = latestAttempt.total - latestAttempt.correct - latestAttempt.wrong;
+  // Dropdown list banao (Latest attempt sabse upar)
+  let optionsHTML = '';
+  attemptsArray.slice().reverse().forEach((attempt, index) => {
+    const attemptNum = attemptsArray.length - index;
+    const date = new Date(attempt.timestamp).toLocaleDateString() + ' ' + new Date(attempt.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const isLatest = index === 0 ? ' (Latest)' : '';
+    optionsHTML += `<option value="${attemptNum - 1}">Attempt ${attemptNum}${isLatest} - ${attempt.percent}% (${date})</option>`;
+  });
+  
+  document.getElementById('attemptSelector').innerHTML = optionsHTML;
+  
+  // Default: Latest attempt load karo
+  window.changeAttempt(attemptsArray.length - 1);
+}
+
+// Dropdown change hone par ye chalega
+window.changeAttempt = function(attemptIndex) {
+  // Current chapter ke saare attempts nikaalo
+  const chNum = document.getElementById('modalTitle').textContent.split(':')[0].replace('Chapter ', '');
+  const attemptsArray = globalChapterData[chNum];
+  
+  if(!attemptsArray || !attemptsArray[attemptIndex]) return;
+  const selectedAttempt = attemptsArray[attemptIndex];
+
+  document.getElementById('mTotal').textContent = selectedAttempt.total;
+  document.getElementById('mCorrect').textContent = selectedAttempt.correct;
+  document.getElementById('mWrong').textContent = selectedAttempt.wrong;
+  document.getElementById('mSkipped').textContent = selectedAttempt.total - selectedAttempt.correct - selectedAttempt.wrong;
 
   let mHTML = '';
-  if(latestAttempt.wrongQuestions && latestAttempt.wrongQuestions.length > 0) {
-    latestAttempt.wrongQuestions.forEach(m => {
+  // Sirf valid questions filter karo
+  const validMistakes = (selectedAttempt.wrongQuestions || []).filter(m => m && m.q);
+  
+  if(validMistakes.length > 0) {
+    validMistakes.forEach(m => {
       mHTML += `
         <div class="mistake-card" style="border-left: 3px solid #ef4444;">
-          <div class="q-text">${m.q || m.question || 'N/A'}</div>
-<div class="ans-row">
-  <span class="your-ans">❌ Your Ans: ${m.yourAnsText || m.userText || 'N/A'}</span>
-  <span class="correct-ans">✅ Correct Ans: ${m.correctAnsText || m.correctText || 'N/A'}</span>
-</div>
+          <div class="q-text">${m.q}</div>
+          <div class="ans-row">
+            <span class="your-ans">❌ Your Ans: ${m.yourAnsText || 'N/A'}</span>
+            <span class="correct-ans">✅ Correct Ans: ${m.correctAnsText || 'N/A'}</span>
+          </div>
           <div class="exp">📖 ${m.exp || 'No explanation'}</div>
         </div>
       `;
     });
   } else {
-    mHTML = '<p style="color:#4ade80;">Is attempt mein koi galti nahi hui!</p>';
+    mHTML = '<p style="color:#4ade80;">Is attempt mein koi galti nahi hui (ya data purana hai)!</p>';
   }
 
   document.getElementById('modalMistakesList').innerHTML = mHTML;
-  document.getElementById('detailModal').classList.add('show');
 }
 
 window.closeModal = function() {
