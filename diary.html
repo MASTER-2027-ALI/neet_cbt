@@ -405,6 +405,14 @@ window.saveUserNote = function(id) {
   alert('✅ Note saved! (Only visible to you)');
 };
 
+window.startQuickRevision = function() {
+    // Popup ke title se chapter number nikaalo (jaise "Chapter 37" se "37")
+    const chNum = document.getElementById('modalTitle').textContent.split(':')[0].replace('Chapter ', '').trim();
+    // Revision page par jao aur chapter number bhej do
+    window.location.href = `revision.html?ch=${chNum}`;
+}
+
+loadDiary();
 loadDiary();
 </script>
 </body>
