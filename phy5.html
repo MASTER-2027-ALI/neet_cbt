@@ -435,6 +435,22 @@ window.addEventListener('load', function() {
         const marks = correctCount * 1 - wrongCount * 0.25;
         const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
         
+                // Galat sawaalon ki list banao (Diary ke liye)
+        const wrongQuestions = [];
+        for (let i = 0; i < totalQ; i++) {
+          if (userAnswers[i] !== null && userAnswers[i] !== questions[i].ans) {
+            wrongQuestions.push({
+              qIndex: i,
+              q: questions[i].q,
+              yourAns: userAnswers[i],
+              yourAnsText: questions[i].opts[userAnswers[i]],
+              correctAns: questions[i].ans,
+              correctAnsText: questions[i].opts[questions[i].ans],
+              exp: questions[i].exp || ''
+            });
+          }
+        }
+
         const attemptData = {
           userName: _currentUser.name,
           userRole: _currentUser.role,
@@ -444,6 +460,7 @@ window.addEventListener('load', function() {
           total: totalQ,
           marks: parseFloat(marks.toFixed(2)),
           percent: percent,
+          wrongQuestions: wrongQuestions,   // ⭐ NEW — Diary ke liye
           timestamp: new Date().toISOString()
         };
         
