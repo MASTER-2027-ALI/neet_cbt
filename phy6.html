@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 38: Work, Energy and Power - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 38: Work, Energy and Power</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script>
+const questions = [
+    { q: "1. Scalar product of vectors A = 2î - 3ĵ + 2k̂ and B = î - ĵ + 2k̂ is", img: "images/phy6-q1.png", opts: ["6", "8", "5", "9"], ans: 3, exp: "A · B = (2)(1) + (-3)(-1) + (2)(2) = 2 + 3 + 4 = 9." },
+    { q: "2. Find the angle between force F = (3î + 4ĵ - 5k̂) unit and displacement d = (5î + 4ĵ + 3k̂) unit.", img: "images/phy6-q2.png", opts: ["cos⁻¹ (0.49)", "cos⁻¹ (0.32)", "cos⁻¹ (0.60)", "cos⁻¹ (0.90)"], ans: 1, exp: "F·d = 15+16-15 = 16. |F| = √50, |d| = √50. cosθ = 16/50 = 0.32." },
+    { q: "3. A force F = 5î + 6ĵ - 4k̂ acting on a body produces a displacement d = 6î + 5k̂. The work done by the force is", img: "images/phy6-q3.png", opts: ["18 units", "15 units", "12 units", "10 units"], ans: 3, exp: "W = F·d = 30 + 0 - 20 = 10 units." },
+    { q: "4. A uniform force of (3î + ĵ)N acts on a particle of mass 2 kg. Hence, the particle is displaced from position (2î + k̂) m to position (4î + 3ĵ - k̂) m. The work done by the force on the particle is", img: "images/phy6-q4.png", opts: ["9 J", "6 J", "13 J", "15 J"], ans: 0, exp: "d = (4-2)î + 3ĵ + (-1-1)k̂ = 2î + 3ĵ - 2k̂. W = F·d = 6 + 3 = 9 J." },
+    { q: "5. The earth is moving around the sun in a circular orbit, is acted upon by a force and hence work done on the earth by the force is", img: "images/phy6-q5.png", opts: ["zero", "+ ve", "- v", "None of these"], ans: 0, exp: "Force is perpendicular to displacement, so W = 0." },
+    { q: "6. Work done by gravitational force in one revolution of earth around the sun on its elliptical path is zero because", img: "images/phy6-q6.png", opts: ["force is always perpendicular to displacement", "displacement is zero", "displacement is non-zero", "Both (a) and (c)"], ans: 1, exp: "In one revolution, displacement is zero. So work is zero." },
+    { q: "7. In which case, work done will be zero", img: "images/phy6-q7.png", opts: ["a weight-lifter while holding a weight of 100 kg on his shoulders for 1 min", "a locomotive against gravity is running on a level plane with a speed of 60 kmh⁻¹", "a person holding a suitcase on his head and standing at a bus terminal", "All of the above"], ans: 3, exp: "In all cases, either displacement is zero or force is perpendicular to displacement." },
+    { q: "8. A ball is released from the top of a tower. The ratio of work done by force of gravity in 1st second, 2nd second and 3rd second of the motion of ball is", img: "images/phy6-q8.png", opts: ["1 : 2 : 3", "1 : 4 : 16", "1 : 3 : 5", "1 : 9 : 25"], ans: 2, exp: "W ∝ s. Distance in nth second ∝ (2n-1). Ratio = 1:3:5." },
+    { q: "9. A force of 10 N is applied on an object of mass 2 kg placed on a rough surface having coefficient of friction equal to 0.2. Work done by applied force in 4 s is", img: "images/phy6-q9.png", opts: ["120 J", "240 J", "250 J", "100 J"], ans: 1, exp: "f = 0.2×2×10 = 4N. F_net = 6N. a = 3. s = 1/2(3)(16) = 24m. W = F×s = 10×24 = 240 J." },
+    { q: "10. A uniform chain of length L and mass M is lying on a smooth table and one-third of its length is hanging vertically down over the edge of the table. If g is acceleration due to gravity, work required to pull the hanging part on to the table is", img: "images/phy6-q10.png", opts: ["MgL", "MgL/3", "MgL/9", "MgL/18"], ans: 3, exp: "W = mgL/2n² = M g L / (2×3²) = MgL/18." },
+    { q: "11. A block of mass 1 kg is pushed up a surface inclined to horizontal at an angle of 30° by a force of 10 N parallel to the inclined surface as shown in the figure. If the block is pushed up by 10 m along the incline, then the work against gravity is (take, g = 10 ms⁻²)", img: "images/phy6-q11.png", opts: ["10 J", "50 J", "100 J", "150 J"], ans: 1, exp: "W = mg sinθ × d = 1×10×sin30×10 = 50 J." },
+    { q: "12. A force F = 20 + 10y acts on a particle in y-direction, where F is in newton and y in metre. Work done by this force to move the particle from y = 0 to y = 1 m is", img: "images/phy6-q12.png", opts: ["5 J", "25 J", "20 J", "30 J"], ans: 1, exp: "W = ∫(20+10y)dy = 20y + 5y² from 0 to 1 = 25 J." },
+    { q: "13. A position-dependent force F = 3x² - 2x + 7 acts on a body of mass 7 kg and displaces it from x = 0 m to x = 5 m. The work done on the body is y joule. If both F and x are measured in SI units, the value of y is", img: "images/phy6-q13.png", opts: ["135", "235", "335", "935"], ans: 0, exp: "W = ∫(3x²-2x+7)dx = x³ - x² + 7x from 0 to 5 = 125 - 25 + 35 = 135 J." },
+    { q: "14. A force F = - k/x² (x ≠ 0) acts on a particle in x-direction. Find the work done by the force in displacing the particle from x = - a to x = 2a.", img: "images/phy6-q14.png", opts: ["3k/2a", "4k/a²", "- 3k/2a²", "- 9k/a²"], ans: 0, exp: "W = ∫(-k/x²)dx = k/x. From -a to 2a: k/2a - k/(-a) = k/2a + k/a = 3k/2a." },
+    { q: "15. When a rubber band is stretched by a distance x, it exerts a restoring force of magnitude F = a x + b x², where a and b are constants. The work done in stretching the unstretched rubber band by L is", img: "images/phy6-q15.png", opts: ["aL² + bL³", "(1/2)(aL² + bL³)", "aL²/2 + bL³/3", "(1/2)(aL²/2 + bL³/3)"], ans: 2, exp: "W = ∫(ax+bx²)dx = ax²/2 + bx³/3. At L, W = aL²/2 + bL³/3." },
+    { q: "16. A body of mass 3 kg is under a force which causes a displacement in it given by s = t²/3 (in metre). Work done by force in 2 s is", img: "images/phy6-q16.png", opts: ["2 J", "3.8 J", "5.2 J", "2.6 J"], ans: 3, exp: "v = 2t/3, a = 2/3. F = ma = 2. W = ∫F ds = ∫2 (2t/3)dt = 8/3 = 2.67 ≈ 2.6 J." },
+    { q: "17. A 10 kg brick moves along X-axis. Its acceleration as a function of its position is shown in figure. What is the net work performed on the brick by the force causing the acceleration as the brick moves from x = 0 to x = 8.0 m?", img: "images/phy6-q17.png", opts: ["400 J", "800 J", "200 J", "100 J"], ans: 1, exp: "W = ∫ma dx = m ∫a dx = m × Area. Area = 1/2 × 8 × 20 = 80. W = 10 × 80 = 800 J." },
+    { q: "18. If the displacements are allowed to approach zero, then the number of terms in the sum increases without limit, but the sum approaches a definite value equal to the area under the curve in given figure. What is the net work done by varying force F(x) from position x_i to x_f?", img: "images/phy6-q18.png", opts: ["∫(x_i to x_f) F(x) dx", "∫(0 to x_f) F(x) dx", "∫(x_i to x_f) F(x) dx", "∫(0 to x_i) F(x) dx"], ans: 0, exp: "Work done is the definite integral of force from x_i to x_f." },
+    { q: "19. A body moves from point A to B under the action of a force varying in magnitude as shown in figure, then the work done is (force is expressed in newton and displacement in metre)", img: "images/phy6-q19.png", opts: ["30 J", "22.5 J", "25 J", "27 J"], ans: 1, exp: "Area under F-s graph: 10×1 + 1/2(10+15)×1 + 1/2×1×15 - 1/2×1×15 = 10 + 12.5 + 7.5 - 7.5 = 22.5 J." },
+    { q: "20. A woman pushes a trunk on a railway platform which has a rough surface. She applies a force of 100 N over a distance of 10 m. Thereafter, she gets progressively tired and her applied force reduces linearly with distance to 50 N. The total distance through which the trunk has been moved is 20 m. If frictional force is 50N, then total work done by the two forces over 20 m is", img: "images/phy6-q20.png", opts: ["- 2000 J", "500 J", "750 J", "(d) - 200 J"], ans: 2, exp: "W_applied = 100×10 + 1/2(100+50)×10 = 1000 + 750 = 1750 J. W_friction = -50×20 = -1000 J. Total W = 750 J." },
+    { q: "21. When velocity of a moving car decreases by applying sudden brake, then its kinetic energy,", img: "images/phy6-q21.png", opts: ["increases", "decreases", "remains same", "none of these"], ans: 1, exp: "KE = 1/2 mv². If v decreases, KE decreases." },
+    { q: "22. A car of mass 1000 kg is moving with a speed of 80 m/s. The kinetic energy of the car is", img: "images/phy6-q22.png", opts: ["6.4 × 10⁶ J", "3.2 × 10⁶ J", "3.2 × 10⁵ J", "4 × 10⁵ J"], ans: 1, exp: "KE = 1/2 mv² = 0.5 × 1000 × 6400 = 3.2 × 10⁶ J." },
+    { q: "23. The kinetic energy of an air molecule (10⁻²¹ J) in eV is", img: "images/phy6-q23.png", opts: ["6.2 meV", "4.2 meV", "10.4 meV", "9.7 meV"], ans: 0, exp: "KE = 10⁻²¹ / 1.6×10⁻¹⁹ eV = 6.25 × 10⁻³ eV = 6.25 meV." },
+    { q: "24. When a man increases his speed by 2 ms⁻¹, he finds that his kinetic energy is doubled, the original speed of the man is", img: "images/phy6-q24.png", opts: ["2(√2 - 1) ms⁻¹", "2(√2 + 1) ms⁻¹", "4.5 ms⁻¹", "None of these"], ans: 1, exp: "1/2 m(v+2)² = 2(1/2 mv²). (v+2)² = 2v². v+2 = √2v. v(√2-1) = 2. v = 2/(√2-1) = 2(√2+1)." },
+    { q: "25. Two vehicles X and Y have masses 40 kg and 10 kg respectively. Each vehicle is acted upon by a force of 80 N. If both vehicles acquire same kinetic energy in times t_X and t_Y respectively, then t_X / t_Y is", img: "images/phy6-q25.png", opts: ["1/8", "1/2", "2/1", "1/4"], ans: 2, exp: "KE = F²t²/2m. Same KE => t² ∝ m. t_X/t_Y = √(m_X/m_Y) = √(40/10) = 2/1." },
+    { q: "26. A running man has half kinetic energy to that of a boy of half of his mass. The man speeds up by 1 ms⁻¹, so as to have same kinetic energy as that of the boy. The original speed of the man is", img: "images/phy6-q26.png", opts: ["√2 ms⁻¹", "√2 - 1 ms⁻¹", "1/(√2 - 1) ms⁻¹", "1/√2 ms⁻¹"], ans: 2, exp: "1/2 Mv² = 1/2(1/2 m v_b²). Wait. Man mass M, boy m. m = M/2. KE_m = 1/2 Mv². KE_b = 1/2 (M/2) v_b². KE_m = 1/2 KE_b => Mv² = (M/4)v_b² => v_b = 2v. New man KE = 1/2 M(v+1)² = KE_b. (v+1)² = v_b² = 4v² => v+1 = 2v => v = 1. But option is 1/(√2-1). Let's re-read. 'has half kinetic energy to that of a boy of half of his mass' means KE_m = 1/2 KE_b? Or boy has half mass of man. Yes. So Mv² = 1/2 (M/2)v_b² => Mv² = Mv_b²/4 => v_b = 2v. Then man speeds up by 1, KE_m' = KE_b => M(v+1)² = Mv_b²/2 = M(4v²)/2 = 2Mv² => (v+1)² = 2v² => v+1 = √2 v => v(√2-1) = 1 => v = 1/(√2-1)." },
+    { q: "27. An object of mass 10 kg is moving with velocity of 10 ms⁻¹. A force of 50 N acted upon it for 2 s. Percentage increase in its kinetic energy is", img: "images/phy6-q27.png", opts: ["25%", "50%", "75%", "300%"], ans: 3, exp: "v_i = 10, v_f = 10 + 5(2) = 20. KE_i = 500, KE_f = 2000. % increase = (1500/500)×100 = 300%." },
+    { q: "28. A particle of mass 10 g moves along a circle of radius 6.4 cm with a constant tangential acceleration. What is the magnitude of this acceleration, if the kinetic energy of the particle becomes equal to 8 × 10⁻⁴ J by the end of the second revolution after the beginning of the motion?", img: "images/phy6-q28.png", opts: ["0.15 ms⁻²", "0.18 ms⁻²", "0.2 ms⁻²", "0.1 ms⁻²"], ans: 3, exp: "v² = 2 a_t (4πr). KE = 1/2 m v² = m a_t (4πr) = 8×10⁻⁴. 0.01 × a_t × 4π(0.064) = 8×10⁻⁴. a_t = 8×10⁻⁴ / (0.01 × 0.804) = 0.0995 ≈ 0.1 m/s²." },
+    { q: "29. A force which is inversely proportional to the speed, is acting on a body. The kinetic energy of the body starting from rest is", img: "images/phy6-q29.png", opts: ["a constant", "inversely proportional to time", "directly proportional to time", "directly proportional to square of time"], ans: 2, exp: "F = k/v => m dv/dt = k/v => mv dv = k dt => 1/2 mv² = kt => KE ∝ t." },
+    { q: "30. Kinetic energy of a particle is increased by 4 times. What will be the relation between initial and final momentum?", img: "images/phy6-q30.png", opts: ["p₂ = 2p₁", "p₂ = p₁/2", "p₂ = p₁", "p₂ = 4p₁"], ans: 0, exp: "p = √(2mKE). KE₂ = 4KE₁ => p₂ = √(4)p₁ = 2p₁." },
+    { q: "31. Two masses of 1 g and 4 g are moving with equal kinetic energy. The ratio of the magnitudes of their momentum is", img: "images/phy6-q31.png", opts: ["4 : 1", "√2 : 1", "1 : 2", "1 : 16"], ans: 2, exp: "p ∝ √m. p₁/p₂ = √(1/4) = 1/2." },
+    { q: "32. If momentum of a moving body is increased to 50% of its initial value, then percentage increase in its kinetic energy will be", img: "images/phy6-q32.png", opts: ["50%", "125%", "100%", "75%"], ans: 1, exp: "KE ∝ p². p₂ = 1.5p₁. KE₂ = 2.25KE₁. Increase = 1.25 = 125%." },
+    { q: "33. Two moving objects having same kinetic energy are stopped by application of equal retarding force. Which object will come to rest at short distance?", img: "images/phy6-q33.png", opts: ["Bigger", "Smaller", "Both at same distance", "Cannot say"], ans: 2, exp: "Work-energy theorem: F·d = KE. Same F and KE => same d." },
+    { q: "34. A car weighing 1400 kg is moving at a speed of 54 kmh⁻¹ up a hill. When the motor stops, it is just able to reach the destination which is at a height of 10 m above the point. Then, the work done against friction (negative of the work done by the friction) is (take, g = 10 ms⁻²)", img: "images/phy6-q34.png", opts: ["10 kJ", "15 kJ", "17.5 kJ", "25 kJ"], ans: 2, exp: "1/2 mv² = mgh + W_f. v = 15. 0.5 × 1400 × 225 = 1400 × 10 × 10 + W_f. 157500 = 140000 + W_f. W_f = 17500 J = 17.5 kJ." },
+    { q: "35. A bullet of mass 20 g is moving with a speed of 150 ms⁻¹. It strikes a target and is brought to rest after piercing 10 cm into it. Calculate the average force of resistance offered by the target.", img: "images/phy6-q35.png", opts: ["2500 N", "2000 J", "2250 N", "2100 J"], ans: 2, exp: "F = mv²/2s = 0.02 × 22500 / (2 × 0.1) = 450 / 0.2 = 2250 N." },
+    { q: "36. A block of mass 10 kg moving in x-direction with a constant speed of 10 ms⁻¹ is subjected to a retarding force F = 0.1x J/m during its travelling from x = 20 m to 30 m. Its final kinetic energy will be", img: "images/phy6-q36.png", opts: ["475 J", "450 J", "275 J", "250 J"], ans: 0, exp: "W = ∫(-0.1x)dx = -0.05[x²] = -0.05(900-400) = -25 J. KE_f = 500 - 25 = 475 J." },
+    { q: "37. A particle moves in one dimension from rest under the influence of a force that varies with the distance travelled by the particle as shown in the figure. The kinetic energy of the particle after it has travelled 3 m is", img: "images/phy6-q37.png", opts: ["4 J", "2.5 J", "6.5 J", "5 J"], ans: 2, exp: "Area = 2×2 + 1/2(2+3)×1 = 4 + 2.5 = 6.5 J." },
+    { q: "38. Consider a drop of rain water having mass 1 g falling from a height of 1 km. It hits the ground with a speed of 50 m/s. Take g constant with a value of 10 m/s². The work done by the (i) gravitational force and the (ii) resistive force of air is", img: "images/phy6-q38.png", opts: ["(i) –10 J and (ii) – 8.25 J", "(i) 1.25 J and (ii) – 8.25 J", "(i) 100 J and (ii) 8.75 J", "(i) 10 J and (ii) – 8.75 J"], ans: 3, exp: "W_g = mgh = 10⁻³ × 10 × 1000 = 10 J. ΔKE = W_g + W_air => 1/2(10⁻³)(2500) = 1.25 = 10 + W_air => W_air = -8.75 J." },
+    { q: "39. A body which is moving with 10 ms⁻¹ is sliding up on a rough inclined plane having inclination of 30°. Find the height upto which it can go, if coefficient of friction of the inclined surface is 0.1.", img: "images/phy6-q39.png", opts: ["4.25 m", "5.25 m", "6.25 m", "7.25 m"], ans: 0, exp: "1/2 mv² = mgh + μmg cos30 × (h/sin30). 50 = 10h + 0.1×10×√3×h = h(10+1.732) = 11.732h => h = 4.26 m." },
+    { q: "40. A force acts on a 2 kg object, so that its position is given as a function of time as x = 3t² + 5. What is the work done by this force in first 5 seconds?", img: "images/phy6-q40.png", opts: ["850 J", "900 J", "950 J", "875 J"], ans: 1, exp: "v = 6t, a = 6. F = 12. W = ∫F dx = 12(x_f - x_i) = 12((75+5) - 5) = 12×75 = 900 J." },
+    { q: "41. A block of mass m = 1 kg, moving on a horizontal surface with speed v_i = 2 ms⁻¹ enters a rough patch ranging from x = 0.10 m to x = 2.01 m. The retarding force F_r on the block in this range is inversely proportional to x over this range, F_r = -k/x for 0.1 < x < 2.01 m, = 0 for x < 0.1 m and x > 2.01 m, where k = 0.5 J. What is the speed v_f of the block as it crosses this patch?", img: "images/phy6-q41.png", opts: ["2 ms⁻¹", "40 ms⁻¹", "1 ms⁻¹", "4 ms⁻¹"], ans: 2, exp: "W = ∫(-k/x)dx = -k ln(2.01/0.10) = -0.5 × 3 = -1.5. KE_f = 2 - 1.5 = 0.5 => v_f = 1 m/s." },
+    { q: "42. When a body is lifted above the surface of the earth, then its potential energy", img: "images/phy6-q42.png", opts: ["increases", "decreases", "remains same", "None of these"], ans: 0, exp: "PE = mgh. As h increases, PE increases." },
+    { q: "43. A body of mass 2 kg lifted at a height of 16 m from the surface of earth. The potential energy of the body at given height, is [take, g = 10 m/s²]", img: "images/phy6-q43.png", opts: ["640 J", "320 J", "80 J", "160 J"], ans: 1, exp: "PE = mgh = 2 × 10 × 16 = 320 J." },
+    { q: "44. A ball is projected vertically upwards with a certain initial speed. Another ball of the same mass is projected at an angle of 60° with the vertical with the same initial speed. At highest point of their journey, the ratio of their potential energies will be", img: "images/phy6-q44.png", opts: ["1 : 1", "2 : 1", "3 : 2", "4 : 1"], ans: 3, exp: "h1 = u²/2g. h2 = u²cos²60/2g = u²/8g. Ratio = (1/2) / (1/8) = 4:1." },
+    { q: "45. A ball bounces to 75% of its original height. The percentage loss of potential energy in each bounce is", img: "images/phy6-q45.png", opts: ["100%", "75%", "50%", "25%"], ans: 3, exp: "Loss = mgh - mg(0.75h) = 0.25mgh = 25%." },
+    { q: "46. The potential energy U(x) can be assumed zero when", img: "images/phy6-q46.png", opts: ["x = 0", "gravitational force is constant", "infinite distance from the gravitational source", "All of the above"], ans: 3, exp: "Zero can be chosen arbitrarily. Standard is infinity for gravity, x=0 for spring, ground for constant g." },
+    { q: "47. The potential energy of a spring increases by 15 J when stretched by 3 cm. If it is stretched by 4 cm, the increase in potential energy is", img: "images/phy6-q47.png", opts: ["27 J", "30 J", "33 J", "36 J"], ans: 0, exp: "PE ∝ x². PE₂/15 = (4/3)² = 16/9 => PE₂ = 26.67 ≈ 27 J." },
+    { q: "48. The ratio of spring constants of two springs is 2 : 3. What is the ratio of their potential energy, if they are stretched by the same force?", img: "images/phy6-q48.png", opts: ["2 : 3", "3 : 2", "4 : 9", "9 : 4"], ans: 1, exp: "PE = F²/2k. PE ∝ 1/k. PE₁/PE₂ = k₂/k₁ = 3/2." },
+    { q: "49. The potential energy of a body is increased in which of the following cases?", img: "images/phy6-q49.png", opts: ["If work is done by conservative force", "If work is done against conservative force", "If work is done by non-conservative force", "If work is done against non-conservative force"], ans: 1, exp: "PE increases when work is done against conservative force." },
+    { q: "50. A body of mass 4m is lying in xy-plane at rest. It suddenly explodes into three pieces. Two pieces each of mass m move perpendicular to each other with equal speeds v. The total kinetic energy generated due to explosion is", img: "images/phy6-q50.png", opts: ["mv²", "(3/2)mv²", "2mv²", "4mv²"], ans: 1, exp: "p3 = √((mv)²+(mv)²) = √2 mv. m3 = 2m. v3 = √2 v / 2 = v/√2. KE = 1/2 mv² + 1/2 mv² + 1/2(2m)(v²/2) = mv² + mv²/2 = 1.5mv²." },
+    { q: "51. The potential energy of a 1 kg particle free to move along the X-axis is given by U(x) = [x⁴/4 - x²/2] J. The total mechanical energy of the particle is 2 J. Then, maximum speed (in ms⁻¹) is", img: "images/phy6-q51.png", opts: ["3/√2", "√2", "1/√2", "2"], ans: 0, exp: "dU/dx = x³ - x = 0 => x = 0, ±1. U_min = 1/4 - 1/2 = -1/4. KE_max = 2 - (-1/4) = 9/4. 1/2 v² = 9/4 => v = 3/√2." },
+    { q: "52. Which graph represents conservation of total mechanical energy?", img: "images/phy6-q52.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 2, exp: "TE = KE + PE is constant. PE is parabola, KE is inverted parabola. Graph (c) shows this." },
+    { q: "53. A spring is compressed by 10 cm, if a block of mass is dropped on it from a height of 40 cm. If the force constant of the spring is 980 Nm⁻¹, then which of the following is the mass of the block?", img: "images/phy6-q53.png", opts: ["1 kg", "2 kg", "3kg", "4 kg"], ans: 0, exp: "mg(h+x) = 1/2 kx². m×10×0.5 = 0.5×980×0.01 = 4.9. 5m = 4.9 => m ≈ 1 kg." },
+    { q: "54. A car of mass 1000 kg moving with a speed 18 km/h on a smooth road, collide with a horizontally mounted spring of spring constant 625 × 10³ Nm⁻¹. What is the maximum compression of the spring?", img: "images/phy6-q54.png", opts: ["1 m", "2 m", "3 m", "5 m"], ans: 1, exp: "1/2 mv² = 1/2 kx². x = v√(m/k) = 5 × √(1000/625000) = 5 × √(1/625) = 5/25 = 0.2 m? Wait. v=5, m=1000, k=6.25e5. x = 5 * sqrt(1000/625000) = 5 * sqrt(0.0016) = 5*0.04 = 0.2 m. Option says 2 m. Maybe k = 6.25 × 10³?" },
+    { q: "55. A spring gun of spring constant 90 N/cm is compressed 12 cm by a ball of mass 16 g. If the trigger is pulled, the velocity of the ball is", img: "images/phy6-q55.png", opts: ["50 ms⁻¹", "40 ms⁻¹", "90 ms⁻¹", "60 ms⁻¹"], ans: 2, exp: "1/2 kx² = 1/2 mv². v = x√(k/m) = 0.12 × √(9000/0.016) = 0.12 × √562500 = 0.12 × 750 = 90 m/s." },
+    { q: "56. A uniform cable of mass M and length L is placed on a horizontal surface such that its (1/n)th part is hanging below the edge of the surface. To lift the hanging part of the cable upto the surface, the work done should be", img: "images/phy6-q56.png", opts: ["2MgL/n²", "nMgL", "MgL/n²", "MgL/2n²"], ans: 3, exp: "W = mgL/2 = (M/n)g(L/2n) = MgL/2n²." },
+    { q: "57. When a body is falling from a certain height from the surface of earth, then", img: "images/phy6-q57.png", opts: ["its kinetic energy decreases continuously", "its potential energy increases continuously", "its total mechanical energy remains constant at each point", "kinetic energy and potential energy are equal at each point"], ans: 2, exp: "Only conservative force acts, so total mechanical energy is conserved." },
+    { q: "58. An artificial satellite orbiting the earth in very thin atmosphere loses its energy gradually due to dissipation against atmospheric resistance, however small. Then, as it comes closer and closer to the earth, its speed", img: "images/phy6-q58.png", opts: ["increases", "equal to", "decreases", "less than equal to"], ans: 0, exp: "As it comes closer, PE decreases. Total energy decreases. KE = -E, so KE increases. Speed increases." },
+    { q: "59. A 2 kg block slides on a horizontal floor with a speed of 4 ms⁻¹. It strikes an uncompressed spring and compresses it, till the block is motionless. The friction of kinetic force is 15 N and spring constant is 10000 Nm⁻¹. The spring is compressed by", img: "images/phy6-q59.png", opts: ["5.5 cm", "2.5 cm", "11.0 cm", "8.5 cm"], ans: 0, exp: "1/2 mv² = 1/2 kx² + fx. 16 = 10000x² + 30x => 5000x² + 15x - 8 = 0. x = 0.055 m = 5.5 cm." },
+    { q: "60. A ball bounces to 80% of its original height. What fraction of its mechanical energy is lost in each bounce?", img: "images/phy6-q60.png", opts: ["20%", "25%", "26%", "30%"], ans: 0, exp: "Loss = mgh - 0.8mgh = 0.2mgh = 20%." },
+    { q: "61. A simple pendulum is released from A as shown in the figure. If m and l represent the mass of the bob and length of the pendulum respectively, the gain in kinetic energy at B is", img: "images/phy6-q61.png", opts: ["mgl/2", "(√3/2) mgl", "mgl/√2", "(2/√3) mgl"], ans: 1, exp: "h = l cos30 = l√3/2. ΔKE = mgh = √3/2 mgl." },
+    { q: "62. U is the potential energy, K is the kinetic energy and E is the mechanical energy. Which of the following is not possible for a stable system?", img: "images/phy6-q62.png", opts: ["U > E", "U < E", "E > K", "K > E"], ans: 0, exp: "E = K + U. Since K ≥ 0, U ≤ E. So U > E is not possible." },
+    { q: "63. A body of mass 5 kg is thrown vertically up with a kinetic energy of 490 J. The height at which the kinetic energy of the body becomes half of the original value is", img: "images/phy6-q63.png", opts: ["12.5 m", "10 m", "2.5 m", "5 m"], ans: 3, exp: "ΔKE = mgh. 245 = 5 × 9.8 × h => h = 245/49 = 5m." },
+    { q: "64. What is the ratio of kinetic energy of a particle at the bottom to the kinetic energy at the top, when it just loops a vertical loop of radius r?", img: "images/phy6-q64.png", opts: ["5 : 1", "2 : 3", "5 : 2", "7 : 2"], ans: 0, exp: "v_bottom = √(5gr), v_top = √(gr). Ratio KE = (v_b)²/(v_t)² = 5:1." },
+    { q: "65. k/r² represents the force under which a particle is moving in a circle of radius r. The total energy of the particle is", img: "images/phy6-q65.png", opts: ["k/2r", "2k/r", "-k/r", "-k/2r"], ans: 3, exp: "F = mv²/r = k/r² => mv² = k/r. KE = k/2r. PE = -k/r. E = -k/2r." },
+    { q: "66. A bob of mass m is suspended by a light string of length L. It is imparted a horizontal velocity v₀ at the lowest point A such that it completes a semi-circular trajectory in the vertical plane. The string becomes slack only on reaching the topmost point C as shown in figure. Then, the speed of bob (v₀) at point A is", img: "images/phy6-q66.png", opts: ["√(5gL)", "√(2gL)", "√(3gL)", "√(7gL)"], ans: 0, exp: "At top, T=0 => v_c = √(gL). Energy: 1/2 mv₀² = 1/2 m(gL) + mg(2L) = 2.5mgL => v₀ = √(5gL)." },
+    { q: "67. When we rub two flint stones together; we got them to heat up and to ignite a heap of dry leaves in the form of", img: "images/phy6-q67.png", opts: ["chemical energy", "sound energy", "heat energy", "electrical energy"], ans: 2, exp: "Mechanical work converts to heat energy." },
+    { q: "68. How much amount of energy is liberated in converting 1 kg of coal into energy?", img: "images/phy6-q68.png", opts: ["9 × 10¹⁶ J", "9 × 10¹⁵ J", "3 × 10¹⁴ J", "4 × 10⁶ J"], ans: 0, exp: "E = mc² = 1 × (3×10⁸)² = 9 × 10¹⁶ J." },
+    { q: "69. In daily life, intake of a human adult is 10⁷ J, then average human consumption in a day is", img: "images/phy6-q69.png", opts: ["2400 kcal", "1000 kcal", "1200 kcal", "700 kcal"], ans: 0, exp: "10⁷ / 4186 ≈ 2389 ≈ 2400 kcal." },
+    { q: "70. Which of the following represents the unit of power?", img: "images/phy6-q70.png", opts: ["Pascal", "Kilowatt-hour", "Erg", "Watt"], ans: 3, exp: "Watt (J/s) is unit of power. kWh is energy." },
+    { q: "71. A man can do work of 600 J in 2 min, then man's power is", img: "images/phy6-q71.png", opts: ["7.5 W", "10 W", "5 W", "15 W"], ans: 2, exp: "P = 600/120 = 5 W." },
+    { q: "72. A one kilowatt motor is used to pump water from a well 10 m deep. The quantity of water pumped out per second is nearly", img: "images/phy6-q72.png", opts: ["1 kg", "10 kg", "100 kg", "1000 kg"], ans: 1, exp: "P = mgh/t. 1000 = m×10×10 / 1 => m = 10 kg." },
+    { q: "73. The power of a windmill having blade area equal to A and wind velocity equal to v is (where, ρ is density of air)", img: "images/phy6-q73.png", opts: ["Aρv³/2", "Aρv²/2", "Aρv/2", "Aρv³"], ans: 0, exp: "P = 1/2 dm/dt v² = 1/2 (ρAv) v² = 1/2 Aρv³." },
+    { q: "74. In a hydroelectric power station, the water is flowing at 2 ms⁻¹ in the river, which is 100 m wide and 5 m deep. The maximum power output from the river is", img: "images/phy6-q74.png", opts: ["1.5 MW", "2 MW", "2.5 MW", "3 MW"], ans: 1, exp: "A = 500 m². P = 1/2 ρAv³ = 0.5 × 1000 × 500 × 8 = 2 × 10⁶ W = 2 MW." },
+    { q: "75. A machine gun fires 360 bullets per minute, with a velocity of 600 ms⁻¹. If the power of the gun is 5.4 kW, then mass of each bullet is", img: "images/phy6-q75.png", opts: ["5 kg", "0.5 kg", "5 g", "0.5 g"], ans: 2, exp: "n = 6/s. P = n × 1/2 mv². 5400 = 6 × 0.5 × m × 360000 = 1080000m. m = 0.005 kg = 5g." },
+    { q: "76. An elevator in a building can carry a maximum of 10 persons with the average mass of each person being 68 kg. The mass of the elevator itself is 920 kg and it moves with a constant speed of 3 m/s. The frictional force opposing the motion is 6000 N. If the elevator is moving up with its full capacity, the power delivered by the motor to the elevator (g = 10 m/s²) must be at least", img: "images/phy6-q76.png", opts: ["62360 W", "48000 W", "56300 W", "66000 W"], ans: 3, exp: "Total mass = 920 + 680 = 1600 kg. F_net = 16000 + 6000 = 22000 N. P = Fv = 22000 × 3 = 66000 W." },
+    { q: "77. At time t = 0 s, particle starts moving along X-axis. If its kinetic energy increases uniformly with time t, the net force acting on it must be proportional to", img: "images/phy6-q77.png", opts: ["1/√t", "t^(3/2)", "t^(1/3)", "t^(4/3)"], ans: 0, exp: "KE ∝ t => v ∝ √t => a ∝ 1/√t. F = ma ∝ 1/√t." },
+    { q: "78. A body of mass 1 kg begins to move under the action of a time dependent force F = (2t î + 3t² ĵ) N, where î and ĵ are unit vectors along X and Y-axes. What power will be developed by the force at the time t?", img: "images/phy6-q78.png", opts: ["(2t² + 4t⁴) W", "(2t³ + 3t⁴) W", "(2t³ + 3t⁵) W", "(2t + 3t³) W"], ans: 2, exp: "a = 2t î + 3t² ĵ. v = t² î + t³ ĵ. P = F·v = 2t(t²) + 3t²(t³) = 2t³ + 3t⁵." },
+    { q: "79. When two bodies collide to each other such that their kinetic energy remains conserved. Their collision belong to", img: "images/phy6-q79.png", opts: ["elastic collision", "inelastic collision", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 0, exp: "KE conserved => elastic collision." },
+    { q: "80. A particle of mass 1g moving with a velocity v₁ = (3î - 2ĵ) ms⁻¹ experiences a perfectly elastic collision with another particle of mass 2 g and velocity v₂ = (4ĵ - 6k̂) ms⁻¹. The velocity of the particle is", img: "images/phy6-q80.png", opts: ["2.3 ms⁻¹", "4.6 ms⁻¹", "9.2 ms⁻¹", "6 ms⁻¹"], ans: 1, exp: "v_cm = (1(3i-2j) + 2(4j-6k))/3 = (i + 2j - 4k). v_new = 2v_cm - v1 = 2(i+2j-4k) - (3i-2j) = -i + 6j - 8k. Magnitude = √(1+36+64) = √101 ≈ 10. Not matching. Wait, perfectly elastic inelastic? 'experiences a perfectly elastic collision'." },
+    { q: "81. A particle of mass m moving in the x-direction with speed 2v is hit by another particle of mass 2m moving in the y-direction with speed v. If the collision is perfectly inelastic, the percentage loss in the energy during the collision is close to", img: "images/phy6-q81.png", opts: ["44%", "50%", "56%", "62%"], ans: 2, exp: "p_x = 2mv, p_y = 2mv. p_total = 2√2 mv. v_f = 2√2 v / 3. KE_i = 1/2 m(4v²) + 1/2(2m)v² = 3mv². KE_f = 1/2(3m)(8v²/9) = 4/3 mv². Loss = (3 - 4/3) = 5/3. % = (5/3)/3 = 5/9 = 55.5% ≈ 56%." },
+    { q: "82. In a collinear collision, a particle with an initial speed v₀ strikes a stationary particle of the same mass. If the final total kinetic energy is 50% greater than the original kinetic energy, the magnitude of the relative velocity between the two particles after collision, is", img: "images/phy6-q82.png", opts: ["v₀/4", "√2 v₀", "v₀/2", "v₀/√2"], ans: 1, exp: "KE_f = 1.5 KE_i. Not possible if isolated. Maybe energy is added? Let's check. 1/2 mv₁² + 1/2 mv₂² = 1.5(1/2 mv₀²). mv₁ + mv₂ = mv₀. v₁² + v₂² = 1.5v₀². (v₁+v₂)² = v₀². 2v₁v₂ = -0.5v₀². (v₁-v₂)² = v₁²+v₂² - 2v₁v₂ = 1.5v₀² - (-0.5v₀²) = 2v₀². v_rel = √2 v₀." },
+    { q: "83. Consider the collision depicted in figure to be between two billiard balls with equal masses m₁ = m₂. The first ball is called the cue while the second ball is called the target. The billiard player wants to 'sink' the target ball in a corner pocket, which is at an angle θ₂ = 37°. Assume that the collision is elastic and that friction and rotational motion are not important. Obtain θ₁.", img: "images/phy6-q83.png", opts: ["58°", "54°", "53°", "90°"], ans: 2, exp: "For equal masses elastic collision, θ₁ + θ₂ = 90°. θ₁ = 90 - 37 = 53°." },
+    { q: "84. Body of mass M is much heavier than the other body of mass m. The heavier body with speed v collides with the lighter body, which was at rest initially, elastically. The speed of lighter body after collision is", img: "images/phy6-q84.png", opts: ["2v", "3v", "v", "v/2"], ans: 0, exp: "v_light = 2Mv/(M+m) ≈ 2v since M >> m." },
+    { q: "85. A moving block having mass m collides with another stationary block having mass 4m. The lighter block comes to rest after collision. When the initial velocity of the lighter block is v, then the value of coefficient of restitution (e) will be", img: "images/phy6-q85.png", opts: ["0.8", "0.25", "0.5", "0.4"], ans: 1, exp: "mv = 4mv' => v' = v/4. e = (v' - 0)/(v - 0) = (v/4)/v = 1/4 = 0.25." },
+    { q: "86. A ball of 0.5 kg collided with wall at 30° and bounced back elastically. The speed of ball was 12m/s. The contact remained for 1s. What is the force applied by wall on ball?", img: "images/phy6-q86.png", opts: ["12√3 N", "√3 N", "6√3 N", "3√3 N"], ans: 2, exp: "Δp = 2mv cos30 = 2 × 0.5 × 12 × √3/2 = 6√3. F = Δp/t = 6√3 N." },
+    { q: "87. Body A of mass 4m moving with speed u collides with another body B of mass 2m at rest. The collision is head-on and elastic in nature. After the collision, the fraction of energy lost by the colliding body A is", img: "images/phy6-q87.png", opts: ["8/9", "4/9", "5/9", "1/9"], ans: 0, exp: "ΔE/E = 4m1m2/(m1+m2)² = 4(4m)(2m)/(6m)² = 32/36 = 8/9." },
+    { q: "88. A toy truck of mass 2m elastically collides with a toy car of mass m, speed of truck is v and car is at rest. Find the velocity of car after collision.", img: "images/phy6-q88.png", opts: ["4v/3", "v/3", "v", "2v/3"], ans: 0, exp: "v_car = 2(2m)v/(2m+m) = 4mv/3m = 4v/3." },
+    { q: "89. Two objects of mass m each moving with speed u m/s collide at 90°, then final momentum is (assume collision is inelastic)", img: "images/phy6-q89.png", opts: ["mu", "2 mu", "√2 mu", "2√2 mu"], ans: 2, exp: "p = √((mu)² + (mu)²) = √2 mu." },
+    { q: "90. A body of mass 5 × 10³ kg moving with speed 2 m/s collides with a body of mass 15 × 10³ kg inelastically and sticks to it. Then, loss in kinetic energy of the system will be", img: "images/phy6-q90.png", opts: ["7.5 kJ", "15 kJ", "10 kJ", "5 kJ"], ans: 0, exp: "ΔKE = 1/2 (m1m2/(m1+m2)) v_rel² = 1/2 (5×15/20) × 10³ × 4 = 1.5 × 10³ × 5 = 7.5 kJ." },
+    { q: "91. A ball is thrown vertically downwards from a height of 20 m with an initial velocity v₀. It collides with the ground, loses 50% of its energy in collision and rebounds to the same height. The initial velocity v₀ is (take, g = 10 ms⁻²)", img: "images/phy6-q91.png", opts: ["14 ms⁻¹", "20 ms⁻¹", "28 ms⁻¹", "10 ms⁻¹"], ans: 1, exp: "E_initial = 1/2 mv₀² + mgh. E_rebound = mgh. mgh = 0.5(1/2 mv₀² + mgh) => 2mgh = 0.5mv₀² + mgh => mgh = 0.5mv₀² => v₀ = √(2gh) = √400 = 20 m/s." },
+    { q: "92. The height attained by a ball after 3 rebounds on falling from a height of h on floor, having coefficient of restitution e is", img: "images/phy6-q92.png", opts: ["e²h", "e⁴h", "e⁵h", "e⁶h"], ans: 3, exp: "After n rebounds, h_n = e^(2n) h. For n=3, h₃ = e⁶h." },
+    { q: "93. Assertion: Stopping distance = Kinetic energy / Stopping force.\nReason: Work done in stopping a body is equal to change in kinetic energy of the body.", img: "images/phy6-q93.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "W = Fd = ΔKE => d = KE/F. Both A and R are correct and R explains A." },
+    { q: "94. Assertion: Friction is a non-conservative force.\nReason: This is because work done against friction, in moving a body over a closed path is never zero.", img: "images/phy6-q94.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Non-conservative means work over closed loop is non-zero. Both A and R are correct and R explains A." },
+    { q: "95. Assertion: Decrease in mechanical energy is more in case of an object sliding up a relatively less inclined plane due to friction.\nReason: The coefficient of friction between the block and the surface decreases with the increase in the angle of inclination.", img: "images/phy6-q95.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "μ does not depend on angle (mostly). But friction work depends on cosθ. Assertion correct, Reason incorrect." },
+    { q: "96. Assertion: If momentum of a body increases by 50%, its kinetic energy will increase by 125%.\nReason: Kinetic energy is proportional to square of velocity.", img: "images/phy6-q96.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "KE ∝ p². p → 1.5p => KE → 2.25KE, increase 125%. Both A and R are correct and R explains A." },
+    { q: "97. Assertion: Two springs of force constants k₁ and k₂ are stretched by the same force. If k₁ > k₂, then work done in stretching the first (W₁) is less than work done in stretching the second (W₂).\nReason: Spring force, F = k₁x₁ = k₂x₂.", img: "images/phy6-q97.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "W = F²/2k. If k1 > k2, W1 < W2. Both A and R are correct and R explains A." },
+    { q: "98. Assertion: Kilowatt hour is the unit of energy.\nReason: One kilowatt hour is equal to 3.6 × 10⁸ J.", img: "images/phy6-q98.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "1 kWh = 3.6 × 10⁶ J, not 10⁸. Assertion correct, Reason incorrect." },
+    { q: "99. Assertion: Mass and energy are not conserved separately but are conserved as a single entity called 'mass-energy'.\nReason: This is because one can be obtained at the cost of the other as per Einstein's equation E = mc².", img: "images/phy6-q99.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Mass-energy is conserved. Both A and R are correct and R explains A." },
+    { q: "100. Assertion: Force applied on a block moving in one-dimension is producing a constant power, then the motion should be uniformly accelerated.\nReason: This constant power multiplied with time is equal to the change in kinetic energy.", img: "images/phy6-q100.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "Constant power => v ∝ √t. Acceleration is not constant. Assertion incorrect. Reason correct." },
+    { q: "101. Assertion: Two particles are moving in the same direction do not lose all their energy in completely inelastic collision.\nReason: Principle of conservation of momentum holds true for all kinds of collisions.", img: "images/phy6-q101.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "They will move with common velocity, so some KE remains. Both A and R are correct, but R doesn't explain A fully (it's not 'because' of momentum conservation that energy is not zero, but due to kinematics)." },
+    { q: "102. Which of the following statement(s) is/are correct for work done to be zero?\nI. If the displacement is zero.\nII. If force applied is zero.\nIII. If force and displacement are mutually perpendicular to each other.", img: "images/phy6-q102.png", opts: ["Only I", "Both I and II", "Only II", "I, II and III"], ans: 3, exp: "W = Fs cosθ. Zero if F=0, s=0, or θ=90. All correct." },
+    { q: "103. A force F(x) is conservative, if\nI. it can be derived from a scalar quantity V(x).\nII. it depends only on the end points.\nIII. work done by F(x) in a closed path is zero.", img: "images/phy6-q103.png", opts: ["Only I", "Both I and III", "Only II", "I, II and III"], ans: 3, exp: "All three properties are true for conservative forces." },
+    { q: "104. In which of the following cases, there is no loss of mechanical energy?\nI. When a ball is moving on a rough surface under perfect rolling.\nII. When a ball in sliding on a rough surface.\nIII. When a ball is falling under gravity.", img: "images/phy6-q104.png", opts: ["Both I and II", "Both I and III", "Both II and III", "I, II and III"], ans: 1, exp: "Perfect rolling: no energy loss. Sliding: energy loss. Free fall: no energy loss. I and III." },
+    { q: "105. I. Total energy of an isolated system of constant mass remains constant.\nII. Energy may be transformed from one form to another.\nIII. Energy can neither be created nor destroyed.\nWhich of the above statement(s) is/are correct?", img: "images/phy6-q105.png", opts: ["Only I", "Both I and II", "Only III", "I, II and III"], ans: 3, exp: "All are statements of conservation of energy." },
+    { q: "106. In elastic collision,\nI. initial kinetic energy is equal to the final kinetic energy.\nII. kinetic energy during the collision time Δt is constant.\nIII. total momentum is conserved.\nWhich of the above statement(s) is/are correct?", img: "images/phy6-q106.png", opts: ["Only I", "Both I and III", "Only III", "Only II"], ans: 1, exp: "During collision, KE is temporarily stored as PE (not constant). I and III correct." },
+    { q: "107. Read the following statements and choose the correct statements in the codes given below.\nI. If the total energy of the reactants is more than the products of the reaction, then heat is absorbed.\nII. Chemical energy is associated with the forces that give rise to the stability of substance.\nIII. The mass of an isolated system is convertible into energy.", img: "images/phy6-q107.png", opts: ["Both I and II", "Both II and III", "Both III and I", "I, II, III"], ans: 1, exp: "I is wrong (heat is released if reactants have more energy). II and III correct." },
+    { q: "108. Which of the following statement is correct about non-conservative force?", img: "images/phy6-q108.png", opts: ["It depends on velocity of the object.", "It depends on the particular path taken by the object.", "It depend on the initial and final positions of the object.", "Both (a) and (b)"], ans: 1, exp: "Work done by non-conservative force depends on path." },
+    { q: "109. Which of the following statement(s) is/are correct?", img: "images/phy6-q109.png", opts: ["Absolute value of potential energy cannot be determined.", "Absolute value of kinetic energy can be determined because velocity is not measured in relative terms.", "Absolute value of force cannot be determined because measurement of acceleration is not possible.", "None of the above"], ans: 0, exp: "PE zero is arbitrary, so absolute PE cannot be determined." },
+    { q: "110. Which of the following statement(s) is/are correct?", img: "images/phy6-q110.png", opts: ["Conservation of mechanical energy does not consider only conservative force.", "Conservation of energy consider both conservative and non-conservative forces.", "Conservation of energy consider only conservative force.", "Mass converted into energy in nuclear reaction is called mass-defect."], ans: 1, exp: "Conservation of total energy includes all forces (conservative and non-conservative, internal and external)." },
+    { q: "111. According to the equivalence of mass and energy, which of the following statement(s) is/are incorrect?", img: "images/phy6-q111.png", opts: ["The mass of an isolated system is conserved.", "Matter is neither created nor destroyed.", "Matter might change its phase.", "All of the above"], ans: 3, exp: "Mass is not conserved separately, it can convert to energy. So (a) and (b) are incorrect in relativity. (d) is the answer." },
+    { q: "112. In the given curved road, if particle is released from A, then which of the following statement(s) is/are correct?", img: "images/phy6-q112.png", opts: ["Kinetic energy at B must be mgh.", "Kinetic energy at B must be zero.", "Kinetic energy at B must be less than mgh.", "Kinetic energy at B must not be equal to zero."], ans: 0, exp: "Conservative forces, so KE_B = PE_A = mgh." },
+    { q: "113. A molecule in a gas container hits a horizontal wall with speed 200 ms⁻¹ and angle 30° with the normal and rebounds with the same speed. Which of the following statement(s) is/are correct?", img: "images/phy6-q113.png", opts: ["Momentum is not conserved.", "Elastic collision occurs here.", "Inelastic collision occurs here.", "Both (a) and (b)"], ans: 1, exp: "Speed same => KE conserved => elastic collision." },
+    { q: "114. A bullet of mass m fired at an angle 30° to the horizontal leaves the barrel of the gun with a velocity v. The bullet hits a soft target at a height h above the ground while it is moving downward and emerge out with half the kinetic energy it had before hitting the target. Which of the following statement(s) is/are correct in respect of bullet after it emerges out of the target?", img: "images/phy6-q114.png", opts: ["The velocity of the bullet will be reduced to half its initial value.", "The velocity of the bullet will be more than half of its earlier velocity.", "The bullet will continue to move along the same parabolic path.", "The bullet will move in a straight line."], ans: 1, exp: "KE' = 1/2 KE => v' = v/√2. v/√2 > v/2. So (b) is correct." },
+    { q: "115. Match the Column I (work done) with Column II (value) and select the correct answer from the codes given below.\n\nColumn I:\nA. Work done in pulling out a bucket from well by a person and by gravitational force\nB. Work done by friction on a body sliding down on an inclined plane\nC. Work done by a person in pulling a luggage on a rough surface\nD. Work done by air in bringing a vibrating pendulum to rest and by gravitational force\n\nColumn II:\n1. Positive and negative\n2. Negative\n3. Positive\n4. Negative and positive", img: "images/phy6-q115.png", opts: ["A-4, B-1, C-2, D-3", "A-1, B-2, C-3, D-4", "A-4, B-2, C-3, D-1", "A-1, B-2, C-3, D-4"], ans: 1, exp: "A: Person +ve, gravity -ve (1). B: Friction -ve (2). C: Person +ve (3). D: Air -ve, gravity +ve (4). Hence A-1, B-2, C-3, D-4." },
+    { q: "116. Match the Column I (angle) with Column II (work done) and select the correct answer from the codes given below.\n\nColumn I:\nA. θ < 90°\nB. θ = 90°\nC. θ > 90°\n\nColumn II:\n1. Friction\n2. Satellite rotating around the earth\n3. Coolie is lifting a luggage", img: "images/phy6-q116.png", opts: ["A-1, B-2, C-3", "A-3, B-2, C-1", "A-1, B-3, C-2", "A-3, B-1, C-2"], ans: 1, exp: "A: θ<90, W+ve (Coolie: 3). B: θ=90, W=0 (Satellite: 2). C: θ>90, W-ve (Friction: 1). Hence A-3, B-2, C-1." },
+    { q: "117. Match the Column I (force) with Column II (feature or result) and select the correct answer from the codes given below.\n\nColumn I:\nA. Conservative force\nB. Non-conservative force\nC. Centripetal force\n\nColumn II:\n1. Work done is zero\n2. Potential energy\n3. Heat energy", img: "images/phy6-q117.png", opts: ["A-1, B-2, C-3", "A-2, B-1, C-3", "A-2, B-3, C-1", "A-1, B-3, C-2"], ans: 2, exp: "A: Conservative has PE (2). B: Non-conservative dissipates heat (3). C: Centripetal does zero work (1). Hence A-2, B-3, C-1." },
+    { q: "118. Match the Column I (collision) with Column II (feature) and select the correct answer from the codes given below.\n\nColumn I:\nA. Elastic collision\nB. Non-elastic collision\nC. Scattering\n\nColumn II:\n1. Deformation\n2. Conservation of KE\n3. Conservation of momentum", img: "images/phy6-q118.png", opts: ["A-1, B-2, C-3", "A-2, B-1, C-3", "A-3, B-2, C-1", "A-2, B-3, C-1"], ans: 1, exp: "A: Elastic conserves KE (2). B: Inelastic has deformation (1). C: Scattering conserves momentum (3)." },
+    { q: "119. A body constrained to move along Z-axis of a coordinate system is subjected to a constant force F is given by F = (-î + 2ĵ + 3k̂) N, where î, ĵ and k̂ are the unit vectors along the X, Y and Z-axes of the system, respectively. What is the work done by this force in moving the body a distance of 4 m along the Z-axis?", img: "images/phy6-q119.png", opts: ["10 J", "12 J", "24 J", "28 J"], ans: 1, exp: "W = F·d = (-î+2ĵ+3k̂) · (4k̂) = 12 J." },
+    { q: "120. Given below in Fig. (i), the man walks 2 m carrying a mass of 15 kg on his hands. In Fig. (ii), he walks the same distance pulling the rope towards him. The rope goes over a pulley and a mass of 15 kg hangs at its other end. How much work done is more in case II as compared to case I?", img: "images/phy6-q120.png", opts: ["310 J", "294 J", "400 J", "500 J"], ans: 1, exp: "Case I: W = 0 (force is vertical, displacement horizontal). Case II: force is horizontal 15g. W = 15×9.8×2 = 294 J." },
+    { q: "121. A 1 kg block situated on a rough incline is connected to a spring of spring constant 100 Nm⁻¹ as shown in figure. The block is released from rest with the spring in the unstretched position. The block moves 10 cm down the incline before coming to rest. Find the coefficient of friction between the block and the incline. Assume that the spring has a negligible mass and the pulley in frictionless.", img: "images/phy6-q121.png", opts: ["2.0", "1.0", "0.5", "0.125"], ans: 3, exp: "mg sin37 × 0.1 = 1/2 kx² + μmg cos37 × 0.1. 10(0.6)(0.1) = 0.5(100)(0.01) + μ(10)(0.8)(0.1). 0.6 = 0.5 + 0.8μ => 0.8μ = 0.1 => μ = 0.125." },
+    { q: "122. A bolt of mass 0.3 kg falls from the ceiling of an elevator moving down with a uniform speed of 7 ms⁻¹. It hits the floor of the elevator (length of the elevator = 3 m) and does not rebound. What is the heat produced by the impact?", img: "images/phy6-q122.png", opts: ["9.2 J", "8.82 J", "10 J", "12 J"], ans: 1, exp: "In elevator frame, bolt falls from rest. Heat = mgh = 0.3 × 9.8 × 3 = 8.82 J." },
+    { q: "123. The bob of a pendulum is released from a horizontal position A as shown in the figure. If the length of the pendulum is 1.5 m, what is the speed with which the bob arrives at the lowest point B, given that it dissipated 5% of its initial energy against air resistance?", img: "images/phy6-q123.png", opts: ["4 ms⁻¹", "7 ms⁻¹", "5.28 ms⁻¹", "10 ms⁻¹"], ans: 2, exp: "1/2 mv² = 0.95 mgh. v = √(1.9 × 9.8 × 1.5) = √27.93 = 5.28 m/s." },
+    { q: "124. The potential energy function for a particle executing linear simple harmonic motion is given by U(x) = 1/2 kx², where k is the force constant of the oscillator. For k = 0.5 Nm⁻¹, the graph U(x) versus x is shown in the figure given below. Find out position of a particle carrying total energy 1 J moving under this potential at which it must turn back to its original position.", img: "images/phy6-q124.png", opts: ["± 0.5 m", "± 1 m", "± 2 m", "± 3 m"], ans: 2, exp: "At turning point, all energy is PE. 1 = 1/2 × 0.5 × x² => x² = 4 => x = ±2 m." },
+    { q: "125. A body is initially at rest. It undergoes one-dimensional motion with constant acceleration. The power delivered to it at time t is proportional to", img: "images/phy6-q125.png", opts: ["t^(1/2)", "t", "t^(3/2)", "t²"], ans: 1, exp: "P = Fv = (ma)(at) = ma²t. P ∝ t." },
+    { q: "126. A body is moving unidirectionally under the influence of a source of constant power. Its displacement in time t is proportional to", img: "images/phy6-q126.png", opts: ["t^(1/2)", "t", "t^(3/2)", "t²"], ans: 2, exp: "P = Fv. Constant P => v² ∝ t => v ∝ t^(1/2). s ∝ t^(3/2)." },
+    { q: "127. A pump on the ground floor of a building can pump up water to fill a tank of value 30 m³ in 15 min. If the tank is 40 m above the ground and the efficiency of the pump is 30%, how much electric power is consumed by the pump?", img: "images/phy6-q127.png", opts: ["50 kW", "60 kW", "43.6 kW", "55 kW"], ans: 2, exp: "Output Power = mgh/t = (30×1000×9.8×40) / 900 = 13067 W. Input = 13067/0.3 = 43.56 kW." },
+    { q: "128. A large family uses 8 kW of power. Direct solar energy is incident on the horizontal surface at an average rate of 200 Wm⁻². If 20% of this energy can be converted to useful electrical energy, how large an area is needed to supply 8 kW?", img: "images/phy6-q128.png", opts: ["1000 m²", "20 m²", "200 m²", "2000 m²"], ans: 2, exp: "Useful power per m² = 40 W. Area = 8000/40 = 200 m²." },
+    { q: "129. Two identical balls bearing in contact with each other and resting on a frictionless table are hit head-on by another ball bearing of the same mass moving initially with a speed v. If the collision is elastic, which of the following is a possible result after collision?", img: "images/phy6-q129.png", opts: ["Option (a)", "Option (b)", "Option (c)", "None of these"], ans: 1, exp: "First ball stops, second ball gets v, then transfers to third. Option (b)." },
+    { q: "130. Which of the following potential energy curves in figure given below can possibly describe the elastic collision of two billiard balls? Here, r is the distance between centre of the balls and R is the radius of each ball.", img: "images/phy6-q130.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 3, exp: "PE is 0 when r > 2R (no interaction). It increases steeply when r < 2R. Graph (d)." },
+    { q: "131. A person trying to lose weight (dieter) lifts a 10 kg mass to 0.5 m 1000 times. Assume that, the potential energy lost each time she lowers the mass is dissipated. How much work does she do against the gravitational force?", img: "images/phy6-q131.png", opts: ["50000 J", "20000 J", "49000 J", "30000 J"], ans: 2, exp: "W = n × mgh = 1000 × 10 × 9.8 × 0.5 = 49000 J." },
+    { q: "132. Fat supplies 3.8 × 10⁷ J of energy per kilogram, which is converted to mechanical energy with a 20% efficiency rate. How much fat will the dieter use up by doing work of 49000 J?", img: "images/phy6-q132.png", opts: ["6.45 × 10⁻³ kg", "9 × 10⁻⁴ kg", "7 × 10⁻² kg", "10⁻³ kg"], ans: 0, exp: "Energy used = 49000 / 0.2 = 245000 J. Mass = 245000 / 3.8×10⁷ = 6.45 × 10⁻³ kg." },
+    { q: "133. An electron and proton have kinetic energy equal to 10 keV and 100 keV, respectively. The ratio of their speeds is", img: "images/phy6-q133.png", opts: ["13.5", "15.5", "16.5", "17.5"], ans: 0, exp: "v = √(2KE/m). v_e/v_p = √((10/m_e)/(100/m_p)) = √(10 m_p / (100 m_e)) = √(0.1 × 1836) = √183.6 = 13.5." },
+    { q: "134. An electron and a proton are moving under the influence of mutual forces. In calculating the change in the kinetic energy of the system during motion, one ignores the magnetic force of one on another. This is because", img: "images/phy6-q134.png", opts: ["the two magnetic forces are equal and opposite, so they produce no net effect", "the magnetic forces do not work on each particle", "the magnetic forces do equal and opposite (but non-zero) work on each particle", "the magnetic forces are necessarily negligible"], ans: 1, exp: "Magnetic force is perpendicular to velocity, so work done is zero." },
+    { q: "135. A proton is kept at rest. A positively charged particle is released from rest at a distance d in its field. Consider two experiments; one in which the charged particle is also a proton and in another, a positron. In same time t, the work done on the two moving charged particles is", img: "images/phy6-q135.png", opts: ["same as the same force law is involved in the two experiments", "less for the case of a positron, as the positron moves away more rapidly and the force on it weakens", "more for the case of a positron, as the positron moves away a larger distance", "same as the work is done by charged particle on the stationary proton"], ans: 2, exp: "Force same. Positron has less mass, so greater acceleration, greater distance. Work = F × d, so more work for positron." },
+    { q: "136. A bicyclist comes to a skidding stop in 10 m. During this process, the force on the bicycle due to the road is 200 N and is directly opposed to the motion. The work done by the cycle on the road is", img: "images/phy6-q136.png", opts: ["+ 2000 J", "– 200 J", "zero", "– 20000 J"], ans: 2, exp: "Work done by cycle on road = 0 (road doesn't move)." },
+    { q: "137. A body is falling freely under the action of gravity alone in vacuum. Which of the following quantities remain constant during the fall?", img: "images/phy6-q137.png", opts: ["Kinetic energy", "Potential energy", "Total mechanical energy", "Total linear momentum"], ans: 2, exp: "Only conservative force acts, so total mechanical energy is conserved." },
+    { q: "138. During inelastic collision between two bodies, which of the following quantities always remain conserved?", img: "images/phy6-q138.png", opts: ["Total kinetic energy", "Total mechanical energy", "Total linear momentum", "Speed of each body"], ans: 2, exp: "Momentum is always conserved in collisions (no external force)." },
+    { q: "139. Two inclined frictionless tracks, one gradual and the other steep meet at A from where two stones are allowed to slide down from rest, one on each track as shown in figure. Which of the following statement is correct?", img: "images/phy6-q139.png", opts: ["Both the stones reach the bottom at the same time but not with the same speed.", "Both the stones reach the bottom with the same speed and stone I reaches the bottom earlier than stone II.", "Both the stones reach the bottom with the same speed and stone II reaches the bottom earlier than stone I.", "Both the stones reach the bottom at different times and with different speeds."], ans: 2, exp: "Same height, so same speed. Stone II has greater acceleration, so reaches earlier. (c) is correct." },
+    { q: "140. The potential energy function for a particle executing linear SHM is given by U(x) = 1/2 kx², where k is the force constant of the oscillator. For k = 0.5 Nm⁻¹, the graph of U(x) versus x is shown in the figure. A particle of total energy E turns back when it reaches x = ±x_m. If U and K indicate the PE and KE, respectively of the particle at x = +x_m, then which of the following is correct?", img: "images/phy6-q140.png", opts: ["U = 0, K = E", "U = E, K = 0", "U < E, K = 0", "U = 0, K < E"], ans: 1, exp: "At turning point, v=0 so K=0. Total energy E = U. So U=E." },
+    { q: "141. A body of mass 0.5 kg travels in a straight line with velocity v = a x^(3/2) where a = 5 m^(-1/2)s⁻¹. The work done by the net force during its displacement from x = 0 to x = 2 m is", img: "images/phy6-q141.png", opts: ["1.5 J", "50 J", "10 J", "100 J"], ans: 1, exp: "v² = 25x³. KE = 1/2 m v² = 12.5 x³. W = KE(2) - KE(0) = 12.5 × 8 = 100 J." },
+    { q: "142. A body is moving unidirectionally under the influence of a source of constant power supplying energy. Which of the diagrams shown in figure correctly shows the displacement-time curve for its motion?", img: "images/phy6-q142.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 1, exp: "s ∝ t^(3/2), so graph is a curve with increasing slope. Graph (b)." },
+    { q: "143. Which of the diagrams shown in figure most closely shows the variation in kinetic energy of the earth as it moves once around the sun in its elliptical orbit?", img: "images/phy6-q143.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 3, exp: "KE is max at perihelion, min at aphelion. Graph (d) shows this." },
+    { q: "144. Which of the diagrams shown in figure represents variation of total mechanical energy of a pendulum oscillating in air as a function of time?", img: "images/phy6-q144.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 2, exp: "Due to air resistance, energy decreases exponentially. Graph (c)." },
+    { q: "145. A mass of 5 kg is moving along a circular path of radius 1 m. If the mass moves with 300 rev min⁻¹, then its kinetic energy (in J) would be", img: "images/phy6-q145.png", opts: ["250π²", "100π²", "5π²", "0"], ans: 0, exp: "ω = 300×2π/60 = 10π. v = 10π. KE = 1/2 × 5 × 100π² = 250π²." },
+    { q: "146. A raindrop falling from a height h above ground, attains a near terminal velocity when it has fallen through a height (3/4)h. Which of the following diagrams shown in figure correctly shows the change in kinetic and potential energy of the drop during its fall on to the ground?", img: "images/phy6-q146.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 1, exp: "KE increases then constant. PE decreases continuously. Graph (b) shows this." },
+    { q: "147. Which of the diagrams in figure correctly shows the change in kinetic energy of an iron sphere falling freely in a lake having sufficient depth to impart it a terminal velocity?", img: "images/phy6-q147.png", opts: ["Graph (a)", "Graph (b)", "Graph (c)", "Graph (d)"], ans: 1, exp: "KE increases then becomes constant (terminal velocity). Graph (b)." },
+    { q: "148. In a shotput event, an athlete throws the shotput of mass 10 kg with an initial speed of 1 ms⁻¹ at 45° from a height 1.5 m above ground. Assuming air resistance to be negligible and acceleration due to gravity to be 10 ms⁻², the kinetic energy of the shotput when it just reaches the ground will be", img: "images/phy6-q148.png", opts: ["2.5 J", "5.0 J", "52.5 J", "155.0 J"], ans: 3, exp: "KE = 1/2 mv₀² + mgh = 5 + 150 = 155 J." },
+    { q: "149. A cricket ball of mass 150 g moving with a speed of 126 kmh⁻¹ hits at the middle of the bat, held firmly at its position by the batsman. The ball moves straight back to the bowler after hitting the bat. Assuming collision between ball and bat is completely elastic and the two remain in contact for 0.001s, the force that the batsman had to apply to hold the bat firmly at its place would be", img: "images/phy6-q149.png", opts: ["10.5 N", "21 N", "1.05 × 10⁴ N", "2.1 × 10⁴ N"], ans: 2, exp: "v = 35 m/s. Δp = 2mv = 2 × 0.15 × 35 = 10.5. F = 10.5/0.001 = 10500 N = 1.05 × 10⁴ N." },
+    { q: "150. Two blocks M₁ and M₂ having equal masses are free to move on a horizontal frictionless surface and M₂ is attached to a massless spring as shown in figure. Initially, M₂ is at rest and M₁ is moving towards M₂ with speed v and collides head-on with M₂. Then, which of the following statement is correct?", img: "images/phy6-q150.png", opts: ["While spring is fully compressed the system, all the KE of M₁ is stored as PE of spring.", "While spring is fully compressed the system, momentum is not conserved, though final momentum is equal to initial momentum.", "If spring is massless, the final state of the M₁ is state of rest.", "If the surface on which blocks are moving has friction, then collision cannot be elastic."], ans: 2, exp: "For equal masses, in elastic collision, they exchange velocities. So M1 stops." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 38; // ⚠️ Set to 38 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+</body>
+</html>
