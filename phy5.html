@@ -396,10 +396,6 @@ function showResult() {
     document.getElementById('resultModal').classList.add('show');
 }
 
-
-    document.getElementById('resultModal').classList.remove('show');
-    renderQuestion();
-}
 function resetQuiz() {
     if (!confirm('Are you sure you want to reset the quiz? (Questions will be reshuffled)')) return;
     window.applyShuffle();
