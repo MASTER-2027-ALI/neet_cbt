@@ -170,7 +170,7 @@
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal()">×</button>
     <h2 id="modalTitle" style="color: #60a5fa; margin-bottom: 5px;">Chapter Title</h2>
-        <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">Detailed Analysis of your last attempt.</p>
+    <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">Detailed Analysis of your last attempt.</p>
     
     <select id="attemptSelector" onchange="changeAttempt(this.value)" style="width: 100%; padding: 10px; margin-bottom: 15px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 8px; font-weight: 600;">
     </select>
@@ -195,27 +195,23 @@ import { getFirestore, collection, query, where, getDocs } from "https://www.gst
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Check login
 const userData = localStorage.getItem('cbt_user');
 if (!userData) {
   window.location.href = 'index.html';
 }
 const user = JSON.parse(userData);
 
-// Chapter Names Array (1 to 61)
 const chapterNames = [
-  // Biology (1-32)
   "The Living World", "Biological Classification", "Plant Kingdom", "Animal Kingdom",
   "Morphology of Flowering Plants", "Anatomy of Flowering Plants", "Structural Organisation in Animals", "Cell: The Unit of Life", "Biomolecules",
   "Cell Cycle and Cell Division", "Photosynthesis in Higher Plants", "Respiration in Plants", "Plant Growth and Development", "Breathing and Exchange of Gases", "Body Fluids and Circulation",
   "Excretory Products and their Elimination", "Locomotion and Movement", "Neural Control and Coordination", "Chemical Coordination and Integration",
   "Reproduction in Organisms", "Sexual Reproduction in Flowering Plants", "Human Reproduction", "Reproductive Health", "Principles of Inheritance and Variation", "Molecular Basis of Inheritance", "Evolution", "Human Health and Disease", "Microbes in Human Welfare", "Biotechnology: Principles and Processes", "Biotechnology and its Applications", "Organisms and Populations", "Ecosystem",
-  // Physics (33-61)
   "Physical World", "Units and Measurements", "Motion in a Straight Line", "Motion in a Plane", "Laws of Motion", "Work, Energy and Power", "System of Particles and Rotational Motion", "Gravitation", 
   "Mechanical Properties of Solids", "Mechanical Properties of Fluids", "Thermal Properties of Matter", "Thermodynamics", "Kinetic Theory", "Oscillations", "Waves", "Electric Charges and Fields", "Electrostatic Potential and Capacitance", "Current Electricity", "Moving Charges and Magnetism", "Magnetism and Matter", "Electromagnetic Induction", "Alternating Current", "Electromagnetic Waves", "Ray Optics and Optical Instruments", "Wave Optics", "Dual Nature of Radiation and Matter", "Atoms", "Nuclei", "Semiconductor Electronics"
 ];
 
-let globalChapterData = {}; // Stores data to use in Modal
+let globalChapterData = {}; 
 
 async function loadDiary() {
   try {
@@ -231,19 +227,15 @@ async function loadDiary() {
       const data = doc.data();
       totalTests++;
       
-      // Fix for old negative percents
       let fixedPercent = Math.max(0, data.percent); 
       totalPercent += fixedPercent;
       
       if (!chapterData[data.chapterNum]) chapterData[data.chapterNum] = [];
-      
-      // Store the full attempt data for detailed view
       chapterData[data.chapterNum].push(data); 
 
-      // Gather mistakes for the main page (Recent Mistakes section)
-            if (data.wrongQuestions && data.wrongQuestions.length > 0) {
+      if (data.wrongQuestions && data.wrongQuestions.length > 0) {
         data.wrongQuestions.forEach(mistake => {
-          // Purana kharab data skip karne ke liye check
+          // Skip old corrupt data
           if (mistake && mistake.q) {
             allMistakes.push({ chapterNum: data.chapterNum, ...mistake });
           }
@@ -251,28 +243,23 @@ async function loadDiary() {
       }
     });
 
-    globalChapterData = chapterData; // Save globally
+    globalChapterData = chapterData; 
 
-    // Update Top Stats
     document.getElementById('totalTests').textContent = totalTests;
     const avg = totalTests > 0 ? (totalPercent / totalTests).toFixed(1) : 0;
     document.getElementById('avgScore').textContent = avg + '%';
 
-    // Analyze Chapters
     let strong = 0;
     let weak = 0;
     let analysisHTML = '';
-
     const sortedChapters = Object.keys(chapterData).sort((a,b) => parseInt(a) - parseInt(b));
 
     sortedChapters.forEach(chNum => {
       const attemptsArray = chapterData[chNum];
       const attempts = attemptsArray.length;
       
-      // Find best attempt to display on card
       let bestAttempt = attemptsArray.reduce((prev, current) => (prev.percent > current.percent) ? prev : current);
       let bestPercent = Math.max(0, bestAttempt.percent);
-      
       const chName = chapterNames[chNum - 1] || "Unknown Chapter";
 
       let statusClass = '';
@@ -295,9 +282,9 @@ async function loadDiary() {
         colorClass = 'average';
       }
 
-      // Make card clickable
+      // NOTE: onclick me openChapterModal use kiya gaya hai
       analysisHTML += `
-        <div class="chapter-progress ${statusClass}" onclick="showChapterDetails(${chNum})">
+        <div class="chapter-progress ${statusClass}" onclick="openChapterModal(${chNum})">
           <h3>Chapter ${chNum}: ${chName} <span style="font-size:14px; color:#94a3b8;">${statusText}</span></h3>
           <div class="progress-bar-container">
             <div class="progress-bar-fill ${colorClass}" style="width: ${bestPercent}%;"></div>
@@ -314,7 +301,6 @@ async function loadDiary() {
     document.getElementById('weakCount').textContent = weak;
     document.getElementById('chapterAnalysis').innerHTML = analysisHTML || '<p style="color:#94a3b8;">No data yet.</p>';
 
-    // Render Recent Mistakes (Bottom Section)
     let mistakesHTML = '';
     if (allMistakes.length === 0) {
       mistakesHTML = '<p style="color:#4ade80;">🎉 Shabaash! Abhi tak koi galti nahi hui.</p>';
@@ -325,14 +311,14 @@ async function loadDiary() {
         const savedNote = localStorage.getItem(mId) || '';
         mistakesHTML += `
           <div class="mistake-card">
-            <div class="q-text">Q: ${m.q || m.question || 'N/A'}</div>
-<div class="ans-row">
-  <span class="your-ans">❌ Your Answer: ${m.yourAnsText || m.userText || 'N/A'}</span>
-  <span class="correct-ans">✅ Correct: ${m.correctAnsText || m.correctText || 'N/A'}</span>
-</div>
+            <div class="q-text">Q: ${m.q}</div>
+            <div class="ans-row">
+              <span class="your-ans">❌ Your Answer: ${m.yourAnsText || 'N/A'}</span>
+              <span class="correct-ans">✅ Correct: ${m.correctAnsText || 'N/A'}</span>
+            </div>
             <div class="exp">📖 Exp: ${m.exp || 'No explanation'}</div>
             <input type="text" class="note-input" id="input-${mId}" placeholder="Why did you get this wrong?" value="${savedNote}">
-            <button class="save-note-btn" onclick="saveNote('${mId}')">Save Note</button>
+            <button class="save-note-btn" onclick="saveUserNote('${mId}')">Save Note</button>
           </div>
         `;
       });
@@ -341,19 +327,18 @@ async function loadDiary() {
 
   } catch (e) {
     console.error("Error loading diary:", e);
-    document.getElementById('chapterAnalysis').innerHTML = '<p style="color:red;">⚠️ Data load nahi hua.</p>';
+    document.getElementById('chapterAnalysis').innerHTML = '<p style="color:red;">⚠️ Data load nahi hua. Console check karein.</p>';
   }
 }
 
-// Function to show Modal
-window.showChapterDetails = function(chNum) {
+// Function triggered on clicking Chapter Card
+window.openChapterModal = function(chNum) {
   const attemptsArray = globalChapterData[chNum];
   if(!attemptsArray || attemptsArray.length === 0) return;
 
   const chName = chapterNames[chNum - 1] || "Unknown Chapter";
   document.getElementById('modalTitle').textContent = `Chapter ${chNum}: ${chName}`;
   
-  // Dropdown list banao (Latest attempt sabse upar)
   let optionsHTML = '';
   attemptsArray.slice().reverse().forEach((attempt, index) => {
     const attemptNum = attemptsArray.length - index;
@@ -364,17 +349,21 @@ window.showChapterDetails = function(chNum) {
   
   document.getElementById('attemptSelector').innerHTML = optionsHTML;
   
-  // Default: Latest attempt load karo
-  window.changeAttempt(attemptsArray.length - 1);
+  // Load latest attempt by default
+  window.changeAttempt(attemptsArray.length - 1, chNum);
+  document.getElementById('detailModal').classList.add('show');
 }
 
-// Dropdown change hone par ye chalega
-window.changeAttempt = function(attemptIndex) {
-  // Current chapter ke saare attempts nikaalo
-  const chNum = document.getElementById('modalTitle').textContent.split(':')[0].replace('Chapter ', '').trim();
-  const attemptsArray = globalChapterData[chNum];
+// Function triggered when Dropdown is changed
+window.changeAttempt = function(attemptIndex, chNum) {
+  // Agar function dropdown se call hua hai, to chNum pass nahi hoga. Title se nikal lo.
+  if(!chNum) {
+      chNum = document.getElementById('modalTitle').textContent.split(':')[0].replace('Chapter ', '').trim();
+  }
   
+  const attemptsArray = globalChapterData[chNum];
   if(!attemptsArray || !attemptsArray[attemptIndex]) return;
+  
   const selectedAttempt = attemptsArray[attemptIndex];
 
   document.getElementById('mTotal').textContent = selectedAttempt.total;
@@ -383,7 +372,7 @@ window.changeAttempt = function(attemptIndex) {
   document.getElementById('mSkipped').textContent = selectedAttempt.total - selectedAttempt.correct - selectedAttempt.wrong;
 
   let mHTML = '';
-  // Sirf valid questions filter karo
+  // Filter valid questions
   const validMistakes = (selectedAttempt.wrongQuestions || []).filter(m => m && m.q);
   
   if(validMistakes.length > 0) {
@@ -410,12 +399,12 @@ window.closeModal = function() {
   document.getElementById('detailModal').classList.remove('show');
 }
 
-window.saveNote = function(id) {
+window.saveUserNote = function(id) {
   const val = document.getElementById('input-' + id).value;
   localStorage.setItem(id, val);
   alert('✅ Note saved! (Only visible to you)');
 };
-  
+
 loadDiary();
 </script>
 </body>
