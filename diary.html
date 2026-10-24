@@ -369,7 +369,7 @@ window.showChapterDetails = function(chNum) {
 // Dropdown change hone par ye chalega
 window.changeAttempt = function(attemptIndex) {
   // Current chapter ke saare attempts nikaalo
-  const chNum = document.getElementById('modalTitle').textContent.split(':')[0].replace('Chapter ', '');
+  const chNum = document.getElementById('modalTitle').textContent.split(':')[0].replace('Chapter ', '').trim();
   const attemptsArray = globalChapterData[chNum];
   
   if(!attemptsArray || !attemptsArray[attemptIndex]) return;
