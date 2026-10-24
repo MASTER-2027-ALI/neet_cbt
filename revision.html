@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Revision - NEET CBT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; padding: 20px; }
+  .header { text-align: center; margin-bottom: 20px; }
+  .header h1 { color: #d97706; font-size: 24px; }
+  .container { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 30px; }
+  .q-box { margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; }
+  .q-text { font-weight: 600; font-size: 16px; margin-bottom: 15px; }
+  .option { display: block; padding: 12px; margin-bottom: 10px; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; }
+  .option.correct { border-color: #38a169; background: #c6f6d5; }
+  .option.wrong { border-color: #e53e3e; background: #fed7d7; }
+  .exp-box { display: none; background: #fefcbf; border-left: 4px solid #d69e2e; padding: 15px; margin-top: 15px; border-radius: 4px; font-size: 14px; }
+  .back-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #4299e1; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>⚡ Quick Revision</h1>
+    <p>Sirf un sawaalon ka test jo aapne pehle galat kiye the</p>
+</div>
+
+<div class="container" id="quizContainer">
+    <p style="text-align:center; color:#718096;">Loading questions...</p>
+</div>
+
+<a href="diary.html" class="back-btn">← Back to Diary</a>
+
+<script src="keys.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const userData = localStorage.getItem('cbt_user');
+if (!userData) window.location.href = 'index.html';
+const user = JSON.parse(userData);
+
+const urlParams = new URLSearchParams(window.location.search);
+const chapterNum = parseInt(urlParams.get('ch'));
+
+const chapterFileMap = {
+    33: "phy1.html", 34: "phy2.html", 35: "phy3.html", 36: "phy4.html", 37: "phy5.html", 38: "phy6.html",
+    39: "phy7.html", 40: "phy8.html", 41: "phy9.html", 42: "phy10.html", 43: "phy11.html", 44: "phy12.html",
+    45: "phy13.html", 46: "phy14.html", 47: "phy15.html", 48: "phy16.html", 49: "phy17.html", 50: "phy18.html",
+    51: "phy19.html", 52: "phy20.html", 53: "phy21.html", 54: "phy22.html", 55: "phy23.html", 56: "phy24.html",
+    57: "phy25.html", 58: "phy26.html", 59: "phy27.html", 60: "phy28.html", 61: "phy29.html"
+};
+
+async function loadRevision() {
+    try {
+        const q = query(collection(db, "results"), where("userName", "==", user.name), where("chapterNum", "==", chapterNum));
+        const snapshot = await getDocs(q);
+        
+        let allWrongQuestions = new Set(); 
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.wrongQuestions) {
+                data.wrongQuestions.forEach(m => {
+                    if (m && m.q) allWrongQuestions.add(m.q);
+                });
+            }
+        });
+
+        if (allWrongQuestions.size === 0) {
+            document.getElementById('quizContainer').innerHTML = '<p style="text-align:center; color:#38a169; font-weight:bold;">🎉 Shabaash! Is chapter mein aapki koi galti nahi hai.</p>';
+            return;
+        }
+
+        let fileName = `chapter${chapterNum}.html`; 
+        if (chapterFileMap[chapterNum]) fileName = chapterFileMap[chapterNum];
+
+        const response = await fetch(fileName);
+        if (!response.ok) throw new Error("File not found");
+        const htmlText = await response.text();
+
+        const match = htmlText.match(/const questions = (\[[\s\S]*?\]);/);
+        if (!match) throw new Error("Questions array not found");
+        const allQuestions = eval(match[1]); 
+        let revisionQuestions = allQuestions.filter(q => allWrongQuestions.has(q.q));
+
+        renderQuestions(revisionQuestions);
+
+    } catch (e) {
+        console.error(e);
+        document.getElementById('quizContainer').innerHTML = '<p style="color:red; text-align:center;">⚠️ Data load nahi hua. File ka naam galat ho sakta hai.</p>';
+    }
+}
+
+function renderQuestions(questions) {
+    const container = document.getElementById('quizContainer');
+    container.innerHTML = '';
+    
+    if (questions.length === 0) {
+        container.innerHTML = '<p style="text-align:center;">No questions to revise.</p>';
+        return;
+    }
+
+    questions.forEach((q, idx) => {
+        const qBox = document.createElement('div');
+        qBox.className = 'q-box';
+        
+        let optsHTML = '';
+        q.opts.forEach((opt, oi) => {
+            optsHTML += `<div class="option" onclick="checkAnswer(this, ${oi === q.ans}, '${q.exp.replace(/'/g, "\\'")}')">${String.fromCharCode(65+oi)}. ${opt}</div>`;
+        });
+
+        qBox.innerHTML = `
+            <div class="q-text">Q${idx+1}. ${q.q}</div>
+            ${optsHTML}
+            <div class="exp-box"></div>
+        `;
+        container.appendChild(qBox);
+    });
+}
+
+window.checkAnswer = function(el, isCorrect, exp) {
+    const parent = el.parentElement;
+    parent.querySelectorAll('.option').forEach(o => o.style.pointerEvents = 'none');
+    
+    if (isCorrect) {
+        el.classList.add('correct');
+    } else {
+        el.classList.add('wrong');
+    }
+
+    const expBox = parent.querySelector('.exp-box');
+    expBox.style.display = 'block';
+    expBox.innerHTML = `<strong>Explanation:</strong> ${exp}`;
+}
+
+loadRevision();
+</script>
+</body>
+</html>
