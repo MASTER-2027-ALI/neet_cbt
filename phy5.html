@@ -262,12 +262,14 @@ const questions = [
     { q: "117. A body with mass 5 kg is acted upon by a force F = (-3î + 4ĵ) N. If its initial velocity at t = 0 is u = (6î - 12ĵ) ms⁻¹, the time at which it will just have a velocity along the Y-axis is", img: "images/phy37-q117.png", opts: ["never", "10 s", "2 s", "15 s"], ans: 1, exp: "a = -0.6î + 0.8ĵ. v_x = 6 - 0.6t = 0 => t = 10s." },
     { q: "118. A car of mass m starts from rest and acquires a velocity along east, v = v î (v > 0) in 2 s. Assuming the car moves with uniform acceleration, the force exerted on the car is", img: "images/phy37-q118.png", opts: ["mv/2 eastward and is exerted by the car engine", "mv/2 eastward and is due to the friction on the tyres exerted by the road", "more than mv/2 eastward exerted due to the engine and overcomes the friction of the road", "mv/2 exerted by the engine"], ans: 1, exp: "External force is friction from the road. F = ma = mv/2 eastward." }
 ];
+</script>
 
+<script src="shuffle-helper.js"></script>
+
+<script>
 // ============================================================
 // QUIZ LOGIC
 // ============================================================
-<script src="shuffle-helper.js"></script>
-    <script>
 const totalQ = questions.length;
 let currentQ = 0;
 const userAnswers = new Array(totalQ).fill(null);
@@ -394,14 +396,18 @@ function showResult() {
     document.getElementById('resultModal').classList.add('show');
 }
 
+
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
 function resetQuiz() {
-    if (!confirm('Are you sure you want to reset the quiz?')) return;
-    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }(function(){const o=JSON.parse(JSON.stringify(questions));for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}for(let i=0;i<questions.length;i++)questions[i]=o[i];})();
+    if (!confirm('Are you sure you want to reset the quiz? (Questions will be reshuffled)')) return;
+    window.applyShuffle();
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
     correctCount = 0; wrongCount = 0; currentQ = 0;
     document.getElementById('resultModal').classList.remove('show');
     renderQuestion();
 }
-
 renderPalette();
 renderQuestion();
 // ========================================
