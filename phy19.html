@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 51: Moving Charges and Magnetism - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 51: Moving Charges and Magnetism</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script src="keys.js"></script>
+<script src="autosave.js"></script>
+<script src="shuffle.js"></script>
+<script>
+const questions = [
+    { q: "1. If a proton is projected in a direction perpendicular to a uniform magnetic field with velocity v and an electron is projected along the lines of force, what will happen to proton and electron?", img: "", opts: ["The electron will travel along a circle with constant speed and the proton will move along a straight line", "Proton will move in a circle with constant speed and there will be no effect on the motion of electron", "There will not be any effect on the motion of electron and proton", "The electron and proton both will follow the path of a parabola"], ans: 1, exp: "For proton, v ⊥ B and for electron v || B. So, force on proton = q(v × B) = Bqv whereas, force on electron = 0." },
+    { q: "2. Which of the following diagrams is correct?", img: "images/phy19-q2.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 2, exp: "Direction of force can be found by left hand rule. As we know the direction of F is the direction of cross product of velocity v and magnetic field B, which is perpendicular to the plane containing v and B." },
+    { q: "3. Magnetic field produced by a wire carrying current", img: "", opts: ["is parallel along the axis of wire", "is perpendicular to the plane of the wire", "forms circular loops along the axis of wire and coplanar to the wire", "direction of field is not constant"], ans: 3, exp: "The Oersted found that the alignment of the magnetic needle is tangential to an imaginary circle which has the straight current-carrying wire, as its centre has its plane perpendicular to the wire." },
+    { q: "4. An electron is travelling horizontally towards East. A magnetic field in vertically downward direction exerts a force on the electron along", img: "", opts: ["East", "West", "North", "South"], ans: 3, exp: "If an electron is travelling horizontally towards East and magnetic field in vertically downward, then according to left hand rule. So, force on electron is towards North." },
+    { q: "5. If a particle of charge 10⁻¹² C moving along the X̂-direction with a velocity 10⁵ ms⁻¹ experiences a force of 10⁻¹⁰ N in Ŷ-direction due to magnetic field, then the minimum magnetic field is", img: "", opts: ["6.25 × 10³ T in Ẑ-direction", "10⁻¹⁵ T in Ẑ-direction", "6.25 × 10⁻³ T in Ẑ-direction", "10⁻³ T in Ẑ-direction"], ans: 3, exp: "Magnetic field, i.e., B = F/qv = 10⁻¹⁰/(10⁻¹² × 10⁵) = 10⁻³ Wb m⁻². So, according to left hand rule, magnetic field acting along Z-axis." },
+    { q: "6. When a charged particle moves in the region of magnetic field, then", img: "", opts: ["magnitude of its velocity keeps on changing", "velocity of particle remains constant", "direction of momentum keeps on changing", "kinetic energy of particle keeps on changing"], ans: 2, exp: "When a charged particle moves in the region of magnetic field, then force is perpendicular to the velocity and it produces a change of direction." },
+    { q: "7. A proton enters a magnetic field of flux density 1.5 Wbm⁻² with a velocity of 2 × 10⁷ ms⁻¹ at an angle of 30° with the field. The force on the proton will be", img: "", opts: ["2.4 × 10⁻¹² N", "0.24 × 10⁻¹² N", "24 × 10⁻¹² N", "0.024 × 10⁻¹² N"], ans: 0, exp: "Net force on the proton, i.e., F = Bqv sinθ = 1.5 × 1.6 × 10⁻¹⁹ × 2 × 10⁷ × sin 30° = 2.4 × 10⁻¹² N." },
+    { q: "8. An ionised gas contains both positive and negative ions. If it is subjected simultaneously to an electric field along the +x-direction and a magnetic field along the +z-direction, then", img: "", opts: ["positive ions deflect towards +y-direction and negative ions towards -y-direction", "all ions deflect towards +y-direction", "all ions deflect towards -y-direction", "positive ions deflect towards -y-direction and negative ions towards +y-direction"], ans: 2, exp: "As the electric field is switched on, positive ion will start to move along positive x-direction and negative ion along negative x-direction. Current associated with motion of both types of ions is along positive x-direction. According to Fleming's left hand rule force on both types of ions will be along negative y-direction." },
+    { q: "9. A current-carrying wire of area A, length l, number of density of charge carriers n is placed in a region of external magnetic field B. What will be net force on charged carriers?", img: "", opts: ["(nAl)q (v_d × B)", "q (v_d × B)", "nq (v_d × B)", "Alq (v_d × B)"], ans: 0, exp: "The total number of mobile charge carriers in wire will be nAl. For a steady current I in this conducting wire, we may assume that each mobile carrier has an average drift velocity v_d. In the presence of an external magnetic field B, the force on these carriers is given by F = (nAl)q (v_d × B)." },
+    { q: "10. A current-carrying closed loop in the form of a right angled isosceles ΔABC is placed in a uniform magnetic field acting along AB. If the magnetic force on the arm BC is F, then force on the arm AC is", img: "images/phy19-q10.png", opts: ["-F", "F", "√2 F", "-√2 F"], ans: 0, exp: "According to the question, F_AB + F_BC + F_CA = 0. (∵ F_AB = 0). F_BC + F_CA = 0 => F_CA = -F_BC = -F." },
+    { q: "11. A square current-carrying loop is suspended in a uniform magnetic field acting in the plane of the loop. If the force on one arm of the loop is F, the net force on the remaining three arms of the loop is", img: "", opts: ["3 F", "-F", "-3 F", "F"], ans: 1, exp: "When a current carrying closed loop is placed in a uniform magnetic field, F_net = 0, only torque acts. So, F_remaining + F_one = 0 => F_remaining = -F." },
+    { q: "12. An electron enters a region of magnetic field perpendicularly with a speed of 3 × 10⁷ ms⁻¹. Strength of magnetic field is 6 × 10⁻⁴ T. Frequency and energy of electron respectively are", img: "", opts: ["2 MHz, 25 keV", "20 MHz, 2.5 keV", "20 MHz, 25 keV", "2 MHz, 2.5 keV"], ans: 3, exp: "r = mv/qB = (9 × 10⁻³¹ × 3 × 10⁷)/(1.6 × 10⁻¹⁹ × 6 × 10⁻⁴) = 28 × 10⁻² m = 28 cm. Frequency, v = v/(2πr) = 20 × 10⁶ s⁻¹ = 20 MHz. Energy, E = (1/2)mv² = (1/2)(9 × 10⁻³¹)(3 × 10⁷)² = 4 × 10⁻¹⁶ J = 2.5 keV." },
+    { q: "13. Which one is a correct figure to represent path of a moving charge in magnetic field?", img: "images/phy19-q13.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 3, exp: "When a particle moves perpendicular to the magnetic field. It has a tendency to perform circular motion in a plane perpendicular to the magnetic field. When this is coupled with the velocity parallel to the field, then resulting trajectory will be a helix along the magnetic field line as shown in figure." },
+    { q: "14. A proton, a deuteron and an α-particle enter a region of perpendicular magnetic field (to their velocities) with same kinetic energy. If r_p, r_d and r_α are the radii of circular paths of these particles, then", img: "", opts: ["r_α = r_d < r_p", "r_α = r_d = r_p", "r_α < r_d < r_p", "r_α > r_d > r_p"], ans: 0, exp: "As we know that radius of circle, r = mv/Bq = (1/B)√(2m²v²/q²) = (1/Bq)√(2mE). Energy is same. So, r ∝ √m/q but in case of deuteron and α-particle q is same and q for proton is least. r_p > r_α = r_d." },
+    { q: "15. Two particles of masses m_a and m_b with same charge are projected in a perpendicular magnetic field. They travel along circular path of radii r_a and r_b such that r_a > r_b. Which is correct?", img: "", opts: ["m_a v_a > m_b v_b", "m_a > m_b and v_a > v_b", "m_a = m_b and v_a > v_b", "m_b v_b > m_a v_a"], ans: 0, exp: "Radius of path, r = mv/qB. Given, r_a > r_b => m_a v_a/qB > m_b v_b/qB => m_a v_a > m_b v_b." },
+    { q: "16. A particle of mass m and charge q moves with a constant velocity v along the positive x-direction. It enters a region containing a uniform magnetic field B directed along the negative z-direction, extending from x = a to x = b. The minimum value of v required so that the particle can just enter the region x > b is", img: "", opts: ["qb B/m", "q (b - a) B/m", "q aB/m", "q (b + a) B/2m"], ans: 1, exp: "The particle moves in a circular path of radius r in the magnetic field. It can just enter the region x > b for r ≥ (b - a). Now, r = mv/qB ≥ (b - a). or v ≥ q(b - a)B/m => v_min = q(b - a)B/m." },
+    { q: "17. An α-particle with a specific charge of 2.5 × 10⁷ C/kg moves with a speed of 2 × 10⁵ ms⁻¹ in a perpendicular magnetic field of 0.05 T. The radius of circular path described by the particle is", img: "", opts: ["8 cm", "4 cm", "16 cm", "2 cm"], ans: 2, exp: "Radius of circular path followed by a particle, r = mv/Bq = v/(B(q/m)) = 2 × 10⁵ / (0.05 × 2.5 × 10⁷) = 16 cm." },
+    { q: "18. A proton of energy 1 MeV describes a circular path in plane at right angles to a uniform magnetic field of 6.28 × 10⁻⁴ T. The mass of proton is 1.7 × 10⁻²⁷ kg. The frequency of proton is nearly equal to", img: "", opts: ["10⁷ Hz", "10⁵ Hz", "10⁶ Hz", "10⁴ Hz"], ans: 3, exp: "As we know that frequency of proton, f = 1/T = qB/2πm = (1.6 × 10⁻¹⁹ × 6.28 × 10⁻⁴)/(2 × (22/7) × 1.67 × 10⁻²⁷) ≈ 10⁴ Hz." },
+    { q: "19. A proton of mass 1.67 × 10⁻²⁷ kg and charge 1.6 × 10⁻¹⁹ C is projected with a speed of 2 × 10⁶ ms⁻¹ at an angle of 60° to the X-axis. If a magnetic field of 0.104 T is applied along Y-axis, then path of proton is", img: "", opts: ["a circle of radius 0.2 m and time period of π × 10⁻⁷ s", "a circle of radius 0.1 m and time period 2π × 10⁻⁷ s", "a helix of radius 0.2 m and time period of 2π × 10⁻⁷ s", "a helix of radius 0.2 m and time period of 4π × 10⁻⁷ s"], ans: 2, exp: "As velocity v component along magnetic field B. So, path is helical. Radius of a helix, r = mv_⊥/qB = (1.67 × 10⁻²⁷ × 2 × 10⁶ × sin 60°)/(0.104 × 1.6 × 10⁻¹⁹) => r = 0.2 m. Time period, T = 2πm/qB = 2π × 10⁻⁷ s." },
+    { q: "20. A straight wire of mass 200 g and length 1.5 m carries a current of 2 A. It is held in mid-air by a uniform horizontal magnetic field. What is the magnitude of magnetic field?", img: "images/phy19-q20.png", opts: ["1 T", "0.65 T", "0.35 T", "0.85 T"], ans: 1, exp: "There is an upward force F of magnitude IlB. For mid-air suspension, this must be balanced by the force due to gravity. mg = IlB => B = mg/Il = (0.2 × 9.8)/(2 × 1.5) = 0.65 T." },
+    { q: "21. An electron moves in a circular orbit with a uniform speed v. It produces a magnetic field B at the centre of the circle. The radius of the circle is proportional to", img: "", opts: ["B/v", "v/B", "√(v/B)", "√(B/v)"], ans: 1, exp: "The radius of circular path, r = mv/qB => r ∝ v/B." },
+    { q: "22. A deuteron of kinetic energy 50 keV is describing a circular orbit of radius 0.5 m in a plane perpendicular to magnetic field B. The kinetic energy of the proton that describes a circular orbit of radius 0.5 m in the same plane with the same magnetic field B is", img: "", opts: ["25 keV", "50 keV", "200 keV", "100 keV"], ans: 3, exp: "r = mv/qB = √(2mK)/qB => (r_p/r_d)² = (m_p K_p)/(m_d K_d). 1 = (m_p K_p)/(2m_p K_d) => K_p = 2K_d = 2 × 50 = 100 keV." },
+    { q: "23. In the given figure, E and B are magnitudes of electric and magnetic fields which are acting on a moving electron as shown. The direction of velocity of electron is along X-axis. Then, force on electron is given by", img: "images/phy19-q23.png", opts: ["F = q(E + vB)ĵ", "F = q(E - vB)ĵ", "F = q(E + vB)k̂", "F = q(E - vB)k̂"], ans: 1, exp: "When electric and magnetic fields are perpendicular to each other. F_E = qE = qEĵ, F_B = qv × B = q(vî × Bk̂) = -qvBĵ (∵ î × k̂ = -ĵ). Therefore, force on electron is given by F = q(E - vB)ĵ." },
+    { q: "24. An electron moves straight inside a charged parallel plate capacitor. Plates of capacitor have charge density σ. The space between plates is filled with constant magnetic field of induction B. Time taken by electron to pass through the region is", img: "images/phy19-q24.png", opts: ["eσ/(ε₀lB)", "ε₀lB/σ", "σε/(ε₀B)", "ε₀B/eσ"], ans: 1, exp: "Velocity of a particle, v = E/B = σ/(ε₀B). Time taken by electron to pass through the region, t = l/v = lε₀B/σ." },
+    { q: "25. A cyclotron is used to accelerate charged particles or ions to high energies. It uses", img: "", opts: ["only electric field", "only magnetic field", "Both electric and magnetic fields", "None of the above"], ans: 2, exp: "The cyclotron is a machine to accelerate charged particles or ions to high energies. The cyclotron used both electric and magnetic fields in combination to increase the energy of charged particles." },
+    { q: "26. An alternating electric field of frequency v, is applied across the dees (radius = R) of a cyclotron that is being used to accelerate protons (mass = m). The operating magnetic field (B) used in the cyclotron and the kinetic energy (K) of the proton beam produced by it, are given by", img: "", opts: ["B = mv/e and K = 2mπ²v²R²", "B = 2πmv/e and K = m²πvR²", "B = 2πmv/e and K = 2mπ²v²R²", "B = mv/e and K = m²πvR²"], ans: 2, exp: "Frequency, v = eB/2πm. KE = 1/2 mv² and radius R = mv/eB. Here, velocity v = πR/(T/2) = 2πR/T = 2πRv. Radius, R = m(2πRv)/eB. Magnetic field, B = 2πmv/e. Kinetic energy, K = 1/2 m(2πRv)² = 2mπ²v²R²." },
+    { q: "27. A proton and an α-particle both enter a region of uniform magnetic field B, moving at right angles to the field B. If the radius of circular orbits for both the particles is equal and the kinetic energy acquired by proton is 1 MeV, the energy acquired by the α-particle will be", img: "", opts: ["4 MeV", "0.5 MeV", "1.5 MeV", "1 MeV"], ans: 3, exp: "Radius in magnetic fields of circular orbit, R = mv/qB = √(2mE)/qB and total energy of a moving particle in a circular orbit, E = q²B²R²/2m. For proton entering in a region of magnetic field, E₁ = e²B²R²/2m_p ...(i). For α-particle, E₂ = (2e)²B²R²/(2(4m_p)) ...(ii). Dividing Eq. (ii) by Eq. (i), E₂/E₁ = 1 => E₂ = E₁ = 1 MeV." },
+    { q: "28. Cyclotron frequency of an electron circulating in a magnetic field of 1T is", img: "", opts: ["28 MHz", "280 MHz", "2.8 GHz", "28 GHz"], ans: 3, exp: "Frequency of an electron, f = Bq/2πm = (1 × 1.6 × 10⁻¹⁹)/(2 × 3.14 × 9.1 × 10⁻³¹) = 28 GHz." },
+    { q: "29. An electron is moving in a cyclotron at a speed of 3.2 × 10⁷ ms⁻¹ in a magnetic field of 5 × 10⁻⁴ T perpendicular to it. What is the frequency of this electron? (q = 1.6 × 10⁻¹⁹ C, m_e = 9.1 × 10⁻³¹ kg)", img: "", opts: ["1.4 × 10⁵ Hz", "1.4 × 10⁷ Hz", "1.4 × 10⁶ Hz", "1.4 × 10⁹ Hz"], ans: 1, exp: "v = 3.2 × 10⁷ ms⁻¹ => B = 5 × 10⁻⁴ T. The frequency of electron, v = qB/2πm = (1.6 × 10⁻¹⁹ × 5 × 10⁻⁴)/(2 × 3.14 × 9.1 × 10⁻³¹) = 1.4 × 10⁷ Hz = 14 MHz." },
+    { q: "30. Which of the following figures correctly depicts the direction of magnetic field of a current-carrying coil?", img: "images/phy19-q30.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 0, exp: "Curl the palm of your right hand around the circular wire with the fingers pointing in the direction of the current. The right hand thumb gives the direction of the magnetic field." },
+    { q: "31. A tightly wound coil of 100 turns with radius 10 cm, magnitude of carrying-current in coil is 1 A, what will be the magnitude of magnetic field at centre of coil?", img: "", opts: ["6.28 × 10⁻⁶ T", "6.28 × 10⁻⁷ T", "6.28 × 10⁻⁵ T", "6.28 × 10⁻⁴ T"], ans: 3, exp: "Since, the coil is tightly wound, we may take each circular element to have the same radius R = 10 cm = 0.1 m. The number of turns N = 100. The magnitude of the magnetic field is B = μ₀NI/2R = (4π × 10⁻⁷ × 10² × 1)/(2 × 10⁻¹) = 2π × 10⁻⁴ = 6.28 × 10⁻⁴ T." },
+    { q: "32. A copper coil of 100 turns, radius 8.0 × 10⁻² m carries a current of 0.40 A. Magnitude of magnetic field at centre of coil is", img: "", opts: ["B = 3.1 × 10⁻³ T", "B = 3.1 × 10⁻² T", "B = 3.1 × 10⁻⁴ T", "B = 3.1 × 10⁻⁷ T"], ans: 2, exp: "Magnetic field at the centre of the loop, B = μ₀NI/2r = (4π × 10⁻⁷ × 100 × 0.4)/(2 × 8.0 × 10⁻²) = 3.1 × 10⁻⁴ T." },
+    { q: "33. Two concentric circular coils X and Y of radii 16 cm and 10 cm lie in same vertical plane containing North to South direction. Coil X has 20 turns, coil Y has 25 turns and current in coil X is 16 A whereas in coil Y is 18 A. Current in X is anti-clockwise and in Y is clockwise. For an observer facing West and looking at coils, magnetic field at the centre of assembly of coils is", img: "", opts: ["1.57 × 10⁻³ T towards East", "1.57 × 10⁻³ T towards West", "1.57 × 10⁻³ T towards North", "15.7 × 10⁻³ T towards South"], ans: 1, exp: "The magnitude of magnetic field in current-carrying circular loop, B = μ₀NI/2R. B_X = (4π × 10⁻⁷ × 20 × 16)/(2 × 0.16) = 4π × 10⁻⁴ T. B_Y = (4π × 10⁻⁷ × 25 × 18)/(2 × 0.1) = 9π × 10⁻⁴ T. B_net = B_Y - B_X = 5π × 10⁻⁴ T = 1.57 × 10⁻³ T (towards west)." },
+    { q: "34. A conducting loop carrying a current I is placed in a uniform magnetic field pointing into the plane of the paper as shown in figure. The loop will have a tendency to", img: "images/phy19-q34.png", opts: ["contract", "expand", "move towards positive X-axis", "move towards negative X-axis"], ans: 1, exp: "Net force on a current-carrying loop in a uniform magnetic field is zero. Hence, the loop cannot translate. So, options (c) and (d) are wrong. From Fleming's left hand rule, we can see that if magnetic field is perpendicular to paper inwards and current in the loop is clockwise (as shown), the magnetic force F_m on each element of the loop is radially outwards or the loops will have a tendency to expand." },
+    { q: "35. A straight long wire carries a current of 35 A. Its magnitude of magnetic field at a distance of 0.20 m from the wire is", img: "", opts: ["3.5 × 10⁻⁵ T", "3.5 × 10⁵ T", "3.5 T", "7 T"], ans: 0, exp: "Magnetic field due to a straight current-carrying conductor, B = μ₀I/2πr = (4π × 10⁻⁷ × 35)/(2π × 0.20) = 3.5 × 10⁻⁵ T." },
+    { q: "36. Vector form of Biot-Savart's law is", img: "", opts: ["dB = (μ₀/4π) (I × dl)/r²", "dB = I (dl × r)/r³", "dB = (μ₀/4π) (I dl × r)/r³", "dB = (μ₀/4π) (I dl × r)/r"], ans: 2, exp: "Vector notation of Biot-Savart's law, dB = (μ₀/4π) (I dl × r)/r³." },
+    { q: "37. An element Δl = Δx î is placed at the origin and carries a current I = 10 A. If Δx = 1 cm, magnetic field at point P is", img: "images/phy19-q37.png", opts: ["4 × 10⁻⁸ k̂ T", "4 × 10⁻⁸ î T", "4 × 10⁻⁸ ĵ T", "-4 × 10⁻⁸ ĵ T"], ans: 0, exp: "The magnitude of magnetic field, |dB| = (μ₀/4π) (I dl sinθ)/r² = (10⁻⁷ × 10 × 10⁻²)/(25 × 10⁻²) = 4 × 10⁻⁸ T. As, dl × r = Δx î × y ĵ = y Δx (î × ĵ) = y Δx k̂. So, the direction of the field is in the +Z-direction." },
+    { q: "38. There is a thin conducting wire carrying current. What is the value of magnetic field induction at any point on the conductor itself?", img: "", opts: ["1", "Zero", "-1", "Either (a) or (b)"], ans: 1, exp: "|dB| = (μ₀/4π) (I dl sinθ)/r². If point lies on the conductor, then θ = 0° or 180° and sin θ = 0, then dB = 0. Hence, the magnetic field induction at any point on the conductor itself is zero." },
+    { q: "39. A straight wire carrying a current of 12 A is sent into a semicircular loop of radius 2.0 cm. What will be magnetic field at the centre of the semicircular loop?", img: "images/phy19-q39.png", opts: ["B = 1.9 × 10⁻⁴ T", "B = 1.9 × 10⁴ T", "B = 1.9 × 10⁻⁴ T, ⊗", "B = 1.9 × 10⁴ T, ⊗"], ans: 2, exp: "B = (μ₀/4π)(πi/R) = 10⁻⁷ × (22 × 12)/(7 × 2 × 10⁻²) = 1.9 × 10⁻⁴ T. Thus, B is 1.9 × 10⁻⁴ T normal to the plane of the paper going into it." },
+    { q: "40. If a current loop of radius R carrying an anti-clockwise current I is placed in a plane parallel to YZ-plane, then magnetic field at a point on the axis of the loop is given by", img: "", opts: ["B = (μ₀IR²)/(2(x² + R²)^(3/2)) ĵ", "B = (μ₀IR²)/(2(x² + R²)^(3/2)) k̂", "B = (μ₀IR²)/(2(x² + R²)^(3/2)) î", "B = (μ₀IR²)/(2(x² + R²)^(3/2)) (î × k̂)"], ans: 2, exp: "A current loop of radius R carrying anti-clockwise current I placed in plane parallel to YZ-plane. Its magnetic field at a point on the axis is along x-axis, B = (μ₀IR²)/(2(x² + R²)^(3/2)) î." },
+    { q: "41. An infinitely long conductor PQR is bent to form a right angle as shown. A current I flows through PQR. The magnetic field due to this current at the point M is H₁. Now, another infinitely long straight conductor QS is connected at Q, so that the current is I/2 in QR as well as in QS. The current in PQ remaining unchanged. The magnetic field at M is now H₂. The ratio H₁/H₂ is given by", img: "images/phy19-q41.png", opts: ["1/2", "1", "2/3", "2"], ans: 2, exp: "Magnetic field at any point lying on the current-carrying straight conductor is zero. Here, H₁ = magnetic field at M due to current in PQ. H₂ = magnetic field at M due to QR + magnetic field at M due to QS + magnetic field at M due to PQ = 0 + H₁/2 + H₁ = 3/2 H₁ => H₁/H₂ = 2/3." },
+    { q: "42. A polygon shaped wire is inscribed in a circle of radius R. The magnetic induction at the centre of polygon, when current flows through the wire is", img: "images/phy19-q42.png", opts: ["(μ₀nI/2πR) tan(2π/n)", "(μ₀nI/2πR) tan(4π/n)", "(μ₀nI/2πR) tan(π/n)", "(μ₀nI/2πR) tan(π/n²)"], ans: 2, exp: "Angle subtended at centre by any side of = 2π/n. => 2θ = 2π/n; θ = π/n. Field due to one side, B₁ = (μ₀I/4πr)(sinθ + sinθ). But, r = R cosθ = R cos(π/n) and sinθ = sin(π/n). B₁ = (μ₀I/4πR cos(π/n)) × 2sin(π/n) = (μ₀I/2πR) tan(π/n) and so field on n sides at centre will add up to form net field B_centre = (μ₀nI/2πR) tan(π/n)." },
+    { q: "43. Two identical wires A and B, each of length l, carry the same current I. Wire A is bent into a circle of radius R and wire B is bent form a square of side a. If B_A and B_B are the values of magnetic field at the centres of the circle and square respectively, then the ratio B_A/B_B is", img: "", opts: ["π²/8", "π²/(16√2)", "π²/16", "π²/(8√2)"], ans: 3, exp: "B at centre of a circle = μ₀I/2R. B at centre of a square = 4 × (μ₀I/4π(l/2))(sin45° + sin45°) = 4√2 μ₀I/2πl. Now, R = L/2π and l = L/4 (as L = 2πR = 4l) where, L = length of wire. B_A = (μ₀I/2(L/2π)) = π(μ₀I/L). B_B = 4√2 μ₀I/2π(L/4) = 8√2 μ₀I/πL = 8√2/π (μ₀I/L). B_A : B_B = π² : 8√2." },
+    { q: "44. The magnetic field at the centre of a circular current carrying-conductor of radius r is B_c. The magnetic field on its axis at a distance r from the centre is B_a. The value of B_c : B_a will be", img: "", opts: ["1 : √2", "1 : 2√2", "2√2 : 1", "√2 : 1"], ans: 2, exp: "Magnetic field at centre of current-carrying coil, B_c = μ₀I/2r ...(i). Magnetic field at axial point due to a current-carrying coil at distance r, d = r. B_c = μ₀Ir²/(2(r² + d²)^(3/2)) => B_a = μ₀Ir²/(2(2r²)^(3/2)) ...(ii). Now, B_c/B_a = (μ₀I/2r) × (2(2r²)^(3/2))/(μ₀Ir²) = 2√2. B_c : B_a = 2√2 : 1." },
+    { q: "45. A long straight wire of radius a carries a steady current I. The current is uniformly distributed over its cross-section. The ratio of the magnetic fields B and B' at radial distances a/2 and 2a respectively, from the axis of the wire is", img: "", opts: ["1/2", "1", "4", "1/4"], ans: 1, exp: "Consider two amperian loops of radius a/2 and 2a as shown in the diagram. Applying Ampere's circuital law for these loops, we get ∮B·dL = μ₀I_enclosed. For the smaller loop, B × 2π(a/2) = μ₀ × I/πa² × π(a/2)² = μ₀I × 1/4 = μ₀I/4 => B' = μ₀I/4πa at distance a/2 from the axis of the wire. Similarly, for bigger amperian loop B' × 2π(2a) = μ₀I (total current enclosed by Amperian loop is I,) => B' = μ₀I/4πa at distance 2a from the axis of the wire. So, ratio of B/B' = 1." },
+    { q: "46. For a cylindrical conductor of radius a, which of the following graphs shows a correct relationship of B versus r?", img: "images/phy19-q46.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 2, exp: "For a cylindrical conductor for r < a, B ∝ r and for r > a, B ∝ (1/r). So, graph (c) is correct." },
+    { q: "47. Which of the following represent a correct figure to display of magnetic field lines due to a solenoid?", img: "images/phy19-q47.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 2, exp: "Figure (c) correctly represents magnetic field lines due to a solenoid." },
+    { q: "48. A solenoid of length 0.5 m has a radius of 1 cm and is made up of 500 turns. It carries a current of 5A. What is the magnetic field inside the solenoid?", img: "", opts: ["6.28 × 10⁻³ T", "6.28 × 10³ T", "6.28 × 10⁻⁵ T", "6.28 × 10⁵ T"], ans: 0, exp: "The number of turns per unit length is n = 500/0.5 = 1000 turns/m. The length (l) = 0.5 m and radius (r) = 0.01 m. Thus, l/a = 50 i.e., l >> a. Hence, we can use the long solenoid formula, namely, B = μ₀nI = 4π × 10⁻⁷ × 10³ × 5 = 6.28 × 10⁻³ T." },
+    { q: "49. A long solenoid has 20 turns cm⁻¹. The current necessary to produce a magnetic field of 20 mT inside the solenoid is approximately", img: "", opts: ["1A", "2 A", "4 A", "8 A"], ans: 3, exp: "By the formula, B = μ₀nI or 20 × 10⁻³ = 4π × 10⁻⁷ × 2000 × I or I = (20 × 10⁻³)/(4π × 10⁻⁷ × 2000) => I ≈ 8 A." },
+    { q: "50. For a toroid, magnetic field strength in the region enclosed by wire turns is given by", img: "", opts: ["B = μ₀nI, where, n = number of turns", "B = μ₀(I/n), n = number of turns per metre", "B = μ₀I/2r, r = mean radius", "B = μ₀NI/2πr, [N = number of turns, r = radius of toroid]"], ans: 3, exp: "For toroid, applying Ampere's circuital law, B(2πr) = μ₀NI => B = μ₀NI/2πr where, B = magnetic field of a toroid, N = number of turns of toroidal coil, r = radius of toroid." },
+    { q: "51. A toroid of core of inner radius 0.25 m and outer radius 0.26 m around which 3500 turns of a wire are wound. If the current in the wire is 11 A, then magnetic field inside the core of the toroid is", img: "", opts: ["3 × 10² T", "3 × 10⁻² T", "3 × 10⁻⁷ T", "3 × 10⁷ T"], ans: 1, exp: "Mean radius, r_m = (0.25 + 0.26)/2 = 25.5 × 10⁻² m. n = N/2πr_m = 3500/(2π × 25.5 × 10⁻²). Magnetic field of a toroid B = μ₀nI = 4π × 10⁻⁷ × 3500/(2π × 25.5 × 10⁻²) × 11 = 3 × 10⁻² T." },
+    { q: "52. If two parallel current-carrying conductors placed 1 m apart in vacuum are placed such that each carries 1 A current, then there is a force of", img: "", opts: ["2 × 10⁻⁷ N per metre of length", "2 × 10⁷ N per metre of length", "9 × 10⁹ N per metre of length", "9 × 10⁻⁹ N per metre of length"], ans: 0, exp: "The force acting per unit length, F/l = μ₀/4π × 2I₁I₂/d. When d = 1m, l = 1m, I₁ = I₂ = 1 A. Then, F = 2 × 10⁻⁷ Nm⁻¹." },
+    { q: "53. Two identical long conducting wires AOB and COD are placed at right angle to each other, with one above other such that O is their common point for the two. The wires carry I₁ and I₂ currents, respectively. Point P is lying at distance d from O along a direction perpendicular to the plane containing the wires. The magnetic field at the point P will be", img: "images/phy19-q53.png", opts: ["(μ₀/2πd)(I₁/I₂)", "(μ₀/2πd)(I₁ + I₂)", "(μ₀/2πd)(I₁² - I₂²)", "(μ₀/2πd)(I₁² + I₂²)^(1/2)"], ans: 3, exp: "The point P is lying at a distance d along the Z-axis. |B₁| = μ₀I₁/2πd and |B₂| = μ₀I₂/2πd. B_net = √(B₁² + B₂²) => B_net = μ₀/2πd (I₁² + I₂²)^(1/2)." },
+    { q: "54. Two long parallel straight wires A and B carrying currents of 4.0 A and 5.0 A in same direction separated by a distance of 4 × 10⁻² m. The force on a 0.20 m section of wire A is", img: "", opts: ["2 × 10⁻⁵ N towards B", "2 × 10⁻⁵ N away from B", "2 × 10⁻⁵ N perpendicular to B", "2 × 10⁻⁵ N parallel to B"], ans: 0, exp: "I₁ = 4A, I₂ = 5A, d = 4 × 10⁻² m, l = 0.20 m. Force on a current carrying wire, F = μ₀I₁I₂l/2πd = (4π × 10⁻⁷ × 4 × 5)/(2π × 4 × 10⁻²) × 0.20 = 2 × 10⁻⁵ N towards B." },
+    { q: "55. Two very long, straight and parallel wires carry steady currents I and I, respectively. The distance between the wires is d. At a certain instant of time a point charge q is at a point equidistant from the two wires in the plane of the wires. Its instantaneous velocity v is perpendicular to this plane. The magnitude of the force due to the magnetic field acting on the charge at their instant is", img: "images/phy19-q55.png", opts: ["(μ₀Iqv)/(2πd)", "(μ₀Iqv)/(πd)", "(2μ₀Iqv)/(πd)", "0"], ans: 3, exp: "According to given information, following figure can be drawn, which shows that direction of magnetic field is along the direction of motion of charge, so net force on it is zero." },
+    { q: "56. A square loop ABCD carrying a current i, is placed near and coplanar with a long straight conductor XY carrying a current I, the net force on the loop will be", img: "images/phy19-q56.png", opts: ["(μ₀Ii)/(2π)", "(2μ₀IiL)/(3π)", "(μ₀IiL)/(2π)", "(2μ₀Ii)/(3π)"], ans: 3, exp: "Consider the given figure, F_BA = μ₀IiL/(2π(L/2)) => F_CD = μ₀IiL/(2π(3L/2)). Therefore, net force on the loop ABCD will be F_loop = F_BA - F_CD = μ₀IiL/2π [1/(L/2) - 1/(3L/2)] = 2μ₀Ii/(3π)." },
+    { q: "57. The wire which connects the battery of a car to its starter motor carries current of 300 A during starting. Force per unit length between wires (wires are 0.7 m long and 0.015 m distant apart) is", img: "", opts: ["1.2 Nm⁻¹ repulsive", "1.2 Nm⁻¹ attractive", "2.4 Nm⁻¹ repulsive", "2.4 Nm⁻¹ attractive"], ans: 0, exp: "The force acting per unit length of a wire, F/l = μ₀I₁I₂/2πd. Also I₁ and I₂ are opposite directions. They repel each other, F = 1.2 Nm⁻¹." },
+    { q: "58. Two thin long parallel wires separated by a distance d carry a current of I ampere in same direction. They will", img: "", opts: ["attract each other with a force of μ₀I²/2πd", "repel each other with a force of μ₀I²/2πd", "attract each other with a force of μ₀I²/2πd²", "repel each other with a force of μ₀I²/2πd²"], ans: 0, exp: "Current flows in same direction. Wires attract each other and F/l = μ₀I²/2πd." },
+    { q: "59. Three long, straight and parallel wires carrying currents are arranged as shown in the figure. The wire C which carries a current of 50 A is so replaced that it experiences no force. The distance of wire C from wire A is", img: "images/phy19-q59.png", opts: ["9 cm", "7 cm", "5 cm", "(d) 3 cm"], ans: 0, exp: "F_AC = F_BC => (μ₀/4π)(2 × 15 × 50/x) = (μ₀/4π)(2 × 50 × 10/(15 - x)). 15/x = 10/(15 - x) => 225 - 15x = 10x => 25x = 255 or x = 9 cm." },
+    { q: "60. A rectangular loop of sides 10 cm and 5 cm carrying a current I of 12 A is placed in different orientations as shown in the figures. If there is a uniform magnetic field of 0.3 T in the positive z-direction in which orientations the loop would be in (i) stable equilibrium and (ii) unstable equilibrium?", img: "images/phy19-q60.png", opts: ["(a) and (b) respectively", "(a) and (c) respectively", "(b) and (d) respectively", "(b) and (c) respectively"], ans: 2, exp: "Since, B is uniform only torque acts on a current-carrying loop. As, τ = M × B => |τ| = |M||B| sin θ. For orientation shown in (b) θ = 0°, τ = 0 (∵ stable equilibrium). and for (d) θ = π, τ = 0 (∵ unstable equilibrium)." },
+    { q: "61. A current-carrying loop is placed in a uniform magnetic field in four different orientations, I, II, III and IV. Arrange them in the decreasing order of potential energy.", img: "images/phy19-q61.png", opts: ["I > III > II > IV", "I > II > III > IV", "I > IV > II > III", "III > IV > I > II"], ans: 2, exp: "As we know, potential energy i.e., U = -MB cosθ, where θ = angle between normal to the plane of the coil and direction of magnetic field. The smaller the θ, the lesser the potential energy." },
+    { q: "62. A steady current i flows in a small square loop of wire of side L in a horizontal plane. The loop is now folded about its middle such that half of it lies in a vertical plane. Let μ₁ and μ₂ respectively denote the magnetic moments due to the current loop before and after folding. Then,", img: "images/phy19-q62.png", opts: ["μ₂ = 0", "μ₁ and μ₂ are in the same direction", "|μ₁|/|μ₂| = √2", "|μ₁|/|μ₂| = 1/√2"], ans: 2, exp: "As we know that initial magnetic moment = μ₁ = iL². After folding the loop, M = magnetic moment due to each part = i(L/2) × L = iL²/2 = μ₁/2. => μ₂ = M√2 = (μ₁/2) × √2 = μ₁/√2. So, |μ₁|/|μ₂| = √2." },
+    { q: "63. A coil in the shape of an equilateral triangle of side l is suspended between the pole pieces of a permanent magnet such that B is in plane of the coil. If due to a current i in the triangle a torque τ acts on it, the side l of the triangle is", img: "images/phy19-q63.png", opts: ["(2/√3)(τ/Bi)^(1/2)", "(2/√3)(τ/Bi)", "2(τ/(√3Bi))^(1/2)", "(1/√3)(τ/Bi)"], ans: 2, exp: "Torque acting on equilateral triangle in a magnetic field B is τ = M × B, τ = iAB sin θ (iA = M). Area of Δ LMN, A = (√3/4)l² and θ = 90° (∵ l = sides of triangle). Substituting the given values in the expression for torque, we have τ = i × (√3/4)l²B sin 90° = (√3/4)il²B (∵ sin 90° = 1). Hence, l = 2(τ/(√3Bi))^(1/2)." },
+    { q: "64. Torque on a current-carrying loop of magnetic moment m, placed in region of magnetic field B is given by", img: "", opts: ["τ = (1/2)m × B", "τ = μ₀m × B", "τ = (μ₀/4π)(m × B)", "τ = m × B"], ans: 3, exp: "Torque on current loop in a field is τ = m × B, where m is magnetic moment of a current carrying loop B is magnetic field." },
+    { q: "65. A current loop in a magnetic field", img: "", opts: ["experiences a torque whether the field is uniform or non-uniform in all orientations", "can be in equilibrium in one orientations", "can be equilibrium in two orientations, both the equilibrium states are unstable", "can be in equilibrium in two orientations, one stable while the other is unstable"], ans: 3, exp: "For parallel M is stable and for anti-parallel is unstable." },
+    { q: "66. A circular coil of 25 turns and radius 12 cm is placed in a uniform magnetic field of 0.5 T normal to the plane of the coil. If the current in the coil is 6 A, then total torque acting on the coil is", img: "", opts: ["zero", "3.4 N m", "3.8 N m", "4.4 N m"], ans: 0, exp: "The torque acting on the coil |τ| = |m × B| = mB sin θ. Here the circular coil is placed normal to the direction of magnetic field then the angle between the direction of magnetic moment (m) and magnetic field (B) is zero, then τ = mB sin θ = mB sin 0 = 0 => τ = 0." },
+    { q: "67. For a circular current loop magnitude of magnetic field on axis of loop at a point distant x from centre of loop (x >> R and magnetic dipole moment of loop is m = IA) is", img: "", opts: ["B = μ₀m/x³", "B = (μ₀/4π)(m/x³)", "B = (μ₀/4π)(2m/x³)", "B = (μ₀/4π)(mR/2πx³)"], ans: 2, exp: "For a loop at a point on its axis distant x from centre, B = μ₀IR²/(2(x² + R²)^(3/2)). For x >> R, B = μ₀R²I/2x³ => B = μ₀IA/2πx³. Hence, B = μ₀m/2πx³ = μ₀/4π × 2m/x³." },
+    { q: "68. Two similar coils are placed mutually perpendicular such that their centres coincide. At centre, the ratio of the magnetic field due to one coil and the resultant magnetic field of both coils for same current will be", img: "images/phy19-q68.png", opts: ["1 : √2", "1 : 2", "2 : 1", "√3 : 1"], ans: 0, exp: "For a single coil, magnetic field, B_s = μ₀I/2R T ...(i). For two coils magnetic field, B_T = √(B₁² + B₂²) = √2 μ₀I/2R ...(ii). On comparing Eq. (i) and Eq. (ii), we get B_s/B_T = 1/√2." },
+    { q: "69. Magnetic moment (or magnetic dipole moment) of a current-carrying coil is given by", img: "", opts: ["m = INA", "m = I/A", "m = NA", "m = NI/A"], ans: 0, exp: "Magnetic moment of a current-carrying loop is m = NIA where, N is number of turns, I is current flowing on a loop and A is area of cross-section of loop." },
+    { q: "70. The magnitude of the magnetic field at the centre of the tightly wound 150 turns coil of radius 12 cm carrying a current of 2A, is", img: "", opts: ["18 G", "19.7 G", "15.7 G", "17.7 G"], ans: 2, exp: "Here, N = 150, R = 12cm = 12 × 10⁻² m, I = 2A. B = μ₀NI/2R = (2π × 10⁻⁷ × 150 × 2)/(12 × 10⁻²) = 1.57 × 10⁻³ T = 15.7 × 10⁻⁴ T = 15.7 G." },
+    { q: "71. A loop of flexible wire of irregular shape carrying current is placed in an external field. Then,", img: "", opts: ["it rotates in a direction perpendicular to its axis", "it rotates along an axis perpendicular to its plane", "it does not show any change", "it assumes a circular shape"], ans: 3, exp: "Each segment experiences a force, so it tends to assume a circular shape." },
+    { q: "72. A circular current loop of magnetic moment M is in an arbitrary orientation in an external magnetic field B. The work done to rotate the loop by 90° about an axis perpendicular to its plane is", img: "", opts: ["MB", "√3/2 MB", "MB/2", "zero"], ans: 3, exp: "Work done = MB(1 - cos θ), θ = 0° so work done is zero." },
+    { q: "73. Magnetic field at the centre of a circular loop of area A is B. The magnetic moment of the loop will be", img: "", opts: ["BA²/μ₀π", "BA^(3/2)/μ₀π", "BA^(3/2)/μ₀π^(1/2)", "2BA^(3/2)/μ₀π^(1/2)"], ans: 2, exp: "Magnetic field at the centre of circular loop, B = μ₀/4π × 2πI/r = μ₀I/2r => I = 2Br/μ₀. Also, A = πr² or r = (A/π)^(1/2). Magnetic moment, M = IA = (2Br/μ₀)A = (2BA/μ₀) × (A/π)^(1/2) = 2BA^(3/2)/μ₀π^(1/2)." },
+    { q: "74. For hydrogen atom, which of the following figure correctly, shows the direction of magnetic moment related to revolving electron?", img: "images/phy19-q74.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 2, exp: "The uniform circular motion of the electron constitutes a current in anti-clockwise. The direction of the magnetic moment is into the plane of the paper and is indicated separately by ⊗." },
+    { q: "75. In a hydrogen atom, an electron revolves around the nucleus in an orbit of radius r with velocity v, the current corresponding to the revolving electron is", img: "", opts: ["I = er/(2πv)", "I = ev/2π", "I = ev/(2πr)", "I = ev/πr"], ans: 2, exp: "T is the time period of revolution. Let r be the orbital radius of the electron, and v the orbital speed. Then, T = 2πr/v, I = e/T. On substituting, we have I = ev/2πr." },
+    { q: "76. In a hydrogen atom, an electron moves in a circular orbit of radius 5.2 × 10⁻¹¹ m and produces a magnetic induction of 12.56 T at its centre. The current produced by the motion of the electron will be", img: "", opts: ["6.53 × 10⁻³ A", "13.25 × 10⁻¹⁰ A", "9.6 × 10⁶ A", "1.04 × 10⁻³ A"], ans: 3, exp: "Magnetic field on a current-carrying in a circular orbit i.e., B = μ₀I/2R. I = B × 2R/μ₀ = (12.56 × 2 × 5.2 × 10⁻¹¹)/(4π × 10⁻⁷) = 1.04 × 10⁻³ A." },
+    { q: "77. The value of Bohr magneton is", img: "", opts: ["9.27 × 10⁻²⁴ Am²", "9.27 × 10⁻²⁷ Am²", "8.8 × 10⁻¹⁰ Am²", "6.25 × 10⁻¹² Am²"], ans: 0, exp: "For n = 1, for a H₂ atom, μ_l min = e/4πm_e h = (1.60 × 10⁻¹⁹ × 6.63 × 10⁻³⁴)/(4 × 3.14 × 9.11 × 10⁻³¹) = 9.27 × 10⁻²⁴ Am² where, the subscript min stands for minimum. This value is called the Bohr magneton." },
+    { q: "78. Magnitude of angular magnetic moment associated with a revolving electron in a hydrogen atom will be", img: "", opts: ["μ_l = e/2m_e", "μ_l = -eI²/2m_e", "μ_l = -e/4m_e", "μ_l = -eI/2m_e"], ans: 3, exp: "There will be a magnetic moment, usually denoted by μ_l associated with this circulating current. Its magnitude is μ_l = Iπr² = evr/2. Multiplying and dividing the right hand side of the above expression by the electron mass m_e, We have μ_l = (e/2m_e)(m_e vr) = (e/2m_e)l. Here, l is the magnitude of the angular momentum of the electron about the central nucleus (orbital angular momentum). Vectorially, μ_l = -(e/2m_e)l. The negative sign indicates that the angular momentum of the electron is opposite in direction to the magnetic moment." },
+    { q: "79. A moving coil galvanometer is an instrument which", img: "", opts: ["is used to measure EMF", "is used to measure potential difference", "is used to measure resistance", "is a deflection instrument which gives a deflection when a current flows through its coil"], ans: 3, exp: "A moving coil galvanometer is a sensitive instrument which is used to measure a deflection when a current flows through its coil." },
+    { q: "80. In a moving coil galvanometer of coil of N -turns of area A have a spring of stiffness k. If coil is deflected by some angle φ due to flow of I current in uniform radial magnetic field B, then", img: "", opts: ["φ = (NAB/k)I", "φ = (k/BNA)I", "φ = (kA/BN)I", "φ = (BN/kA)I"], ans: 0, exp: "When a current flows through the coil, a torque acts on it. This torque is given by τ = NIAB where, the symbols have their usual meaning. Since, the field is radial by design, we have taken sin θ = 1 in the above expression for the torque. The magnetic torque NIAB tends to rotate the coil. A spring S_p provides a counter torque kφ that balances the magnetic torque NIAB; resulting in a steady angular deflection φ. In equilibrium kφ = NIAB where, k is the torsional constant of the spring, i.e., the restoring torque per unit twist. The deflection φ is indicated on the scale by a pointer attached to the spring. We have φ = (NAB/k)I." },
+    { q: "81. To make the field radial in a moving coil galvanometer", img: "", opts: ["number of turns of coil is kept small", "magnet is taken in the form of horse-shoe", "poles are of very strong magnets", "poles are cylindrically cut"], ans: 3, exp: "Uniform field is made radial by cutting pole pieces radially." },
+    { q: "82. The deflection in a moving coil galvanometer is", img: "", opts: ["directly proportional to torsional constant of spring", "directly proportional to the number of turns in the coil", "inversely proportional to the area of the coil", "inversely proportional to the current in the coil"], ans: 1, exp: "The deflection in a moving coil galvanometer, φ = NAB/k I or φ ∝ N, where N is number of turns in a coil, B is magnetic field, A is area of cross-section." },
+    { q: "83. In a moving coil galvanometer having a coil of N-turns of area A and carrying current I is placed in a radial field of strength B. The torque acting on the coil is", img: "", opts: ["NA²B²I", "NABI²", "N²ABI", "NABI"], ans: 3, exp: "The deflecting torque acting on the coil τ_deflection = NIAB." },
+    { q: "84. What is the shape of magnet used in moving coil galvanometer to make the magnetic field radial", img: "", opts: ["concave", "horse-shoe magnet", "convex", "None of these"], ans: 1, exp: "Concave pole pieces (horse-shoe magnet) are used to make the magnetic field radial." },
+    { q: "85. In ballistic galvanometer, the frame on which the coil is wound is non-metallic to", img: "", opts: ["avoid the production of induced emf", "avoid the production of eddy current", "increase the production of eddy current", "increase the production of induced emf"], ans: 1, exp: "In ballistic galvanometer, the frame on which the coil is wound is non-metallic to avoid the production of eddy current." },
+    { q: "86. Current sensitivity of a galvanometer is", img: "", opts: ["NBA/k", "k/NBA", "NBA/kR", "kR/NBA"], ans: 0, exp: "Current sensitivity of the galvanometer deflection per unit ampere = φ/I = NBA/k." },
+    { q: "87. To increase the current sensitivity of a moving coil galvanometer, we should decrease", img: "", opts: ["strength of magnet", "torsional constant of spring", "number of turns in coil", "area of coil"], ans: 1, exp: "Current sensitivity of all galvanometer φ/I = S_i = NBA/k. Hence, to increase S_i, k must be decreased." },
+    { q: "88. The coil of a galvanometer consists of 100 turns and effective area of 1 cm². The restoring couple is 10⁻⁸ Nm rad⁻¹. The magnetic field between poles is of 5 T. Current sensitivity of this galvanometer is", img: "", opts: ["5 × 10⁴ rad/μA", "5 × 10⁶ per amp", "2 × 10⁻⁷ per amp", "5 rad/μA"], ans: 1, exp: "Spring constant, k = 10⁻⁸ Nm/rad. N = 100, A = 1 cm² = 1 × 10⁻⁴ m², B = 5 T. S_i = NBA/k = (100 × 5 × 1 × 10⁻⁴)/10⁻⁸ = 5 × 10⁶ A⁻¹." },
+    { q: "89. A galvanometer has a coil of resistance 15 Ω and meter shows full scale deflection for a current of 4 mA. To convert it into an ammeter of 0 to 6 A range,", img: "", opts: ["a resistance of 10 mΩ is required in series", "a resistance of 10 mΩ is required in parallel", "a resistance of 1000 Ω is required in series", "a resistance of 1000 Ω is required in parallel"], ans: 1, exp: "As potential is same for parallel combination. For ammeter, S(I - I_g) = GI_g. Shunt resistance, S = GI_g/(I - I_g) = (15 × 4 × 10⁻³)/(6 - 4 × 10⁻³) = 10 mΩ." },
+    { q: "90. In two galvanometers A and B, to produce a deflection of 10 divisions, currents of 3 mA and 5 mA are required respectively, then", img: "", opts: ["A is more sensitive than B", "B is more sensitive than A", "both are equally sensitive", "sensitivity of B is 5/3 that A"], ans: 0, exp: "Minimum current measured by A → 0.3 mA. by B → 0.5 mA. A is more sensitive than B." },
+    { q: "91. For the given ammeter circuit,", img: "images/phy19-q91.png", opts: ["I_gS = IG", "(I - I_g)S = I_gG", "I_gG = (I + I_g)S", "I/I_g = G/S"], ans: 1, exp: "According to ammeter circuit, we get (I - I_g)S = I_gG where, G is resistance of galvanometer." },
+    { q: "92. To convert a galvanometer into an ammeter,", img: "", opts: ["a low resistance is connected in series with the coil of galvanometer", "a low resistance is connected in parallel with the coil of galvanometer", "a high resistance is connected in series with galvanometer coil", "a high resistance is connected in parallel with the galvanometer coil"], ans: 1, exp: "To convert a galvanometer into ammeter, a low resistance is connected in parallel with the coil of galvanometer." },
+    { q: "93. A galvanometer of resistance 70 Ω, is converted into an ammeter by a shunt resistance r_s = 0.03 Ω. The value of its resistance will become", img: "", opts: ["0.025 Ω", "0.022 Ω", "0.035 Ω", "0.030 Ω"], ans: 3, exp: "R = R_G r_s/(R_G + r_s). Here, R_G = 70 Ω, r_s = 0.03 Ω. R = (70 × 0.03)/(70 + 0.03) = 0.02998 = 0.03 Ω." },
+    { q: "94. To increase current sensitivity of a moving coil galvanometer by 50%, its resistance is increased so that its new resistance is twice of its initial resistance. Its voltage sensitivity changes by a factor of", img: "", opts: ["increases by a factor of 2", "decreases by a factor of 1/2", "increases by a factor of 4", "decreases by a factor of 1/4"], ans: 3, exp: "S_V = S_i/R => S_V' = 1.5S_i/(2R) = 3/4 S_V. % decrease in voltage sensitivity = (1 - 3/4)/1 × 100 = 25% = (1/4) S_V." },
+    { q: "95. Voltage sensitivity of a galvanometer is", img: "", opts: ["NBA/k", "k/NBA", "NBA/kR", "kR/NBA"], ans: 2, exp: "Voltage sensitivity is deflection per unit voltage φ/V = NBA/kR = (NBA/k) × 1/R." },
+    { q: "96. To convert a galvanometer into a voltmeter,", img: "", opts: ["a low resistance in parallel is used", "a low resistance in series is used", "a high resistance in series is used", "a high resistance in parallel is used"], ans: 2, exp: "To convert a galvanometer into voltmeter, a high resistance in series is to be connected with galvanometer." },
+    { q: "97. For the voltmeter circuit given,", img: "images/phy19-q97.png", opts: ["I_g/I = G/S", "I/I_g = (R_L + G)/S", "(I - I_g)R_L = I_g(G + S)", "IR_L = I_gG"], ans: 2, exp: "For voltmeter circuit, (I - I_g)R_L = I_g(G + S) where, G and S, are resistance of galvanometer and shunt." },
+    { q: "98. A galvanometer with a coil of resistance 12 Ω shows full scale deflection for a current of 2.5 mA. The ratio of net resistance of an ammeter of range 0 to 7.5 A and a voltmeter of range 0 to 10 V is", img: "", opts: ["10⁻¹²", "10⁻⁷", "10⁻⁶", "10⁻⁸"], ans: 2, exp: "G = 12 Ω and I_g = 2.5 × 10⁻³ A. For ammeter, S = GI_g/(I - I_g) = (12 × 2.5 × 10⁻³)/(7.5 - (2.5 × 10⁻³)) => S = 4 × 10⁻³ Ω => 1/R_ammeter = 1/G + 1/S => R_a = SG/(S + G) = 4.0 × 10⁻³ Ω. For a galvanometer as voltmeter, R = V/I_g - G = 10.0/(2.5 × 10⁻³) - 12 = 3988 Ω. R_V = Voltmeter's resistance = R + G = 4000 Ω = 4 × 10³ Ω. Ratio, R_a/R_V = 10⁻⁶." },
+    { q: "99. A galvanometer coil has a resistance of 12 Ω and meter shows full scale deflection for a current of 3 mA. To convert galvanometer into a voltmeter of range 0 to 18 V,", img: "images/phy19-q99.png", opts: ["a resistance of 5988 Ω in series is required", "a resistance of 5988 Ω in parallel is required", "a resistance of 5.988 Ω in series is required", "a resistance of 5.988 Ω in parallel is required"], ans: 0, exp: "For voltmeter circuit, we get I_g(R + G) = V. R = V/I_g - G = 18/(3 × 10⁻³) - 12 = 5988 Ω in series." },
+    { q: "100. Relation between voltage sensitivity (S_V) and current sensitivity (S_i) for a galvanometer of resistance G ohms is", img: "", opts: ["S_i/G = S_V", "S_V/G = S_i", "S_iS_V = G", "√(S_iS_V) = G"], ans: 0, exp: "As, we know current sensitivity S_i = NBA/k and voltage sensitivity, S_V = NBA/kR => S_i/S_V = R (or G) => S_i/G = S_V." },
+    { q: "101. Assertion Cyclotron is a device which is used to accelerate the positive ions.\nReason Cyclotron frequency depends upon the velocity.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Cyclotron is utilised to accelerate the positive ion. Cyclotron frequency is given by v = Bq/2πm. It means cyclotron frequency does not depend upon velocity. Assertion is correct but Reason is incorrect." },
+    { q: "102. Assertion If a proton and an α-particle enter a uniform magnetic field perpendicularly with the same speed, the time period of revolution of α-particle is double than that of proton.\nReason In a magnetic field, the period of revolution of a charged particle is directly proportional to the mass of the particle and inversely proportional to the charge of particle.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "Time period, T = 2πm/Bq as (m/q)_α = 2(m/q)_p ⇒ T_α = 2T_p. Also, T ∝ m. But, T_α = 4T_p which is not the case. Both are correct but Reason is not the correct explanation." },
+    { q: "103. Assertion The ion cannot move with a speed beyond a certain limit in a cyclotron.\nReason As velocity increases, time taken by ion increases.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Time taken is independent of velocity and radius of path. However, maximum velocity will be given by v_max = qBR/m where, R is radius of Dee's. Assertion is correct but Reason is incorrect." },
+    { q: "104. Assertion The magnetic field produced by a current-carrying solenoid is independent of its length and cross-sectional area.\nReason The magnetic field inside the solenoid is uniform.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 1, exp: "The magnetic field due to solenoid having n number of turns/metre and carrying current I is B = μ₀nI/2 (cos α - cos β). It is obvious that magnetic field is independent of length and area. Also magnetic field is uniform inside the solenoid. Both are correct but Reason is not the correct explanation." },
+    { q: "105. Assertion An electron and a proton enter a magnetic field with equal velocities, then the force experienced by the proton will be more than electron.\nReason The mass of proton is 1837 times more than that of electron.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 3, exp: "The force experienced by a charged particle in a magnetic field is given by F = q(v × B), which is independent of mass. As qv and B are same for both the electron and proton, both will experience same force. Assertion is incorrect but Reason is correct." },
+    { q: "106. Statement I When a charged particle moves in the region of a perpendicular magnetic field, its speed remains constant.\nStatement II Force acting on the charged particle is given by F = q(v × B).", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "When a charged particle moves in region of a perpendicular magnetic field, the magnetic force is perpendicular to the velocity of the particle. So, no work is done and no change in the magnitude of the velocity. Both I and II are correct." },
+    { q: "107. Statement I When a charged particle moves in a region of magnetic field such that its velocity is at some acute angle with direction of field, its trajectory is a helix.\nStatement II Perpendicular component of velocity causes a rotating centripetal force and parallel component of velocity does not produces any force.", img: "images/phy19-q107.png", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "If velocity has component along B, this component remains unchanged as the motion along the magnetic field will not be affected by the magnetic field. The motion in a plane perpendicular to B is as before a circular one, thereby producing a helical motion." },
+    { q: "108. Statement I In cyclotron, frequency of applied voltage (to dees) is adjusted so that v_applied voltage = v_cyclotron = qB/2πm. This ensures acceleration of charged particle in each cycle.\nStatement II Charged particles are moved inside 'dee' by magnetic field in semicircular paths and they arrive in gap between the 'dees' in a time interval of T sec, where T = 2πm/Bq.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "Charged particle covers semicircular path in T/2 s. T = 2πm/Bq where, B is magnetic field and m is mass of electron. Both statements are correct and II explains I." },
+    { q: "109. Statement I Magnetic properties of iron like materials cannot be linked to intrinsic magnetic moment of electrons of its atoms.\nStatement II The electron is an elementary particle, it does not spin around an axis and it does not possess any intrinsic magnetic moment.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 3, exp: "Any charge in uniform circular motion would have an associated magnetic moment. This dipole moment is labelled as the orbital magnetic moment. Hence, the subscript l in μ_l. Besides the orbital moment, the electron has an intrinsic magnetic moment, which has the same numerical value. It is called the spin magnetic moment. But we hasten to add that it is not as though the electron is spinning. The electron is an elementary particle and it does not have an axis to spin around like a top or our Earth. Nevertheless it does possess this intrinsic magnetic moment. The microscopic roots of magnetism in iron and other materials can be traced back to this intrinsic spin magnetic moment." },
+    { q: "110. Statement I If we increase the current sensitivity of a galvanometer by increasing number of turns, its voltage sensitivity also increases.\nStatement II Resistance of a wire is directly proportional to its length.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 3, exp: "Current sensitivity, S_i = NBA/k and voltage sensitivity, S_V = k/NBA/kR. So, when S_i is increased by increasing number of turns N, length of wire used also increases and so, R increases. Hence, S_V may remain same or decrease whereas S_i increases." },
+    { q: "111. Consider a moving charged particle in a region of magnetic field. Which of the following are correct?\nI. If v is parallel to B, then path of particle is spiral.\nII. If v is perpendicular to B, then path of particle is a circle.\nIII. If v has a component along B, then path of particle is helical.\nIV. If v is along B, then path of particle is a circle.", img: "", opts: ["I and II", "II and III", "III and IV", "IV and I"], ans: 1, exp: "If v ⊥ B, then path is a circular motion and if v has a component along B, then path will be helical." },
+    { q: "112. An electron and a proton moving on a straight parallel paths with same velocity enter a semi-infinite region of uniform magnetic field perpendicular to velocity. Which of these are correct?\nI. They will never come out of magnetic field region.\nII. They will come out travelling along parallel paths.\nIII. They will come out same time.\nIV. They will come out at different times.", img: "images/phy19-q112.png", opts: ["I and II", "II and III", "II and IV", "I and IV"], ans: 2, exp: "Radius of a circle r = mv/Bq => r ∝ m => v_e < v_p and time taken to complete one revolution T = 2πm/Bq => T ∝ m. But, mass of electron (m_e) < mass of proton (m_p). So, T_e < T_p. II and IV are correct." },
+    { q: "113. A velocity selector; (a region of perpendicular electric and magnetic field)\nI. Allows charged particles to pass straight when v = E/B.\nII. Deflects particles in a direction perpendicular to both v and B, when v > E/B.\nIII. Deflects particles in the direction of electric field when v < E/B.\nIV. Deflects all particles in a direction perpendicular to both E and B.", img: "", opts: ["I, III and IV", "II, III and IV", "I, II and III", "I, II and IV"], ans: 2, exp: "In a velocity selector, where F_e and F_B are electric and magnetic field, Case I: F_e = F_B => v = E/B, Case II: F_e < F_B => v > E/B, Case III: F_e > F_B => v < E/B. I, II and III are correct." },
+    { q: "114. Difference between Coulomb's force and Biot-Savart's force are\nI. Electrostatic force is along the displacement vector joining the source and the field point but magnetic force is perpendicular to the plane containing the displacement vector and source.\nII. There is an angle dependence in the Biot-Savart's law which is not present in Coulomb's law.\nIII. Biot-Savart's law can be expressed in vector form but Coulomb's law cannot be expressed in vector form.\nIV. Biot-Savart's law is applicable in all medium but Coulomb's law is applicable only in medium which can be polarised.", img: "", opts: ["I and II", "II and III", "III and IV", "IV and I"], ans: 0, exp: "Difference between Coulomb's force and Biot-Savart's forces are: I. The electrostatic field is along the displacement vector joining the source and the field point. The magnetic field is perpendicular to the plane containing the displacement vector r and the current element Idl. II. There is an angle dependence in the Biot-Savart's law which is not present in the electrostatic case. In the magnetic field at any point in the direction of Idl. Along this line, θ = 0, sin θ = 0, then |dB| = 0. I and II are correct." },
+    { q: "115. Two coaxial solenoids 1 and 2 of the same length are set so that one is inside the other. The number of turns per unit length are n₁ and n₂. The current i₁ and i₂ are flowing in opposite directions. The magnetic field inside the inner coil is zero. This is possible when\nI. i₁ ≠ i₂ and n₁ = n₂\nII. i₁ = i₂ and n₁ ≠ n₂\nIII. i₁ = i₂ and n₁ = n₂\nIV. i₁n₁ = i₂n₂", img: "", opts: ["I and II", "II and III", "III and IV", "I and IV"], ans: 2, exp: "As two coaxial solenoids 1 and 2 of the same length are set to be inside the other. So, net magnetic field, i.e., B_net = B₁ - B₂ => B₁ - B₂ = 0. B₁ = B₂ => B ∝ ni. So, n₁i₁ = n₂i₂ or n₁ = n₂ and i₁ = i₂. III and IV are correct." },
+    { q: "116. The galvanometer cannot as such be used as an ammeter to measure the value of current in a given circuit. The following reasons are\nI. galvanometer gives full scale deflection for a small current.\nII. galvanometer has a large resistance.\nIII. a linear scale cannot be designed so that I ∝ φ.\nIV. a galvanometer can give inaccurate values.", img: "", opts: ["I and IV", "II and III", "I and II", "III and IV"], ans: 2, exp: "I Galvanometer is a very sensitive device, it gives a full scale deflection for a current of the order of μA. II For measuring currents, the galvanometer has to be connected in series and as it has a large resistance, this will change the value of the current in the circuit. I and II are correct." },
+    { q: "117. A charged particle with some initial velocity is projected in a region where non-zero electric and/or magnetic fields are present. In Column I, information about the existence of electric and/or magnetic field and direction of initial velocity of charged particle are given, while in Column II the probable path of the charged particle is mentioned. Match the entries of Column I with the entries of Column II.\nColumn I:\nA. E = 0, B ≠ 0, and initial velocity is at any angle with B\nB. E ≠ 0, B = 0 and initial velocity is at any angle with E\nC. E ≠ 0, B ≠ 0, E || B and initial velocity is ⊥ to both\nD. E ≠ 0, B ≠ 0, E perpendicular to B and v perpendicular to both E and B\n\nColumn II:\n1. Straight line\n2. Parabola\n3. Circular\n4. Helical path with non-uniform pitch", img: "", opts: ["A-1,3 B-1,2 C-4 D-1", "A-1,2 B-3,4 C-4 D-1,3", "A-2 B-3 C-1 D-4", "A-4 B-1 C-2 D-3"], ans: 0, exp: "A. Since, E = 0 and B ≠ 0 so path will be straight line. If velocity is parallel to B, or path will be circular if v ⊥ B, or path will be helical (with uniform pitch) if v is at same other angle to B. Hence, A → 1, 3. B. Since, E ≠ 0 and B = 0. So, path will be straight line parallel to E or parabola otherwise. Hence, B → 1, 2. C. E ≠ 0, B ≠ 0, E || B. Helical path with non-uniform pitch. Hence, C → 4. D. Straight line path if v × B = E. Hence, D → 1." },
+    { q: "118. Match the following parameters of a charged particle moving in cyclotron with their values.\nColumn I:\nA. Frequency of rotation of charged particle v (Hz).\nB. Velocity of charged particle v (ms⁻¹).\nC. Kinetic energy of charged particle K (joule).\nD. Force on charged particle when it is inside any of dees F (newton).\n\nColumn II:\n1. Bqv\n2. q²B²R²/2m\n3. qBR/m\n4. Bq/2πm", img: "", opts: ["A-1, B-2, C-3, D-4", "A-2, B-3, C-4, D-1", "A-3, B-4, C-2, D-1", "A-4, B-3, C-2, D-1"], ans: 3, exp: "A-4: Frequency of rotation v = Bq/2πm. B-3: Velocity v = qBR/m. C-2: Kinetic energy K = q²B²R²/2m. D-1: Force F = Bqv." },
+    { q: "119. Match the following columns.\nColumn I:\nA. Lorentz force\nB. Gauss' law\nC. Biot-Savart's law\nD. Coulomb's law\n\nColumn II:\n1. ∮ E·dA = q/ε₀\n2. dB = (μ₀/4π) (i dl × r)/r³\n3. F = q(E + v × B)\n4. F = (1/4πε₀)(q₁q₂/r²)", img: "", opts: ["A-3, B-1, C-2, D-4", "A-1, B-2, C-4, D-3", "A-2, B-3, C-4, D-1", "A-4, B-1, C-2, D-3"], ans: 0, exp: "A. Lorentz force F = q(E + v × B). B. Gauss' law, ∮ E·dA = q/ε₀. C. Biot-Savart's law, dB = (μ₀/4π) (i dl × r)/r³. D. Coulomb's law, F = (1/4πε₀)(q₁q₂/r²)." },
+    { q: "120. For a current-carrying wire loop of N-turns, placed in region of a uniform magnetic field B, match Column I and Column II.\nColumn I:\nA. Torque on loop\nB. Torque on loop when m is either parallel or anti-parallel to B\nC. Magnetic moment of loop\nD. Torque on loop when m is perpendicular to B\n\nColumn II:\n1. mB\n2. NIA\n3. zero\n4. m × B", img: "", opts: ["A-1, B-2, C-3, D-4", "A-2, B-1, C-4, D-3", "A-4, B-3, C-2, D-1", "A-1, B-3, C-4, D-2"], ans: 2, exp: "A. Torque on loop, τ = m × B. B. Torque on loop when m is either parallel or anti-parallel to B, i.e., τ = m × B vanishes. C. Magnetic moment of loop, m = NIA, where I is current and A is area of cross-section of wire. D. Torque on loop when m is perpendicular to B. τ = m × B = mB sin 90° = mB." },
+    { q: "121. Figure shows the construction details of a moving coil galvanometer. Match the part with its function.\nColumn I:\nA. Soft iron core\nB. Pole pieces\nC. Spring\nD. Coil\n\nColumn II:\n1. produces deflecting torque\n2. produces restoring torque\n3. produces radial field\n4. increases field strength", img: "images/phy19-q121.png", opts: ["A-1, B-2, C-3, D-4", "A-4, B-3, C-2, D-1", "A-2, B-1, C-4, D-3", "A-3, B-2, C-1, D-4"], ans: 1, exp: "A. Core increases field strength. B. Pole pieces produce radial field. C. Spring produce restoring torque. D. Coil produces deflecting torque." },
+    { q: "122. [Passage: An electron with a speed v₀ << c moves in a circle of radius r₀ in a uniform magnetic field. The time required for one revolution of the electron is T₀. The speed of the electron is now doubled to 2v₀.] The radius of the circle will change to", img: "", opts: ["4r₀", "2r₀", "r₀", "r₀/2"], ans: 1, exp: "r_0 = mv_0/qB ⇒ r' = m(2v_0)/qB = 2r_0." },
+    { q: "123. [Passage: An electron with a speed v₀ << c moves in a circle of radius r₀ in a uniform magnetic field. The time required for one revolution of the electron is T₀. The speed of the electron is now doubled to 2v₀.] The time required for one revolution of the electron will change to", img: "", opts: ["4T₀", "2T₀", "T₀", "T₀/2"], ans: 2, exp: "T = 2πm/qB → independent of velocity. So, T remains T_0." },
+    { q: "124. [Passage: An electron with a speed v₀ << c moves in a circle of radius r₀ in a uniform magnetic field. The time required for one revolution of the electron is T₀. The speed of the electron is now doubled to 2v₀.] A charged particle is projected in a magnetic field B = (2î + 4ĵ) × 10² T. The acceleration of the particle is found to be a = (xî + 2ĵ) ms⁻². Find the value of x.", img: "", opts: ["4 ms⁻²", "-4 ms⁻²", "-2 ms⁻²", "2 ms⁻²"], ans: 1, exp: "As F ⊥ B. Hence, a ⊥ B. a · B = 0 ⇒ (xî + 2ĵ) · (2î + 4ĵ) = 0. 2x + 8 = 0 ⇒ x = -4 ms⁻²." },
+    { q: "125. [Passage: The horizontal component of the earth's magnetic field at a certain place is 3.0 × 10⁻⁵ T and the direction of the field is from the geographic south to the geographic north. A very long straight conductor is carrying a steady current of 1 A.] What is the force per unit length on it when it is placed on a horizontal table and the direction of current is east to west?", img: "images/phy19-q125.png", opts: ["3 × 10⁻⁵ Nm⁻¹", "5 × 10⁻² Nm⁻¹", "6 × 10⁻⁷ Nm⁻¹", "8 × 10⁻³ Nm⁻¹"], ans: 0, exp: "Force acting on a horizontal table F = IlB sin θ. So, the force per unit length is f = F/l = IB sin θ. When the current is flowing from East to West, then θ = 90°, so f = IB sin 90° = 1 × 3 × 10⁻⁵ × 1 = 3 × 10⁻⁵ Nm⁻¹." },
+    { q: "126. [Passage: The horizontal component of the earth's magnetic field at a certain place is 3.0 × 10⁻⁵ T and the direction of the field is from the geographic south to the geographic north. A very long straight conductor is carrying a steady current of 1 A.] What is the force per unit length when the direction of the current is south to north?", img: "images/phy19-q126.png", opts: ["5 × 10⁻⁴ Nm⁻¹", "Zero", "6 × 10⁻² Nm⁻¹", "8 × 10⁻³ Nm⁻¹"], ans: 1, exp: "When the current is flowing from South to North, then θ = 0°, So, f = IB sin 0° ⇒ f = 0. Hence, there is no force on the conductor." },
+    { q: "127. [Passage: The arc's BC (radius = b) and AD (radius = a) of a loop are joined by the straight wires AB and CD. A steady current I is flowing in the loop. Angle made by AB and CD at the origin is 30°. Another straight thin wire with steady current I₁ flowing out of plane of the paper is kept at the origin.] The magnitude of the magnetic field B due to loop ABCD at the origin O is", img: "images/phy19-q127.png", opts: ["zero", "(μ₀I/24)((b - a)/ab)", "(μ₀I/4π)((b - a)/ab)", "(μ₀I/4π)[2(b - a) + (π/3)(a + b)]"], ans: 1, exp: "Net magnetic field at O, B_AB + B_BC + B_CD + B_DA => B = 0 + (μ₀I/4a)(π/6π) + 0 - (μ₀I/4b)(π/6π) = (μ₀I/24ab)(b - a)." },
+    { q: "128. [Passage: The arc's BC (radius = b) and AD (radius = a) of a loop are joined by the straight wires AB and CD. A steady current I is flowing in the loop. Angle made by AB and CD at the origin is 30°. Another straight thin wire with steady current I₁ flowing out of plane of the paper is kept at the origin.] Due to presence of current I₁ at the origin", img: "images/phy19-q128.png", opts: ["the forces on AB and DC are zero", "the forces on AD and BC are zero", "the magnitude of the net force on the loop is given by (μ₀I₁I/4π){2(b - a) + (π/3)(a + b)}", "the magnitude of the net force on the loop is given by (μ₀I₁I/24ab)(b - a)"], ans: 1, exp: "As, AD and BC are parallel to the field of I₁. So, force on them is zero." },
+    { q: "129. Which of the following statements are correct?", img: "", opts: ["If a moving charged particle enters into a region of magnetic field from outside, it does not complete a circular path", "If a moving charged particle traces a helical path in a uniform magnetic field, the axis of the helix is parallel to the magnetic field", "The power associated with the force exerted by a magnetic field on a moving charged particle is always equal to zero", "If in a region a uniform magnetic field and a uniform electric field both exist, a charged particle moving in this region cannot trace a circular path"], ans: 1, exp: "Options (a), (b) and (c) are theoretical facts. As in case of moving charged particle in magnetic field F_mag ⊥ v, hence power associated will be zero (option (c) is correct). If both the electric and magnetic fields exist : If B || E, the path of the charged particle will be helical. If B || E, the radius of the charged particle will not be constant. Hence, the path will not be circular (option (d) is correct)." },
+    { q: "130. A charged particle moves in a uniform magnetic field. The velocity of the particle at some instant makes an acute angle with the magnetic field. The path of the particle will be", img: "images/phy19-q130.png", opts: ["a circle", "a helix with uniform pitch", "a helix with non-uniform pitch", "a helix with uniform radius"], ans: 1, exp: "If a particle moves in a magnetic field in helical path, the plane of the helical path will be inclined at an acute angle with the magnetic field." },
+    { q: "131. A proton is fired from origin with velocity v = v₀ĵ + v₀k̂ in a uniform magnetic field B = B₀ĵ.", img: "", opts: ["its z-coordinate can never be negative", "its x-coordinate can never be positive", "its x-and z-coordinates cannot be zero at the same time", "its y-coordinate will be proportional to its time of flight"], ans: 1, exp: "Velocity of proton makes an angle of 45° with the direction of magnetic field. Therefore, the path of the proton is a helix. The plane of the circle of this helix is the plane formed by negative X and positive Z-axis. Therefore, x-coordinate can never be positive. Further, x and z-coordinates will become zero simultaneously after every pitch and y-coordinate of the proton at any time t is y = v₀t, i.e., y ∝ t." },
+    { q: "132. Two circular coils of radii 5 cm and 10 cm carry equal currents of 2 A. The coils have 50 and 100 turns respectively and are placed in such a way that their planes as well as their centres coincide. Magnitude of magnetic field at the common centre of coils is", img: "", opts: ["8π × 10⁻⁴ T if currents in the coils are in same sense", "4π × 10⁻⁴ T if currents in the coils are in same sense", "zero if currents in the coils are in opposite sense", "8π × 10⁻⁴ T if currents in the coils are in opposite sense"], ans: 0, exp: "Using B = μ₀NI/2R ⇒ |B₁| = |B₂| = 4π × 10⁻⁴ T. If current in same sense, B_net = 8π × 10⁻⁴ T. If current in opposite sense, B_net = 0." },
+    { q: "133. A circular coil of wire consisting of 100 turns, each of radius 8.0 cm carries a current of 0.40 A. What is the magnitude of the magnetic field B at the centre of the coil?", img: "images/phy19-q133.png", opts: ["4 T", "3.1 × 10⁻⁴ T", "2 × 10⁻³ T", "10⁻⁴ T"], ans: 1, exp: "Here, n = 100, r = 8 cm = 8 × 10⁻² m and I = 0.40 A. The magnetic field B at the centre, B = μ₀/4π × 2πIn/r = (10⁻⁷ × 2 × 3.14 × 0.4 × 100)/(8 × 10⁻²) = 3.1 × 10⁻⁴ T." },
+    { q: "134. A long straight wire in the horizontal plane carries a current of 50 A in north to south direction. Give the magnitude and direction of B at a point 2.5 m east of the wire.", img: "images/phy19-q134.png", opts: ["2 × 10⁻⁶ T, south", "3 × 10⁻⁶ T, down", "4 × 10⁻⁶ T, up", "6 T, north"], ans: 2, exp: "The magnitude of magnetic field, B = μ₀/4π × 2I/r = 10⁻⁷ × 2 × 50/2.5 = 4 × 10⁻⁶ T, upward direction." },
+    { q: "135. A horizontal overhead power line carries a current of 90 A in East to West direction. What are the magnitude and direction of the magnetic field due to the current 1.5 m below the line?", img: "images/phy19-q135.png", opts: ["1.2 × 10⁻⁵ T, North", "1.2 × 10⁻⁵ T, South", "4 T, vertically up", "4 T, vertically down"], ans: 0, exp: "The magnitude of magnetic field, B = μ₀/4π × 2I/r = 10⁻⁷ × 2 × 90/1.5 = 1.2 × 10⁻⁵ T. The direction of B will be perpendicularly upward." },
+    { q: "136. What is the magnitude of magnetic force per unit length on a wire carrying a current of 8 A and making an angle of 30° with the direction of a uniform magnetic field of 0.15 T?", img: "images/phy19-q136.png", opts: ["0.4 Nm⁻¹", "0.6 Nm⁻¹", "4 Nm⁻¹", "6 Nm⁻¹"], ans: 1, exp: "According to the question, I = 8 A, θ = 30°, B = 0.15 T, l = 1 m. The magnitude of magnetic force F = I(l × B) = IlB sin θ = 8 × 1 × 0.15 × sin 30° = 0.6 Nm⁻¹." },
+    { q: "137. A 3.0 cm wire carrying a current of 10 A is placed inside a solenoid perpendicular to its axis. The magnetic field inside the solenoid is given to be 0.27 T. What is the magnetic force on the wire?", img: "images/phy19-q137.png", opts: ["7 × 10⁻² N", "8.1 × 10⁻² N", "64 × 10⁻² N", "4 × 10² N"], ans: 1, exp: "Here, the angle between the magnetic field and the direction of flow of current is 90°. Given, l = 3 cm = 3 × 10⁻² m, I = 10 A, B = 0.27 T. The magnitude of magnetic force on the wire, F = IlB sin 90° = 10 × 3 × 10⁻² × 0.27 × sin 90° = 8.1 × 10⁻² N." },
+    { q: "138. Two long and parallel straight wires A and B carrying currents of 8.0 A and 5.0 A in the same direction are separated by a distance of 4.0 cm. Estimate the force on a 10 cm section of wire A.", img: "images/phy19-q138.png", opts: ["5 × 10⁻⁵ N repulsive", "5 × 10⁻⁵ N attractive", "2 × 10⁻⁵ N repulsive", "2 × 10⁻⁵ N attractive"], ans: 1, exp: "Given, I₁ = 8 A, I₂ = 5 A and r = 4 cm = 0.04 m. Force per unit length on two parallel wire carrying-current F = μ₀/4π × 2I₁I₂/r = (10⁻⁷ × 2 × 8 × 5)/0.04 = 2 × 10⁻⁴ N. The force on A of length 10 cm is F' = F × 0.1 (∵ 1m = 100 cm) ⇒ F' = 2 × 10⁻⁴ × 0.1 = 2 × 10⁻⁵ N." },
+    { q: "139. A closely wound solenoid 80 cm long has 5 layers of windings of 400 turns each. The diameter of the solenoid is 1.8 cm. If the current carried is 8.0 A, estimate the magnitude of B inside the solenoid near its centre.", img: "images/phy19-q139.png", opts: ["2.5 × 10⁻² T", "3.5 × 10⁻² T", "4.5 × 10⁻² T", "5 × 10⁻² T"], ans: 0, exp: "The total number of turns, N = 400 × 5 = 2000 and number of turns/length, n = 2000/0.8 = 2500. The magnitude of magnetic field inside the solenoid B = μ₀nI = 4 × 3.14 × 10⁻⁷ × 2500 × 8 = 2.5 × 10⁻² T. The direction of magnetic field is along the axis of solenoid." },
+    { q: "140. A square coil of side 10 cm consists of 20 turns and carries a current of 12 A. The coil is suspended vertically and the normal to the plane of the coil makes an angle of 30° with the direction of a uniform horizontal magnetic field of magnitude 0.80 T. What is the magnitude of torque experienced by the coil?", img: "", opts: ["1.96 Nm", "0.96 Nm", "2.0 Nm", "4 Nm"], ans: 1, exp: "The magnitude of torque experienced by the coil, τ = NIAB sin θ = 20 × 12 × (10 × 10⁻²)² × 0.80 × sin 30° = 2.4 × 0.80 sin 30° = (2.4 × 0.80)/2 = 0.96 Nm." },
+    { q: "141. Two moving coil meters M₁ and M₂ having the following particulars :\nR₁ = 10 Ω, N₁ = 30, A₁ = 3.6 × 10⁻³ m², B₁ = 0.25 T\nR₂ = 14 Ω, N₂ = 42, A₂ = 1.8 × 10⁻³ m², B₂ = 0.50 T\n(The spring constants are identical for the two meters). Determine the ratio of voltage sensitivity of M₂ and M₁.", img: "", opts: ["4", "5", "6", "1"], ans: 3, exp: "Using the formula of voltage sensitivity, V = NAB/kR. V_s2/V_s1 = (n₂B₂A₂/k₂R₁)/(k₂R₂n₁B₁A₁) = (42 × 0.50 × 1.8 × 10⁻³ × k × 10)/(k × 14 × 30 × 0.25 × 3.6 × 10⁻³) = 1." },
+    { q: "142. In a chamber, a uniform magnetic field of 6.5 G (1 G = 10⁻⁴ T) is maintained. An electron is shot into the field with a speed of 4.8 × 10⁶ ms⁻¹ normal to the field explain why the path of the electron is a circle. Determine the radius of the circular orbit. (e = 1.6 × 10⁻¹⁹ C, m_e = 9.1 × 10⁻³¹ kg)", img: "", opts: ["2 cm", "8 cm", "6 cm", "4.2 cm"], ans: 3, exp: "r = mv/Bq [Here, F = q(v × B) = e(v × B) = eVB sin 90°]. eVB sin 90° = mv²/r => r = mv/(eB × 1) = (9.1 × 10⁻³¹ × 4.8 × 10⁶)/(1.6 × 10⁻¹⁹ × 6.5 × 10⁻⁴) = 4.2 × 10⁻² m = 4.2 cm." },
+    { q: "143. A circular coil of 30 turns and radius 8.0 cm carrying a current of 6.0 A is suspended vertically in a uniform horizontal magnetic field of magnitude 1.0 T. The field lines make an angle of 60° with the normal of the coil. Calculate the magnitude of the counter torque that must be applied to prevent the coil from turning.", img: "images/phy19-q143.png", opts: ["4 Nm", "6 Nm", "3.1 Nm", "2.8 Nm"], ans: 2, exp: "Magnitude of torque acting on the current-carrying coil due to the magnetic field, τ = nIAB sin θ = 30 × 6 × π(0.08)² × 1 × sin 60° = 30 × 6 × 3.14 × 0.08 × 0.08 × (√3/2) = 3.133 Nm." },
+    { q: "144. Two charged particles traverse identical helical paths in a completely opposite sense in a uniform magnetic field B = B₀k̂.", img: "", opts: ["They have equal z-components of momenta", "They must have equal charges", "They necessarily represent a particle, anti-particle pair", "The charge to mass ratio satisfy (e/m)₁ + (e/m)₂ = 0"], ans: 3, exp: "For given pitch, d corresponds to charged particle, we have q/m = 2πv cos θ/qB = constant ⇒ (e/m)₁ + (e/m)₂ = 0. Note Consider e in place of q in solution." },
+    { q: "145. Biot-Savart, law indicates that the moving electrons (velocity v) produce a magnetic field B such that", img: "", opts: ["B is perpendicular to v", "B is parallel to v", "it obeys inverse cube law", "it is along the line joining the electron and point of observation"], ans: 0, exp: "Magnetic field associated with moving charge B = μ₀/4π × q(v × r)/r². So, B ⊥ v." },
+    { q: "146. A current-carrying circular loop of radius R is placed in the x-y plane with centre at the origin. Half of the loop with x > 0 is now bent so that it now lies in the y-z plane.", img: "", opts: ["The magnitude of magnetic moment now diminishes", "The magnetic moment does not change", "(c) The magnitude of B at (0,0,z), z >> R increases", "(d) The magnitude of B at (0,0,z), z >> R is unchanged"], ans: 0, exp: "When the loop is bent, the effective area decreases, so magnetic moment diminishes." },
+    { q: "147. An electron is projected with uniform velocity along the axis of a current-carrying long solenoid. Which of the following is true?", img: "", opts: ["The electron will be accelerated along the axis", "The electron path will be circular about the axis", "The electron will experience a force at 45° to the axis and hence execute a helical path", "The electron will continue to move with uniform velocity along the axis of the solenoid"], ans: 3, exp: "F = qvB sin θ = 0 as θ = 0 or π." },
+    { q: "148. In a cyclotron, a charged particle", img: "", opts: ["undergoes acceleration all the time", "speeds up between the dees because of the magnetic field", "speeds up in a dee", "slows down within a dee and speeds up between dees"], ans: 0, exp: "The charged particle undergoes acceleration as (i) speeds up between the dees because of the oscillating electric field and (ii) speed remains the same inside the dees because of the magnetic field but direction undergoes change continuously." },
+    { q: "149. A circular current loop of magnetic moment M is in an arbitrary orientation in an external magnetic field B. The work done to rotate the loop by 30° about an axis perpendicular to its plane is", img: "", opts: ["MB", "√3/2 MB", "MB/2", "zero"], ans: 3, exp: "The rotation of the loop by 30° about an axis perpendicular to its plane make no change in the angle made by magnetic moment with the direction of magnetic field, therefore, the work done to rotate the loop is zero." },
+    { q: "150. The gyromagnetic ratio of an electron in an H-atom, according to Bohr model, is", img: "", opts: ["independent of which orbit it is in", "negative", "positive", "increase with the quantum number n"], ans: 1, exp: "If L is the magnitude of the angular momentum of the electron about the central nucleus (orbital angular momentum). Vectorially, μ_l = -(e/2m_e)L where, μ_l is the magnetic moment. The negative sign indicates that the angular momentum of the electron is opposite in direction to the magnetic moment." },
+    { q: "151. Consider a wire carrying a steady current, I placed in a uniform magnetic field B perpendicular to its length. Consider the charges inside the wire. It is known that magnetic forces do no work. This implies that,", img: "", opts: ["motion of charges inside the conductor is unaffected by B, since they do not absorb energy", "some charges inside the wire move to the surface as a result of B", "if the wire moves under the influence of B, no work is done by the force", "if the wire moves under the influence of B, no work is done by the magnetic force on the ions, assumed fixed within the wire."], ans: 1, exp: "Magnetic forces on a wire carrying a steady current, I placed in a uniform magnetic field B, perpendicular to its length is given by F = IlB. The direction of force is given by Fleming's left hand rule and F is perpendicular to the direction of magnetic field B. Therefore, work done by the magnetic force on the ions is zero." },
+    { q: "152. Two identical current carrying coaxial loops, carry current I in an opposite sense. A simple amperian loop passes through both of them once. Calling the loop as C,", img: "", opts: ["∮_C B·dl = μ₀I", "the value of ∮_C B·dl = ±2μ₀I is independent of sense of C", "there may be a point on C where, B and dl are perpendicular", "B vanishes everywhere on C"], ans: 1, exp: "Applying the Ampere's circuital law, we have ∮_C B·dl = μ₀(I - I) = 0 (because current is in opposite sense.) Also, there may be a point on C where B and dl are perpendicular and hence, ∮_C B·dl = 0." },
+    { q: "153. A cubical region of space is filled with some uniform electric and magnetic fields. An electron enters the cube across one of its faces with velocity v and a positron enters via opposite face with velocity -v. At this instant,", img: "", opts: ["the electric forces on both the particles cause identical accelerations", "the magnetic forces on both the particles cause equal accelerations", "both particles gain or loose energy at the same rate", "the motion of the Centre of Mass (CM) is determined by B alone"], ans: 1, exp: "The magnetic force F = q(v × B) on charged particle is either zero or F is perpendicular to v (or component of v) which in turn revolves particles on circular path with uniform speed. In both the cases, particles have equal accelerations. Both the particles gain or loss energy at the same rate as both are subjected to the same electric force (F = qE) in opposite direction. Since, there is no change of the Centre of Mass (CM) of the particles, therefore the motion of the Centre of Mass (CM) is determined by B alone." },
+    { q: "154. A charged particle would continue to move with a constant velocity in a region wherein,", img: "", opts: ["E = 0, B ≠ 0", "E ≠ 0, B ≠ 0", "E ≠ 0, B = 0", "E = 0, B = 0"], ans: 1, exp: "Here, force on charged particle due to electric field F_E = qE. Force on charged particle due to magnetic field, F_m = q(v × B). Now, F_E = 0 if E = 0 and F_m = 0 if sin θ = 0 or θ° = 0° or 180°. Hence, B ≠ 0. Also, E = 0 and B = 0 and the resultant force qE + q(v × B) = 0. In this case, E ≠ 0 and B ≠ 0." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 51; // ⚠️ Set to 51 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+<script src="results-save.js"></script>
+</body>
+</html>
