@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 59: Atoms - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 59: Atoms</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script src="keys.js"></script>
+<script src="autosave.js"></script>
+<script src="shuffle.js"></script>
+<script>
+const questions = [
+    { q: "1. JJ Thomson's experiment revealed that", img: "", opts: ["atoms are smallest entities of matter", "atoms are round in shape", "atoms are electrically neutral", "atoms contains negatively charged particles"], ans: 3, exp: "JJ Thomson's experiment revealed that atoms contains negatively charged particles." },
+    { q: "2. The first atomic model as proposed by JJ Thomson, can be pictured as", img: "images/phy27-q2.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 1, exp: "The first atomic model as proposed by JJ Thomson, can be pictured as option (b)." },
+    { q: "3. JJ Thomson's cathode ray experiment demonstrated that,", img: "", opts: ["cathode rays are stream of ions", "all the mass of an atom is situated in the nucleus", "the e/m of electrons is greater than the e/m of protons", "the e/m ratio of the cathode ray particles change when a different gas is placed in the cathode rays"], ans: 2, exp: "JJ Thomson's cathode ray experiment demonstrated that the e/m of electrons is greater than the e/m of protons." },
+    { q: "4. Order of ratio of e/m ratio of proton, α-particles and electrons is", img: "", opts: ["(e/m)_p > (e/m)_α > (e/m)_e", "(e/m)_e > (e/m)_p > (e/m)_α", "(e/m)_α > (e/m)_e > (e/m)_p", "All are equal"], ans: 1, exp: "For an electron, e = 1.6 × 10⁻¹⁹ C, m_e = 9.1 × 10⁻³¹ kg. For a proton, e = 1.6 × 10⁻¹⁹ C, m_p = 1.6 × 10⁻²⁷ kg. For an α-particle, e = 2 × 1.6 × 10⁻¹⁹ C, m_α = 4 × 1.6 × 10⁻²⁷ kg. Clearly, (e/m)_e > (e/m)_p > (e/m)_α." },
+    { q: "5. Average angle of deflection of α-particles by a thin gold foil predicted by Thomson's model was", img: "", opts: ["much less than that predicted by Rutherford's model", "about the same that predicted by Rutherford's model", "much more than that predicted by Rutherford's model", "None of the above"], ans: 0, exp: "Average angle of deflection of α-particles by a thin gold foil predicted by Thomson's model was much less than that predicted by Rutherford's model." },
+    { q: "6. The probability of backward scattering predicted by Thomson's model was", img: "", opts: ["much less than that predicted by Rutherford's model", "about the same that predicted by Rutherford's model", "much more than that predicted by Rutherford's model", "None of the above"], ans: 0, exp: "The probability of backward scattering predicted by Thomson's model was much less than that predicted by Rutherford's model." },
+    { q: "7. Comparison of J J Thomson and Rutherford atomic models is shown respectively, pick the correct one.", img: "images/phy27-q7.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 3, exp: "Comparison of J J Thomson and Rutherford atomic models is shown in option (d)." },
+    { q: "8. α-particle scattering experiment is done", img: "", opts: ["to investigate nuclear structure", "to investigate atomic structure", "to investigate electronic configuration", "to investigate α-particle emission"], ans: 1, exp: "α-particle scattering experiment is done to investigate atomic structure." },
+    { q: "9. Rutherford's atomic model can be visualised as", img: "images/phy27-q9.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 3, exp: "Rutherford's atom had a positively charged centre and electrons were revolving outside it. It is also called the planetary model of the atom." },
+    { q: "10. In Geiger-Marsden experiment, collimation of α-particles into a narrow beam is done by passing", img: "", opts: ["α-particles through a narrow gap between lead bricks", "α-particles through gold foil", "α-particles through an electric field", "α-particles through a magnetic field"], ans: 0, exp: "In Geiger-Marsden experiment, collimation of α-particles into a narrow beam is done by passing α-particles through a narrow gap between lead bricks." },
+    { q: "11. Correct figure of Geiger-Marsden experiment is", img: "images/phy27-q11.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 3, exp: "Most of α-particles pass straight through, few are deflected at small angles and very few are deflected by larger angles." },
+    { q: "12. Gold foil used in Geiger-Marsden experiment is about 10⁻⁸ m thick. This ensures", img: "", opts: ["gold foil's gravitational pull is small or possible", "gold foil is deflected when α-particle stream is not incident centrally over it", "gold foil provides no resistance to passage of α-particles", "most α-particle will not suffer more than 1° scattering during passage through gold foil"], ans: 3, exp: "As the gold foil is very thin, it can be assumed that α-particles will suffer not more than one scattering during their passage through it. Therefore, computation of the trajectory of an α-particle scattered by a single nucleus is enough." },
+    { q: "13. In Geiger-Marsden experiment detection of α-particles scattered at a particular angle is done by", img: "", opts: ["counting flashes produced by α-particles on a ZnS coated screen", "counting spots produced on a photographic film", "using a galvanometer detector", "using a Geiger-counter"], ans: 0, exp: "The scattered α-particles were observed through a rotatable detector consisting of zinc sulphide screen and a microscope. The scattered α-particles on striking the screen produced brief light flashes or scintillations. These flashes may be viewed through a microscope and the distribution of the number of scattered particles may be studied as a function of angle of scattering." },
+    { q: "14. Atoms consist of a positively charged nucleus is obviously from the following observation of Geiger-Marsden experiment", img: "", opts: ["most of α-particles do not pass straight through the gold foil", "many of α-particles are scattered through the acute angles", "very large number of α-particles are deflected by large angles", "None of the above"], ans: 3, exp: "Atoms consist of a positively charged nucleus is obviously from the following observation of Geiger-Marsden experiment." },
+    { q: "15. For scattering of α-particles, Rutherford's suggested that", img: "", opts: ["mass of atom and its positive charge were concentrated at centre of atom", "only mass of atom is concentrated at centre of atom", "only positive charge of atom is concentrated at centre of atom", "mass of atom is uniformly distributed throughout its volume"], ans: 0, exp: "In Rutherford's nuclear model of the atom, the entire positive charge and most of the mass of the atom are concentrated in the nucleus with the electrons some distance away." },
+    { q: "16. α-particles are scattered due to", img: "", opts: ["attraction from electrons", "repulsion from nucleus", "Both (a) and (b)", "gravitational pull from neutrons"], ans: 1, exp: "α-particles are scattered due to repulsion from nucleus." },
+    { q: "17. Graph of total number of α-particles scattered at different angles is", img: "images/phy27-q17.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 3, exp: "Graph of total number of α-particles scattered at different angles is shown in option (d)." },
+    { q: "18. From Rutherford's experiment, estimated sizes of nucleus and atom are", img: "", opts: ["10⁻¹⁵ m, 10⁻¹⁰ m", "10⁻¹⁵ m, 10⁻¹⁴ m", "10⁻¹⁵ m, 10⁻²⁰ m", "10⁻¹⁵ m, 10⁻¹⁵ m"], ans: 0, exp: "From Rutherford's experiment, estimated sizes of nucleus and atom are 10⁻¹⁵ m and 10⁻¹⁰ m." },
+    { q: "19. For separation r between gold nucleus and an α-particle, the magnitude of repulsive force is given by", img: "images/phy27-q19.png", opts: ["F = (1/4πε₀)(2e²/r²)", "F = (1/4πε₀)(e²/r²)", "F = (1/4πε₀)(158e²/r²)", "F = (1/4πε₀)(56e²/r²)"], ans: 2, exp: "For separation r, force between α-particle (charge 2e) and gold nucleus (charge Ze) is F = (1/4πε₀) × (2e)(Ze)/r². For gold, Z = 79. Therefore, F = (1/4πε₀)(158e²/r²)." },
+    { q: "20. When an α-particle of mass m moving with velocity v bombards on a heavy nucleus of charge Ze, its distance of closest approach from the nucleus depends on m as", img: "", opts: ["1/√m", "1/m²", "m", "1/m"], ans: 3, exp: "At distance of minimum separation, KE = PE. K = k Ze·2e/r => r = k Ze·2e / K. For a given K, r ∝ 1/K. As K = p²/2m, so r ∝ m if p is constant. But here velocity v is constant, so K ∝ m. Hence, r ∝ 1/m." },
+    { q: "21. In Geiger-Marsden experiment, it can be fairly assumed that the gold nucleus remains stationary throughout the scattering process as", img: "", opts: ["gold foil is very thin", "α-particles are moving very fast", "α-particles carry positive charge", "gold nucleus is about 50 times heavier than the α-particles"], ans: 3, exp: "For gold, Z = 79. Since, the nucleus of gold is about 50 times heavier than an α-particle, it is reasonable to assume that it remains stationary throughout the scattering process." },
+    { q: "22. In a Geiger-Marsden experiment, an α-particle of 7.7 MeV energy approaches a gold nucleus head on, it comes momentarily to rest and reverses its direction. We can conclude that", img: "", opts: ["radius of gold nucleus is 3.0 × 10⁻¹⁴ m", "radius of gold nucleus is more than 3.0 × 10⁻¹⁴ m", "radius of gold nucleus is less than 3.0 × 10⁻¹⁴ m", "radius cannot be estimated by given data"], ans: 2, exp: "Let d be the centre-to-centre distance between the α-particle and the gold nucleus when the α-particle is at its stopping point. Then, we can write the conservation of energy E_i = E_f as K = (1/4πε₀)(2e)(Ze)/d = 2Ze²/4πε₀d. Thus, the distance of closest approach d is given by d = 2Ze²/4πε₀K = 7.7 MeV 1.2 × 10⁻¹² J. Since, 1/4πε₀ = 9.0 × 10⁹ N-m²/C². Therefore, with e = 1.6 × 10⁻¹⁹ C, we have d = (2)(9.0 × 10⁹ Nm²/C²)(1.6 × 10⁻¹⁹ C)² Z / (1.2 × 10⁻¹² J) = 3.84 × 10⁻¹⁶ Z m. The atomic number of foil material gold is Z = 79, so that d(Au) = 3.0 × 10⁻¹⁴ m = 30 fm. The radius of gold nucleus is, therefore, less than 3.0 × 10⁻¹⁴ m." },
+    { q: "23. α-particles are scattered by the gold nucleus but not by the electrons. It is, because", img: "", opts: ["electrons are much massive than α-particle", "α-particles are massive than electrons but only about 2% massive for a gold nucleus", "α-particles are nearly of same mass or that of nucleus", "α-particles are positively charged"], ans: 1, exp: "α-particles are scattered by the gold nucleus but not by the electrons. It is, because α-particles are massive than electrons but only about 2% massive for a gold nucleus." },
+    { q: "24. Trajectory of an α-particle is shown in figure below. Then, impact parameter is", img: "images/phy27-q24.png", opts: ["a", "b", "c", "d"], ans: 1, exp: "The impact parameter is the perpendicular distance of the initial velocity vector of the α-particle from the centre line of the nucleus of the atom, when the α-particle is far away from nucleus at line." },
+    { q: "25. If impact parameter is very small, then scattering angle is around", img: "", opts: ["zero", "90°", "180°", "360°"], ans: 2, exp: "α-particle close to the nucleus (small impact parameter) suffers large scattering. In case of head-on collision, the impact parameter is minimum and the α-particle rebounds back (θ ≃ π)." },
+    { q: "26. The size of nucleus is estimated by measuring", img: "", opts: ["distance of closest approach", "impact parameter", "scattering angle", "All of the above"], ans: 3, exp: "The scattering angle can be used to calculate the distance of closest approach and therefore the \"radius\" of the nucleus." },
+    { q: "27. In the diagram shown, dimension d is known as", img: "images/phy27-q27.png", opts: ["impact parameter", "distance of closest approach", "atomic radius", "nuclear radius"], ans: 1, exp: "In the diagram shown, dimension d is known as distance of closest approach." },
+    { q: "28. The fact that only a small fraction of the number of incident particles rebound back in Rutherford scattering indicates that", img: "", opts: ["number of α-particles undergoing head-on collision is large", "mass of the atom is concentrated in a small volume", "mass of the atom is concentrated in a large volume", "Both (a) and (b)"], ans: 1, exp: "The fact that only a small fraction of the number of incident particles rebound back in Rutherford scattering indicates that mass of the atom is concentrated in a small volume." },
+    { q: "29. In Geiger-Marsden experiment, in a head-on collision between an α-particle and a gold nucleus, the minimum separation is 4 × 10⁻¹⁴ m. The energy of α-particle is (Take, atomic number of gold = 79)", img: "", opts: ["5.68 MeV", "8 MeV", "4.47 MeV", "7.24 MeV"], ans: 0, exp: "At distance of minimum separation, KE = PE. => KE = k Ze·2e/r. or KE = (9 × 10⁹ × 79 × 2 × (1.6 × 10⁻¹⁹)²)/(4 × 10⁻¹⁴) J = (9 × 10⁹ × 79 × 2 × (1.6 × 10⁻¹⁹)²)/(4 × 10⁻¹⁴ × 1.6 × 10⁻¹⁹) eV = 5.688 MeV (∵ 1 MeV = 1.6 × 10⁻¹³ J)." },
+    { q: "30. The electrostatic force of attraction, F_e between the revolving electrons and the nucleus provides the requisite centripetal force (F_c) to keep them in their orbits. Thus, for a dynamically stable orbit in a hydrogen atom F_e = F_c.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "The electrostatic force of attraction, F_e between the revolving electrons and the nucleus provides the requisite centripetal force (F_c) to keep them in their orbits. Thus, for a dynamically stable orbit in a hydrogen atom F_e = F_c." },
+    { q: "31. ke²/r² = mv²/r, i.e., r = e²/4πε₀mv².", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "ke²/r² = mv²/r, i.e., r = e²/4πε₀mv²." },
+    { q: "32. The kinetic energy (K) of the electron in hydrogen atom is K = (1/2)mv² = e²/8πε₀r.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "The kinetic energy (K) of the electron in hydrogen atom is K = (1/2)mv² = e²/8πε₀r." },
+    { q: "33. U = Potential energy = -e²/4πε₀r.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "U = Potential energy = -e²/4πε₀r." },
+    { q: "34. The total energy E of the electron in a hydrogen atom is E = K + U = e²/8πε₀r - e²/4πε₀r = -e²/8πε₀r. The total energy of the electron is negative. This implies the fact that the electron is bound to the nucleus. If E were positive, an electron will not follow a closed orbit around the nucleus.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "The total energy E of the electron in a hydrogen atom is E = K + U = e²/8πε₀r - e²/4πε₀r = -e²/8πε₀r. The total energy of the electron is negative. This implies the fact that the electron is bound to the nucleus. If E were positive, an electron will not follow a closed orbit around the nucleus." },
+    { q: "35. Each element has a characteristic spectrum of radiation, which it emits. When an atomic gas or vapour is excited at low pressure, usually by passing an electric current through it, the emitted radiation has a spectrum which contains certain specific wavelengths only. A spectrum of this kind is termed as emission line spectrum.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "Each element has a characteristic spectrum of radiation, which it emits. When an atomic gas or vapour is excited at low pressure, usually by passing an electric current through it, the emitted radiation has a spectrum which contains certain specific wavelengths only. A spectrum of this kind is termed as emission line spectrum." },
+    { q: "36. Line emission spectrum consists of bright lines on a dark background. The study of emission line spectra of a material can therefore serve as a type of 'fingerprint' for identification of the gas.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "Line emission spectrum consists of bright lines on a dark background. The study of emission line spectra of a material can therefore serve as a type of 'fingerprint' for identification of the gas." },
+    { q: "37. When white light passes through a gas and we analyse the transmitted light using a spectrometer, we find some dark lines in the spectrum. These dark lines correspond precisely to those wavelengths which were found in the emission line spectrum of the gas. This is called the absorption spectrum of the material of the gas.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "When white light passes through a gas and we analyse the transmitted light using a spectrometer, we find some dark lines in the spectrum. These dark lines correspond precisely to those wavelengths which were found in the emission line spectrum of the gas. This is called the absorption spectrum of the material of the gas." },
+    { q: "38. In Balmer series, H_α-line is obtained using formula 1/λ = R(1/2² - 1/n²), where, R = 1.097 × 10⁷ m⁻¹, n = 3 for H_α. This gives λ = 656.3 nm which corresponds to red colour.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "In Balmer series, H_α-line is obtained using formula 1/λ = R(1/2² - 1/n²), where, R = 1.097 × 10⁷ m⁻¹, n = 3 for H_α. This gives λ = 656.3 nm which corresponds to red colour." },
+    { q: "39. A regular pattern of increasing spacing is observed in option (a) whereas others are irregular.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "A regular pattern of increasing spacing is observed in option (a) whereas others are irregular." },
+    { q: "40. The shortest wavelength occurs when an electron makes a transitions from n = ∞ to n = 2 state. Therefore, 1/λ_min = R(1/2² - 1/∞²) = R/4 = 364.6 nm.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "The shortest wavelength occurs when an electron makes a transitions from n = ∞ to n = 2 state. Therefore, 1/λ_min = R(1/2² - 1/∞²) = R/4 = 364.6 nm." },
+    { q: "41. According to Rydberg's formula 1/λ = R(1/n_f² - 1/n_i²). here n_f = 1, n_i = n. 1/λ = R(1/1² - 1/n²) => 1/λ = R(1 - 1/n²) => n = √(λR/(λR - 1))", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "According to Rydberg's formula 1/λ = R(1/n_f² - 1/n_i²). here n_f = 1, n_i = n. 1/λ = R(1/1² - 1/n²) => 1/λ = R(1 - 1/n²) => n = √(λR/(λR - 1))" },
+    { q: "42. Largest wavelength results due to transition n = 2 → n = 1. 1/λ = R(1/1² - 1/2²) => 1/λ = 3R/4. Or λ = 4/3R = 1218 Å.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "Largest wavelength results due to transition n = 2 → n = 1. 1/λ = R(1/1² - 1/2²) => 1/λ = 3R/4. Or λ = 4/3R = 1218 Å." },
+    { q: "43. Balmer formula is applicable for all single electron atoms or ions. However, it is difficult to apply it in multi electrons system.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "Balmer formula is applicable for all single electron atoms or ions. However, it is difficult to apply it in multi electrons system." },
+    { q: "44. Wavelength of spectral line in Balmer series is given by 1/λ = R(1/2² - 1/n²). For first line of Balmer series, n = 3. => 1/λ₁ = R(1/2² - 1/3²) = 5R/36. For second line, n = 4. => 1/λ₂ = R(1/2² - 1/4²) = 3R/16. Therefore, λ₂/λ₁ = 20/27 => λ₂ = 20/27 × λ₁ => λ₂ = 20/27 × 6561 = 4860 Å.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "Wavelength of spectral line in Balmer series is given by 1/λ = R(1/2² - 1/n²). For first line of Balmer series, n = 3. => 1/λ₁ = R(1/2² - 1/3²) = 5R/36. For second line, n = 4. => 1/λ₂ = R(1/2² - 1/4²) = 3R/16. Therefore, λ₂/λ₁ = 20/27 => λ₂ = 20/27 × λ₁ => λ₂ = 20/27 × 6561 = 4860 Å." },
+    { q: "45. In Brackett series, 1/λ = R(1/4² - 1/n²). For maximum wavelength, λ_max transition n = 5, we get 1/λ_max = R(1/4² - 1/5²) = R(25-16)/(16×25) = R×9/(16×25) ...(i). For minimum wavelength, λ_min transition n = ∞, we get 1/λ_min = R(1/4² - 1/∞²) = R(1/16) ...(ii). On comparing Eqs. (i) and (ii), we get λ_min/λ_max = 25/9.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "In Brackett series, 1/λ = R(1/4² - 1/n²). For maximum wavelength, λ_max transition n = 5, we get 1/λ_max = R(1/4² - 1/5²) = R(25-16)/(16×25) = R×9/(16×25) ...(i). For minimum wavelength, λ_min transition n = ∞, we get 1/λ_min = R(1/4² - 1/∞²) = R(1/16) ...(ii). On comparing Eqs. (i) and (ii), we get λ_min/λ_max = 25/9." },
+    { q: "46. In Pfund series, 1/λ = R(1/5² - 1/n²); n = 6, 7, ... Maximum wavelength is given by 1/λ_max = R(1/5² - 1/6²). In transition 6 → 5. Minimum wavelength is given by 1/λ_min = R(1/5² - 1/∞²). In transition ∞ → 5. So, ratio is 36/11.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "In Pfund series, 1/λ = R(1/5² - 1/n²); n = 6, 7, ... Maximum wavelength is given by 1/λ_max = R(1/5² - 1/6²). In transition 6 → 5. Minimum wavelength is given by 1/λ_min = R(1/5² - 1/∞²). In transition ∞ → 5. So, ratio is 36/11." },
+    { q: "47. Balmer formula is valid for", img: "", opts: ["hydrogen", "singly ionised helium", "doubly ionised lithium", "All of these"], ans: 3, exp: "Balmer formula is valid for hydrogen, singly ionised helium, doubly ionised lithium." },
+    { q: "48. We know that, frequency v = c/λ = c·R(1/n₁² - 1/n₂²) = 3 × 10⁸ × 10⁷ (1/2² - 1/4²) = 9/16 × 10⁵ Hz.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "We know that, frequency v = c/λ = c·R(1/n₁² - 1/n₂²) = 3 × 10⁸ × 10⁷ (1/2² - 1/4²) = 9/16 × 10⁵ Hz." },
+    { q: "49. We know that frequency, v₁ = Rc(1/n₁² - 1/n₂²). This gives, v₁ = Rc(1 - 1/∞) = Rc => v₂ = Rc(1 - 1/4) = 3/4 Rc. v₃ = Rc(1/4 - 1/∞) = Rc/4 => v₁ - v₂ = v₃.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "We know that frequency, v₁ = Rc(1/n₁² - 1/n₂²). This gives, v₁ = Rc(1 - 1/∞) = Rc => v₂ = Rc(1 - 1/4) = 3/4 Rc. v₃ = Rc(1/4 - 1/∞) = Rc/4 => v₁ - v₂ = v₃." },
+    { q: "50. The model of the atom proposed by Rutherford assume that the atom, consisting of a central nucleus and revolving electron is stable much like sun-planet system which the model imitates. However, there are some fundamental differences between the two situations. While the planetary system is held by gravitational force, the nucleus-electron system being charged objects, interact by Coulomb's law of force.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "The model of the atom proposed by Rutherford assume that the atom, consisting of a central nucleus and revolving electron is stable much like sun-planet system which the model imitates. However, there are some fundamental differences between the two situations. While the planetary system is held by gravitational force, the nucleus-electron system being charged objects, interact by Coulomb's law of force." },
+    { q: "51. Bohr concluded that inspite of the success of electromagnetic theory in explaining large-scale phenomena, it could not be applied to the processes at the atomic scale. It became clear that a fairly radical departure from the established principles of classical mechanics and electromagnetism would be needed to understand the structure of atoms and the relation of atomic structure to atomic spectra. According to classical mechanics, electron emits radiation while revolving nucleus.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "Bohr concluded that inspite of the success of electromagnetic theory in explaining large-scale phenomena, it could not be applied to the processes at the atomic scale. It became clear that a fairly radical departure from the established principles of classical mechanics and electromagnetism would be needed to understand the structure of atoms and the relation of atomic structure to atomic spectra. According to classical mechanics, electron emits radiation while revolving nucleus." },
+    { q: "52. According to the classical electromagnetic theory, the frequency of the electromagnetic waves emitted by the revolving electrons is equal to the frequency of revolution of electron.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "According to the classical electromagnetic theory, the frequency of the electromagnetic waves emitted by the revolving electrons is equal to the frequency of revolution of electron." },
+    { q: "53. The frequency of the electron moving around the proton is v = v/2πr = (2.2 × 10⁶ ms⁻¹)/(2π(5.3 × 10⁻¹¹ m)) = 6.6 × 10¹⁵ Hz. According to the classical electromagnetic theory, we know that the frequency of the electromagnetic waves emitted by the revolving electrons is equal to the frequency of its revolution around the nucleus. Thus, the initial frequency of the light emitted is 6.6 × 10¹⁵ Hz.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "The frequency of the electron moving around the proton is v = v/2πr = (2.2 × 10⁶ ms⁻¹)/(2π(5.3 × 10⁻¹¹ m)) = 6.6 × 10¹⁵ Hz. According to the classical electromagnetic theory, we know that the frequency of the electromagnetic waves emitted by the revolving electrons is equal to the frequency of its revolution around the nucleus. Thus, the initial frequency of the light emitted is 6.6 × 10¹⁵ Hz." },
+    { q: "54. The energy of an atom is the least (largest negative value) when its electron is revolving in an orbit closest to the nucleus i.e., the one for which n = 1. For n = 2, 3, ... the absolute value of the energy E is smaller.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "The energy of an atom is the least (largest negative value) when its electron is revolving in an orbit closest to the nucleus i.e., the one for which n = 1. For n = 2, 3, ... the absolute value of the energy E is smaller." },
+    { q: "55. According to Bohr's model, an electron in an atom can revolve", img: "", opts: ["in any orbit", "in certain stable orbits with emission of radiant energy", "in certain stable orbits without emission of radiant energy", "only in orbits close to nucleus"], ans: 2, exp: "According to Bohr's first postulate, an electron in an atom can revolve in certain stable orbits without emission of radiant energy." },
+    { q: "56. Bohr's second postulate defines the stable orbits on the basis of", img: "", opts: ["linear momentum of electron", "angular momentum of electron", "kinetic energy of electron", "total energy of electron"], ans: 1, exp: "Bohr's second postulate defines the stable orbits on the basis of angular momentum of electron." },
+    { q: "57. In a stable orbit, angular momentum of an electron is", img: "", opts: ["a whole number multiple of h/2π", "a prime number multiple of h/2π", "an odd number multiple of h/2π", "an integral multiple of h/2π"], ans: 3, exp: "In a stable orbit, angular momentum of an electron is an integral multiple of h/2π." },
+    { q: "58. Second Bohr's postulate implies quantisation of", img: "", opts: ["charge of an electron", "energy of an electron", "angular momentum of an electron", "radiated energy by an electron"], ans: 2, exp: "Second Bohr's postulate implies quantisation of angular momentum of an electron." },
+    { q: "59. Bohr's second postulate can be written as", img: "", opts: ["mv_nr_n = h/4π", "mv_nr_n = nh/2π", "mv_nr_n = nh/4π", "mv_nr_n = 0"], ans: 1, exp: "Bohr's second postulate can be written as mv_nr_n = nh/2π." },
+    { q: "60. As an electron makes a transition from an excited state to the ground state of a hydrogen like atom/ion.", img: "", opts: ["Its kinetic energy increase but potential energy and total energy decreases", "kinetic energy, potential energy and total energy decrease", "kinetic energy decreases, potential energy increases but total energy remains same", "kinetic energy and total energy decrease but potential energy increases"], ans: 0, exp: "As we know that kinetic energy of an electron is KE ∝ (Z/n)². When the electron makes transition from an excited state to the ground state, then n decreases and KE increases. We know that PE is lowest for ground state. As TE = -KE. TE also decreases." },
+    { q: "61. Energy of an electron in an excited state of hydrogen atom is – 3.4 eV. Its angular momentum will be", img: "", opts: ["1.11 × 10⁻³⁴ Js", "1.51 × 10⁻³¹ Js", "2.11 × 10⁻³⁴ Js", "3.72 × 10⁻³⁴ Js"], ans: 2, exp: "Using E_n = -13.6/n² = -3.4 eV, we get n = 2. Therefore, Angular momentum L = nh/2π = (2 × 6.6 × 10⁻³⁴)/(2 × 3.14) = 2.11 × 10⁻³⁴ J-s." },
+    { q: "62. When an electron in hydrogen atom is excited from its 4th to 5th stationary orbit, the change in angular momentum of electron is", img: "", opts: ["4.6 × 10⁻³⁴ Js", "3.32 × 10⁻³⁴ Js", "1.05 × 10⁻³⁴ Js", "2.08 × 10⁻³⁴ Js"], ans: 2, exp: "Change in angular momentum ΔL = L₂ - L₁ = n₂h/2π - n₁h/2π = h/2π(n₂ - n₁) = 6.6 × 10⁻³⁴/(2 × 3.14) × (5 - 4) = 1.05 × 10⁻³⁴ J-s." },
+    { q: "63. The ratio of speed of an electron in ground state in Bohr's first orbit of hydrogen atom to the velocity of light in air is", img: "", opts: ["e²/2πhc", "2πe/hc", "e³/2πhc", "2πe²/hc"], ans: 0, exp: "In hydrogen atom, speed of an electron v_n = 2πZe²/nh and v = (2πe²)/hc => v/c = 2πe²/hc." },
+    { q: "64. In Bohr's atomic model, speed and time period of revolution of an electron in n = 3 level are respectively", img: "", opts: ["v = 1.09 × 10⁶ ms⁻¹, T = 1.52 × 10⁻¹⁶ s", "v = 2.19 × 10⁶ ms⁻¹, T = 1.52 × 10⁻¹⁶ s", "v = 7.29 × 10⁶ ms⁻¹, T = 1.22 × 10⁻¹⁶ s", "v = 7.29 × 10⁵ ms⁻¹, T = 4.10 × 10⁻¹⁵ s"], ans: 3, exp: "Using, v_n = 1/137 · c/n, we get v₃ = 1/137 × (3 × 10⁸)/3 = 7.29 × 10⁵ ms⁻¹. Also, T_n = 2πr_n/v. Therefore, T₃ = 2πr₃/v₃ = (2π(3² × 0.53 × 10⁻¹⁰))/(7.29 × 10⁵) = 4.10 × 10⁻¹⁵ s." },
+    { q: "65. The speed of electron in ground state energy level is 2.6 × 10⁶ ms⁻¹, then its speed in fourth excited state will be", img: "", opts: ["5.6 × 10⁶ ms⁻¹", "6 × 10⁵ ms⁻¹", "5.5 × 10⁵ ms⁻¹", "4.3 × 10⁶ ms⁻¹"], ans: 1, exp: "According to Bohr's model v = 2πKe²Z/nh or v ∝ 1/n. Therefore, v₄/v_B = n_B/n_A => v_B = v_A × n_A/n_B = 2.6 × 10⁶ × 1/5 = 6 × 10⁵ ms⁻¹." },
+    { q: "66. Orbital radius of an electron of hydrogen atom in its ground state (n = 1) is around", img: "", opts: ["0.53 Å", "0.16 Å", "0.28", "Cannot be found"], ans: 0, exp: "The size of the innermost orbit (n = 1) can be obtained as r₁ = h²ε₀/πme². This is called the Bohr radius, represented by the symbol a₀. Thus, a₀ = h²ε₀/πme². Substitution of values of h, m, ε₀ and e, we get a₀ = 5.29 × 10⁻¹¹ m. Therefore, a₀ ≈ 0.53 Å." },
+    { q: "67. If radius of first Bohr orbit is r, then the radius of second Bohr's orbit will be", img: "", opts: ["2r", "8r", "4r", "2√2r"], ans: 2, exp: "According to Bohr atomic radius, r_n i.e., r_n ∝ n². Therefore, r_n/r₁ = n²/1² or r_n = n²r. So, n = 2 gives r₂ = 4r." },
+    { q: "68. The magnetic moment (μ) of an electron revolving around the nucleus varies with principal quantum number as", img: "", opts: ["μ ∝ n", "μ ∝ 1/n", "μ ∝ n²", "μ ∝ 1/n²"], ans: 0, exp: "Magnetic moment of an electron i.e., μ = IA = ev/(T) · πr² = ev/(2πr) · πr² = e/2 · vr = e/2m · mvr. μ = e/2m · nh/2π. Therefore, μ ∝ n." },
+    { q: "69. Ratio of wavelengths emitted for transition 2 → 1 in Li²⁺, He⁺ and H is", img: "", opts: ["1 : 2 : 3", "1 : 4 : 9", "4 : 9 : 36", "3 : 2 : 1"], ans: 2, exp: "In hydrogen atom, wavelength of characteristic spectrum 1/λ = RZ²(1/n₁² - 1/n₂²). For Lyman series n₁ = 1, n₂ = 2. 1/λ₁ = RZ²(1/1² - 1/2²) ...(i). For Balmer series n₁ = 2, n₂ = 3. 1/λ₂ = RZ²(1/2² - 1/3²) ...(ii). Dividing Eq. (ii) by Eq. (i) we get λ₁/λ₂ = RZ²(1/4 - 1/9)/RZ²(1/1² - 1/2²) = 5/36 / 3/4 = 5/36 × 4/3 = 5/27." },
+    { q: "70. Time of revolution of an electron around a nucleus of charge Ze in n^th Bohr orbit is proportional to", img: "", opts: ["n", "n³/Z²", "n²/Z", "Z/n"], ans: 1, exp: "In hydrogen state, T ∝ n³ => T₁/T₂ = (n₁/n₂)³. Given, T₁ = 8T₂ => n₁ = 2n₂." },
+    { q: "71. Energy of an electron in an excited state of hydrogen atom is – 3.4 eV. Its angular momentum will be", img: "", opts: ["1.11 × 10⁻³⁴ Js", "1.51 × 10⁻³¹ Js", "2.11 × 10⁻³⁴ Js", "3.72 × 10⁻³⁴ Js"], ans: 2, exp: "Using E_n = -13.6/n² = -3.4 eV, we get n = 2. Therefore, Angular momentum L = nh/2π = (2 × 6.6 × 10⁻³⁴)/(2 × 3.14) = 2.11 × 10⁻³⁴ J-s." },
+    { q: "72. When an electron in hydrogen atom is excited from its 4th to 5th stationary orbit, the change in angular momentum of electron is", img: "", opts: ["4.6 × 10⁻³⁴ Js", "3.32 × 10⁻³⁴ Js", "1.05 × 10⁻³⁴ Js", "2.08 × 10⁻³⁴ Js"], ans: 2, exp: "Change in angular momentum ΔL = L₂ - L₁ = n₂h/2π - n₁h/2π = h/2π(n₂ - n₁) = 6.6 × 10⁻³⁴/(2 × 3.14) × (5 - 4) = 1.05 × 10⁻³⁴ J-s." },
+    { q: "73. The ratio of speed of an electron in ground state in Bohr's first orbit of hydrogen atom to the velocity of light in air is", img: "", opts: ["e²/2πhc", "2πe/hc", "e³/2πhc", "2πe²/hc"], ans: 0, exp: "In hydrogen atom, speed of an electron v_n = 2πZe²/nh and v = (2πe²)/hc => v/c = 2πe²/hc." },
+    { q: "74. In Bohr's atomic model, speed and time period of revolution of an electron in n = 3 level are respectively", img: "", opts: ["v = 1.09 × 10⁶ ms⁻¹, T = 1.52 × 10⁻¹⁶ s", "v = 2.19 × 10⁶ ms⁻¹, T = 1.52 × 10⁻¹⁶ s", "v = 7.29 × 10⁶ ms⁻¹, T = 1.22 × 10⁻¹⁶ s", "v = 7.29 × 10⁵ ms⁻¹, T = 4.10 × 10⁻¹⁵ s"], ans: 3, exp: "Using, v_n = 1/137 · c/n, we get v₃ = 1/137 × (3 × 10⁸)/3 = 7.29 × 10⁵ ms⁻¹. Also, T_n = 2πr_n/v. Therefore, T₃ = 2πr₃/v₃ = (2π(3² × 0.53 × 10⁻¹⁰))/(7.29 × 10⁵) = 4.10 × 10⁻¹⁵ s." },
+    { q: "75. The speed of electron in ground state energy level is 2.6 × 10⁶ ms⁻¹, then its speed in fourth excited state will be", img: "", opts: ["5.6 × 10⁶ ms⁻¹", "6 × 10⁵ ms⁻¹", "5.5 × 10⁵ ms⁻¹", "4.3 × 10⁶ ms⁻¹"], ans: 1, exp: "According to Bohr's model v = 2πKe²Z/nh or v ∝ 1/n. Therefore, v₄/v_B = n_B/n_A => v_B = v_A × n_A/n_B = 2.6 × 10⁶ × 1/5 = 6 × 10⁵ ms⁻¹." },
+    { q: "76. Orbital radius of an electron of hydrogen atom in its ground state (n = 1) is around", img: "", opts: ["0.53 Å", "0.16 Å", "0.28", "Cannot be found"], ans: 0, exp: "The size of the innermost orbit (n = 1) can be obtained as r₁ = h²ε₀/πme². This is called the Bohr radius, represented by the symbol a₀. Thus, a₀ = h²ε₀/πme². Substitution of values of h, m, ε₀ and e, we get a₀ = 5.29 × 10⁻¹¹ m. Therefore, a₀ ≈ 0.53 Å." },
+    { q: "77. If radius of first Bohr orbit is r, then the radius of second Bohr's orbit will be", img: "", opts: ["2r", "8r", "4r", "2√2r"], ans: 2, exp: "According to Bohr atomic radius, r_n i.e., r_n ∝ n². Therefore, r_n/r₁ = n²/1² or r_n = n²r. So, n = 2 gives r₂ = 4r." },
+    { q: "78. The magnetic moment (μ) of an electron revolving around the nucleus varies with principal quantum number as", img: "", opts: ["μ ∝ n", "μ ∝ 1/n", "μ ∝ n²", "μ ∝ 1/n²"], ans: 0, exp: "Magnetic moment of an electron i.e., μ = IA = ev/(T) · πr² = ev/(2πr) · πr² = e/2 · vr = e/2m · mvr. μ = e/2m · nh/2π. Therefore, μ ∝ n." },
+    { q: "79. Ratio of wavelengths emitted for transition 2 → 1 in Li²⁺, He⁺ and H is", img: "", opts: ["1 : 2 : 3", "1 : 4 : 9", "4 : 9 : 36", "3 : 2 : 1"], ans: 2, exp: "In hydrogen atom, wavelength of characteristic spectrum 1/λ = RZ²(1/n₁² - 1/n₂²). For Lyman series n₁ = 1, n₂ = 2. 1/λ₁ = RZ²(1/1² - 1/2²) ...(i). For Balmer series n₁ = 2, n₂ = 3. 1/λ₂ = RZ²(1/2² - 1/3²) ...(ii). Dividing Eq. (ii) by Eq. (i) we get λ₁/λ₂ = RZ²(1/4 - 1/9)/RZ²(1/1² - 1/2²) = 5/36 / 3/4 = 5/36 × 4/3 = 5/27." },
+    { q: "80. Time of revolution of an electron around a nucleus of charge Ze in n^th Bohr orbit is proportional to", img: "", opts: ["n", "n³/Z²", "n²/Z", "Z/n"], ans: 1, exp: "In hydrogen state, T ∝ n³ => T₁/T₂ = (n₁/n₂)³. Given, T₁ = 8T₂ => n₁ = 2n₂." },
+    { q: "81. As n increases, energy level comes closer and closer.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "As n increases, energy level comes closer and closer." },
+    { q: "82. Energy of an electron in any of stationary states is given by E_n = -13.6/n² eV.", img: "", opts: ["True", "False", "Cannot say", "None of these"], ans: 0, exp: "Energy of an electron in any of stationary states is given by E_n = -13.6/n² eV." },
+    { q: "83. The observations of Geiger-Marsden experiment are\nI. many of α-particles pass straight through the gold foil.\nII. only about 0.14% of α-particles scatter by more than 1°.\nIII. about 1 in 8000 of α-particles is deflected more than 90°.\nIV. very few α-particles are reflected back.\nChoose the correct option from the codes given below.", img: "", opts: ["I, II and IV", "I, II and III", "II, III and IV", "I, II, III and IV"], ans: 3, exp: "All the given observations are correct." },
+    { q: "84. α-particles have\nI. mass equals to that of helium atom.\nII. charge of +2e units.\nIII. size less than 10⁻¹⁵ m\nIV. speed around that of speed of light.", img: "", opts: ["I and II", "II and III", "I, II and III", "I, II and IV"], ans: 0, exp: "α-particles have mass equals to that of helium atom and charge of +2e units." },
+    { q: "85. Trajectory of an α-particle in Geiger-Marsden experiment is explained by using\nI. Coulomb's law\nII. Newton's law\nIII. Gauss' law\nIV. Faraday's law\nChoose the correct option from the codes given below.", img: "", opts: ["I and II", "I and III", "I and IV", "I, II and IV"], ans: 0, exp: "Trajectory of an α-particle in Geiger-Marsden experiment is explained by using Coulomb's law and Newton's law." },
+    { q: "86. Rutherford's atomic model could account for\nI. concept of stationary orbits.\nII. the positively charged central core of an atom.\nIII. origin of spectra.\nIV. stability of atoms.\nChoose the correct option from the codes given below.", img: "", opts: ["Only I is correct", "Only II is correct", "I, III and IV are correct", "All of these"], ans: 1, exp: "Rutherford's atomic model could account for the positively charged central core of an atom." },
+    { q: "87. In Paschen series, range of wavelengths are\nI. 0.365 μm\nII. 0.565 μm\nIII. 1.89 μm\nIV. 0.818 μm\nChoose the correct option from the codes given below.", img: "", opts: ["I and II", "II and III", "III and IV", "IV and I"], ans: 2, exp: "In Paschen series, 1/λ_max = R(1/3² - 1/4²) => λ_max = 1.89 μm and 1/λ_min = R(1/3² - 1/∞) => λ_min = 0.818 μm." },
+    { q: "88. The Balmer series for the H-atom can be observed,\nI. if we measure the frequencies of light emitted when an excited atom falls to ground state.\nII. if we measure the frequencies of light emitted due to transition between excited states and first excited state.\nIII. in any transition of a H-atom.\nIV. as a sequence of frequencies with the higher frequencies getting closely packed.\nChoose the correct option from the codes given below.", img: "", opts: ["I and II", "II and III", "I and III", "II and IV"], ans: 3, exp: "The Balmer series for the H-atom can be observed if we measure the frequencies of light emitted due to transition between excited states and first excited state and as a sequence of frequencies with the higher frequencies getting closely packed." },
+    { q: "89. Bohr's atomic model assume that\nI. the nucleus of is infinite mass and is at rest.\nII. electrons in a quantised orbit will not radiate the energy.\nIII. mass of electrons remains constant during revolution.\nIV. emission or absorption of energy results to transition of electron from one orbit to another.\nChoose the correct option from the codes given below.", img: "", opts: ["Only Statement I is correct", "Statements I and II are correct", "Statements I, II and III are correct", "All of the above"], ans: 3, exp: "All the given statements are correct." },
+    { q: "90. Which of these statements are correct regarding Bohr's model of hydrogen atom?\nI. Orbiting speed of electron decreases as it shift to discrete orbits away from nucleus.\nII. Radii of allowed orbits of electron are proportional to the principal quantum number.\nIII. Frequency of revolution of an electron is inversely proportional to the cube of principal quantum number.\nIV. Binding force with which electron is bound to nucleus increases as electron shifts to outer orbits.\nChoose the correct option from the codes given below.", img: "", opts: ["I and III", "II and IV", "I, II and III", "II, III and IV"], ans: 0, exp: "I and III statements are correct." },
+    { q: "91. In a mixture of H—He⁺ gas (He⁺ is singly ionized He atom), H-atoms and He⁺ ions are excited to their respective first excited states. Subsequently, H atoms transfer their total excitation energy to He⁺ ions (by collisions). The quantum number n of the state finally populated in He⁺ ions is", img: "", opts: ["2", "3", "4", "5"], ans: 2, exp: "E_n = -13.6/n² Z². In first excited state E_H₂ = -3.4 eV and E_He = -13.6 eV. H₂ atom gives excitation energy (10.2 eV) to helium atom. Now energy of He ion = -13.6 + 10.2 = -3.4 eV. Again, E = -13.6/n² × Z² => n = √(13.6 × 4 / 3.4) = 4." },
+    { q: "92. The wavelength of light emitted in the visible region by He⁺ ions after collisions with H-atoms is", img: "", opts: ["6.5 × 10⁻⁷ m", "5.6 × 10⁻⁷ m", "4.8 × 10⁻⁷ m", "4.0 × 10⁻⁷ m"], ans: 2, exp: "1/λ = (13.6Z²/hc)(1/n₁² - 1/n₂²). Here n₁ = 3 and n₂ = 4 => λ = 4.8 × 10⁻⁷ m." },
+    { q: "93. The ratio of kinetic energy of the n = 2 electrons for the H-atom to that of He⁺ ion is", img: "", opts: ["1/4", "1/2", "1", "2"], ans: 0, exp: "Kinetic energy, K ∝ Z²/n². K_H₂/K_He = (Z_H₂/Z_He)² = (1/2)² = 1/4." },
+    { q: "94. [Passage: The key feature of Bohr's theory of spectrum of hydrogen atom is the quantisation of angular momentum when an electron is revolving around a proton. We will extend this to a general rotational motion to find quantized rotational energy of a diatomic molecule assuming it to be rigid. The rule to be applied is Bohr's quantization condition.] A diatomic molecule has moment of inertia I. By Bohr's quantization condition its rotational energy in the n^th level (n = 0 is not allowed) is", img: "", opts: ["(1/n²)(h²/8π²I)", "(1/n)(h²/8π²I)", "n(h²/8π²I)", "n²(h²/8π²I)"], ans: 3, exp: "Iω = nh/2π. Rotational kinetic energy = (1/2)Iω² = (1/2) × (n²h²/4π²I) = n²h²/8π²I." },
+    { q: "95. [Passage: The key feature of Bohr's theory of spectrum of hydrogen atom is the quantisation of angular momentum when an electron is revolving around a proton. We will extend this to a general rotational motion to find quantized rotational energy of a diatomic molecule assuming it to be rigid. The rule to be applied is Bohr's quantization condition.] It is found that the excitation frequency from ground to the first excited state of rotation for the CO molecule is close to 4/π × 10¹¹ Hz. Then, the moment of inertia of CO molecule about its centre of mass is close to (Take, h = 2π × 10⁻³⁴ Js)", img: "", opts: ["2.76 × 10⁻⁴⁶ kgm²", "1.87 × 10⁻⁴⁶ kgm²", "4.67 × 10⁻⁴⁷ kgm²", "1.17 × 10⁻⁴⁷ kgm²"], ans: 1, exp: "hf = change in rotational kinetic energy (f = frequency). hf = 3h²/8π²I => I = 3h/(8π²f) = (3 × 2π × 10⁻³⁴)/(8π² × 4/π × 10¹¹) = 0.1875 × 10⁻⁴⁵ = 1.875 × 10⁻⁴⁶ kgm²." },
+    { q: "96. [Passage: The key feature of Bohr's theory of spectrum of hydrogen atom is the quantisation of angular momentum when an electron is revolving around a proton. We will extend this to a general rotational motion to find quantized rotational energy of a diatomic molecule assuming it to be rigid. The rule to be applied is Bohr's quantization condition.] In a CO molecule, the distance between C (mass = 12 amu) and O (mass = 16 amu), where 1 amu = 5/3 × 10⁻²⁷ kg, is close to", img: "", opts: ["2.4 × 10⁻¹⁰ m", "1.9 × 10⁻¹⁰ m", "1.3 × 10⁻¹⁰ m", "4.4 × 10⁻¹¹ m"], ans: 2, exp: "r₁ = m₂d/(m₁ + m₂) and r₂ = m₁d/(m₁ + m₂). Now, I = m₁r₁² + m₂r₂². Therefore, d = 1.3 × 10⁻¹⁰ m." },
+    { q: "97. Which of the following is true for Balmer series of the hydrogen spectrum?", img: "", opts: ["The entire series falls in the UV region", "The series is partly in the visible region and partly in the UV region", "The wave number of the first Balmer line is 5R/36, R is the Rydberg's constant", "The colour of the second line of Balmer series is blue."], ans: 1, exp: "(b, c, d) The series is partly in the visible region and partly in the UV region. The colour of the second line of Balmer series is blue. Wave number = 1/λ = R(1/n₁² - 1/n₂²). For first Balmer line n₁ = 2, n₂ = 3. Therefore, Wave number = R(1/2² - 1/3²) = R((9-4)/(9×4)) = 5R/36." },
+    { q: "98. The radius of the orbit of an electron in a Hydrogen like atom is 4.5 a₀, where a₀ is the Bohr radius. Its orbital angular momentum is 3h/2π. It is given that h is Planck's constant and R is Rydberg constant. The possible wavelength(s), when the atom de-excites is/are", img: "", opts: ["9/32R", "9/16R", "9/5R", "4/3R"], ans: 0, exp: "(a, c) nh/2π = 3h/2π => n = 3. a₀ × n²/Z = 4.5a₀ => n²/Z = 4.5 => Z = 2. 1/λ₁ = R × 2²[1/1² - 1/3²]. 1/λ₂ = 4R[1/2² - 1/3²]. 1/λ₃ = 4R[1/1² - 1/2²]. λ₁ = 9/32R, λ₂ = 9/5R, λ₃ = 1/3R." },
+    { q: "99. Consider a beam of free electrons among towards free protons. When they scatter, an electron and a proton cannot combine to produce a H-atom.", img: "", opts: ["Because of energy conservation", "Without simultaneously releasing energy in the form of radiation", "Because of momentum conservation", "Because of angular momentum conservation"], ans: 0, exp: "When beam of free electrons is aiming towards free protons. Then, they scatter but an electron and a proton cannot combine to produce a H-atom because of energy conservation and without simultaneously releasing energy in the form of radiation." },
+    { q: "100. The Bohr model for the spectra of a H-atom", img: "", opts: ["will not be applicable to hydrogen in the molecular form", "will not be applicable for multielectron atom", "is valid only at room temperature", "predicts continuous as well as discrete spectral lines"], ans: 0, exp: "(a, b) The Bohr model for the spectra of a H-atom will not be applicable to hydrogen in the molecular form. And also, it will not be applicable for multielectron atom." },
+    { q: "101. The minimum energy to ionise an atom is the energy required to", img: "", opts: ["add one electron to the gaseous state of atom", "excite the atom from its ground state to its first excited state", "remove one outermost electron from the gaseous state of atom", "remove one innermost electron from the gaseous state of atom"], ans: 2, exp: "The minimum energy to ionise an atom is the energy required to excite an electron in the atom from its ground state corresponding to n = 1, to its ionisation level corresponding to n = ∞. If the atom is given such amount of energy, the electron is just able to become a free electron and the atom is about to be ionised. When this occurs, one outermost electron from the atom is just to be removed from the atom. Much higher energy is necessary to free an innermost electron from the atom." },
+    { q: "102. What is the shortest wavelength present in the Paschen series of spectral lines?", img: "", opts: ["411.85 nm", "822.65 nm", "11.85 nm", "22.65 nm"], ans: 1, exp: "For Paschen series, n₁ = 3 and n₂ = ∞ for shortest wavelength, using the formula, hc/λ = R[1/n₁² - 1/n₂²] [where, R is the Rydberg constant]. hc/λ = 13.6 × 1.6 × 10⁻¹⁹ [1/3² - 1/∞²] or hc/λ = (21.76 × 10⁻¹⁹)/9. or λ = (9 × 6.63 × 10⁻³⁴ × 3 × 10⁸)/(21.76 × 10⁻¹⁹) = 8.2265 × 10⁻⁷ m = 822.65 nm. Thus, the shortest wavelength present is 822.65 nm." },
+    { q: "103. A difference of 2.3 eV separates two energy levels in an atom. What is the frequency of radiation emitted when the atom makes a transition from the upper level to the lower level?", img: "", opts: ["3.4 × 10² Hz", "1.25 × 10¹⁰ Hz", "5.6 × 10¹⁴ Hz", "None of these"], ans: 2, exp: "Given, difference in energy level E = 2.3 eV = 2.3 × 1.6 × 10⁻¹⁹ J. Planck's constant h = 6.63 × 10⁻³⁴ J-s. Let v be the frequency, then E = hv or v = E/h = (2.3 × 1.6 × 10⁻¹⁹)/(6.63 × 10⁻³⁴) = 5.6 × 10¹⁴ Hz." },
+    { q: "104. The ground state energy of hydrogen atom is –13.6 eV. What are the kinetic and potential energies of the electron in this state?", img: "", opts: ["KE = 13.6 eV, PE = –27.2 eV", "KE = 1.5 eV, PE = –3.0 eV", "KE = –27.2 eV, PE = 13.6 eV", "None of the above"], ans: 0, exp: "Given, the ground state energy of hydrogen atom E = - 13.6 eV. We know that Kinetic Energy (KE) = - E = 13.6 eV. Potential Energy (PE) = - 2KE = - 2 × 13.6 = - 27.2 eV." },
+    { q: "105. A hydrogen atom initially in the ground level absorbs a photon which excites it to the n = 4 level. Determine the wavelength of photon.", img: "", opts: ["9.74 × 10⁻⁸ m", "5.25 × 10⁻⁵ m", "1.05 × 10⁻³ m", "7.15 × 10⁻² m"], ans: 0, exp: "For ground state n₁ = 1 to n₂ = 4. Energy absorbed by photons E = E₂ - E₁ = 12 - 75 eV = + 13.6(1/n₁² - 1/n₂²) × 1.6 × 10⁻¹⁹ J = 13.6(1/1² - 1/4²) × 1.6 × 10⁻¹⁹ = 13.6 × 1.6 × 10⁻¹⁹(15/16) = 20.4 × 10⁻¹⁹. or E = hv = 20.4 × 10⁻¹⁹. Frequency v = (20.4 × 10⁻¹⁹)/h = (20.4 × 10⁻¹⁹)/(6.63 × 10⁻³⁴) = 3.076 × 10¹⁵ = 3.076 × 10¹⁵ Hz. Wavelength of photon λ = c/v = (3 × 10⁸)/(3.076 × 10¹⁵) = 9.74 × 10⁻⁸ m." },
+    { q: "106. The radius of the innermost electron orbit of a hydrogen atom is 5.3 × 10⁻¹¹ m. What are the radii of then n = 2 and n = 3 orbits?", img: "", opts: ["2.12 × 10⁻¹⁰ m, 5.5 × 10⁻¹⁰ m", "2.12 × 10⁻¹⁰ m, 4.77 × 10⁻¹⁰ m", "1.05 × 10⁻¹⁰ m, 1.25 × 10⁻¹⁰ m", "None of the above"], ans: 1, exp: "Given, the radius of the innermost electron orbit of a hydrogen atom r₁ = 5.3 × 10⁻¹¹ m. As we know that r_n = n²r₁. For n = 2, radius r₂ = 2²r₁ = 4 × 5.3 × 10⁻¹¹ = 2.12 × 10⁻¹⁰ m. For n = 3, radius r₃ = 3²r₁ = 9 × 5.3 × 10⁻¹¹ = 4.77 × 10⁻¹⁰ m." },
+    { q: "107. A 12.5 eV electron beam is used to bombard gaseous hydrogen at room temperature. What series of wavelength will be emitted?", img: "", opts: ["225 Å", "845 Å", "993 Å", "105 Å"], ans: 2, exp: "Energy of electron beam E = 12.5 eV = 12.5 × 1.6 × 10⁻¹⁹ J. Planck's constant h = 6.63 × 10⁻³⁴ J-s. Velocity of light c = 3 × 10⁸ ms⁻¹. Using the relation E = hc/λ => λ = (6.62 × 10⁻³⁴ × 3 × 10⁸)/(12.5 × 1.6 × 10⁻¹⁹) = 0.993 × 10⁻⁷ m = 993 × 10⁻¹⁰ m = 993 Å. This wavelength falls in the range of Lyman series (912 Å to 1216 Å) thus, we conclude that Lyman series of wavelength 993 Å is emitted." },
+    { q: "108. In accordance with the Bohr's model, find the quantum number that characterises the earth's revolution around the sun in an orbit of radius 1.5 × 10¹¹ m with orbital speed 3 × 10⁴ ms⁻¹. (Mass of earth = 6.0 × 10²⁴ kg.)", img: "", opts: ["2.6 × 10⁷⁴", "8.5 × 10⁸⁰", "4.34 × 10¹⁰⁰", "None of these"], ans: 0, exp: "Given, radius of orbit r = 1.5 × 10¹¹ m. Orbital speed v = 3 × 10⁴ m/s; mass of earth M = 6 × 10²⁴ kg. Angular momentum, mvr = nh/2π. or n = 2πvrm/h [where, n is the quantum number of the orbit] = (2 × 3.14 × 3 × 10⁴ × 1.5 × 10¹¹ × 6 × 10²⁴)/(6.63 × 10⁻³⁴) = 2.57 × 10⁷⁴ or n = 2.6 × 10⁷⁴. Thus, the quantum number is 2.6 × 10⁷⁴ which is too large." },
+    { q: "109. The total energy of an electron in the first excited state of the hydrogen atom is about –3.4 eV. What is the kinetic energy of the electron in this state?", img: "", opts: ["–3.4 eV", "+ 3.4 eV", "6.8 eV", "– 6.8 eV"], ans: 1, exp: "The kinetic energy of electron (KE) = KZe²/2r. Potential energy of electron (PE) = -KZe²/r => PE = -2 KE. In this calculation, the electric potential and potential energy are zero at infinity. Total energy = PE + KE = - 2KE + KE = - KE. In the first excited state, total energy = - 3.4 eV. KE = - (-3.4) = 3.4 eV." },
+    { q: "110. In the above question, what is the potential energy of the electron in this state?", img: "", opts: ["–3.4 eV", "+ 3.4 eV", "6.8 eV", "– 6.8 eV"], ans: 3, exp: "PE of electron in this first excited state = -2KE = -2(3.4) = -6.8 eV." },
+    { q: "111. Which of the answers for the above question would change if the choice of the zero of potential energy is changed?", img: "", opts: ["KE", "PE", "TE", "Both (b) and (c)"], ans: 3, exp: "If zero of potential energy is changed, kinetic energy does not change and continue to be +3.4 eV. So, the potential energy and total energy of the state would change with the choice of zero of potential energy." },
+    { q: "112. A 10 kg satellite revolves around the earth in circular orbit in every 2 h in an orbit, of radius 8000 km. Then, according to Bohr's theory, quantum number of orbit of satellite is", img: "", opts: ["100", "204", "5.3 × 10⁴⁵", "5.3 × 10¹²"], ans: 2, exp: "Here, m = 10 kg and r_n = 8 × 10⁶ m. We have, the time period T of the circling satellite is 2 h. That is T = 7200 s. Thus, the velocity v_n = 2πr_n/T. mvr = nh/2π. The quantum number of the orbit of satellite n = (2πr_n)² × m/(T × h). Substituting the values, n = (2π × 8 × 10⁶ m)² × 10/(7200 s × 6.64 × 10⁻³⁴ Js) = 5.3 × 10⁴⁵." },
+    { q: "113. Taking Bohr radius, a₀ = 53 pm, the radius of Li²⁺ ion in its ground state on the basis of Bohr model will be", img: "", opts: ["53 pm", "27 pm", "18 pm", "13 pm"], ans: 2, exp: "For a hydrogen like atom r_n = 0.53 n²/Z Å = 53 n²/Z pm. For Li²⁺, n = 1 (ground state). Z = 3. Therefore, r_n = 53/3 ≈ 18 pm." },
+    { q: "114. The simple Bohr model cannot be directly applied to calculate the energy levels of an atom with many electrons as", img: "", opts: ["electrons are not subjected to a central force", "electrons are colliding with each other", "electrons are subjected to screening effects", "force between nucleus and electrons is in comparison to electron-electron electronic force."], ans: 2, exp: "The simple Bohr model cannot be applied to multielectron atoms because of the presence of electron-electron interaction. The electrons are subjected to screening effects." },
+    { q: "115. For ground state of H-atom, angular momentum is h/2π. As angular momentum is a vector and hence there will be infinitely many possibilities of orbits with vector pointing in all possible directions. In actuality this is not correct", img: "", opts: ["because Bohr model gives incorrect value of angular momentum", "because only one of these would have a minimum energy", "angular momentum must be in the direction of spin of electrons", "because electrons go around in horizontal orbits only"], ans: 0, exp: "Bohr's model assumes a central force and circular orbit which accounts for a constant angular momentum with vector pointing perpendicular to force vector. This is an approximate model." },
+    { q: "116. O₂ molecule consists of two oxygen atoms. In the molecule, nuclear force between the nuclei of the two atoms", img: "", opts: ["is not important because nuclear forces are short-ranged", "is an important as electrostatic force for binding the two atoms", "cancels the repulsive electrostatic force between the nuclei", "is not important because oxygen nucleus have equal number of neutrons and protons"], ans: 0, exp: "In a molecule, the nuclear force between the nuclei of the two atoms is not important because nuclear forces are short-ranged." },
+    { q: "117. Two H-atoms in the ground state collide inelastically. The maximum amount by which their combined kinetic energy is reduced is", img: "", opts: ["10.20 eV", "20.40 eV", "13.6 eV", "27.2 eV"], ans: 0, exp: "The total energy associated with the two H-atoms in the ground state collide in elastically = 2 × (13.6 eV) = 27.2 eV. The maximum amount by which their combined kinetic energy is reduced when anyone of them goes into first excited state after the inelastic collision. The total energy associated with the two H-atoms after the collision = (13.6/2²) + (13.6) = 17.0 eV. Therefore, maximum loss of their combined kinetic energy = 27.2 - 17.0 = 10.2 eV." },
+    { q: "118. A set of atoms in an excited state decays", img: "", opts: ["in general to any of the states with lower energy", "into a lower state only when excited by an external electric field", "all together simultaneously into a lower state", "to emit photons only when they collide"], ans: 0, exp: "A set of atoms in an excited state decays in general to any of the state with lower energy, emitting a photon in the process." },
+    { q: "119. An ionised H-molecule consists of an e⁻ and two protons. The protons are separated by a small distance. In ground state", img: "", opts: ["the e⁻ would not move in circular orbits", "the energy would be 2⁴ times of a H-atom", "the e⁻ would not go around protons", "molecule soon decay in a proton and a H-atom"], ans: 0, exp: "In an ionised hydrogen molecule, as there are two protons and one electron, therefore electrons's orbit would go around the two protons separated by a small distance (~ Å). Electron revolves around the 'charge centre' so orbit is no longer remains circular." },
+    { q: "120. Let E_n = -me⁴/8ε₀²n²h² be the energy of n^th level of H-atom. If all the H-atoms are in ground state and radiation of frequency E₂ - E₁/h falls on it, then\nI. it will not be absorbed at all.\nII. some of atoms moves to first excited state.\nIII. all atoms will be excited to n = 2 state.\nIV. no atom makes a transition to the n = 3 state.\nPossible options is/are", img: "", opts: ["Only I", "II and III", "II and IV", "III and IV"], ans: 2, exp: "As incident energy is E₂ - E₁, so, it is sufficient for an electron to make a transition from n = 1 to n = 2 state. So, depending on number of incident photons, few of e⁻ absorbs photons and so are excited in a higher energy level (n = 2 state)." },
+    { q: "121. The simple Bohr model cannot be applied to He⁴ atom as it was applied to a H-atom, because\nI. He⁴ is an inert gas.\nII. He⁴ has neutrons in its nucleus.\nIII. He⁴ has one more electron.\nIV. Electrons-electrons interaction are effective.\nCorrect reasons are", img: "", opts: ["III and IV", "I and II", "II and III", "II and IV"], ans: 0, exp: "Bohr model is applicable to single electron atom and ions. He⁴ has two electrons, thus electrons-electrons interaction are effective." },
+    { q: "122. Positronium is just like a H-atom with the proton replaced by the positively charged anti-particle of the electron (called the positron which is as massive as the electron). What would be the ground state energy of positronium?", img: "", opts: ["1.3 eV", "- 6.8 eV", "2.5 eV", "-13.6 eV"], ans: 1, exp: "The total energy of the electron in the stationary states of the hydrogen atom is given by E_n = -me⁴/8n²ε₀²h² ≈ -13.6Z²/n² μ/m_e. μ = reduced mass = m_e/2. E₁ = -13.6/2 = -6.8 eV." },
+    { q: "123. Assume that there is no repulsive force between the electrons in an atom but the force between positive and negative charges is given by Coulomb's law as usual. Under such circumstances, calculate the ground state energy of a He-atom.", img: "", opts: ["–54.4 eV", "–13.6 eV", "12 eV", "13.6 eV"], ans: 0, exp: "For a He-nucleus with charge 2e and electrons of charge -e, the energy level in ground state is -E_n = Z² - 13.6 eV/n² = 2² - 13.6 eV/1² = - 54.4 eV. It will remain same, if no interaction between electrons." },
+    { q: "124. Using Bohr model, calculate the electric current created by the electron when the H-atom is in the ground state. With radius a₀ and velocity v.", img: "", opts: ["2πa₀v", "e/2πv", "2πa₀e/v", "0"], ans: 2, exp: "The electron in hydrogen atom in ground state revolves on a circular path whose radius is equal to the Bohr radius (a_n). Let the velocity of electron is v. Therefore, Time for one revolution = 2πa₀/v. The electric current is given by i = q/t, if q charge flows in time t. Here, q = e. The electric current is given by i = 2πa₀e/v." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 59; // ⚠️ Set to 59 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+<script src="results-save.js"></script>
+</body>
+</html>
