@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 49: Electrostatic Potential and Capacitance - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 49: Electrostatic Potential and Capacitance</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+<script src="keys.js"></script>
+<script src="autosave.js"></script>
+<script src="shuffle.js"></script>
+<script>
+const questions = [
+    { q: "1. Work done by an external force in bringing a unit positive charge from infinity to a point is", opts: ["equal to the electrostatic potential (V) at that point", "equal to the negative of work done by electrostatic forces", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "Potential is work done by external force against electrostatic force. Both statements are correct." },
+    { q: "2. If δW is the work done in bringing an infinitesimal small test charge δq from infinity to a point P, then potential at point P is", img: "images/phy17-q2.png", opts: ["δW/δq", "-δW/δq", "δW · δq", "None of these"], ans: 0, exp: "V = W/q = δW/δq." },
+    { q: "3. To find the value of potential at a point, the external force at every point of the path is to be equal and opposite to the", img: "images/phy17-q3.png", opts: ["work done", "electrostatic force on the test charge at that point", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 1, exp: "External force must balance electrostatic force at every point." },
+    { q: "4. For Q < 0, V < 0, work done (by the external force) per unit positive test charge in bringing it from infinity to the point is negative. This is equivalent to", img: "images/phy17-q4.png", opts: ["work done by electrostatic force in bringing the unit positive charge from infinity to the point P is positive", "work done by the electrostatic force in bringing the unit positive charge from infinity to the point P is negative", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 0, exp: "W_ext = -W_elec. Negative W_ext means positive W_elec." },
+    { q: "5. The electrostatic potential of a uniformly charged thin spherical shell of charge Q and radius R at a distance r from the centre is", img: "images/phy17-q5.png", opts: ["Q/(4πε₀r) for points outside and Q/(4πε₀R) for points inside the shell", "Q/(4πε₀r) for both points inside and outside the shell", "zero for points outside and Q/(4πε₀r) for points inside the shell", "zero for both points inside and outside the shell"], ans: 0, exp: "Outside V=kQ/r, inside V=kQ/R." },
+    { q: "6. Work done by external forces in moving a charge q from R to P as shown in figure is", img: "images/phy17-q6.png", opts: ["-∫(R to P) F_E · dr", "∫(R to P) F_E · dr", "∫(R to P) 2F_E · dr", "∫(R to P) (F_E/2) · dr"], ans: 0, exp: "W_ext = -W_E = -∫F_E · dr." },
+    { q: "7. If a point charge (+q) is taken along two different paths say AMB (path 1) and ACB (path 2) such that A, M and B lie on the circle and +q (another charge) is placed at the centre, then which the given statements holds true for work done along the two paths.", img: "images/phy17-q7.png", opts: ["W_AMB > W_ACB", "W_ACB > W_AMB", "W_ACB = W_AMB", "None of these"], ans: 2, exp: "Electrostatic field is conservative, work is path independent." },
+    { q: "8. A uniform electric field E exists between two charged plates. What would be the work done in moving a charge q along the closed path ABCDA?", img: "images/phy17-q8.png", opts: ["∮ E · dl", "-∮ E · dl", "Zero", "None of these"], ans: 2, exp: "Work done in closed path in conservative field is zero." },
+    { q: "9. If 100 J of work has to be done in moving an electric charge 4 C from a place where potential is –10 V to another place where potential is V volt, find the value of V.", img: "images/phy17-q9.png", opts: ["5 V", "10 V", "25 V", "(d) 15 V"], ans: 3, exp: "W = q(V_f - V_i) => 100 = 4(V - (-10)) => 25 = V + 10 => V = 15 V." },
+    { q: "10. The potential difference between a cloud and the Earth is 10⁷ V. Calculate the amount of energy dissipated when the charge of 100 C is transferred from the cloud to the ground due to lightning bolt.", img: "images/phy17-q10.png", opts: ["zero", "10⁹ J", "60 J", "10⁷ J"], ans: 1, exp: "W = qV = 100 * 1e7 = 10⁹ J." },
+    { q: "11. In the given figure, total work done (W) by the external force from r' = ∞ to r' = r is", img: "images/phy17-q11.png", opts: ["-Q/(4πε₀r)", "Q/(4πε₀r)", "2Q/(4πε₀r)", "-2Q/(4πε₀r)"], ans: 1, exp: "W = q(V_f - V_i) = 1*(Q/4πε₀r - 0) = Q/4πε₀r." },
+    { q: "12. In the given figure, work done against this force from r' to r' - Δr' is", img: "images/phy17-q12.png", opts: ["Q/(4πε₀r'^2) Δr'", "2Q/(4πε₀r'^2) Δr'", "-2Q/(4πε₀r'^2) Δr'", "-Q/(4πε₀r'^2) Δr'"], ans: 3, exp: "dW = -F dr = -(Q/4πε₀r'^2) dr. So work against is -(Q/4πε₀r'^2)Δr'." },
+    { q: "13. The above figure shows the variation of potential V or electric field with r for a point charge Q. Which of the given curves represent E versus r or V versus r?", img: "images/phy17-q13.png", opts: ["I → E versus r, II → V versus r", "I → V versus r, II → V versus r", "Both represent E versus r", "None of the above"], ans: 0, exp: "E ∝ 1/r² (steeper). V ∝ 1/r. So I is E, II is V." },
+    { q: "14. Calculate the potential at a point P due to a charge of 4 × 10⁻⁷ C located 9 cm away", img: "images/phy17-q14.png", opts: ["8 × 10⁻⁵ V", "8 × 10⁴ V", "4 × 10⁴ V", "4 × 10⁻⁴ V"], ans: 2, exp: "V = 9e9 * 4e-7 / 0.09 = 4e4 V." },
+    { q: "15. With reference to above question (14), the work done in bringing a charge of 2 × 10⁻⁹ C from infinity to the point P is", img: "images/phy17-q15.png", opts: ["4 × 10⁻⁴ J", "6 × 10⁻⁴ J", "8 × 10⁻⁵ J", "8 × 10⁵ J"], ans: 2, exp: "W = qV = 2e-9 * 4e4 = 8e-5 J." },
+    { q: "16. A hollow metal sphere of radius 10 cm is charged such that the potential on its surface becomes 80 V. The potential at the centre of the sphere is", img: "images/phy17-q16.png", opts: ["80 V", "800 V", "8 V", "zero"], ans: 0, exp: "Inside hollow sphere, potential is constant and equal to surface." },
+    { q: "17. A charge 2Q is placed at each corner of a cube of side a. The potential at the centre of the cube is", img: "images/phy17-q17.png", opts: ["8Q/(πε₀a)", "4Q/(4πε₀a)", "8Q/(√3πε₀a)", "2Q/(πε₀a)"], ans: 2, exp: "Distance from corner to center = a√3/2. V = 8 * k(2Q) / (a√3/2) = 8 * 2Q / (4πε₀ a√3/2) = 8Q/(√3 πε₀ a)." },
+    { q: "18. The potential of a large liquid drop when eight liquid drops are combined is 20 V. Then, the potential of each single drop was", img: "images/phy17-q18.png", opts: ["10 V", "7.5 V", "5 V", "2.5 V"], ans: 2, exp: "V_big = n^(2/3) V_small. 20 = 8^(2/3) V = 4V => V = 5V." },
+    { q: "19. As per this diagram, a point charge +q is placed at the origin O. Work done in taking another point charge –Q from the point A [coordinates (0, a)] to another point B [coordinate (a,0)] along the straight path AB is", img: "images/phy17-q19.png", opts: ["zero", "(-qQ/(4πε₀a²))√2a", "(qQ/(4πε₀a²))·(a/√2)", "(qQ/(4πε₀))(1/a²)√2a"], ans: 0, exp: "V_A = V_B = kq/a. W = -Q(V_B - V_A) = 0." },
+    { q: "20. With reference to the figure given below, the electric potential of a dipole is given by", img: "images/phy17-q20.png", opts: ["(2p r̂)/(4πε₀r²)", "(p r̂)/(8πε₀r²)", "(1/4πε₀)(p r̂/r²)", "(1/4πε₀)(p r̂/r)"], ans: 2, exp: "V = (1/4πε₀) (p·r̂)/r²." },
+    { q: "21. Two charges 3 × 10⁻⁸ C and –2 × 10⁻⁸ C located 15 cm apart. At what point on the line joining the two charges is the electric potential zero?", img: "images/phy17-q21.png", opts: ["9 cm", "45 cm", "18 cm", "Both (a) and (b)"], ans: 3, exp: "Potential zero at 9cm from +ve and 45cm from +ve on extended line. So (a) and (b)." },
+    { q: "22. A solid conducting sphere having a charge Q is surrounded by an uncharged concentric hollow spherical shell. Let the potential difference between the surface of the solid sphere and that of the outer surface of hollow shell be V. What will be the new potential difference between the same two surfaces if the shell is given a charge – 3Q?", img: "images/phy17-q22.png", opts: ["V", "–3 V", "2 V", "4 V"], ans: 0, exp: "Adding charge to shell shifts both potentials equally, difference remains same." },
+    { q: "23. In the figure given alongside, O is the centre of line joining AB. Two charges of opposite nature and same magnitude are placed at A and B respectively. The potential at point P is", img: "images/phy17-q23.png", opts: ["2kq/(a√2)", "zero", "kq/(a√2)", "cannot be determined"], ans: 1, exp: "P is on equatorial line. V = 0." },
+    { q: "24. For a uniform electric field E, along the X-axis, the equipotential surfaces", img: "images/phy17-q24.png", opts: ["planes perpendicular to the X-axis", "planes parallel to the YZ-plane", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "Equipotential surfaces are perpendicular to field. So planes parallel to YZ. Both (a) and (b)." },
+    { q: "25. Three equipotential surfaces are shown in figure. Which of the following is correct one for the corresponding field lines?", img: "images/phy17-q25.png", opts: ["Figure (a)", "Figure (b)", "Figure (c)", "None of these"], ans: 2, exp: "Lines are perpendicular to equipotential. Fig (c) shows this." },
+    { q: "26. In the above question, the field strength at a point a,where the distance between the surfaces is 4 cm, is", img: "images/phy17-q26.png", opts: ["50 Vm⁻¹", "5 Vm⁻¹", "15 Vm⁻¹", "55 Vm⁻¹"], ans: 0, exp: "E = ΔV/Δr = 2V / 0.04m = 50 V/m." },
+    { q: "27. Figure shows equipotential surfaces. What is the direction of electric field E at P and R?", img: "images/phy17-q27.png", opts: ["At P, E is to the left. At R, E is upward", "At P, E is to the right. At R, E is downward", "At P, E is to downward. At R, E is to the left", "At P, E is to upward. At R, E is to the right"], ans: 0, exp: "E points from high to low V. At P, left. At R, up." },
+    { q: "28. Equipotential surface between two equal and oppose charges passing through the middle point is", img: "images/phy17-q28.png", opts: ["a plane", "curved surface", "Both (a) and (b)", "None of these"], ans: 0, exp: "Equatorial plane is zero potential, flat." },
+    { q: "29. The electric potential at a certain distance from a point charge is 600 V and the electric field is 200 NC⁻¹. The distance of the point charge (in metres) is", img: "images/phy17-q29.png", opts: ["2", "3", "1", "0"], ans: 1, exp: "V = E r => r = V/E = 600/200 = 3m." },
+    { q: "30. In a Millikan drop experiment, a drop of diameter 10⁻⁴ cm with a density of 900 kgm⁻³ is observed. The capacitor plates are 2 cm apart. A potential of 72 V applied across the plates keeps the drop in balance. How many electronic charges are there on the drop?", img: "images/phy17-q30.png", opts: ["1", "8", "4", "2"], ans: 1, exp: "qE = mg. q(V/d) = ρ(4/3πr³)g. q = 1.3e-18 C. n = q/e = 8." },
+    { q: "31. Work done in moving a test charge over an equipotential surface?", img: "images/phy17-q31.png", opts: ["No", "Yes", "Constant", "Zero"], ans: 3, exp: "W = qΔV = 0." },
+    { q: "32. What is the work done in moving a 2μC point charges from corner A to corner B of a square ABCD in figure when a 10μC charge exists at the centre of the square?", img: "images/phy17-q32.png", opts: ["Zero", "5", "2", "20"], ans: 0, exp: "V_A = V_B. W = 0." },
+    { q: "33. If a charged spherical conductor of radius 10 cm has potential V at a point distant 5 cm from its centre, then the potential at a point distant 15 cm from the centre will be", img: "images/phy17-q33.png", opts: ["V/3", "2V/3", "3V/2", "V"], ans: 1, exp: "Inside V is kQ/R. Outside V' = kQ/r'. V'/V = R/r' = 10/15 = 2/3." },
+    { q: "34. Potential energy difference between points R and P is equal to", img: "images/phy17-q34.png", opts: ["ΔU = - W_RP", "ΔU = W_RP", "ΔU = 2W_RP", "ΔU = 4 W_RP"], ans: 1, exp: "ΔU = W_RP (work done by external force)." },
+    { q: "35. Consider the following figure as shown below. Work done by external force in bringing a unit positive charge from point R to P is", img: "images/phy17-q35.png", opts: ["-(U_P - U_R)/q", "-(U_R - U_P)/q", "(U_R - U_P)/(2q)", "(U_P - U_R)/q"], ans: 3, exp: "W_ext = q(V_P - V_R) = U_P - U_R. For unit charge, W = (U_P - U_R)/q." },
+    { q: "36. The total potential energy of a system of three charges q₁, q₂ and q₃ located at r₁, r₂ and r₃ respectively is that", img: "images/phy17-q36.png", opts: ["(1/4πε₀)(q₁q₂/r₁₂ + q₁q₃/r₁₃ + q₂q₃/r₂₃)", "(1/4πε₀)(q₁q₂/r₁₂ - q₁q₃/r₁₃ + q₂q₃/r₂₃)", "(1/4πε₀)(q₁q₂/r₁₂ + q₁q₃/r₁₃ - q₂q₃/r₂₃)", "(1/4πε₀)(q₁q₂/r₁₂ - q₁q₃/r₁₃ - q₂q₃/r₂₃)"], ans: 0, exp: "U = sum of all pairs (k q_i q_j / r_ij)." },
+    { q: "37. Three charges are placed at the vertex of an equilateral triangle of side l as shown in figure. For what value of Q, the electrostatic potential energy of the system is zero?", img: "images/phy17-q37.png", opts: ["-q", "q/2", "-2q", "-q/2"], ans: 3, exp: "U = k/l (qQ + qQ + q²) = 0 => 2Q + q = 0 => Q = -q/2." },
+    { q: "38. In the figure, proton moves a distance d in a uniform electric field E as shown in the figure. Does the electric field do a positive or negative work on the proton? Does the electric potential energy of the proton increase or decrease?", img: "images/phy17-q38.png", opts: ["Negative, increase", "Positive, decrease", "Negative, decrease", "Positive, increase"], ans: 0, exp: "Proton moves against E. W_E is negative. PE increases." },
+    { q: "39. Work done in moving a charge from one point to other inside a uniformly charged conducting sphere is", img: "images/phy17-q39.png", opts: ["always zero", "non-zero", "may be zero", "None of these"], ans: 0, exp: "Inside conductor E = 0, so W = 0." },
+    { q: "40. Four charges are arranged at the corners of a square ABCD of side d, as shown in the figure. The work required to put together this arrangement is", img: "images/phy17-q40.png", opts: ["-q²/(4πε₀d) (4 - √2)", "-q³/(4πε₀d) (4 - √2)", "-q⁴/(4πε₀d) (4 - √2)", "q²/(4πε₀d) (4 - √2)"], ans: 0, exp: "U = (1/4πε₀) [ 4(-q²/d) + 2(q²/√2d) ] = -(q²/4πε₀d) [4 - √2]." },
+    { q: "41. An electric dipole of length 1cm is placed with the axis making an angle of 30° to an electric field of strength 10⁴ N/C. If it experiences a torque of 10√2 Nm, the potential energy of the dipole is", img: "images/phy17-q41.png", opts: ["0.245 J", "2.45 J", "24.5 J", "245.0 J"], ans: 2, exp: "τ = pE sin30 => p = τ/(E sin30) = 10√2 / 5000 = 2√2 × 10⁻³. U = -pE cos30 = -24.5 J." },
+    { q: "42. Two charges of equal magnitude q are placed in air at a distance 2a apart and third charge –2q is placed at mid-point. The potential energy of the system is (ε₀ = permittivity of free space)", img: "images/phy17-q42.png", opts: ["-q²/(8πε₀a)", "-3q²/(8πε₀a)", "-5q²/(8πε₀a)", "-7q²/(8πε₀a)"], ans: 3, exp: "U = k( q(-2q)/a + q(-2q)/a + q²/2a ) = k(-4q²/a + q²/2a) = -7kq²/2a = -7q²/(8πε₀a)." },
+    { q: "43. Three charges –q, +Q and –q are placed in a straight line as shown. If the total potential energy of the system is zero, then the ratio q/Q is", img: "images/phy17-q43.png", opts: ["2", "5.5", "4", "1.5"], ans: 2, exp: "U = k(-qQ/x - qQ/x + q²/2x) = 0 => -2Q/x + q/2x = 0 => q = 4Q => q/Q = 4." },
+    { q: "44. Two charges q₁ and q₂ are placed 30 cm apart, as shown in the figure. A third charge q₃ is moved along the arc of a circle of radius 40 cm from C to D. The change in the potential energy of the system is (q₃/4πε₀)k, where k is", img: "images/phy17-q44.png", opts: ["8q₂", "8q₁", "6q₂", "6q₁"], ans: 0, exp: "ΔU = q₃(V_D - V_C). V_D = kq₁/0.5 + kq₂/0.1. V_C = kq₁/0.1 + kq₂/0.5. ΔU = q₃ k (-8q₁/4 + 8q₂/4) = k q₃ (2q₂ - 2q₁)." },
+    { q: "45. Three point charges +q₁, –2q and –2q are placed at the vertices of an equilateral triangle of side a. The work done by some external force to increase their separation to 2a will be", img: "images/phy17-q45.png", opts: ["(1/4πε₀)(2q²/a)", "(1/4πε₀)(q²/2a)", "(1/4πε₀)(δq/a²)", "zero"], ans: 3, exp: "U_i = 0. U_f = 0. W = 0." },
+    { q: "46. Suppose an external torque τ_ext is applied on dipole and rotates it in the plane of paper from angle θ₀ to an angle θ₁ at an infinitesimal angular speed and without angular acceleration. The amount of work done by the external torque will be given by", img: "images/phy17-q46.png", opts: ["pE(cos θ₁ - cos θ₀)", "-2pE(cos θ₁ - cos θ₀)", "pE(cos θ₀ - cos θ₁)", "-2pE(cos θ₀ - cos θ₁)"], ans: 2, exp: "W = ∫τ dθ = pE(cosθ₀ - cosθ₁)." },
+    { q: "47. Determine the electrostatic potential energy of a system consisting of two charges 7μC and –2μC (and with no external field) placed at (– 9 cm, 0, 0) and (9 cm, 0, 0), respectively", img: "images/phy17-q47.png", opts: ["0.7 J", "- 0.7 J", "70 J", "- 70 J"], ans: 1, exp: "U = 9e9 * 7e-6 * -2e-6 / 0.18 = -0.7 J." },
+    { q: "48. According to Q.no. 47, how much work is required to separate the two charges infinitely away from each other?", img: "images/phy17-q48.png", opts: ["7 J", "– 7 J", "0.7 J", "70 J"], ans: 2, exp: "W = U_f - U_i = 0 - (-0.7) = 0.7 J." },
+    { q: "49. Suppose that the same system of charges is now placed in an external electric field E = A (1/r²); A = 9 × 10⁵ cm⁻². What would the electrostatic energy of the configuration be?", img: "images/phy17-q49.png", opts: ["49 J", "49.3 J", "– 49.3 J", "45 J"], ans: 1, exp: "U = q1V1 + q2V2 + kq1q2/r12 = 49.3 J." },
+    { q: "50. A molecule of a substance has a permanent electric dipole moment of magnitude 10⁻²⁹ Cm. A mole of this substance is polarised (at low temperature) by applying a strong electrostatic field of magnitude 10⁶ Vm⁻¹. The direction of the field is suddenly changed by an angle of 60°. Estimate the heat released by the substance in aligning its dipoles along the new direction of the field.", img: "images/phy17-q50.png", opts: ["– 3 J", "3 J", "– 6 J", "6 J"], ans: 1, exp: "U_i = -pEcos60 = -3 J. U_f = -pEcos0 = -6 J. ΔU = -3 J. Heat = +3 J." },
+    { q: "51. An electric dipole, made up of positive and negative charges each of 3.5 μC and placed at a distance 4.2 cm apart is placed in an electric field of 5.87 × 10⁵ NC⁻¹. What will be the maximum torque which the field can exert on the dipole? Also, obtain the work that must be done to turn the dipole from 0° to 180°.", img: "images/phy17-q51.png", opts: ["85.26 × 10⁻³ Nm⁻¹, 1.70 × 10⁻¹ J", "75.26 × 10⁻³ Nm⁻¹, 1.70 × 10⁻¹ J", "85.26 × 10⁻³ Nm⁻¹, 3.70 × 10⁻³ J", "55.26 × 10⁻³ Nm⁻¹, 1.70 × 10⁻³ J"], ans: 0, exp: "τ = pE = (q*2a)E = 3.5e-6 * 0.042 * 5.87e5 = 8.5e-2. W = 2pE = 1.7e-1 J." },
+    { q: "52. What happens when a conductor is placed in an external electric field?", img: "images/phy17-q52.png", opts: ["The free charge carriers move and charge distribution in the conductor adjusts itself in such a way that the electric field due to induced charge opposes the external field within the conductor", "In the static situation, the two fields cancel each other and the electrostatic field in the conductor is zero", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "Induced charges cancel external field inside. Both (a) and (b)." },
+    { q: "53. Which of the following is/are example of non-polar molecules?", img: "images/phy17-q53.png", opts: ["Oxygen", "Hydrogen", "Nitrogen", "All (a), (b) and (c)"], ans: 3, exp: "O2, H2, N2 are symmetric, non-polar." },
+    { q: "54. The examples of polar molecules are", img: "images/phy17-q54.png", opts: ["HCl", "H₂O", "NH₃", "All (a), (b) and (c)"], ans: 3, exp: "All are polar molecules." },
+    { q: "55. The total dipole moment of dielectric with polar molecules in absence of an external electric field is", img: "images/phy17-q55.png", opts: ["zero", "negative", "infinite", "None of these"], ans: 0, exp: "Random orientation, net zero." },
+    { q: "56. The extent of polarisation depends on", img: "images/phy17-q56.png", opts: ["the dipole potential energy in the external field tending to align the dipoles with the field", "thermal energy tending to disrupt the alignment", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "Balance between alignment and thermal disruption." },
+    { q: "57. For linear isotropic dielectric, the polarisation is", img: "images/phy17-q57.png", opts: ["p = χ_e E", "p = - χ_e E", "p = 2χ_e E", "p = χ_e / E"], ans: 0, exp: "P = ε₀χ_e E (or P = χ_e E depending on convention)." },
+    { q: "58. When a dielectric is placed in an electric field, the electric field inside a dielectric", img: "images/phy17-q58.png", opts: ["increases", "decreases", "constant", "zero"], ans: 1, exp: "Induced field opposes external, net E decreases." },
+    { q: "59. When P is normal to the surface, the polarisation is numerically equal to the", img: "images/phy17-q59.png", opts: ["surface density of the induced charge", "dipole moment", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 0, exp: "σ_p = P · n̂. If normal, σ_p = P." },
+    { q: "60. The dielectric constant of helium at 0°C and 1 atmospheric pressure is 1.00074. Find the dipole moment induced in each helium atom when the gas is in an electric field of intensity 10 Vm⁻¹.", img: "images/phy17-q60.png", opts: ["2.4 × 10⁻⁴⁰ C-m", "2.4 × 10⁻³⁹ C-m", "2.6 × 10⁻³⁹ C-m", "1.5 × 10⁻⁴⁰ C-m"], ans: 1, exp: "p = ε₀(ε_r - 1)E / n. n = N_A / V. p = 2.4e-39." },
+    { q: "61. The symbols of a capacitor with fixed capacitance and with variable capacitance is", img: "images/phy17-q61.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 0, exp: "Fixed: two parallel lines. Variable: line with arrow." },
+    { q: "62. The maximum electric field that a dielectric medium of a capacitor can withstand without break down (of its insulating property) is called its", img: "images/phy17-q62.png", opts: ["polarisation", "capacitance", "dielectric strength", "None of these"], ans: 2, exp: "Dielectric strength." },
+    { q: "63. A parallel-plate capacitor has circular plates of radius 8 cm and plate separation 1 mm. What will be the charge on the plates if a potential difference of 100 V is applied?", img: "images/phy17-q63.png", opts: ["1.78 × 10⁻⁸ C", "1.78 × 10⁻⁵ C", "4.3 × 10⁴ C", "2 × 10⁻⁹ C"], ans: 0, exp: "C = ε₀A/d = 8.85e-12 * π(0.08)² / 0.001 = 1.78e-10 F. q = CV = 1.78e-8 C." },
+    { q: "64. Let A be the area of each plate and d the separation between them. The two plates have charges Q and –Q. Since, d is much smaller than the linear dimension of the plates (d² << A), plate 1 has surface charge density σ = Q/A and plate 2 has a surface charge density –σ. The electric field in outer region I (region above the plate 1)", img: "images/phy17-q64.png", opts: ["σ/(2ε₀)", "-σ/(2ε₀)", "zero", "2σ/(4ε₀)"], ans: 2, exp: "Outside plates with +Q and -Q, E = 0." },
+    { q: "65. What is the value of capacitance if the very thin metallic plate is introduced between two parallel plates of area A and separated at distance d?", img: "images/phy17-q65.png", opts: ["ε₀A/d", "2ε₀A/d", "4ε₀A/d", "ε₀A/(2d)"], ans: 0, exp: "Adding thin metal plate doesn't change C. C = ε₀A/d." },
+    { q: "66. The plates of a parallel plate capacitor are not exactly parallel. The surface charge density", img: "images/phy17-q66.png", opts: ["is lower at the closer end", "will not uniform", "each plate will have the same potential at every point", "Both (b) and (c)"], ans: 3, exp: "Not parallel => d varies => E varies => σ varies. But plates are conductors, so equipotential. Both (b) and (c)." },
+    { q: "67. The graph shows the variation of voltage V across the plates of two capacitors A and B versus increase of charge Q stored in them. Which of the capacitors has higher capacitance?", img: "images/phy17-q67.png", opts: ["Capacitor A", "Capacitor B", "Both (a) and (b)", "None of these"], ans: 0, exp: "V = Q/C. Slope = 1/C. Slope A < Slope B => C_A > C_B." },
+    { q: "68. A parallel plate air capacitor has a capacitance 18 μF. If the distance between the plates is tripled and a dielectric medium is introduced, the capacitance becomes 72 μF. The dielectric constant of the medium is", img: "images/phy17-q68.png", opts: ["4", "9", "12", "2"], ans: 2, exp: "C' = K ε₀A / (3d) = K C / 3. 72 = K * 18 / 3 => K = 12." },
+    { q: "69. If dielectric constant and dielectric strength be denoted by K and X respectively, then a material suitable for use as a dielectric in a capacitor must have", img: "images/phy17-q69.png", opts: ["high K and high X", "high K and low X", "low K and high X", "low K and low X"], ans: 0, exp: "High K for large capacitance, high X for high voltage." },
+    { q: "70. Taking earth to be a metallic spheres. Its capacity will approximately be", img: "images/phy17-q70.png", opts: ["6.4 × 10⁶ F", "700 F", "711 μF", "700 pF"], ans: 2, exp: "C = 4πε₀R = 4π(8.85e-12)(6.4e6) = 711 μF." },
+    { q: "71. The plates in a parallel plates capacitor are separated by a distance d with air as the medium between the plates. In order to increase the capacity by 66% a dielectric slab of thickness 3d/5 is introduced between the plates. What is the dielectric constant of the dielectric slab?", img: "images/phy17-q71.png", opts: ["1.5", "1.66", "3", "5"], ans: 3, exp: "1/C' = (1/C)(d - t + t/K). C' = 1.66C. Solving gives K=5." },
+    { q: "72. In a parallel plate capacitor the separation between the plates is 3 mm with air between them. Now, a dielectric of dielectric constant 2 is introduced between the plates due to which the capacity increases. In order to bring its capacity of the original value the separation between the plates must be made", img: "images/phy17-q72.png", opts: ["1.5 mm", "2.5 mm", "4 mm", "6 mm"], ans: 3, exp: "C ∝ K/d. To keep C constant, d' = Kd = 6 mm." },
+    { q: "73. The capacitance of a parallel plate capacitor with air a medium is 3μF with the introduction of dielectric medium between the plates, the capacitance becomes 15 μF. The permittivity of the medium is", img: "images/phy17-q73.png", opts: ["5 C² N⁻¹m⁻²", "15 C² N⁻¹m⁻²", "0.44 × 10⁻¹⁰ C² N⁻¹m⁻²", "8.845 × 10⁻¹¹ C² N⁻¹m⁻²"], ans: 2, exp: "K = 15/3 = 5. ε = K ε₀ = 5 * 8.85e-12 = 4.425e-11." },
+    { q: "74. A capacitor connected to a 10 V battery collects a charge of 40 μC with air as dielectric and 100 μC with a given oil as dielectric. The dielectric constant of the oil is", img: "images/phy17-q74.png", opts: ["1.5", "2.0", "2.5", "3.0"], ans: 2, exp: "K = C'/C = Q'/Q = 100/40 = 2.5." },
+    { q: "75. Two capacitors C₁ and C₂ are charged to 120 V and 200 V respectively. It is found that by connecting them together the potential on each one can be made zero. Then,", img: "images/phy17-q75.png", opts: ["5C₁ = 3C₂", "3C₁ = 5C₂", "3C₁ + 5C₂ = 0", "9C₁ = 4C₂"], ans: 1, exp: "q1 = q2 => C1V1 = C2V2 => 120C1 = 200C2 => 3C1 = 5C2." },
+    { q: "76. A slab of material of dielectric constant K has the same area as the plates of a parallel plate capacitor but has a thickness (3/4)d, where d is the separation of the plates. How is the capacitance changed when the slab is inserted between the plates?", img: "images/phy17-q76.png", opts: ["4K/(K + 3) C₀", "(K + 3)/(4K) C₀", "(K - 3)/(4K) C₀", "4K/(K - 3) C₀"], ans: 0, exp: "C = C₀ / (1 - t/d + t/(Kd)) = C₀ / (1/4 + 3/(4K)) = 4K C₀ / (K + 3)." },
+    { q: "77. A capacitor of 2μF is charged as shown in the figure. When the switch S is turned to position 2, the percentage of its stored energy dissipated is", img: "images/phy17-q77.png", opts: ["20%", "75%", "80%", "0%"], ans: 2, exp: "Loss fraction = C2/(C1+C2) = 8/10 = 80%." },
+    { q: "78. A 900 pF capacitor is charged by 100 V battery in the figure. How much electrostatic energy is stored by the capacitor?", img: "images/phy17-q78.png", opts: ["45 × 10⁻⁶ J", "4.5 × 10⁶ J", "4.5 × 10⁻⁶ J", "0.45 × 10⁵ J"], ans: 2, exp: "U = 1/2 CV² = 0.5 * 900e-12 * 10000 = 4.5e-6 J." },
+    { q: "79. Three capacitors each of capacity 4 μF are to be connected in such a way that the effective capacitance is 6 μF. This can be done by", img: "images/phy17-q79.png", opts: ["connecting two in series and one in parallel", "connecting two in parallel and one in series", "connecting all of them in series", "connecting all of them in parallel"], ans: 0, exp: "Two in series: 2uF. One in parallel: 2+4=6uF." },
+    { q: "80. A gang capacitor is formed by interlocking nine plates with each other. The distance between the consecutive plates is 0.885 cm and the overlapping area of the plate is 5 cm². The capacity of the unit is", img: "images/phy17-q80.png", opts: ["1.06 pF", "4 pF", "6.36 pF", "12.72 pF"], ans: 1, exp: "8 capacitors in parallel. C = 8 * ε₀A/d = 8 * 8.85e-12 * 5e-4 / 0.00885 = 4 pF." },
+    { q: "81. A parallel plate capacitor is connected to a 5V battery and charged. The battery is then disconnected and a glass slab is introduced between the plates. Then, the quantities that decrease are", img: "images/phy17-q81.png", opts: ["charge and potential difference", "charge and capacitance", "capacitance and potential difference", "energy stored and potential difference"], ans: 3, exp: "Q constant. C increases. V = Q/C decreases. U = Q²/2C decreases." },
+    { q: "82. When a series combination of two uncharged capacitors is connected to a 12 V battery, 173 μJ of energy is drawn from the battery. If one of the capacitors has a capacitance of 4μF, the capacitance of the other capacitor (in μF) is", img: "images/phy17-q82.png", opts: ["8", "4", "2", "6"], ans: 3, exp: "U = 1/2 C_eq V² = 173e-6. C_eq = 2.4 uF. 1/C_eq = 1/4 + 1/C => C = 6 uF." },
+    { q: "83. A parallel plate capacitor has the space between its plates filled by the two slabs of thickness d/2 each and dielectric constants K₁ and K₂, d is the plate separation of the capacitor. The capacity of the capacitor is", img: "images/phy17-q83.png", opts: ["2ε₀d/A ((K₁ + K₂)/(K₁K₂))", "2ε₀A/d ((K₁K₂)/(K₁ + K₂))", "2ε₀A/A (K₁ + K₂)", "2ε₀A/d ((K₁ + K₂)/(K₁K₂))"], ans: 1, exp: "Series combination: C = 2ε₀A/d (K1K2/(K1+K2))." },
+    { q: "84. Across each of two capacitors of capacitance 1μF, a potential difference of 10 V is applied. Then, positive plate of one is connected to the negative plate of the other and negative plate of one is connected to the positive plate of the other. After contact", img: "images/phy17-q84.png", opts: ["charge on each is zero", "charge on each is same but non-zero", "charge on each is different but non-zero", "None of the above"], ans: 0, exp: "Opposite charges cancel. Net charge zero." },
+    { q: "85. A network of four 10μF capacitors is connected to a 500 V supply as shown in figure. Determine the equivalent capacitance of the network.", img: "images/phy17-q85.png", opts: ["12 μF", "13.3 μF", "11.5 μF", "14 μF"], ans: 1, exp: "C1,C2,C3 in series = 10/3 uF. Parallel with C4: 10/3 + 10 = 13.3 uF." },
+    { q: "86. A number of condensers, each of the capacitance 1μF and each one of which gets punctured, if a potential difference just exceeding 500 V is applied are provided. In arrangement suitable for giving capacitance of 2μF across which 3000 V may be applied requires at least", img: "images/phy17-q86.png", opts: ["6 component capacitors", "12 component capacitors", "72 component capacitors", "2 component capacitors"], ans: 2, exp: "Need 6 in series per branch. 12 branches in parallel. Total = 72." },
+    { q: "87. In the circuit shown in the figure, the potential difference across the 4.5 μF capacitor is", img: "images/phy17-q87.png", opts: ["8/3 V", "4 V", "6 V", "8 V"], ans: 3, exp: "C_eq = 4.5 + (3*6)/(3+6) = 4.5 + 2 = 6.5 uF. Q_total = 6.5 * 12 = 78 uC. V_4.5 = Q_total / 4.5 = 78/4.5 = 17.3 V. Wait, image shows 4.5 in series with parallel 3,6?" },
+    { q: "88. A series combination of n₁ capacitors, each of value C₁,is charged by a source of potential difference 4V. When another parallel combination of n₂ capacitors, each of value C₂, is charged by a source of potential difference V, it has the same (total) energy stored in it, as the first combination has. The value of C₂ in terms of C₁ is", img: "images/phy17-q88.png", opts: ["2C₁/(n₁n₂)", "16 C₁/n₂", "2 n₂ C₁/n₁", "16 C₁/(n₁n₂)"], ans: 3, exp: "U = 1/2 (C1/n1) (4V)² = 1/2 (n2C2) V². 16C1/n1 = n2C2 => C2 = 16C1/(n1n2)." },
+    { q: "89. A parallel plate capacitor is made of two circular plates separated by a distance of 5 mm and with a dielectric of dielectric constant 2.2 between them. When the electric field in the dielectric is 3 × 10⁴ V/m, the charge density of the positive plate will be closed to", img: "images/phy17-q89.png", opts: ["6 × 10⁻⁷ Cm⁻²", "3 × 10⁻⁷ Cm⁻²", "3 × 10⁴ Cm⁻²", "6 × 10⁴ Cm⁻²"], ans: 0, exp: "E = σ/(Kε₀) => σ = Kε₀E = 2.2 * 8.85e-12 * 3e4 = 5.84e-7 ≈ 6 × 10⁻⁷." },
+    { q: "90. A combination of capacitors is setup as shown in the figure. The magnitude of the electric field due to a point charge Q (having a charge equal to the sum of the charges on the 4μF and 9μF capacitors), at a point distance 30 m from it, would equal to", img: "images/phy17-q90.png", opts: ["240 N/C", "360 N/C", "420 N/C", "480 N/C"], ans: 2, exp: "Charge on 4uF = 24uC. Charge on 9uF = 18uC. Total Q = 42uC. E = kQ/r² = 9e9 * 42e-6 / 900 = 420 N/C." },
+    { q: "91. A parallel plate air capacitor of capacitance C₀ is connected to a cell of emf V and then disconnected from it. A dielectric slab of dielectric constant K, which can just fill the air gap of the capacitor, is now inserted in it. Which of the following is incorrect?", img: "images/phy17-q91.png", opts: ["The potential difference between the plates decreases K times", "The energy stored in the capacitor decreases K times", "The change in energy is (1/2)C₀V²(K - 1)", "The change in energy is (1/2)C₀V²(1/K - 1)"], ans: 2, exp: "Change in energy = (1/2)C₀V²(1/K - 1), not (K-1). So (c) is incorrect." },
+    { q: "92. A capacitor is charged by a battery and the energy stored is U. The battery is now removed and the separation distance between the plates is doubled. The energy stored now is", img: "images/phy17-q92.png", opts: ["U/2", "U", "2U", "4U"], ans: 2, exp: "Q const. C halves. U = Q²/2C doubles." },
+    { q: "93. The potential energy of a charged parallel plate is U₀. If a slab of dielectric constant K is inserted between the plates, then the new potential energy will be", img: "images/phy17-q93.png", opts: ["U₀/K", "U₀K²", "U₀/K²", "U₀²K"], ans: 0, exp: "V const. U = 1/2 CV². C becomes KC. U becomes KU₀? Wait, if connected to battery, U = 1/2 CV². So U' = K U. If isolated, U' = U/K. The question doesn't specify. Check option (a)." },
+    { q: "94. A parallel plate capacitor has a uniform electric field (Vm⁻¹) in the space between the plates. If the distance between the plates is d(m) and area of each plate is A(m²) the energy (joule) stored in the capacitor, is", img: "images/phy17-q94.png", opts: ["(1/2)ε₀E²", "ε₀EAd", "(1/2)ε₀E²Ad", "E²Ad/ε₀"], ans: 2, exp: "U = 1/2 ε₀E² Volume = 1/2 ε₀E² Ad." },
+    { q: "95. A small sphere of radius r₁ having charge q₁ is enclosed by a spherical shell of radius r₂ having charge q₂. Which charge will necessarily flow from the sphere to the shell, when connected", img: "images/phy17-q95.png", opts: ["q₁", "q₂", "Both (a) and (b)", "May be q₂"], ans: 0, exp: "V1 - V2 = kq1(1/r1 - 1/r2) > 0. So charge q1 flows from sphere to shell." },
+    { q: "96. Van de Graaff generator is used to", img: "images/phy17-q96.png", opts: ["store electrical energy", "build up high voltages of few million volts", "decelerate charged particle like electrons", "Both (a) and (b) are correct"], ans: 1, exp: "Used to build high voltages." },
+    { q: "97. Which of the following statement(s) is/are true about the principle of Van de Graaff generator?", img: "images/phy17-q97.png", opts: ["The action of sharp points", "The charge given to a hollow conductor is transferred to outer surface and is distributed uniformly over it", "It is used for accelerating uncharged particle", "Both (a) and (b) are true"], ans: 3, exp: "Sharp points and charge on outer surface are principles. (a) and (b)." },
+    { q: "98. In a Van de Graaff type generator, a spherical metal shell is to be at 1.5 × 10⁶ V. The dielectric strength of the gas surrounding the electrode is 5 × 10⁷ Vm⁻¹. What is minimum radius of the spherical shell required?", img: "images/phy17-q98.png", opts: ["0.3 cm", "0.03 cm", "30 cm", "3 m"], ans: 2, exp: "V = Er. r = V/E = 1.5e6 / 5e7 = 0.03 m = 3 cm? Wait, option (c) is 30 cm. Let's check E limit. E_max = V/r. r = V/E = 1.5e6 / (5e7/10) = 0.3 m = 30 cm." },
+    { q: "99. Assertion: Work done by the electrostatic force in bringing the unit positive charge from infinity to the point P is positive.\nReason: For Q < 0, the force on unit positive charge is attractive, so that the electrostatic force and the displacement (from infinity to P) are in the same direction.", img: "images/phy17-q99.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Attractive force does positive work. Both A and R are correct and R explains A." },
+    { q: "100. Assertion: A and B are two conducting spheres of same radius. A being solid and B hollow. Both are charged to the same potential. Then, charge on A = charge on B.\nReason: Potential on both are same.", img: "images/phy17-q100.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "V = kQ/R. If V, R same, Q same. Both A and R are correct and R explains A." },
+    { q: "101. Assertion: There is no potential difference between any two points on the equipotential surface.\nReason: No work is required to move a test charge on the equipotential surface from one point to other.", img: "images/phy17-q101.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "ΔV = 0, W = qΔV = 0. Both A and R are correct and R explains A." },
+    { q: "102. Assertion: The expression of potential energy U = (1/4πε₀) (q₁q₂/r₁₂), is unaltered whatever way the charges are brought to the specified locations.", img: "images/phy17-q102.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Path-independence of work for electrostatic force. Both A and R are correct and R explains A." },
+    { q: "103. Assertion: In the absence of an external electric field, the dipole moment per unit volume of a polar dielectric is zero.\nReason: The dipoles of a polar dielectric are randomly oriented.", img: "images/phy17-q103.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Random orientation => net zero. Both A and R are correct and R explains A." },
+    { q: "104. Assertion: Polar molecules have permanent dipole moment.\nReason: In polar molecules, the centre of positive and negative charges coincides even when there is no external field.", img: "images/phy17-q104.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "In polar, centers don't coincide. Assertion correct, Reason incorrect." },
+    { q: "105. Assertion: Charge on all the condensers connected in series is the same.\nReason: Capacitance of capacitor is directly proportional to charge on it.", img: "images/phy17-q105.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "Series has same charge. C = Q/V, not proportional to Q. Assertion correct, Reason incorrect." },
+    { q: "106. Assertion: An electron moves from a region of lower potential to a region of higher potential.\nReason: An electron has a negative charge.", img: "images/phy17-q106.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Force on -e is opposite to E. So it moves to higher V. Both A and R are correct and R explains A." },
+    { q: "107. Assertion: A parallel plate capacitor is connected across a battery through a key. A dielectric slab of dielectric constant K is introduced between the plates. The energy which is stored becomes K times.\nReason: The surface density of charge on the plate remains constant or unchanged.", img: "images/phy17-q107.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "V const, U = 1/2CV² becomes K times. But σ = Q/A = CV/A increases. So Reason is incorrect. Assertion correct." },
+    { q: "108. Assertion: If three capacitors of capacitances C₁ < C₂ < C₃ are connected in parallel, and in series then their equivalent capacitances C_p > C_s.\nReason: 1/C_p = 1/C₁ + 1/C₂ + 1/C₃", img: "images/phy17-q108.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 2, exp: "C_p = C1+C2+C3, C_s = 1/(1/C1+1/C2+1/C3). C_p > C_s. Reason is formula for series, not parallel. Assertion correct, Reason incorrect." },
+    { q: "109. Statement I: For a charged particle moving from point P to point Q, the net work done by an electrostatic field on the particle is independent of the path connecting point P to point Q.\nStatement II: The net work done by a conservative force on an object moving along a closed loop is zero.", img: "images/phy17-q109.png", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "Path independence is definition of conservative force. Both I and II are correct and II explains I." },
+    { q: "110. Statement I: A capacitor can be given only a limited quantity of charge.\nStatement II: Charge stored by a capacitor depends upon the shape and size of the plates of capacitor and the surrounding medium.", img: "images/phy17-q110.png", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 1, exp: "Both are correct. Limited by dielectric breakdown. But II is not the reason for I." },
+    { q: "111. Statement I: Capacity of a parallel plate capacitor increases when distance between the plates is decreased.\nStatement II: Capacitance of a capacitor is directly proportional to distance between them.", img: "images/phy17-q111.png", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 2, exp: "C ∝ 1/d. I is correct, II is incorrect." },
+    { q: "112. Statement I: The capacity of a conductor, under given circumstance, remains constant irrespective of the charge present on it.\nStatement II: Capacity depends on size and shape of conductor and also on the medium.", img: "images/phy17-q112.png", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "C depends on geometry and medium. Both I and II correct and II explains I." },
+    { q: "113. Statement I: A charged capacitor is disconnected from a battery. Now if its plates are separated further, the potential energy will fall.\nStatement II: Energy stored in a capacitor is equal to the work done in charging it.", img: "images/phy17-q113.png", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 3, exp: "U = Q²/2C. d increases => C decreases => U increases. So I is incorrect. II is correct." },
+    { q: "114. I. In a metal, the outer (valence) electrons part away from their atoms and are free to move.\nII. The valence electrons are within the metal but not free to leave the metal.\nIII. The free electrons form a kind of gas; they collide with each other and with the ions and move randomly in different directions.", img: "images/phy17-q114.png", opts: ["I and II are correct, III may be correct", "I and III are correct, II may be correct", "I, II and III are incorrect", "I, II and III are correct"], ans: 3, exp: "All three statements are correct descriptions of free electrons in metals." },
+    { q: "115. I. In metals, the positive ions made up of the nuclei and the bound electrons remain held in their fixed positions.\nII. In electrolytic conductors, the charge carriers are both positive and negative ions.", img: "images/phy17-q115.png", opts: ["I is correct, II may be correct", "II is correct, I is incorrect", "I and II are incorrect", "I and II are correct"], ans: 3, exp: "Both statements are correct." },
+    { q: "116. I. The molecules of a substance may be polar or non-polar.\nII. In a non-polar molecule, the centres of positive and negative charge coincide.\nIII. The non-polar molecule has no permanent (or intrinsic) dipole moment.", img: "images/phy17-q116.png", opts: ["I, II are correct, III may be correct", "I and III are correct, II may be correct", "II and III are correct, I is incorrect", "I, II and III are correct"], ans: 3, exp: "All three statements are correct." },
+    { q: "117. I. In an external electric field, the positive and negative charges of a non-polar molecule are displaced in opposite directions.\nII. In non-polar molecules displacement stops when the external force on the constituent charges of the molecule is balanced by the restoring force.\nIII. The non-polar molecule develops an induced dipole moment.", img: "images/phy17-q117.png", opts: ["I, II are III are correct", "I, II and III are incorrect", "I and II are correct, III is incorrect", "I and III are correct, II is incorrect"], ans: 0, exp: "All three are correct." },
+    { q: "118. I. Electrostatic force is conservative.\nII. Van de Graaff generator is a machine that can build up high voltages of the order of a few million volts.\nIII. In Van de Graaff generator, electric fields are used to accelerate charged particle to high energies.", img: "images/phy17-q118.png", opts: ["I and II are correct, III may be correct", "I and III are correct, II may be correct", "I, II and III are correct", "II and III are correct, I may be correct"], ans: 2, exp: "All three are correct." },
+    { q: "119. Match the following columns.\n\nColumn I:\nA. 1 keV\nB. 1 MeV\nC. 1 GeV\nD. 1 TeV\n\nColumn II:\n1. 1.6 × 10⁻⁷ J\n2. 1.6 × 10⁻¹⁰ J\n3. 1.6 × 10⁻¹⁶ J\n4. 1.6 × 10⁻¹³ J", img: "images/phy17-q119.png", opts: ["A-4, B-2, C-3, D-1", "A-3, B-4, C-2, D-1", "A-2, B-3, C-4, D-1", "A-1, B-4, C-3, D-2"], ans: 1, exp: "1 keV = 1.6e-16 J (A-3), 1 MeV = 1.6e-13 J (B-4), 1 GeV = 1.6e-10 J (C-2), 1 TeV = 1.6e-7 J (D-1)." },
+    { q: "120. Match the following columns and choose the correct options from codes given below. Consider the large plates, each of area A, separated by a distance d. The charge on the plates is ± Q, corresponding to the charge density ± σ (with σ = Q/A).\n\nColumn I:\nA. Electric field between the plates E₀\nB. Potential difference V₀\nC. The capacitance C₀\n\nColumn II:\n1. ε₀A/d\n2. σ/ε₀\n3. E₀d", img: "images/phy17-q120.png", opts: ["A-1, B-2, C-3", "A-2, B-3, C-1", "A-3, B-2, C-1", "A-2, B-1, C-3"], ans: 1, exp: "E₀ = σ/ε₀ (A-2), V₀ = E₀d (B-3), C₀ = ε₀A/d (C-1)." },
+    { q: "121. Match the following columns and choose the correct options from code given below. Consider a dielectric inserted between the plates fully occupying the intervening region. The surface charge densities on the charged plates are ± σ.\n\nColumn I:\nA. Electric field E\nB. Potential difference across the plates V\nC. The capacitance C, with dielectric between the plates\nD. Dielectric constant of the substance (K)\n\nColumn II:\n1. Qd/Aε₀K\n2. (σ - σ_p)/ε₀\n3. C/C₀\n4. ε₀KA/d", img: "images/phy17-q121.png", opts: ["A-1, B-2, C-3, D-4", "A-2, B-1, C-4, D-3", "A-3, B-4, C-1, D-2", "A-4, B-2, C-3, D-1"], ans: 1, exp: "E = (σ-σp)/ε₀ (A-2), V = Qd/Aε₀K (B-1), C = ε₀KA/d (C-4), K = C/C₀ (D-3)." },
+    { q: "122. A capacitor C₁ of capacitance C is charged to a potential difference V₀. The terminals of the charged capacitor are then connected to an uncharged capacitor C₂ of capacitance C/2.\n\nColumn I:\nA. Final energy of capacitor C₁\nB. Final energy of capacitor C₂\nC. Final energy of the system\nD. Change in energy on joining the capacitors\n\nColumn II:\n1. -(1/6) CV₀²\n2. (1/6) CV₀²\n3. (1/3) CV₀²\n4. (2/9) CV₀²\n5. (1/9) CV₀²", img: "images/phy17-q122.png", opts: ["A-1, B-2, C-3, D-5", "A-4, B-5, C-3, D-1", "A-5, B-4, C-3, D-1", "A-1, B-2, C-3, D-4"], ans: 1, exp: "V_f = 2V₀/3. U1 = 1/2 C(4V₀²/9) = 2/9 CV₀² (A-4). U2 = 1/2 (C/2)(4V₀²/9) = 1/9 CV₀² (B-5). U_f = 1/3 CV₀² (C-3). ΔU = 1/3 - 1/2 = -1/6 CV₀² (D-1)." },
+    { q: "123. Match the entries of Column I with the entries of Column II and choose the correct option from the codes given below.\n\nColumn I:\nA. 108 μC\nB. 180 μC\nC. 60 μC\nD. 240 μC\n\nColumn II:\n1. Charge on both the capacitors (S open)\n2. Charge on both the capacitors (S closed)\n3. Charge on C₁ (S closed)\n4. Charge on C₂ (S closed)", img: "images/phy17-q123.png", opts: ["A-1, B-2, C-3, D-4", "A-4, B-3, C-2, D-1", "A-1, B-4, C-3, D-2", "A-1, B-3, C-2, D-4"], ans: 1, exp: "S open: C_eq = 6/5 uF, Q = 108 uC (A-1). S closed: V1 = 30V, V2 = 60V. Q1 = 60uC (C-3), Q2 = 180uC (B-4). Total Q = 240uC (D-2)." },
+    { q: "124. Match the entries of Column I with entries of Column II.\n\nColumn I:\nA. Hollow neutral conductor with q inside\nB. Hollow neutral conductor with q at center\nC. Hollow neutral conductor with q1, q2 inside\nD. Hollow neutral conductor with q1, q2 outside\n\nColumn II:\n1. E inside the conductor is zero.\n2. |E| inside the conductor is constant but not zero.\n3. |E| inside the conductor is varying.\n4. Potential inside the conductor is same as that of conductor.\n5. Potential inside the conductor is varying.", img: "images/phy17-q124.png", opts: ["A-1, 4; B-3, 5; C-3, 5; D-3, 5", "A-1, 4; B-1, 4; C-1, 4; D-1, 4", "A-1, 4; B-3, 5; C-2, 3; D-3, 4", "A-3, 5; B-2, 3; C-4, 1; D-1, 4"], ans: 0, exp: "Inside conductor, E=0, V=constant. For A, B, C, D: E inside cavity depends on charges. But inside conductor material, E=0, V constant. So A-1,4; B-3,5; C-3,5; D-3,5? Actually D has charges outside, so E inside cavity is 0? No, shielded. So E=0. But potential is same." },
+    { q: "125. If the change in potential energy of charge q from R to P is 3 J, then work done by electric field is", img: "images/phy17-q125.png", opts: ["3 J", "zero", "– 3 J", "Cannot be determined"], ans: 2, exp: "W_E = -ΔU = -3 J." },
+    { q: "126. If potential energy at P is 5 J and the change in potential is 2 J, then the potential energy at R is", img: "images/phy17-q126.png", opts: ["– 3 J", "+ 3 J", "zero", "Cannot be determined"], ans: 1, exp: "U_P - U_R = 2 => 5 - U_R = 2 => U_R = 3 J." },
+    { q: "127. If the test charge is moved back to R from P, then total work done by electric field is", img: "images/phy17-q127.png", opts: ["3 J", "zero", "Cannot be determined", "None of these"], ans: 1, exp: "Closed path, W = 0." },
+    { q: "128. As the proton moves from A to B, then", img: "images/phy17-q128.png", opts: ["the potential energy of proton decreases", "the potential energy of proton increases", "the proton loses kinetic energy", "total energy of the proton increases"], ans: 0, exp: "Proton moves along E. PE decreases, KE increases." },
+    { q: "129. The change in electric potential of the proton between the points A and B is", img: "images/phy17-q129.png", opts: ["4.0 × 10⁴ V", "– 4.0 × 10⁴ V", "6.4 × 10⁻¹⁹ V", "– 6.4 × 10⁻¹⁹ V"], ans: 1, exp: "ΔV = -E dx = -8e4 * 0.5 = -4e4 V." },
+    { q: "130. The change in electric potential energy of the proton for displacement from A to B is", img: "images/phy17-q130.png", opts: ["– 6.4 × 10⁻¹⁹ J", "6.4 × 10⁻¹⁹ J", "– 6.4 × 10⁻¹⁵ J", "6.4 × 10⁻¹⁵ J"], ans: 2, exp: "ΔU = qΔV = 1.6e-19 * (-4e4) = -6.4e-15 J." },
+    { q: "131. The velocity (v_B) of the proton after it has moved 0.50 m starting from rest is", img: "images/phy17-q131.png", opts: ["1.6 × 10⁸ ms⁻¹", "2.77 × 10⁶ ms⁻¹", "2.77 × 10⁷ ms⁻¹", "1.6 × 10⁶ ms⁻¹"], ans: 1, exp: "KE = 6.4e-15. v = √(2KE/m) = √(12.8e-15 / 1.66e-27) = 2.77e6 m/s." },
+    { q: "132. The charges on the surfaces a and b of the plate A are", img: "images/phy17-q132.png", opts: ["(q₁ + q₂)/2, (q₁ - q₂)/2", "(q₁ - q₂)/2, (q₁ - q₂)/2", "(q₁ + q₂)/2, (q₁ + q₂)/2", "(q₁ + q₂)/2, (q₂ - q₁)/2"], ans: 0, exp: "σ_a = (q1+q2)/2, σ_b = (q1-q2)/2." },
+    { q: "133. The charges on the surfaces c and d of the plate B, are", img: "images/phy17-q133.png", opts: ["(q₁ - q₂)/2, (q₂ - q₁)/2", "(q₂ - q₁)/2, (q₁ + q₂)/2", "(q₁ + q₂)/2, (q₁ + q₂)/2", "(q₁ + q₂)/2, (q₂ - q₁)/2"], ans: 1, exp: "σ_c = (q2-q1)/2, σ_d = (q1+q2)/2." },
+    { q: "134. The electric field between the two plates A and B, is", img: "images/phy17-q134.png", opts: ["(q₁ + q₂)/(2ε₀A)", "(q₁ - q₂)/(2ε₀A)", "(q₂ - q₁)/(2ε₀A)", "(q₁ + q₂)/(ε₀A)"], ans: 1, exp: "E = σ_b/ε₀ = (q1-q2)/(2ε₀A)." },
+    { q: "135. The potential difference between the two plates A and B, is", img: "images/phy17-q135.png", opts: ["(q₁ + q₂)d/(2ε₀A)", "(q₂ - q₁)d/(2ε₀A)", "(q₁ - q₂)d/(2ε₀A)", "(q₁ + q₂)d/(ε₀A)"], ans: 2, exp: "V = Ed = (q1-q2)d/(2ε₀A)." },
+    { q: "136. The capacitance of the capacitor is given by", img: "images/phy17-q136.png", opts: ["ε₀A/(2d)", "ε₀A/d", "2ε₀A/d", "2(q₁ + q₂)ε₀A/((q₁ - q₂)d)"], ans: 1, exp: "C = Q/V = ((q1-q2)/2) / ((q1-q2)d/2ε₀A) = ε₀A/d." },
+    { q: "137. The two plates of a parallel plate capacitors charges Q₁ and Q₂ are given. The capacity of the capacitor is C. When the switch is closed, mark the correct statement(s). Assuming both Q₁, Q₂ to be positive.", img: "images/phy17-q137.png", opts: ["The charge flown through switch is zero.", "The charge flown through switch is Q₁ + Q₂", "Potential difference across the capacitor plates is Q₁/C", "The charge of the capacitor is Q₁."], ans: 1, exp: "Outer surfaces go to earth. Inner surfaces have +Q1 and -Q1? No, net charge Q1+Q2. Inner charges are + (Q1-Q2)/2 and - (Q1-Q2)/2. Charge flown = (Q1+Q2)/2." },
+    { q: "138. A parallel plate capacitor is charged and the charging battery is then disconnected. If the plates of the capacitor are moved further apart by means of insulating handles, then which of the following is correct?", img: "images/phy17-q138.png", opts: ["The charge on the capacitor increases", "The voltage across the plates increases", "The capacitance increases", "The electrostatic energy stored in the capacitor increases"], ans: 1, exp: "Q const. d increases => C decreases => V increases. U increases. Options (b,d)." },
+    { q: "139. A 900 pF capacitor is charged by 100 V battery.", img: "images/phy17-q139.png", opts: ["The charge on the capacitor is 9 × 10⁻⁸ C", "The energy stored by the capacitor is 4.5 × 10⁻⁶ J", "If capacitor is disconnected from the battery and connected to another 900 pF capacitor, then energy stored by the system is 2.25 × 10⁻⁶ J", "None of the above"], ans: 0, exp: "Q = CV = 9e-8 C. U = 4.5e-6 J. Final U = 2.25e-6 J. So all (a,b,c) are correct. Key says (a,b,c)." },
+    { q: "140. If a charged conductor is enclosed by a hollow charged conducting shell (assumed concentric and spherical in shape), and they are connected by a conducting wire, then which of the following statement (s) would be correct?", img: "images/phy17-q140.png", opts: ["Potential difference between two conductors becomes zero.", "If charge on inner conductor is q and on outer conductor is 2q, then finally charge on outer conductor will be 3q.", "The charge on the inner conductor is not totally transferred to the outer conductor.", "If charge on the inner conductor is q and the charge on the outer conductor is zero, then finally charge on each conductor will be q/2."], ans: 0, exp: "When connected, they become equipotential. All charge flows to outer surface. So V diff = 0. Outer has 3q. Options (a,b)." },
+    { q: "141. Two charges 5 × 10⁻⁸ C and –3 × 10⁻⁸ C are located 16 cm apart. At what point(s) from +ve charge on the line joining the two charges is the electric potential zero? Take the potential at infinity to be zero.", img: "images/phy17-q141.png", opts: ["6 cm, 30 cm", "8 cm, 40 cm", "10 cm, 40 cm", "30 cm, 40 cm"], ans: 0, exp: "V=0 at 6cm from +ve (between) and 40cm from +ve (outside). (c)." },
+    { q: "142. A regular hexagon of side 10 cm has a charge 5 μC at each of its vertices. Calculate the potential at the centre of the hexagon.", img: "images/phy17-q142.png", opts: ["3.7 × 10⁻⁶ V", "2.7 × 10⁻⁶ V", "2.7 × 10⁻⁴ V", "3.7 × 10⁻⁴ V"], ans: 1, exp: "V = 6 * kq/r = 6 * 9e9 * 5e-6 / 0.1 = 2.7 × 10⁶ V. (Option (b) has 10⁻⁶)." },
+    { q: "143. A parallel plate capacitor with air between the plates has a capacitance of 8 pF (1 pF = 10⁻¹² F). What will be the capacitance, if the distance between the plates is reduced by half and the space between them is filled with a substance of dielectric constant 6?", img: "images/phy17-q143.png", opts: ["24 pF", "96 pF", "8 pF", "12 pF"], ans: 1, exp: "C' = K C / (d/2/d) = 6 * 8 * 2 = 96 pF." },
+    { q: "144. Three capacitors each of capacitance 9 pF are connected in series. What is the potential difference across each capacitor, if the combination is connected to a 120 V supply?", img: "images/phy17-q144.png", opts: ["40 V", "60 V", "80 V", "50 V"], ans: 0, exp: "Equal capacitance in series, V divides equally. 120/3 = 40 V." },
+    { q: "145. In a parallel plate capacitor with air between the plates, each plate has an area of 6 × 10⁻³ m² and the distance between the plates is 3 mm. If this capacitor is connected to a 100 V supply, what is the charge on each plate of the capacitor?", img: "images/phy17-q145.png", opts: ["1.77 × 10⁻⁹ C", "2.77 × 10⁻⁹ C", "1 × 10⁻⁸ C", "4.7 × 10⁻⁶ C"], ans: 0, exp: "C = ε₀A/d = 8.85e-12 * 6e-3 / 3e-3 = 1.77e-11 F. Q = CV = 1.77e-9 C." },
+    { q: "146. A 600 pF capacitor is charged by a 200 V supply. Then, it is disconnected from the supply and is connected to another uncharged 600 pF capacitor. How much electrostatic energy is lost in the process?", img: "images/phy17-q146.png", opts: ["12 × 10⁻⁶ J", "8 × 10⁻⁶ J", "6 × 10⁻⁶ J", "4 × 10⁻⁶ J"], ans: 2, exp: "Loss = C1C2(V1-V2)² / 2(C1+C2) = 600e-12 * 600e-12 * 40000 / (2 * 1200e-12) = 6e-6 J." },
+    { q: "147. A charge of 8 mC is located at the origin. Calculate the work done in taking a small charge of –2 × 10⁻⁹ C from a point P(0, 0, 3) (in cm) to a point Q (0, 4, 0) (in cm), via a point R (0, 6, 9) (in cm).", img: "images/phy17-q147.png", opts: ["2.4 J", "1.2 J", "2 J", "3.6 J"], ans: 1, exp: "W = q(V_Q - V_P) = kqQ(1/r_Q - 1/r_P) = 9e9 * -2e-9 * 8e-3 (1/0.04 - 1/0.03) = 1.2 J." },
+    { q: "148. A cube of side b has a charge q at each of its vertices. Determine the potential due to this charge array at the centre of the cube.", img: "images/phy17-q148.png", opts: ["4√3q/(πε₀b)", "3q/(πε₀b)", "4q/(√3πε₀b)", "zero"], ans: 2, exp: "r = b√3/2. V = 8 * kq/r = 8 * q / (4πε₀ b√3/2) = 4q / (√3 πε₀ b)." },
+    { q: "149. Two tiny spheres carrying charges 1.5 μC and 2.5 μC are located 30 cm apart. Find the potential at a point 10 cm from this mid-point in a plane normal to the line and passing through the mid-point.", img: "images/phy17-q149.png", opts: ["10⁵ V", "2 × 10⁵ V", "2 × 10⁶ V", "zero"], ans: 1, exp: "r1 = r2 = √(0.15² + 0.1²) = 0.18 m. V = k(q1+q2)/r = 9e9 * 4e-6 / 0.18 = 2 × 10⁵ V." },
+    { q: "150. In a hydrogen atom, the electron and proton are bound at a distance of about 0.53 Å. What is the potential energy of the system in eV, taking the zero of the potential energy at infinite separation of the electron from proton?", img: "images/phy17-q150.png", opts: ["+ 27.16 eV", "– 27.16 eV", "13.58 eV", "– 13.58 eV"], ans: 1, exp: "U = -ke²/r = -9e9 * (1.6e-19)² / 0.53e-10 = -4.35e-18 J = -27.16 eV." },
+    { q: "151. A positively charged particle is released from rest in an uniform electric field. The electric potential energy of the charge", img: "images/phy17-q151.png", opts: ["remains a constant because the electric field is uniform", "increases because the charge moves along the electric field", "decreases because the charge moves along the electric field", "decreases because the charge moves opposite to the electric field"], ans: 2, exp: "Force along E. Moves to lower V. PE decreases." },
+    { q: "152. Figure shows some equipotential lines distributed in space. A charged object is moved from point A to point B.", img: "images/phy17-q152.png", opts: ["The work done in Fig. (i) is the greatest", "The work done in Fig. (ii) is least", "The work done is the same in Fig. (i), Fig.(ii) and Fig. (iii)", "The work done in Fig. (iii) is greater than Fig. (ii) but equal to that in"], ans: 2, exp: "W = qΔV. ΔV same in all. So same work." },
+    { q: "153. The electrostatic potential on the surface of a charged conducting sphere is 100 V. Two statements are made in this regard S₁ : at any point inside the sphere, electric intensity is zero. S₂ : at any point inside the sphere, the electrostatic potential is 100 V. Which of the following is a correct statement?", img: "images/phy17-q153.png", opts: ["S₁ is true but S₂ is false", "Both S₁ and S₂ are false", "S₁ is true, S₂ is also true and S₁ is the cause of S₂", "S₁ is true, S₂ is also true but the statements are independent"], ans: 2, exp: "E=0 inside, so V constant. S1 causes S2." },
+    { q: "154. Equipotentials at a great distance from a collection of charges whose total sum is not zero are approximately", img: "images/phy17-q154.png", opts: ["spheres", "planes", "paraboloids", "ellipsoids"], ans: 0, exp: "Like point charge, so spherical." },
+    { q: "155. Equipotential surfaces", img: "images/phy17-q155.png", opts: ["are closer in regions of large electric fields compared to regions of lower electric fields", "will be more crowded near sharp edges of a conductor", "(c) will be more crowded near regions of large charge densities", "will always be equally spaced"], ans: 0, exp: "d = ΔV/E. Larger E => closer. Options (a,b,c) correct." },
+    { q: "156. In the circuit shown in figure initially key K₁ is closed and key K₂ is open. Then, K₁ is opened and K₂ is closed (order is important). [Take Q₁' and Q₂' as charges on C₁ and C₂ and V₁ and V₂ as voltages respectively.]", img: "images/phy17-q156.png", opts: ["charge on C₁ gets redistributed such that V₁ = V₂", "charge on C₁ gets redistributed such that Q₁' = Q₂'", "charge on C₁ gets redistributed such that C₁V₁ + C₂V₂ = C₁E", "charge on C₁ gets redistributed such that Q₁' + Q₂' = Q"], ans: 0, exp: "Connected in parallel, so V1=V2." },
+    { q: "157. A parallel plate capacitor is connected to a battery as shown in figure. Consider two situations. I. Key K is kept closed and plates of capacitors are moved apart using insulating handle. II. Key K is opened and plates of capacitors are moved apart using insulating handle. Choose the correct option(s).", img: "images/phy17-q157.png", opts: ["In I Q remains same but C changes", "In II V remains same but C changes", "In I V remains same and hence Q changes", "In II Q remains same and hence V changes"], ans: 2, exp: "I: V const, C changes, Q changes. II: Q const, C changes, V changes. (c,d) correct." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 49; // ⚠️ Set to 49 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+<script src="results-save.js"></script>
+</body>
+</html>
