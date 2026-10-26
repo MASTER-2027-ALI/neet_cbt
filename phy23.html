@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 55: Electromagnetic Waves - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 55: Electromagnetic Waves</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script src="keys.js"></script>
+<script src="autosave.js"></script>
+<script src="shuffle.js"></script>
+<script>
+const questions = [
+    { q: "1. The conduction current is the same as displacement current when source is", img: "", opts: ["only AC", "only DC", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "In conductor, there is no storage of charge, so conduction current is the same as displacement current when sources are both Direct Current (DC) and Alternating Current (AC)." },
+    { q: "2. An oscillating charge is an example of", img: "", opts: ["displacement current", "conduction current", "accelerating charge", "accelerating current"], ans: 0, exp: "An oscillating charge is an example of displacement current." },
+    { q: "3. The current ε₀(dφ_E/dt) = i is a new term and is due to changing electric field, therefore called", img: "", opts: ["conduction current", "induced current", "Both (a) and (b)", "Maxwell's displacement current"], ans: 3, exp: "The current ε₀(dφ_E/dt) = i is a new term and is due to changing electric field, therefore called Maxwell's displacement current." },
+    { q: "4. There may be a large regions of space, where there is no conduction current, but there is only", img: "", opts: ["displacement current due to time varying electric fields", "induced current due to time varying electric fields", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 0, exp: "There may be a large regions of space, where there is no conduction current, but there is only displacement current due to time varying electric fields." },
+    { q: "5. Which statement represents the symmetrical counterpart of Faraday's law and a consequence of the displacement current being a source of a magnetic field?", img: "", opts: ["An electric field changing with time gives rise to a magnetic field", "A magnetic field changing with time gives rise to an electric field", "An emf changing with time gives rise to an electric field", "An displacement current, changing with time gives rise to an electric field"], ans: 0, exp: "The fact that an electric field changing with time gives rise to a magnetic field, is the symmetrical counterpart and is a consequence of the displacement current being a source of a magnetic field." },
+    { q: "6. In the given figure, a magnetic field (say at point M) between the plates of the capacitor to be the same as that just", img: "images/phy23-q6.png", opts: ["outside at P", "between the plates", "above the plates", "down the plates"], ans: 0, exp: "In the given figure, a magnetic field (say at point M) between the plates of the capacitor to be the same as that just outside at P." },
+    { q: "7. The charge on a parallel-plate capacitor varies as q = q₀ cos 2πvt. The plates are very large and close together (area = A, separation = d). Neglecting the edge effects, find the displacement current through the capacitor?", img: "", opts: ["- sin 2πvt (2πv)", "q₀ cos 2πvt", "2π q₀ v sin (2πvt)", "- 2π q₀ v sin (2πvt)"], ans: 3, exp: "Displacement current (I_d) is equal to charging current (i_d = dq/dt). Thus, i_d = dq/dt = d/dt (q₀ cos 2πvt) = q₀(-sin 2πvt)(2πv) = -2π q₀ v sin (2πvt)." },
+    { q: "8. What is an instantaneous take of change of voltage for displacement current of 10A current in the space between the parallel plate of 1 μF capacitor?", img: "", opts: ["10⁵ Vs⁻¹", "10⁶ Vs⁻¹", "10⁻⁶ Vs⁻¹", "10⁷ Vs⁻¹"], ans: 3, exp: "Displacement current i.e., i_d = ε₀(dφ_E/dt) = ε₀A d/dt(V/d) => i_d = (ε₀A/d)(dV/dt) = C(dV/dt) => dV/dt = i_d/C = 10/10⁻⁶ = 10⁷ Vs⁻¹." },
+    { q: "9. The charge of a parallel plate capacitor is varying as q = q₀ sin 2πft. The plates are very large and close together (Area = A, separation = d). Neglecting edge effects, the displacement current through the capacitor is", img: "", opts: ["d/Aε₀", "(d/ε₀) sin 2πft", "2πfq₀ cos 2πft", "2πfq₀/ε₀ cos 2πft"], ans: 2, exp: "As, we know, the displacement through the capacitor i.e., i = dq/dt = d/dt(q₀ sin 2πft) = q₀2πf cos 2πft." },
+    { q: "10. A parallel-plate capacitor consists of two circular plates with radius R = 10 cm separated by distance d = 0.5 mm. The capacitor is being charged at a uniform rate by applying a changing potential difference between the two plates. Calculate the displacement current for the capacitor. Assume that the electric field is due to the displacement current only and rate at which the electric field between the plates changes is 5 × 10¹³ Vms⁻¹.", img: "", opts: ["13.8 A", "12.6 A", "13.9 A", "10.5 A"], ans: 2, exp: "Here, cross-section area of a capacitor i.e., A = πR² = π(0.1 m)² = 3.14 × 10⁻² m². i.e., dE/dt = 5 × 10¹³ Vms⁻¹. Thus, displacement current i.e., i_d = ε₀A dE/dt = (8.85 × 10⁻¹² C²Nm⁻¹)(3.14 × 10⁻² m²)(5 × 10¹³ Vms⁻¹) = 13.9 A." },
+    { q: "11. A sinusoide voltage is applied directly across an 8 μF capacitor. The frequency of the source is 3.00 kHz and the voltage amplitude is 30.0 V. Find the displacement current and amplitude between the plates of the capacitor.", img: "", opts: ["42.5 A", "4.25 μA", "4.52 A", "4.52 μA"], ans: 2, exp: "Here, C = 8.00 μF = 8.00 × 10⁻⁶ F, v = 3.00 kHz, V₀ = 30.0 V. Clearly, ω = 2πv = 2π × (3.00 × 10³ s⁻¹) = 6π × 10³ s⁻¹. Voltage across the capacitor, V = V₀ sin ωt = (30.0) sin(6π × 10³ t). Displacement current, i_d = dq/dt = d/dt(q) = d/dt(CV) = C dV/dt = (8.00 × 10⁻⁶) d/dt[30.0 sin(6π × 10³ t)] = (8.00 × 10⁻⁶)(30.0) d/dt[sin(6π × 10³ t)] = (8.00 × 10⁻⁶)(30.0)[cos(6π × 10³ t)] d/dt(6π × 10³ t) = (8.00 × 10⁻⁶)(30.0)(6π × 10³)cos(6π × 10³ t) = (4.52 A) cos(6π × 10³ t). Hence, the displacement current varies sinusoidally with time and has a maximum value of 4.52 A." },
+    { q: "12. You are given a parallel plate capacitor having capacitance of 2μF. How would you establish an instantaneous displacement current of 1 mA in the space between its plates?", img: "", opts: ["550 Vs⁻¹", "500 Vs⁻¹", "525 Vs⁻¹", "475 Vs⁻¹"], ans: 1, exp: "Here, C = 2μF = 2 × 10⁻⁶ F. i_d (displacement current) = 1 mA = 10⁻³ A. As, i_d = dq/dt = d/dt(CV) = C dV/dt. Therefore, dV/dt = (1/C)i_d = (1/2 × 10⁻⁶ F)(10⁻³ A) = 500 Vs⁻¹." },
+    { q: "13. A parallel plate capacitor is charged to 100 × 10⁻⁶ C. Due to radiations falling, from a radiating source the plate loses charge at the rate of 2 × 10⁻⁷ Cs⁻¹. The magnitude of displacement current is", img: "", opts: ["10⁻⁶ A", "10⁻⁴ A", "2 × 10⁻⁷ A", "2 × 10⁻⁷ mCs⁻¹"], ans: 2, exp: "Magnitude of displacement current is given by I_d = I_C = |dq/dt| = 2 × 10⁻⁷ Cs⁻¹ = 2 × 10⁻⁷ A." },
+    { q: "14. Which is the most important prediction to emerge from Maxwell's equations?", img: "", opts: ["Existence of magnetic waves", "Existence of electrical waves", "Existence of radio waves", "Existence of electromagnetic waves"], ans: 3, exp: "The most important prediction to emerge from Maxwell's equations is the existence of electromagnetic waves, which are (coupled) time-varying electric and magnetic fields that propagate in space. The speed of the waves, according to these equations, turned out to be very close to the speed of light (3 × 10⁸ ms⁻¹), obtained from optical measurements. This led to the remarkable conclusion that light is an electromagnetic waves." },
+    { q: "15. The total current passing through any surface, of which the closed loop is the perimeter, is", img: "", opts: ["sum of conduction current and displacement current", "difference of conduction current and displacement current", "product of conduction current and displacement current", "fraction of conduction current and displacement current"], ans: 0, exp: "The total current passing through any surface of which the closed loop is the perimeter is the sum of the conduction current and the displacement current. The generalised law is ∮B·dl = μ₀i_c + μ₀ε₀ dφ_E/dt and is known as Ampere-Maxwell law." },
+    { q: "16. We have a contradiction, calculated one way, there is a magnetic field at a point P, calculated another way, the magnetic field at P is zero. Since, the contradiction arises from our use of", img: "", opts: ["Ampere's circuital law", "Lorentz's force law", "Fleming's right hand rule", "Fleming left hand rule"], ans: 0, exp: "We have a contradiction, calculated one way, there is a magnetic field at a point P, calculated another way, the magnetic field at P is zero. Since, the contradiction arises from our use of Ampere's circuital law." },
+    { q: "17. 'Time-dependent electric and magnetic fields give rise to each other'. Which laws give a quantitative expression of this statement?", img: "", opts: ["Faraday's law of electromagnetic induction", "Ampere-Maxwell law", "Faraday's left hand rule of electromagnetic induction", "Both (a) and (b)"], ans: 3, exp: "Faraday's law of electromagnetic induction and Ampere-Maxwell law give a quantitative expression of this statement." },
+    { q: "18. If we generalise Ampere's circuital law by adding to the total current carried by conductors through the surface, another term which is ε₀ times the rate of change of electric flux through the same surface, the total value of current for all surfaces will be", img: "", opts: ["same", "different", "may be same", "None of these"], ans: 0, exp: "If we generalise Ampere's circuital law by adding to the total current carried by conductors through the surface, another term which is ε₀ times the rate of change of electric flux through the same surface, the total value of current for all surfaces will be same." },
+    { q: "19. Find magnetic field on circular loop of radius r, placed between circular plates of capacitor of radius R having displacement current i_d, r < R.", img: "", opts: ["(μ₀/2π)(i_d r/R²)", "(μ₀/2π)(i_d/r)", "(μ₀/2π)(i_d/R)", "zero"], ans: 0, exp: "Consider a loop of radius r (< R) between the two circular plates, placed coaxially with them. The area of the loop = πr². By symmetry, magnetic field is equal in magnitude at all points on the loop. If i_d is the displacement current crossing the loop and I_d is the total displacement current between plates i_d = (i_d/πR²) × πr². Using Ampere-Maxwell's law, we have B · dl = μ₀i'_d or B · 2πr = μ₀ i_d r²/πR² or B = μ₀i_d r / 2πR²." },
+    { q: "20. An expression for the magnetic field strength B at the point between the capacitor plates in terms of the rate of change of the electric field strength i.e., dE/dt between the plates is", img: "", opts: ["μ₀i/2πr", "(ε₀μ₀r/2)(dE/dt)", "zero", "μ₀i/2r"], ans: 1, exp: "Magnetic field strength B between the parallel plates capacitor i.e., B · dl = μ₀i_d. B = μ₀2i_d/4πr = (μ₀/4π)(2i_d/r) = (μ₀/4π)(2/r)ε₀ dφ_E/dt (∵ i_d = ε₀ dφ_E/dt). = (μ₀/4π)(2/r)ε₀ d/dt (E · A) = dE · A/πr² (∵ dφ_E = dE · A = dE πr²) = (μ₀ε₀πr² dE)/(2πr dt) = (μ₀ε₀r/2)(dE/dt)." },
+    { q: "21. Consider cross-sectional view of the given figure. Now choose the correct option.", img: "images/phy23-q21.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 0, exp: "In parallel plate capacitor, electric field E is perpendicular to the surfaces. It has the same magnitude over the area A of the capacitor plates and vanishes outside it." },
+    { q: "22. Which scientist's experiment marks the beginning of the field of communication using electromagnetic waves?", img: "", opts: ["Maxwell", "JC Bose", "Hertz", "Marconi"], ans: 3, exp: "Marconi's experiment marks the beginning of the field of communication using electromagnetic waves." },
+    { q: "23. Electromagnetic waves can be deflected by", img: "", opts: ["only electric field", "only magnetic field", "Both (a) and (b)", "None of these"], ans: 3, exp: "In electromagnetic waves, the rest mass of a particle is zero, then net force exerted on a particle is zero. So, there is no deflection shown by a particle." },
+    { q: "24. Which waves propagate in a solid, which is rigid and that resists shear?", img: "", opts: ["Electromagnetic waves", "Sound waves", "Transverse waves of water", "Transverse elastic sound waves"], ans: 3, exp: "Transverse elastic (sound) waves can also propagate in a solid, which is rigid and that resist shear." },
+    { q: "25. Name of famous scientists who demolished the conclusively the hypothesis of ether?", img: "", opts: ["Maxwell and Hertz in 1890", "JC Bose and Hertz in 1886", "Marconi and Maxwell in 1887", "Michelson and Morley in 1887"], ans: 3, exp: "Michelson and Morley in 1887 demolished conclusively the hypothesis of ether." },
+    { q: "26. In which medium, electric and magnetic fields, oscillating in space and time, can sustain each other?", img: "", opts: ["Air", "Vacuum", "Free space", "Water"], ans: 1, exp: "In vacuum, electric and magnetic fields, oscillating in space and time, can sustain each other." },
+    { q: "27. The velocity of light depends on", img: "", opts: ["electric properties of the medium", "magnetic properties of the medium", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 2, exp: "The velocity of light depends on electric and magnetic properties of the medium." },
+    { q: "28. In a material medium of permittivity ε and magnetic permeability μ, the velocity of light becomes", img: "", opts: ["v = 1/με", "v = 1/√(με)", "v = √(μ/ε)", "v = √(ε/μ)"], ans: 1, exp: "In a material medium of permittivity ε and magnetic permeability μ, the velocity of light becomes v = 1/√(με)." },
+    { q: "29. Electromagnetic waves of different wavelengths with the same velocity (independent of wavelength) within a few metres per second and the value of speed of light is", img: "", opts: ["3 × 10⁸ ms⁻¹", "3 × 10¹¹ ms⁻¹", "3 × 10¹² ms⁻¹", "3 × 10⁹ ms⁻¹"], ans: 0, exp: "Electromagnetic waves of different wavelengths that this velocity is the same (independent of wavelength) to within a few metres per second, out of the value of 3 × 10⁸ ms⁻¹." },
+    { q: "30. The constancy of the velocity of electromagnetic waves in vacuum is used to define a standard of", img: "", opts: ["breadth", "thickness", "length", "Both (a) and (b)"], ans: 2, exp: "The constancy of the velocity of electromagnetic waves in vacuum is used to define a standard of length." },
+    { q: "31. The distance travelled by light in vacuum in a time (1/c) seconds = (2.99792458 × 10⁸)⁻¹ second is known as", img: "", opts: ["centimetre", "metre", "decimetre", "millimetre"], ans: 1, exp: "Namely, the metre is now defined as the distance travelled by light in vacuum in a time (1/c) seconds = (2.99792458 × 10⁸)⁻¹ s." },
+    { q: "32. The direction of k describes", img: "", opts: ["direction of propagation of the wave", "opposite direction of propagation of the wave", "direction of propagation of the wave (ω/k)", "opposite direction of propagation of the wave (ω/k)"], ans: 0, exp: "The direction of k describes direction of propagation of the wave." },
+    { q: "33. The signal will be greatly diminished, when the antenna is turned", img: "", opts: ["horizontal", "vertical", "at the angle of 45°", "at angle of 60°"], ans: 0, exp: "When the antenna is turned horizontal, the signal will be greatly diminished. Some portable radios have horizontal antenna (usually inside the case of radio), which are sensitive to the magnetic component of the electromagnetic wave. Such a radio must remain horizontal in order to receive the signal. In such cases, response also depends on the orientation of the radio with respect to the station." },
+    { q: "34. What will be the magnetic energy density, in the magnetic field B?", img: "", opts: ["B²/2μ₀", "B/2μ₀", "2B/μ₀", "2B²μ₀"], ans: 0, exp: "Magnetic energy density in the magnetic field B is B²/2μ₀." },
+    { q: "35. The average value of electric energy density in an electromagnetic wave is (E₀ is peak value)", img: "", opts: ["(1/2)ε₀E₀²", "E₀²/2ε₀", "ε₀E₀²", "(1/4)ε₀E₀²"], ans: 0, exp: "The average value of electric energy density in an electromagnetic wave is (1/2)ε₀E₀²." },
+    { q: "36. During the propagation or electromagnetic waves in a medium.", img: "", opts: ["Electric energy density is double of the magnetic energy density", "Electric energy density is half of the magnetic energy density", "Electric energy density is equal to the magnetic energy density", "Both electric and magnetic energy densities are zero"], ans: 2, exp: "During the propagation of electromagnetic waves in a medium, electric energy density is equal to the magnetic energy density." },
+    { q: "37. Out of the following options which one can be used to produce a propagating electromagnetic wave?", img: "", opts: ["A stationary charge", "A charge less particle", "An accelerating charge", "A charge moving at constant velocity"], ans: 2, exp: "An accelerating charge can be used to produce a propagating electromagnetic wave." },
+    { q: "38. If the total energy transferred to a surface in time t is U, then the magnitude of the total momentum delivered to this surface (for complete absorption) is", img: "", opts: ["p = U/c", "p = c/U", "p = cU", "p = 2c/U"], ans: 0, exp: "If the total energy transferred to a surface in time t is U, then the magnitude of the total momentum delivered to this surface (for complete absorption) is p = U/c." },
+    { q: "39. Solar radiation is", img: "", opts: ["transverse electromagnetic wave", "longitudinal electromagnetic wave", "stationary wave", "None of the above"], ans: 0, exp: "Solar radiation is transverse electromagnetic wave. It consists of electric and magnetic field components. These components are perpendicular to the direction of propagation of wave." },
+    { q: "40. A plane electromagnetic wave of frequency 25 MHz travels in free space along the x-direction. At a particular point in space and time, E = 6.3 JV/m. What is B at this point?", img: "", opts: ["2.1 × 10⁻⁸ k̂ T", "2.1 × 10⁸ k̂ T", "3.5 × 10⁶ k̂ T", "3.0 × 10⁵ k̂ T"], ans: 0, exp: "According to Maxwell equation, the magnitude of the electric and magnetic fields in an electromagnetic wave are related as. B = E/c = 6.3 Vm⁻¹ / (3 × 10⁸ ms⁻¹) = 2.1 × 10⁻⁸ k̂ T." },
+    { q: "41. Light with an energy flux of 18 Wcm⁻² falls on a non-reflecting surface at normal incidence. If the surface has an area of 20 cm², find the average force executed on the surface during a 30 min time span.", img: "", opts: ["12 × 10⁻⁶ N", "1.2 × 10⁻⁷ N", "1.2 × 10⁻⁶ N", "12 × 10⁷ N"], ans: 2, exp: "The total energy falling on the surface is U = (18 Wcm⁻²) × (20 cm²) × (30 × 60) = 6.48 × 10⁵ J. Therefore, the total momentum delivered (for complete absorption) is p = U/c = (6.48 × 10⁵ J)/(3 × 10⁸ ms⁻¹) = 2.16 × 10⁻³ Jms⁻¹. The average force exerted on the surface is F = p/t = (2.16 × 10⁻³)/(0.18 × 10⁴) = 1.2 × 10⁻⁶ N." },
+    { q: "42. By measuring the heating of a material as it absorbs light from the sun, one finds that the intensity of sunlight at the surface of the earth is 1300 Wm⁻². What will be magnetic field of sunlight?", img: "", opts: ["990 T", "3 × 10⁻⁶ T", "3.3 × 10⁻⁶ T", "9.9 × 10⁻⁶ T"], ans: 2, exp: "Here, I = 1300 Wm⁻². As, I = (1/2)ε₀cE₀². As, we know, electric field i.e., E₀ = √(2I/ε₀c) = √(2(1300 Wm⁻²)/((8.85 × 10⁻¹² C²Nm⁻²)(3 × 10⁸ ms⁻¹))) or E₀ = 990 NC⁻¹. So, magnetic field of sunlight i.e., B₀ = E₀/c = 990 NC⁻¹ / (3 × 10⁸ ms⁻¹) = 3.3 × 10⁻⁶ T." },
+    { q: "43. An electromagnetic wave propagating in the y-direction has wavelength of 5.0 mm. The electric field is in the x-direction and its maximum magnitude of 66 Vm⁻¹. The equation for the electric field as function of x and t is", img: "", opts: ["11 sin(t - y/c)", "66 sin 1.2π × 10¹¹ (t - y/c)", "66 sin 1.2π(t - x/c)", "11 sin π × 10¹¹ (t - x/c)"], ans: 1, exp: "Angular frequency, ω = 2πv = 2πc/λ = (2π × 3 × 10⁸)/(5 × 10⁻³) = 1.2π × 10¹¹ rads⁻¹. The equation for the electric field, along X-axis in the electromagnetic wave is E_x = E₀ sin ω(t - y/c) = 66 sin 1.2π × 10¹¹ (t - y/c)." },
+    { q: "44. Suppose that the electric field amplitude of an electromagnetic wave is E₀ = 120 NC⁻¹ and its frequency is v = 50.0 MHz. The expressions for E will be (if wave travels along X)", img: "", opts: ["[(120 NC⁻¹) sin {(1.05 rad m⁻¹)x - (3.14 × 10⁸ rads⁻¹)t}] î", "[(120 NC⁻¹) sin {(1.05 rad m⁻¹)x - (3.14 × 10⁸ rads⁻¹)t}] k̂", "[(120 NC⁻¹ sin {(1.05 rad m⁻¹)x - (3.14 × 10⁸ rads⁻¹)t}] ĵ", "[(120 NC⁻¹) cos {(1.05 rad m⁻¹)x - (3.14 × 10⁸ rads⁻¹)t}] ĵ"], ans: 2, exp: "Given, E₀ = 120 NC⁻¹, v = 50.0 MHz = 50 × 10⁶ Hz. As, we know, magnetic field B₀ = E₀/c = 120 NC⁻¹ / (3 × 10⁸ ms⁻¹) = 4 × 10⁻⁷ T = 400 nT. ω = 2πv = (2 × 3.14 rad)(50 × 10⁶ Hz) = 3.14 × 10⁸ rads⁻¹. Wave constant i.e., k = ω/c = 3.14 × 10⁸ rads⁻¹ / (3 × 10⁸ ms⁻¹) = 1.05 rad m⁻¹. If we take the wave to be propagating along X-axis, then E is along y-axis and B is along Z-axis. Clearly, E = E₀ sin (kx - ωt) ĵ = (120 NC⁻¹) sin {(1.05 rad m⁻¹)x - (3.14 × 10⁸ rads⁻¹)t} ĵ." },
+    { q: "45. The magnetic field of an electromagnetic wave is given by B_y = 3 × 10⁻⁷ sin (10³x + 6.28 × 10¹² t). The wavelength of the electromagnetic wave is", img: "", opts: ["6.28 cm", "3.14 cm", "0.63 cm", "0.32 cm"], ans: 2, exp: "Given, B_y = 3 × 10⁻⁷ sin (10³x + 6.28 × 10¹² t). Comparing with the general equation B_y = B₀ sin (kx + ωt), we get k = 10³ => 2π/λ = 10³ (∵ k = 2π/λ). => Wavelength of electromagnetic wave λ = 2π/10³ = 6.28 × 10⁻³ m = 0.63 cm." },
+    { q: "46. Light having an energy flux of 40 Wcm⁻² falls on non-reflecting surface at normal incidence. If the surface has an area of 20 cm², the total momentum delivered (for complete absorption) during 10 min is", img: "", opts: ["24 × 10⁻⁵ kg ms⁻¹", "24 × 10⁻⁴ kg ms⁻¹", "102 × 10⁴ kg ms⁻¹", "1.03 × 10⁷ kg ms⁻¹"], ans: 1, exp: "Here, energy flux, φ = 40 Wcm⁻², surface area (A) = 20 cm², time (t) = 10 min = 10 × 60 s. Total energy falling on the surface in time t is U = φAt = 40 × 20 × (10 × 60) J. Momentum of the incident light (p) = U/c = (40 × 20 × (10 × 60))/(3 × 10⁸) = 24 × 10⁻⁴ kgs⁻¹. Momentum of the reflected light = 0. Therefore, momentum delivered to the surface = 24 × 10⁻⁴ - 0 = 24 × 10⁻⁴ kg ms⁻¹." },
+    { q: "47. A plane electromagnetic wave of frequency 30 MHz travels in free space along x-direction. The electric field component of the wave at a particular point of space and time E = 6 Vm⁻¹ along y-direction. Its magnetic field component B at this point would be", img: "", opts: ["2 × 10⁻⁸ T along z-direction", "6 × 10⁻⁸ T along x-direction", "2 × 10⁻⁸ T along y-direction", "6 × 10⁻⁸ T along z-direction"], ans: 0, exp: "In electromagnetic, the ratio of the amplitude of electric and magnetic field is always constant and it is equal to velocity of the electromagnetic waves. i.e., E/B = c => B = E/c = 6/(3 × 10⁸) = 2 × 10⁻⁸ T. Magnetic field of component B is 2 × 10⁻⁸ T along Z." },
+    { q: "48. The refractive index and the permeability of a medium are respectively 1.5 and 5 × 10⁻⁷ Hm⁻¹. The relative permittivity of the medium is nearly", img: "", opts: ["25", "15", "81", "6"], ans: 3, exp: "Given refractive index i.e., n = 1.5. Permeability of a medium i.e., μ₀ = 5 × 10⁻⁷. n = c/v => n = √(μ_r ε_r). => ε_r = n²/μ_r = (n²μ₀)/μ (∵ μ_r = μ/μ₀) = (1.5)² × 4π × 10⁻⁷ / (5 × 10⁻⁷) = 6(∵ μ₀ = 4π × 10⁻⁷ Tm A⁻¹)." },
+    { q: "49. If ε₀ and μ₀ are the electric permittivity and magnetic permeability of free space and ε and μ are the corresponding quantities in the medium, the index of refraction of the medium in terms of above parameter is", img: "", opts: ["εμ/ε₀μ₀", "(εμ/ε₀μ₀)^(1/2)", "(ε₀μ₀/εμ)", "(ε₀μ₀/εμ)^(1/2)"], ans: 1, exp: "Velocity of light in vacuum c = 1/√(μ₀ε₀). Velocity of light in medium v = 1/√(με). So, μ = c/v = (με/μ₀ε₀)^(1/2)." },
+    { q: "50. A radiation of energy E falls normally on a perfectly reflecting surface. The momentum transferred to the surface is", img: "", opts: ["E/c", "2E/c", "Ec", "E/c²"], ans: 1, exp: "Initial momentum of surface, p_i = E/c. where, c = velocity of light (constant) and E is energy. Since, the surface is perfectly reflecting, so the same momentum will be reflected completely. Final momentum, p_f = -E/c (negative value). Therefore, change in momentum, Δp = p_f - p_i = -E/c - E/c = -2E/c. Thus, momentum transferred to the surface is Δp' = |Δp| = 2E/c." },
+    { q: "51. Light wave is travelling along y-direction. If the corresponding E vector at any time is along the X-axis, the direction of B vector at that time is along", img: "images/phy23-q51.png", opts: ["Y-axis", "X-axis", "+ Z-axis", "- Z-axis"], ans: 2, exp: "Electromagnetic radiation is a self propagating wave in space with electric and magnetic components. These components oscillate at right angles to each other and to the direction of propagation. Hence, B is along the Z-axis at that time." },
+    { q: "52. The electric field associated with an electro magnetic wave in vacuum is given by E = î 40 cos (kz - 6 × 10⁸ t), where E, z and t are in Vm⁻¹, meter and second respectively. The value of wave vector k is", img: "", opts: ["2 m⁻¹", "0.5 m⁻¹", "6 m⁻¹", "3 m⁻¹"], ans: 0, exp: "Electromagnetic wave equation E = E₀ cos (kz - ωt) ...(i). Speed of electromagnetic wave v = ω/k. Given, equation E = î40 cos(kz - 6 × 10⁸ t) ...(ii). Comparing Eqs. (i) and (ii), we get ω = 6 × 10⁸ and E₀ = 40î. Here, wave factor k = ω/v = (6 × 10⁸)/(3 × 10⁸) = 2 m⁻¹." },
+    { q: "53. Radiations of intensity 0.5 Wm⁻² are striking a metal plate. The pressure on the plate is", img: "", opts: ["0.66 × 10⁻⁸ Nm⁻²", "0.332 × 10⁻⁸ Nm⁻²", "0.111 × 10⁻⁸ Nm⁻²", "0.083 × 10⁻⁸ Nm⁻²"], ans: 0, exp: "Intensity or power per unit area of the radiations P = pv => p = P/v = 0.5/(3 × 10⁸) = 0.166 × 10⁻⁸ Nm⁻²." },
+    { q: "54. The magnetic field in a travelling electromagnetic wave has a peak value of 20 nT. The peak value of electric field strength is", img: "", opts: ["3 Vm⁻¹", "6 Vm⁻¹", "9 Vm⁻¹", "12 Vm⁻¹"], ans: 1, exp: "As, E = B × c. where, E = electric field, B = magnetic field, c = speed of EM wave. On putting the values of electric field, we get |E| = |B||c| = 20 × 10⁻⁹ × 3 × 10⁸ = 6 Vm⁻¹." },
+    { q: "55. A charged particle with charge q enters a region of constant, uniform and mutually orthogonal fields E and B with a velocity v perpendicular to both E and B and comes out without any change in magnitude or direction of v. Then,", img: "", opts: ["v = B × E/B²", "v = E × B/B²", "v = E × B/E²", "v = B × E/E²"], ans: 1, exp: "When a charged particle q enters a region with velocity v of charged particle is remaining constant, it means force acting on charged particle is zero. So, q(v × B) = qE => v × B = E. Velocity of a charged particle v = E × B/B², v = (E × B)/B²." },
+    { q: "56. The magnetic field component of intensity of electromagnetic wave is 4I₀. What is the electric field component of intensity?", img: "", opts: ["2I₀", "4I₀", "I₀", "I₀/4"], ans: 1, exp: "As I_E (intensity due to electric field) = (1/2)cε₀ E². I_B (intensity due to magnetic field) = cB²/2μ₀. I_E/I_B = ((1/2)cε₀E²)/(cB²/2μ₀) = (ε₀μ₀)(E/B)² = (1/c²)(c²) = 1 => I_E = I_B = 4I₀ (as c = 1/√(ε₀μ₀) and E/B = c)." },
+    { q: "57. At the time Maxwell predicted the existence of electromagnetic waves, which was the more familiar electromagnetic waves at that time?", img: "", opts: ["X-rays", "γ-rays", "Visible light waves", "Radiowaves"], ans: 2, exp: "At the time Maxwell predicted the existence of electromagnetic waves, visible light waves was the more familiar electromagnetic waves at that time." },
+    { q: "58. Which of the following are electromagnetic waves?", img: "", opts: ["Visible light waves and X-rays", "Gamma rays and radio waves", "Microwaves and ultraviolet rays", "All of the above"], ans: 3, exp: "Electromagnetic waves include visible light, X-rays, gamma rays, radiowaves, microwaves and infrared waves." },
+    { q: "59. The classification of electromagnetic waves according to frequency is called", img: "", opts: ["electromagnetic beam", "electromagnetic spectrum", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 1, exp: "The classification of electromagnetic waves according to frequency is called electromagnetic spectrum." },
+    { q: "60. Infrared waves are produced by", img: "", opts: ["hot bodies and molecules", "cold bodies and molecules", "Neither hot nor cold", "Both (a) and (b)"], ans: 0, exp: "Infrared waves are produced by hot bodies and molecules. This band lies adjacent to the low-frequency or long-wavelength end of the visible spectrum." },
+    { q: "61. Infrared radiations is trapped by", img: "", opts: ["ozone layer", "water vapour", "CO₂", "Both (b) and (c)"], ans: 3, exp: "Infrared waves radiations, are trapped by greenhouse gases such as carbon dioxide and water vapour." },
+    { q: "62. Visible rays in the spectrum runs from about", img: "", opts: ["4 × 10¹⁴ Hz to 4 × 10¹¹ Hz", "4 × 10¹⁴ Hz to 7 × 10¹⁴ Hz", "4 × 10¹² Hz to 7 × 10¹⁴ Hz", "4 × 10¹¹ Hz to 7 × 10¹⁴ Hz"], ans: 1, exp: "Visible rays is the most familiar form of electromagnetic waves. It is the part of the spectrum that is detected by the human eye. It runs from about 4 × 10¹⁴ Hz to about 7 × 10¹⁴ Hz or a wavelength range of about 700-400 nm." },
+    { q: "63. In the electromagnetic spectrum, X-ray region lies", img: "", opts: ["beyond the microwave region", "above the ultraviolet region", "beyond the UV region", "above the infrared ray region"], ans: 2, exp: "In the electromagnetic spectrum, X-ray region lies beyond the UV region." },
+    { q: "64. Arrange the following electromagnetic radiations in the order of increasing energy.\nI. Blue light\nII. Yellow light\nIII. X-ray\nIV. Radio wave", img: "", opts: ["IV, II, I, III", "I, II, IV, III", "III, I, II, IV", "II, I, IV, III"], ans: 0, exp: "Energy E = hv = hc/λ => E ∝ 1/λ. Since λ_radio > λ_yellow > λ_blue > λ_X-ray, so E_radio < E_yellow < E_blue < E_X-ray. Hence, increasing order of energy is IV, II, I, III." },
+    { q: "65. UV radiation is absorbed by", img: "", opts: ["ordinary glass", "prism", "black glass", "Both (b) and (c)"], ans: 0, exp: "UV-radiation is absorbed by ordinary glass." },
+    { q: "66. The energy of the EM waves is of the order of 15 keV. To which part of the spectrum does it belong?", img: "", opts: ["X-ray", "Infrared rays", "Ultraviolet rays", "γ-rays"], ans: 0, exp: "Given, energy of EM waves is of the order of 15 keV i.e., E = hv = h(c/λ) => λ = (h × c)/E = (6.624 × 10⁻³⁴ × 3 × 10⁸)/(15 × 10³ × 1.6 × 10⁻¹⁹) = (1.3248 × 10⁻²⁹)/(1.6 × 10⁻¹⁹) = 0.828 × 10⁻¹⁰ m. λ = 0.828 Å (∵ 1Å = 10⁻¹⁰ m). Thus, this spectrum is a part of X-rays." },
+    { q: "67. Wavelength of gamma rays are", img: "", opts: ["10⁻¹⁰ nm to less than 10⁻¹⁴ m", "10⁻¹⁴ m to less than 10⁻¹⁰ m", "10⁻¹¹ m to less than 10⁻¹⁴ m", "10⁻¹⁴ nm to less than 10⁻¹⁰ nm"], ans: 2, exp: "Wavelength of gamma rays are 10⁻¹¹ m to less than 10⁻¹⁴ m." },
+    { q: "68. Gamma rays are used in medicine to destroy", img: "", opts: ["PB cells", "cancer cells", "Both (a) and (b)", "Neither (a) nor (b)"], ans: 1, exp: "Gamma rays are used in medicine to destroy cancer cells." },
+    { q: "69. One common way to generate X-rays is that", img: "", opts: ["bombard a metal target by high energy electrons", "bombard a metal target by low energy neutrons", "bombard a metal target by low energy protons", "bombard a metal target by high energy neutrons"], ans: 0, exp: "One common way to generate X-rays is to bombard a metal target by high energy electrons. X-rays is to bombard a metal target by high energy electrons." },
+    { q: "70. All components of the electromagnetic spectrum in vacuum have the same", img: "", opts: ["energy", "velocity", "wavelength", "frequency"], ans: 1, exp: "In electromagnetic spectrum, all components of electric and magnetic fields in vacuum are carrying same velocity of light i.e., 3 × 10⁸ ms⁻¹." },
+    { q: "71. The condition under which a microwave oven heats up a food item containing water molecules most efficiently is", img: "", opts: ["the frequency of the microwave must match the resonant frequency of the water molecules", "the frequency of the microwave has no relation with natural frequency of water molecules", "microwave are heat waves, so always produce heating", "infrared waves produce heating in a microwave oven"], ans: 0, exp: "The condition under which a microwave oven heats up a food item containing water molecules most efficiently is the frequency of the microwave must match the resonant frequency of the water molecules." },
+    { q: "72. Radio wave diffract around building although light waves do not. The reason is that radio waves", img: "", opts: ["travel with speed target than c", "have much longer wavelength than light", "carry news", "are not electromagnetic waves"], ans: 1, exp: "Diffraction takes places when the wavelength of wave is comparable with the size of the obstacle in path. The wavelength of radiowaves is greater than the wavelength of light waves. Therefore, radio waves are diffracted around building." },
+    { q: "73. X-rays are not used for radar purposes, because they are not", img: "", opts: ["reflected by target", "partly absorbed by target", "electromagnetic waves", "completely absorbed by target"], ans: 0, exp: "X-rays has wavelength about 1 nm to 10⁻³ nm which has minimum wavelength and carries maximum energy i.e., E ∝ 1/λ. So, It penetrates the target and hence are not reflected back by target." },
+    { q: "74. Molybdenum is used as a target element for the production of X-rays because it is", img: "", opts: ["light and can easily deflect electrons", "light and can absorb electrons", "a heavy element with a high melting point", "an element having high thermal conductivity"], ans: 2, exp: "Molybdenum is used as a target element for the production of X-rays because it is a heavy element with a high melting point." },
+    { q: "75. Assertion While applying Ampere's circuital law to given surfaces with same perimeter, the left hand side ∮ B · dl = μ₀i(t) has not changed but the right hand side is zero.\nReason No current passes through the surface.", img: "images/phy23-q75.png", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "On applying Ampere's circuital law to such surfaces with the same perimeter, we find that the left hand side of equation ∮ B · dl = μ₀i(t) has not changed but the right hand side is zero and not μ₀i. Since, no current passes through the surface." },
+    { q: "76. Assertion We needed to do was to set up an AC circuit in which the current oscillate at the frequency of visible light i.e., yellow.\nReason The above experiment demonstrates electromagnetic wave.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "We needed to do was to set up an AC circuit in which the current oscillate at the frequency of visible light, i.e., yellow. The frequency of yellow light is about 6 × 10¹⁴ Hz, while the frequency that we get even with modern electronic circuits is hardly about 10¹¹ Hz. This is why the experimental demonstration of electromagnetic wave had to come in the low frequency region (the radio wave region), as in the Hertz's experiment (1887)." },
+    { q: "77. Assertion An oscillating charge produces an electric field in space, which produces an oscillating magnetic field, which in turn, is a source of electric field and so on.\nReason The oscillating electric and magnetic field thus regenerate each other, so to speak, as the wave propagates through the space.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "An oscillating charge produces an electric field in space, which produces an oscillating magnetic field, which in turn, is a source of electric field and so on. The oscillating electric and magnetic field thus regenerate each other, so to speak, as the wave propagates through the space." },
+    { q: "78. Assertion When the sun shines on our hand, we feel the energy being absorbed from the electromagnetic waves (our hands get warm).\nReason Electromagnetic waves also transfer momentum to our hand but because c is very large, the amount of momentum transferred is extremely small and we do not feel the pressure.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "When the sun shines on your hand, you feel the energy being absorbed from the electromagnetic waves (your hands get warm). Electromagnetic waves also transfer momentum to your hand but because c is very large, the amount of momentum transferred is extremely small and you do not feel the pressure." },
+    { q: "79. Statement I Infrared waves are sometimes referred to as heat waves.\nStatement II Water molecules present in most materials readily absorb infrared waves. After absorption, their thermal motion increases, that is they heat up and heat their surroundings.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "Infrared waves are sometimes referred to as heat waves. This is because water molecules present in most materials readily absorb infrared waves (many other molecules, e.g., CO₂, NH₃, also absorb infrared waves). After absorption, their thermal motion increases, that is, they heat up and heat their surroundings." },
+    { q: "80. Statement I Welders wear special glass goggles or face masks with glass windows to protect their eyes from large amount of UV produced by welding arcs.\nStatement II Due to shorter wavelength of UV, UV-radiations can be focussed into very narrow beams for high precision applications such as LASER eye surgery.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 2, exp: "Welders wear special glass goggles or face masks with glass windows to protect their eyes from large amount of UV produced by welding arcs. Due to its shorter wavelength, UV-radiations can be focussed into very narrow beams for high precision applications such as LASIK (Laser assisted in situ keratomileusis) eye surgery. UV lamps are used to kill germs in water purifier. Statement I is correct but Statement II is incorrect." },
+    { q: "81. Statement I X-rays are used as a diagnostic tool in medicine and as a treatment for certain forms of cancer.\nStatement II X-rays damage or destroy living tissues and organisms.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "X-rays are used as a diagnostic tool in medicine and as a treatment for certain forms of cancer. Because X-rays damage or destroy living tissues and organs, care must be taken to avoid unnecessary or over exposure." },
+    { q: "82. Which of the following statement(s) is/are correct?", img: "images/phy23-q82.png", opts: ["I and II", "II and III", "I and III", "All of these"], ans: 3, exp: "According to Gaussian surfaces, net electric flux i.e., φ_E = |E| A = ((1/ε₀)Q/A) × A = Q/ε₀." },
+    { q: "83. I. In all respects, the displacement current has the same physical effects as the conduction current.\nII. Due to electric fields in a conducting wire, the displacement current may be zero, since the electric field E does not change with time.\nIII. The charging capacitor, both conduction and displacement currents may be present in same regions of space.\nIV. In most of the cases, they both may be present in the same region of space, as there exist no perfectly conducting or perfectly insulating medium.", img: "", opts: ["I and II", "III and IV", "I, II and III", "I, II and IV"], ans: 3, exp: "The displacement current has same physical effects as conduction current. In conducting wire displacement current is zero. Both may be present in most of the cases, as there exist no perfectly conducting or perfectly insulating medium." },
+    { q: "84. I. The total current i is the sum of the conduction current denoted by i_c, and the displacement current denoted by i_d(t) = ε₀(dφ_E/dt).\nSo, i = i_c + i_d = i_c + ε₀ (dφ_E/dt).\nII. Outside the capacitor plates, we have only conduction current i_c = i and no displacement current, i_d = 0.\nIII. Inside the capacitor, there is no conduction current i_c = 0 and there is only displacement current, so that i_d = i.\nWhich of the above statements is/are correct? Choose the correct option.", img: "", opts: ["I and III", "II and III", "I and III", "All of these"], ans: 3, exp: "The total current i is the sum of the conduction current denoted by i_c, and the displacement current denoted by i_d (= ε₀(dφ_E/dt)). So, we have i = i_c + i_d = i_c + ε₀(dφ_E/dt). In explicit terms, this means that outside the capacitor plates, we have only conduction current i_c = i and no displacement current i.e., i_d = 0 and there is only displacement current, so that i_d = i." },
+    { q: "85. Consider the figure. Which of the following statements are correct?\nI. A plane electromagnetic wave propagating along the z-direction (the fields are shown as a function of the z-coordinate, at a given time t).\nII. The electric field E_x is along the Y-axis and varies sinusoidally with z, at a given time.\nIII. The magnetic field B_y is along the Y-axis and again varies sinusoidally with z.", img: "images/phy23-q85.png", opts: ["I and II", "II and III", "I and III", "All of these"], ans: 0, exp: "A plane electromagnetic wave propagating along the z-direction (the fields are shown as a function of the z-coordinate, at a given time t). The electric field E_x is along the Y-axis and varies sinusoidally with z, at a given time. The magnetic field B_y is along the X-axis and again varies sinusoidally with z." },
+    { q: "86. I. Electromagnetic waves are self-sustaining oscillations of electric and magnetic fields in free space or vacuum.\nII. No material medium is involved in the vibrations of the electric and magnetic fields.\nIII. Sound waves in air are longitudinal waves of compression and refraction.\nIV. Transverse waves on the surface of water consist of water moving up and down as the wave spreads horizontally and radially onwards.\nWhich of the following statements are correct? Choose the correct option.", img: "", opts: ["I, II and III", "I, III and IV", "II, III and IV", "All of these"], ans: 3, exp: "Electromagnetic waves are self-sustaining oscillation of electric and magnetic fields in free space, or vacuum. They differ from all the other waves we have studied so far, in respect that no material medium is involved in the vibration of the electric and magnetic fields. Sound waves in air are longitudinal waves of compression and rarefaction. Transverse waves on the surface of water consist of water moving up and down as the wave spreads horizontally and radially onwards." },
+    { q: "87. I. The great technological importance of electromagnetic waves stems from their capability to carry energy from one place to another.\nII. The radio and TV signals from broadcasting stations carry energy.\nIII. Light carries energy from the sun to the earth, thus making life possible on the earth.\nWhich of the following statement(s) is/are correct? Choose the correct option.", img: "", opts: ["I and II", "II and III", "I and III", "All of these"], ans: 3, exp: "The great technological importance of electromagnetic waves stems from their capability to carry energy from one place to another. The radio and TV signals from broadcasting stations carry energy. Light carries energy from the sun to the earth, thus making life possible on the earth." },
+    { q: "88. Which of the following statement(s) is/are correct?\nI. Radio waves are produced by the accelerated motion of charges in conducting wires.\nII. Radio waves are used in radio and television communication systems.\nIII. Cellular phones use radio waves to transmit voice communication in the ultra high frequency.", img: "", opts: ["I and III", "II and III", "I and II", "All of these"], ans: 3, exp: "Radio waves are produced by the accelerated motion of charges in conducting wires. They are used in radio and television communication systems. They are generally in the frequency range from 500 kHz to about 1000 MHz. The AM (amplitude modulated) band is from 530 kHz to 1710 kHz. Higher frequencies upto 54 MHz are used for short wave bands. TV waves range from 54 MHz to 890 MHz. The FM (frequency modulated) radio band extends from 88 MHz to 108 MHz. Cellular phones use radio waves to transmit voice communication in the Ultra High Frequency (UHF) band." },
+    { q: "89. I. Ultraviolet rays wavelength ranging about 4 × 10⁻⁷ m (400 nm) down to 6 × 10⁻¹⁰ m (0.6 nm).\nII. UV radiation is produced by special lamps and very hot bodies.\nIII. The Sun is an important source of ultraviolet light.\nIV. Most of the UV rays absorbed in the ozone layer in the atmosphere at an altitude of about 40-50 km.\nWhich of the following statements are correct?", img: "", opts: ["I, II and III", "II, III and IV", "I, III and IV", "All of these"], ans: 3, exp: "UV radiations covers wavelength ranging from about 4 × 10⁻⁷ m (400 nm) down to 6 × 10⁻¹⁰ m (0.6 nm). It is produced by special lamps and very hot bodies. The sun is an important source of ultraviolet light. But fortunately, most of it is absorbed in the ozone layer in the atmosphere at an altitude of about 40-50 km." },
+    { q: "90. Which of the following statements are correct?\nI. The wavelength of microwave is greater than that of UV-rays.\nII. The wavelength of infrared rays is lesser than that of UV-rays.\nIII. The wavelength of microwave is lesser than that of infrared rays.\nIV. Gamma rays have shortest wavelengths in the electromagnetic spectrum.", img: "", opts: ["I and II", "II and III", "III and IV", "I and IV"], ans: 3, exp: "The wavelength of microwave is greater than that of UV-rays. Gamma rays have shortest wavelengths in the electromagnetic spectrum." },
+    { q: "91. Match the items of Column I with those of Column II and choose the correct option from the codes given below.\nColumn I:\nA. ∮ E dA = Q/ε₀\nB. ∮ B dA = 0\nC. ∮ E dl = - dφ_B/dt\nD. ∮ B dl = μ₀i_c + μ₀ε₀ dφ_E/dt\n\nColumn II:\n1. Faraday's law\n2. Ampere-Maxwell law\n3. Gauss law for electricity\n4. Gauss law for magnetism", img: "", opts: ["A-4, B-3, C-2, D-1", "A-3, B-2, C-1, D-4", "A-3, B-4, C-1, D-2", "A-1, B-2, C-3, D-4"], ans: 2, exp: "A. ∮ E dA = q/ε₀ (Gauss's law for electricity). B. ∮ B dl = 0 (Gauss's law for magnetism). C. ∮ E dl = - dφ_B/dt (Faraday's law). D. ∮ B dl = μ₀i_c + μ₀ε₀ dφ_E/dt (Ampere-Maxwell law)." },
+    { q: "92. Match the items of Column I with the items of Column II and choose the correct option from the codes given below.\nColumn I:\nA. Radio\nB. Amplitude modulated\nC. Short wave bands\nD. TV wave\nE. Frequency modulated\n\nColumn II:\n1. 54 MHz\n2. 88 MHz to 108 MHz\n3. 530 kHz to 1710 kHz\n4. 500 kHz to 1000 MHz\n5. 54 MHz to 890 MHz", img: "", opts: ["A-4, B-3, C-1, D-5, E-2", "A-3, B-4, C-1, D-5, E-2", "A-4, B-5, C-1, D-2, E-3", "A-3, B-1, C-2, D-4, E-5"], ans: 0, exp: "A. Radio -> 4. 500 kHz to 1000 MHz. B. Amplitude modulated -> 3. 530 kHz to 1710 kHz. C. Short wave bands -> 1. 54 MHz. D. TV wave -> 5. 54 MHz to 890 MHz. E. Frequency modulated -> 2. 88 MHz to 108 MHz." },
+    { q: "93. Match List I (Electromagnetic wave type) with List II (Its association/application) and select the correct option from the choices given below the list.\nList I:\nA. Infrared waves\nB. Radio waves\nC. X-rays\nD. Ultraviolet\n\nList II:\n1. To treat muscular strain\n2. For broadcasting\n3. To detect fracture of bones\n4. Absorbed by the ozone layer of the atmosphere", img: "", opts: ["A-4, B-3, C-2, D-1", "A-1, B-2, C-4, D-3", "A-3, B-2, C-1, D-4", "A-1, B-2, C-3, D-4"], ans: 3, exp: "A-1: Infrared waves are used to treat muscular strain. B-2: Radio waves are used for broadcasting. C-3: X-rays are used to detect fracture of bones. D-4: Ultraviolet rays are absorbed by the ozone layer of the atmosphere." },
+    { q: "94. [Passage: The magnetic field in a plane electromagnetic wave is given by B_y = 2 × 10⁻⁷ sin(0.5 × 10³ x + 1.5 × 10¹¹ t)T.] What is the wavelength of the wave?", img: "", opts: ["12.6 cm", "1.26 cm", "1.26 m", "6.12 m"], ans: 1, exp: "Comparing the given equation with magnetic field in a plane i.e., B_y = B₀ sin [2π(x/λ + t/T)] we get λ = 2π/(0.5 × 10³) m = 1.26 cm." },
+    { q: "95. [Passage: The magnetic field in a plane electromagnetic wave is given by B_y = 2 × 10⁻⁷ sin(0.5 × 10³ x + 1.5 × 10¹¹ t)T.] What is the frequency of the wave?", img: "", opts: ["2.39 GHz", "23.9 MHz", "23.9 GHz", "20.3 MHz"], ans: 2, exp: "As we know frequency i.e., v = 1/Time taken. 1/T = ω/2π = (1.5 × 10¹¹)/2π = 23.9 GHz." },
+    { q: "96. [Passage: The magnetic field in a plane electromagnetic wave is given by B_y = 2 × 10⁻⁷ sin(0.5 × 10³ x + 1.5 × 10¹¹ t)T.] Write an expression for the electric field?", img: "", opts: ["E_y = 60 sin (0.5 × 10³x + 1.5 × 10¹¹ t) Vm⁻¹", "E_x = 60 sin (0.5 × 10³x + 1.5 × 10¹¹ t) Vm⁻¹", "E_z = 60 sin (0.5 × 10³x + 1.5 × 10¹¹ t) Vm⁻¹", "E_y = 60 cos (0.5 × 10³x + 1.5 × 10¹¹ t) Vm⁻¹"], ans: 2, exp: "According to Maxwell equation, electric field i.e., E₀ = B₀c = 2 × 10⁻⁷ × 3 × 10⁸ ms⁻¹ = 6 × 10¹ Vm⁻¹. The electric field component is perpendicular to the direction of propagation and the direction of magnetic field. Therefore, the electric field component along the Z-axis is obtained as E_z = 60 sin (0.5 × 10³x + 1.5 × 10¹¹ t) Vm⁻¹." },
+    { q: "97. [Passage: In a plane electromagnetic wave, the electric field oscillates sinusoidally at a frequency of 2.0 × 10¹⁰ Hz and amplitude 48 Vm⁻¹.] What is the wavelength of the wave?", img: "", opts: ["1.5 × 10⁻² m", "1.5 × 10⁻⁴ m", "3 × 10⁻² m", "3 × 10⁻⁴ m"], ans: 0, exp: "Wavelength of waves λ = c/f = (3 × 10⁸)/(2 × 10¹⁰) = 1.5 × 10⁻² m." },
+    { q: "98. [Passage: In a plane electromagnetic wave, the electric field oscillates sinusoidally at a frequency of 2.0 × 10¹⁰ Hz and amplitude 48 Vm⁻¹.] What is the amplitude of the oscillating magnetic field?", img: "", opts: ["0.8 × 10⁻⁷ T", "1.6 × 10⁻⁷ T", "3.2 × 10⁻⁸ T", "6.4 × 10⁻⁸ T"], ans: 1, exp: "Using the formula, c = E₀/B₀. The amplitude of the oscillating magnetic field B₀ = E₀/c = 48/(3 × 10⁸) = 1.6 × 10⁻⁷ T." },
+    { q: "99. Which of the following statement is/are correct?", img: "", opts: ["Time dependent electric field gives rise to magnetic field.", "Time independent electric field gives rise to magnetic field.", "Time dependent magnetic field gives rise to electric field.", "Time independent magnetic field gives rise to electric field."], ans: 0, exp: "Amplitude = 10 Vm⁻¹. c = ω/k => 3 × 10⁸ = 10⁷/k => k = 1/30 => 2π/λ = 1/30 => λ = 188.4 m. Time dependent electric field gives rise to magnetic field and time dependent magnetic field gives rise to electric field." },
+    { q: "100. The electric field of an electromagnetic wave in free space is given by E = 10 cos(10t + kx) j Vm⁻¹, where t and x are in seconds and metres, respectively. It can be inferred that", img: "", opts: ["The wavelength λ is 188.4m", "The wave number k is 0.33 radm⁻¹", "The wave amplitude is 10Vm⁻¹", "The wave is propagating along + x-direction."], ans: 0, exp: "Given equation E = 10 cos(10t + kx) j Vm⁻¹. Comparing with E = E₀ cos(ωt + kx) j. Amplitude E₀ = 10 Vm⁻¹. ω = 10 rad/s. If wave is propagating along +x direction, then E = E₀ cos(kx - ωt) j. But here it is (kx + ωt), so wave is propagating along -x direction. c = ω/k => 3 × 10⁸ = 10/k => k = 10/(3 × 10⁸) = 3.33 × 10⁻⁸ radm⁻¹. Wavelength λ = 2π/k = 2π/(3.33 × 10⁻⁸) = 1.88 × 10⁸ m." },
+    { q: "101. Which of the following have zero average value in a plane electromagnetic wave?", img: "", opts: ["Electric field", "Magnetic field", "Electric energy", "Magnetic energy"], ans: 0, exp: "In a plane electromagnetic wave, electric and magnetic field both have zero average value. Electric energy and magnetic energy have non-zero average value." },
+    { q: "102. Which of the following statements about EM waves is/are correct?", img: "", opts: ["Electromagnetic waves having wavelength 1000 times smaller than light waves are called X-rays.", "Ultraviolet waves are used in treatment of swollen joints.", "de-Broglie waves are not electromagnetic in nature", "Electromagnetic waves exhibit polarisation while sound waves do not."], ans: 0, exp: "(a) Electromagnetic waves having wavelength 1000 times smaller than light waves are called X-rays. (b) Infrared waves are used in treatment of swollen joints. (c) de-Broglie waves are not electromagnetic in nature, they are matter waves. (d) Electromagnetic waves exhibit polarisation while sound waves do not." },
+    { q: "103. The wavelength of X-rays; γ-rays; ultraviolet rays and microwaves are a, b, c and d, respectively then", img: "", opts: ["a > b", "d > c", "d < b", "c > a"], ans: 0, exp: "For X-rays > γ-rays. (a > b)." },
+    { q: "104. Which of the following relation are true for energy of X-rays (E_X), radiowaves (E_R) and microwave (E_M)?", img: "", opts: ["E_X > E_M", "E_X < E_M", "E_M > E_R", "E_M < E_R"], ans: 0, exp: "V_X > V_M > V_R. Therefore, E_X > E_M > E_R." },
+    { q: "105. [Passage: A parallel plate capacitor made of circular plates each of radius R = 6.0 cm, has a capacitance C = 100 pF. The capacitor is connected to a 230 V AC supply with a frequency of 300 rads⁻¹.] What is the rms value of conduction current?", img: "", opts: ["6.9 × 10⁶ A", "6.9 μA", "5.9 × 10⁶ A", "5.9 μA"], ans: 1, exp: "Capacitive reactance, X_c = 1/ωC = 1/(300 × 100 × 10⁻¹²) = 1/(3 × 10⁻⁸) Ω. If i_rms is the rms value of the conduction current. Then, i_rms = V_rms/X_c = 230 V / (10⁸/3)Ω = 6.9 × 10⁻⁶ A = 6.9 μA." },
+    { q: "106. [Passage: A parallel plate capacitor made of circular plates each of radius R = 6.0 cm, has a capacitance C = 100 pF. The capacitor is connected to a 230 V AC supply with a frequency of 300 rads⁻¹.] In the above question, is the conduction current equal to the displacement current?", img: "", opts: ["Yes", "No", "May be", "Never possible"], ans: 0, exp: "Yes, conduction current is equal to displacement current." },
+    { q: "107. [Passage: A parallel plate capacitor made of circular plates each of radius R = 6.0 cm, has a capacitance C = 100 pF. The capacitor is connected to a 230 V AC supply with a frequency of 300 rads⁻¹.] Determine the amplitude of B, at a point 3.0 cm from the axis between the plates.", img: "", opts: ["1.62 × 10⁻¹¹ T", "1.63 × 10¹¹ T", "1.62 × 10¹¹ T", "1.63 × 10⁻¹¹ T"], ans: 3, exp: "Given, the distance or point from the axis between the plates r = 3 cm = 3 × 10⁻² m. Radius of plates R = 6 cm = 6 × 10⁻² m. The magnetic field at a point between the plates B = (μ₀/2πR²) r I_d => B = (μ₀r/2πR²) I (I_d = I). If I = I₀, maximum value of current, then I = √2 I_rms. B = (μ₀r/2πR²) √2 I_rms = (4π × 10⁻⁷ × 0.03 × √2 × 6.9 × 10⁻⁶)/(2π × 0.06 × 0.06) = 1.63 × 10⁻¹¹ T." },
+    { q: "108. [Passage: Figure shows a capacitor made of two circular plates each of radius 12 cm and separated by 5.0 cm. The capacitor is being charged by an external source (not shown in the figure). The charging current is constant and equal to 0.15 A.] What is the capacitance of capacitor?", img: "images/phy23-q108.png", opts: ["2 pF", "4 pF", "6 pF", "8 pF"], ans: 3, exp: "Capacitance of parallel plate capacitor C = ε₀A/d where, A is the area of plates. C = (8.854 × 10⁻¹² × 3.14(12 × 10⁻²)²)/(5 × 10⁻²) => C = (8.854 × 3.14 × 144 × 10⁻¹²⁻⁴⁺²)/5 => C = 8.01 × 10⁻¹⁴ F = 8.01 pF." },
+    { q: "109. [Passage: Figure shows a capacitor made of two circular plates each of radius 12 cm and separated by 5.0 cm. The capacitor is being charged by an external source (not shown in the figure). The charging current is constant and equal to 0.15 A.] What is the rate of change of potential difference between the plates?", img: "images/phy23-q109.png", opts: ["9.5 × 10⁹ Vs⁻¹", "9.5 × 10¹² Vs⁻¹", "18.7 × 10⁹ Vs⁻¹", "18.7 × 10¹² Vs⁻¹"], ans: 2, exp: "Charge on the plates of the capacitor q = CV => dq/dt = C dV/dt => I = C dV/dt (∵ dq/dt = I) => dV/dt = I/C = 0.15/(8.01 × 10⁻¹²) = 18.7 × 10⁹ Vs⁻¹. Thus, the rate of change of potential is 18.7 × 10⁹ Vs⁻¹." },
+    { q: "110. [Passage: Figure shows a capacitor made of two circular plates each of radius 12 cm and separated by 5.0 cm. The capacitor is being charged by an external source (not shown in the figure). The charging current is constant and equal to 0.15 A.] What is the displacement current across the plates?", img: "images/phy23-q110.png", opts: ["0.15 A", "0.30 A", "0.50 A", "1 A"], ans: 0, exp: "The displacement current is equal to the conduction current. I_d = 0.15 A." },
+    { q: "111. [Passage: Suppose that the electric field amplitude of an electromagnetic wave is E₀ = 120 N/C and that its frequency is v = 50.0 MHz.] The amplitude of B₀ is", img: "", opts: ["200 nT", "300 nT", "400 nT", "500 nT"], ans: 2, exp: "Speed of light in vacuum c = E₀/B₀ => B₀ = E₀/c = 120/(3 × 10⁸) = 40 × 10⁻⁸ or B₀ = 400 × 10⁻⁹ T = 400 nT." },
+    { q: "112. [Passage: Suppose that the electric field amplitude of an electromagnetic wave is E₀ = 120 N/C and that its frequency is v = 50.0 MHz.] The value of ω is", img: "", opts: ["3.14 × 10² rads⁻¹", "3.14 × 10⁸ rads⁻¹", "6.28 × 10⁸ rads⁻¹", "6.28 × 10⁶ rads⁻¹"], ans: 1, exp: "Angular frequency of wave, ω = 2πf = 2 × 3.14 × 50 × 10⁶ => ω = 3.14 × 10⁸ rads⁻¹." },
+    { q: "113. [Passage: Suppose that the electric field amplitude of an electromagnetic wave is E₀ = 120 N/C and that its frequency is v = 50.0 MHz.] The value of k is", img: "", opts: ["0.5 rad m⁻¹", "1 rad m⁻¹", "2 rad m⁻¹", "4 rad m⁻¹"], ans: 1, exp: "Wave number of electromagnetic waves k = ω/c = (3.14 × 10⁸)/(3 × 10⁸) = 1.05 radm⁻¹ = 1 rad m⁻¹." },
+    { q: "114. [Passage: Suppose that the electric field amplitude of an electromagnetic wave is E₀ = 120 N/C and that its frequency is v = 50.0 MHz.] The value of λ is", img: "", opts: ["2 m", "4 m", "6 m", "8 m"], ans: 2, exp: "Wavelength of electromagnetic wave λ = c/f = (3 × 10⁸)/(50 × 10⁶) = 6.00 m." },
+    { q: "115. About 5% of the power of a 100W light bulb is converted to visible radiation. What is the average intensity of visible radiation at a distance of 1m from the bulb? Assume that the radiations are emitted isotropically and neglect reflection.", img: "", opts: ["0.2 Wm⁻²", "0.4 Wm⁻²", "0.8 Wm⁻²", "1.6 Wm⁻²"], ans: 1, exp: "Total power = 100 W. Visible radiation power = 5% of total power = (5/100) × 100 = 5 W. At a distance of 1m, the energy distributed in the form of sphere. Area of sphere = 4π(radius)². Intensity of visible radiation = Power/Area = 5/(4 × 3.14 × (1)²) = 0.4 Wm⁻²." },
+    { q: "116. The amplitude of the magnetic field part of a harmonic electromagnetic wave in vacuum is B₀ = 510 nT. What is the amplitude of the electric field part of the wave?", img: "", opts: ["130 N/C", "153 N/C", "170 N/C", "190 N/C"], ans: 1, exp: "Given, magnetic field part of harmonic electromagnetic wave B₀ = 510 nT. Speed of light in vacuum c = E₀/B₀ where, E₀ is the electric part of the wave. 3 × 10⁸ = E₀/(510 × 10⁻⁹) or E₀ = 153 NC⁻¹. Thus, the amplitude of the electric field part of wave is 153 NC⁻¹." },
+    { q: "117. [Passage: Suppose that the electric field part of an electromagnetic wave in vacuum is E = {(3.1 NC⁻¹) cos [(1.8 radm⁻¹)y + (5.4 × 10⁶ rads⁻¹)t]} î.] What is the wavelength λ?", img: "", opts: ["1.5 m", "2.5 m", "3.5 m", "4.5 m"], ans: 2, exp: "The electric part of electromagnetic wave in vacuum E = 3.1 cos (1.8y + 5.4 × 10⁶ t) î. Comparing with standard equation E = E₀ cos (ky + ωt), we get angular frequency ω = 5.4 × 10⁶ rads⁻¹. Wave number, k = 1.8 radm⁻¹. The amplitude of the electric field part of the wave E₀ = 3.1 NC⁻¹. λ = 2π/k = 2π/1.8 = 3.492 m => λ = 3.5 m." },
+    { q: "118. [Passage: Suppose that the electric field part of an electromagnetic wave in vacuum is E = {(3.1 NC⁻¹) cos [(1.8 radm⁻¹)y + (5.4 × 10⁶ rads⁻¹)t]} î.] What is the frequency v?", img: "", opts: ["0.74 × 10⁴ Hz", "0.86 × 10⁶ Hz", "0.9 × 10⁶ Hz", "10⁷ Hz"], ans: 1, exp: "As, ω = 2πv. v = ω/2π = (5.4 × 10⁶ × 7)/(2 × 22) = 0.86 × 10⁶ Hz." },
+    { q: "119. [Passage: Suppose that the electric field part of an electromagnetic wave in vacuum is E = {(3.1 NC⁻¹) cos [(1.8 radm⁻¹)y + (5.4 × 10⁶ rads⁻¹)t]} î.] What is the amplitude of the magnetic field part of the wave?", img: "", opts: ["10⁻⁸ T", "10⁻⁷ T", "10⁻⁶ T", "10⁻⁵ T"], ans: 0, exp: "c = E₀/B₀. Amplitude of magnetic field B₀ = E₀/c = 3.1/(3 × 10⁸) = 1.03 × 10⁻⁸ T ≈ 10⁻⁸ T." },
+    { q: "120. One requires 11 eV of energy to dissociate a carbon monoxide molecule into carbon and oxygen atoms. The minimum frequency of the appropriate electromagnetic radiation to achieve the dissociation lies in", img: "", opts: ["visible region", "infrared region", "ultraviolet region", "microwave region"], ans: 2, exp: "Given, energy required to dissociate a carbon monoxide molecule into carbon and oxygen atoms E = 11 eV. We know that, E = hv where, h = 6.62 × 10⁻³⁴ J-s => 11 eV = hv => v = (11 × 1.6 × 10⁻¹⁹)/h J = 2.65 × 10¹⁵ Hz. This frequency radiation belongs to ultraviolet region." },
+    { q: "121. A linearly polarised electromagnetic wave given as E = E₀î cos (kz - ωt) is incident normally on a perfectly reflecting infinite wall at z = a. Assuming that the material of the wall is optically inactive, the reflected wave will be given as", img: "", opts: ["E_r = E₀î(kz - ωt)", "E_r = E₀î cos (kz + ωt)", "E_r = - E₀î cos (kz + ωt)", "E_r = E₀î sin (kz - ωt)"], ans: 1, exp: "The incident electromagnetic wave is, E = E₀î cos(kz - ωt). The reflected electromagnetic wave is given by E_r = E₀(-î)cos[k(-z) - ωt + π] = -E₀î cos[-(kz + ωt) + π] = E₀î cos[-(kz + ωt)] = E₀î cos(kz + ωt)." },
+    { q: "122. Light with an energy flux of 20 W cm⁻² falls on a non-reflecting surface at normal incidence. If the surface has an area of 30 cm², the total momentum delivered (for complete absorption) during 30 min is", img: "", opts: ["36 × 10⁻⁵ kg·ms⁻¹", "36 × 10⁻⁴ kg·ms⁻¹", "108 × 10⁴ kg·ms⁻¹", "1.08 × 10⁷ kg·ms⁻¹"], ans: 1, exp: "Given, energy flux φ = 20 Wcm⁻². A = 30 cm², t = 30 min = 30 × 60 s. Now, total energy falling on the surface in time t is, U = φAt = 20 × 30 × (30 × 60) J. Momentum of the incident light = U/c = (20 × 30 × (30 × 60))/(3 × 10⁸) = 36 × 10⁻⁴ kg·ms⁻¹. Momentum of the reflected light = 0. Therefore, momentum delivered to the surface = 36 × 10⁻⁴ - 0 = 36 × 10⁻⁴ kg·ms⁻¹." },
+    { q: "123. The electric field intensity produced by the radiations coming from 100 W bulb at a 3 m distance is E. The electric field intensity produced by the radiations coming from 50 W bulb at the same distance is", img: "", opts: ["E/2", "2E", "E/√2", "√2E"], ans: 0, exp: "We know that, E₀ ∝ √P_av. Therefore, (E₀)₁/(E₀)₂ = √((P_av)₁/(P_av)₂) => E/(E₀)₂ = √(1000/50). (E₀)₂ = E/√2. Now according to question, P' = 50 W, P = 100 W. Therefore, putting these value in above equation, we get E'/E = 50/100 => E'/E = 1/2 => E' = E/2." },
+    { q: "124. If E and B represent electric and magnetic field vectors of the electromagnetic wave, the direction of propagation of electromagnetic wave is along", img: "", opts: ["E", "B", "B × E", "E × B"], ans: 3, exp: "If E and B represent electric and magnetic field vectors of the electromagnetic wave, the direction of propagation of electromagnetic wave is along E × B." },
+    { q: "125. The ratio of contributions made by the electric field and magnetic field components to the intensity of an EM wave is", img: "", opts: ["c : 1", "c² : 1", "1 : 1", "√c : 1"], ans: 2, exp: "Intensity in terms of electric field, U_av = (1/2)ε₀E₀². Intensity in terms of magnetic field, U_av = (1/2)(B₀²/μ₀). Now taking the intensity in terms of electric field, (U_av)_electric field = (1/2)ε₀E₀² = (1/2)ε₀(cB₀)² (∵ E₀ = cB₀) = (1/2)ε₀ × c² × B₀². But, c = 1/√(μ₀ε₀). Therefore, (U_av)_electric field = (1/2)ε₀ × (1/μ₀ε₀) × B₀² = (1/2)(B₀²/μ₀) = (U_av)_magnetic field. Thus, the energy in electromagnetic wave is divided equally between electric field vector and magnetic field vector. Therefore, the ratio of contributions by the electric field and magnetic field components to the intensity of an electromagnetic wave is 1 : 1." },
+    { q: "126. An electromagnetic wave travels in vacuum along z-direction E = (E₁î - E₂ĵ)cos(kz - ωt). Choose the correct options from the following.", img: "", opts: ["The associated magnetic field is given as B = (1/c)(E₁î - E₂ĵ)cos(kz - ωt)", "The associated magnetic field is given as B = (1/c)(E₁î - E₂ĵ)cos(kz - ωt)", "The given electromagnetic field is circularly polarised", "The given electromagnetic wave is plane polarised"], ans: 3, exp: "Here, in electromagnetic wave, the electric field vector is given as, E = (E₁î + E₂ĵ)cos(kz - ωt). In electromagnetic wave, the associated magnetic field vector, B = E/c = (E₁î + E₂ĵ)cos(kz - ωt)/c. Also, E and B are perpendicular to each other and the propagation of electromagnetic wave is perpendicular to E as well as B, so the given electromagnetic wave is plane polarised." },
+    { q: "127. An electromagnetic wave travelling along Z-axis is given as E = E₀ cos (kz - ωt). Choose the correct options from the following.", img: "", opts: ["The associated magnetic field is given as B = (1/c) k̂ × E", "The electromagnetic field can be written in terms of the associated magnetic field as E = c (B × k̂)", "k̂ · E = 0, k̂ · B = 0", "k̂ × E = 0, k̂ × B = 0"], ans: 0, exp: "Suppose an electromagnetic wave is travelling along negative z-direction. Its electric field is given by E = E₀ cos(kz - ωt) which is perpendicular to Z-axis. It acts along negative y-direction. The associated magnetic field B in electromagnetic wave is along X-axis i.e., along k̂ × E. As, B₀ = E₀/c => B = (1/c)(k̂ × E). The associated electric field can be written in terms of magnetic field as E = c(B × k̂). Angle between k̂ and E is 90° between k̂ and B is 90°. Therefore, E = 1Ec cos 90° = 0 and k̂ · B = 1E cos 90° = 0." },
+    { q: "128. A plane electromagnetic wave propagating along x-direction can have the following pairs of E and B.", img: "", opts: ["E_x, B_y", "E_y, B_z", "B_x, E_y", "E_z, B_y"], ans: 1, exp: "As the electromagnetic wave is propagating along x-direction, so the electric and magnetic field vectors must be in y-z plane. So, possible pairs are (E_y, B_z) and (E_z, B_y)." },
+    { q: "129. A charged particle oscillates about its mean equilibrium position with a frequency of 10⁹ Hz. The electromagnetic waves produced", img: "", opts: ["will have frequency of 10⁹ Hz", "will have frequency of 2 × 10⁹ Hz", "will have wavelength of 0.3 m", "fall in the region of radiowaves"], ans: 0, exp: "Given, frequency by which the charged particles oscillates about its mean equilibrium position = 10⁹ Hz. So, frequency of electromagnetic waves produced by the charged particle is v = 10⁹ Hz. Wavelength λ = c/v = (3 × 10⁸)/(10⁹) = 0.3 m. Also, frequency of 10⁹ Hz fall in the region of radiowaves." },
+    { q: "130. The source of electromagnetic waves can be a charge", img: "", opts: ["moving with a constant velocity", "moving in a circular orbit", "at rest", "falling in an electric field"], ans: 1, exp: "Here, in option (b) charge is moving in a circular orbit. In circular motion, the direction of the motion of charge is changing continuously, thus it is an accelerated motion and this option is correct. Also, we know that a charge starts accelerating when it falls in an electric field." },
+    { q: "131. An EM wave of intensity I falls on a surface kept in vacuum and exerts radiation pressure p on it. Which of the following are true?", img: "", opts: ["Radiation pressure is I/c if the wave is totally absorbed", "Radiation pressure is I/c if the wave is totally reflected", "Radiation pressure is 2I/c if the wave is totally reflected", "Radiation pressure is in the range I/c < p < 2I/c for real surfaces"], ans: 0, exp: "When wave is fully absorbed by the surface, the momentum of the reflected wave per unit time per unit area = 0. Radiation pressure (p) = change in momentum per unit time per unit area = ΔI/c = I/c - 0 = I/c. When wave is totally reflected, then momentum of the reflected wave per unit time per unit area = -I/c. Radiation pressure p = I/c - (-I/c) = 2I/c. Here, p lies between I/c and 2I/c." },
+    { q: "132. The magnetic field of a beam emerging from a filter facing a floodlight is given by B₀ = 12 × 10⁻⁸ sin (1.20 × 10⁷z - 3.60 × 10¹⁵t) T. What is the average intensity of the beam?", img: "", opts: ["1.91 Wm⁻²", "1.71 Wm⁻²", "200 Wm⁻²", "1.5 Wm⁻²"], ans: 1, exp: "Magnetic field B = B₀ sin ωt. Given, equation B = 12 × 10⁻⁸ sin(1.20 × 10⁷z - 3.60 × 10¹⁵t) T. On comparing this equation with standard equation, we get B₀ = 12 × 10⁻⁸. The average intensity of the beam I_av = (1/2)(B₀²/μ₀) · c = 1/2 × (12 × 10⁻⁸)² × 3 × 10⁸/(4π × 10⁻⁷) = 1.71 W/m²." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 55; // ⚠️ Set to 55 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+<script src="results-save.js"></script>
+</body>
+</html>
