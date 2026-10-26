@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 60: Nuclei - CBT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; padding: 10px; }
+        .main-container { display: flex; max-width: 1400px; margin: 0 auto; gap: 15px; height: calc(100vh - 20px); }
+        .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar h3 { color: #2b6cb0; font-size: 16px; margin-bottom: 10px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-box { background: #ebf8ff; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #2c5282; }
+        .stat-box .lbl { font-size: 11px; color: #4a5568; }
+        .stat-box.green { background: #f0fff4; } .stat-box.green .num { color: #22543d; }
+        .stat-box.red { background: #fff5f5; } .stat-box.red .num { color: #742a2a; }
+        .stat-box.orange { background: #fffaf0; } .stat-box.orange .num { color: #7b341e; }
+        .stat-box.purple { background: #faf5ff; } .stat-box.purple .num { color: #44337a; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 11px; justify-content: center; }
+        .legend span { display: flex; align-items: center; gap: 3px; }
+        .legend .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        .dot.not-visited { background: #e2e8f0; border: 1px solid #a0aec0; }
+        .dot.attempted { background: #38a169; }
+        .dot.not-answered { background: #e53e3e; }
+        .dot.marked { background: #805ad5; }
+        .dot.answered-marked { background: #805ad5; border: 2px solid #38a169; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .palette-btn { width: 100%; aspect-ratio: 1; border: 1px solid #cbd5e0; border-radius: 6px; background: #f7fafc; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn.not-visited { background: #edf2f7; color: #4a5568; }
+        .palette-btn.attempted { background: #38a169; color: #fff; border-color: #2f855a; }
+        .palette-btn.not-answered { background: #e53e3e; color: #fff; border-color: #c53030; }
+        .palette-btn.marked { background: #805ad5; color: #fff; border-color: #6b46c1; }
+        .palette-btn.answered-marked { background: #805ad5; color: #fff; border: 3px solid #38a169; }
+        .palette-btn.current { outline: 3px solid #4299e1; outline-offset: 1px; }
+        .quiz-area { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
+        .quiz-header h2 { color: #2b6cb0; font-size: 18px; }
+        .q-counter { background: #4299e1; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .question-box { flex: 1; margin-bottom: 15px; }
+        .q-text { font-weight: 600; margin-bottom: 15px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+        .q-num-badge { display: inline-block; background: #4299e1; color: #fff; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-size: 14px; margin-right: 10px; }
+        .option { display: block; padding: 12px 16px; margin: 8px 0; background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 15px; }
+        .option:hover { border-color: #90cdf4; background: #ebf8ff; }
+        .option.correct-ans { border-color: #38a169; background: #c6f6d5; font-weight: 600; }
+        .option.wrong-ans { border-color: #e53e3e; background: #fed7d7; }
+        .option.disabled { pointer-events: none; opacity: 0.8; }
+        .feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct-fb { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .feedback.wrong-fb { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .feedback .exp { margin-top: 6px; font-style: italic; color: #4a5568; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px solid #e2e8f0; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4299e1; color: #fff; } .btn-primary:hover { background: #3182ce; }
+        .btn-secondary { background: #a0aec0; color: #fff; } .btn-secondary:hover { background: #718096; }
+        .btn-warning { background: #d69e2e; color: #fff; } .btn-warning:hover { background: #b7791f; }
+        .btn-success { background: #38a169; color: #fff; } .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: #e53e3e; color: #fff; } .btn-danger:hover { background: #c53030; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-marked { background: #805ad5; color: #fff; } .btn-marked:hover { background: #6b46c1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .modal-box h2 { color: #2b6cb0; margin-bottom: 20px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .result-item { background: #ebf8ff; padding: 15px; border-radius: 10px; }
+        .result-item .label { font-size: 12px; color: #4a5568; }
+        .result-item .value { font-size: 24px; font-weight: 700; color: #2c5282; margin-top: 4px; }
+        .result-item.green { background: #f0fff4; } .result-item.green .value { color: #22543d; }
+        .result-item.red { background: #fff5f5; } .result-item.red .value { color: #742a2a; }
+        .result-item.purple { background: #faf5ff; } .result-item.purple .value { color: #44337a; }
+        .result-item.orange { background: #fffaf0; } .result-item.orange .value { color: #7b341e; }
+        .mobile-palette-toggle { display: none; position: fixed; bottom: 15px; right: 15px; z-index: 500; background: #4299e1; color: #fff; border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 300px; position: fixed; top: 0; left: 0; right: 0; z-index: 600; transform: translateY(-100%); transition: transform 0.3s; border-radius: 0 0 12px 12px; }
+            .sidebar.open { transform: translateY(0); }
+            .mobile-palette-toggle { display: block; }
+            .quiz-area { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="mobile-palette-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>📋 Question Palette</h3>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="num" id="sbTotal">0</div><div class="lbl">Total</div></div>
+            <div class="stat-box green"><div class="num" id="sbAttempted">0</div><div class="lbl">Attempted</div></div>
+            <div class="stat-box red"><div class="num" id="sbNotAnswered">0</div><div class="lbl">Not Answered</div></div>
+            <div class="stat-box orange"><div class="num" id="sbNotVisited">0</div><div class="lbl">Not Visited</div></div>
+            <div class="stat-box purple"><div class="num" id="sbMarked">0</div><div class="lbl">Marked</div></div>
+            <div class="stat-box green"><div class="num" id="sbCorrect">0</div><div class="lbl">Correct</div></div>
+            <div class="stat-box red"><div class="num" id="sbWrong">0</div><div class="lbl">Wrong</div></div>
+            <div class="stat-box"><div class="num" id="sbMarks">0</div><div class="lbl">Marks</div></div>
+        </div>
+        <div class="legend">
+            <span><span class="dot not-visited"></span> Not Visited</span>
+            <span><span class="dot attempted"></span> Attempted</span>
+            <span><span class="dot not-answered"></span> Not Answered</span>
+            <span><span class="dot marked"></span> Marked</span>
+            <span><span class="dot answered-marked"></span> Ans & Marked</span>
+        </div>
+        <div class="palette" id="palette"></div>
+    </div>
+    <div class="quiz-area">
+        <div class="quiz-header">
+            <h2>📚 Chapter 60: Nuclei</h2>
+            <div class="q-counter" id="qCounter">Q 1 / 0</div>
+        </div>
+        <div class="question-box" id="questionBox"></div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">⬅ Previous</button>
+            <button class="btn btn-warning" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+            <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()">Next ➡</button>
+            <button class="btn btn-success" onclick="showResult()">📊 Submit & Result</button>
+            <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-box">
+        <h2>📋 Final Result</h2>
+        <div class="result-grid">
+            <div class="result-item"><div class="label">Total</div><div class="value" id="rTotal">0</div></div>
+            <div class="result-item green"><div class="label">Correct</div><div class="value" id="rCorrect">0</div></div>
+            <div class="result-item red"><div class="label">Wrong</div><div class="value" id="rWrong">0</div></div>
+            <div class="result-item orange"><div class="label">Marks</div><div class="value" id="rMarks">0</div></div>
+            <div class="result-item purple"><div class="label">Percentage</div><div class="value" id="rPercent">0%</div></div>
+        </div>
+        <p style="font-size:13px; color:#718096;">Marking: +1 Correct | -0.25 Wrong</p>
+        <br>
+        <button class="btn btn-primary" onclick="document.getElementById('resultModal').classList.remove('show')">Close</button>
+        <button class="btn btn-danger" onclick="resetQuiz()">🔄 Reset Quiz</button>
+    </div>
+</div>
+
+<script src="keys.js"></script>
+<script src="autosave.js"></script>
+<script src="shuffle.js"></script>
+<script>
+const questions = [
+    { q: "1. Ratio of radius of an atom to the radius of its nucleus is around", img: "", opts: ["10⁻²", "10⁴", "10¹²", "10¹⁵"], ans: 1, exp: "Radius of atom ≈ 10⁻¹⁰. Radius of nucleus ≈ 10⁻¹⁴. Therefore, Ratio of radius of atom / Radius of nucleus = 10⁻¹⁰/10⁻¹⁴ ≈ 10⁴." },
+    { q: "2. Volume of a nucleus to the volume of its atom is around", img: "", opts: ["10²", "10⁻²", "10⁻¹²", "10⁻¹⁵"], ans: 2, exp: "Volume of a nucleus is about 10⁻¹² times volume of an atom." },
+    { q: "3. Ratio of mass of nucleus with mass of atom is approximately", img: "", opts: ["1", "10", "10³", "10¹⁰"], ans: 0, exp: "As nearly 99.9% mass of atom is in nucleus. Therefore, Mass of nucleus / Mass of atom = 99.9/100 = 0.99 ≈ 1." },
+    { q: "4. Nucleus of an atom has a", img: "", opts: ["boundary that diffuses into atom like atmosphere of earth diffuses into vacuum", "boundary that keeps on changing due to interaction of protons and neutrons", "sharply defined boundary that remains unaltered in ordinary conditions", "uneven boundary"], ans: 2, exp: "Nucleus of an atom has a sharply defined boundary that remains unaltered in ordinary conditions." },
+    { q: "5. Atomic mass unit (1 u) is", img: "", opts: ["1/12 of mass of ¹²C atom", "1/14 of mass of ¹⁴C atom", "1/12 of mass of ¹⁴C atom", "1/6 of mass of ¹²C atom"], ans: 0, exp: "1 atomic mass unit (1 u) is 1/12 of mass of ¹²C atom." },
+    { q: "6. Chlorine has two isotopes having masses 34.98 u and 36.98 u with relative abundance of 75.4% and 24.6 %, respectively. The average atomic mass of chlorine is", img: "", opts: ["34.98", "36.98", "35.47", "35"], ans: 2, exp: "The average mass of a chlorine atom is obtained by the weighted average of the masses of the two isotopes, which is = (75.4 × 34.98 + 24.6 × 36.98)/100 = 35.47u." },
+    { q: "7. The lightest element hydrogen has", img: "", opts: ["only one isotope", "two isotopes", "three isotopes", "four isotopes"], ans: 2, exp: "The lightest element hydrogen has three isotopes." },
+    { q: "8. Unstable isotope of hydrogen is", img: "", opts: ["hydrogen", "deuterium", "helium", "tritium"], ans: 3, exp: "Tritium is an unstable isotope of hydrogen." },
+    { q: "9. Which of the following is not true about the nucleus?", img: "", opts: ["Positive charge of nucleus is due to the protons", "All the electrons of an atom are outside the nucleus", "Charge of nucleus is +Ze", "Charge of electrons may be greater than –Ze in an atom"], ans: 3, exp: "An atom is electrically neutral, so the charge of electrons is equal to the charge of nucleus which is +Ze. So, option (d) is not true." },
+    { q: "10. Masses of nuclei of hydrogen, deuterium and tritium are in ratio", img: "", opts: ["1 : 2 : 3", "1 : 1 : 1", "1 : 1 : 2", "1 : 2 : 4"], ans: 0, exp: "Since, the nuclei of deuterium and tritium are isotopes of hydrogen, they must contain only one proton each. But the masses of the nuclei of hydrogen, deuterium and tritium are in the ratio of 1 : 2 : 3, because of presence of neutral matter in deuterium and tritium nuclei." },
+    { q: "11. Masses of nuclei of deuterium and tritium are not same because", img: "", opts: ["they contain different number of protons", "they contain some other neutral matter in different amounts", "they contain protons of different masses", "their nuclear densities are different"], ans: 1, exp: "Masses of nuclei of deuterium and tritium are not same because they contain some other neutral matter in different amounts." },
+    { q: "12. Least stable particle is", img: "", opts: ["electron", "proton", "neutron", "meuon"], ans: 2, exp: "A free neutron, unlike a free proton, is unstable." },
+    { q: "13. A free neutron decays into", img: "", opts: ["an electron and a proton", "a proton, an electron and a anti-neutrino", "an electron and a positron", "free neutrons are stable"], ans: 1, exp: "A free neutron, unlike a free proton, is unstable. It decays into a proton, an electron and a anti-neutron (another elementary particle). n → p + e⁻ + ν̄." },
+    { q: "14. As compared to ¹²C atom, ¹⁴C atom has", img: "", opts: ["two extra protons and two extra electrons", "two extra protons but no extra electrons", "two extra neutrons and no extra electrons", "two extra neutrons and two extra electrons"], ans: 2, exp: "For ¹²C, A = 12 = N + Z, Z = 6 => N = 6. For ¹⁴C, A = 14 = N + Z, Z = 6 => N = 8. Also, number of electrons in both atoms = number of protons = Z = 6." },
+    { q: "15. If an element has 3 isotopes with atomic masses m₁, m₂ and m₃ with percentage abundances of n₁, n₂ and n₃ respectively, then average atomic mass of element is", img: "", opts: ["m₁n₁ + m₂n₂ + m₃n₃", "(m₁n₁ + m₂n₂ + m₃n₃)/(m₁ + m₂ + m₃)", "(m₁ + m₂ + m₃)/(n₁ + n₂ + n₃)", "(m₁n₁ + m₂n₂ + m₃n₃)/(n₁ + n₂ + n₃)"], ans: 3, exp: "Average atomic mass = (m₁n₁ + m₂n₂ + m₃n₃)/(n₁ + n₂ + n₃)." },
+    { q: "16. Two stable isotopes of lithium ⁶₃Li and ⁷₃Li have respective abundances of 7.5% and 92.5%. These isotopes have masses of 6.01512u and 7.01600u, respectively. The atomic mass of lithium is", img: "", opts: ["6.940934 u", "6.849325 u", "6.01512 u", "6.01600 u"], ans: 0, exp: "As we know that, m = (m₁n₁ + m₂n₂)/(n₁ + n₂) = (6.01512 × 7.5 + 7.01600 × 92.5)/100 = 6.940934 u." },
+    { q: "17. Boron has two stable isotopes ¹⁰₅B and ¹¹₅B. Their respective masses are 10.01294 u and 11.00931 u and the atomic mass of boron is 10.811 u. The abundance of ¹⁰₅B and ¹¹₅B are respectively nearing to", img: "", opts: ["50%, 50%", "20%, 80%", "25%, 75%", "5%, 95%"], ans: 1, exp: "Let the percentage of ¹⁰₅B in sample be x. Then, percentage of ¹¹₅B is (100 - x). So, using formula of average atomic masses of isotopes, 10.811 = (10.01294 × x + 11.00931(100 - x))/100 => 1081.1 = 1100.931 - 0.99637x => 0.99637x = 19.831 => x = 19.831/0.99637 = 19.3 ≈ 20%." },
+    { q: "18. The mass number of a nucleus is equal to the number of ... A ... . In ²²⁶₈₈Ra nucleus, there are ... B ... and ... C ... . Here, A, B and C refer to", img: "", opts: ["electrons it contains, 138 protons and 88 neutrons", "protons it contains, 226 neutrons and 88 electrons", "neutrons it contains, 226 protons and 88 electrons", "nucleons it contains, 138 neutrons and 88 protons"], ans: 3, exp: "The mass number of a nucleus is equal to the number of nucleons it contains, 138 neutrons and 88 protons." },
+    { q: "19. In 14g of ¹⁴₆C isotope of carbon, the number of protons, neutrons and electrons are", img: "", opts: ["48 × 10²³, 48 × 10²³, 36 × 10²¹", "36 × 10²³, 36 × 10²³, 36 × 10²¹", "36 × 10²³, 48 × 10²³, 36 × 10²³", "48 × 10²³, 36 × 10²³, 48 × 10²³"], ans: 2, exp: "Protons, neutrons and electrons in an atom of ¹⁴₆C are 6, 8 and 6, respectively. 14 g of ¹⁴₆C contains 6 × 10²³ (1 mole) atoms, number of protons, neutrons and electrons in 14 g of ¹⁴₆C are 6 × 6 × 10²³ = 36 × 10²³ = number of protons. 8 × 6 × 10²³ = 48 × 10²³ = number of neutrons and 6 × 6 × 10²³ = 36 × 10²³ = number of electrons." },
+    { q: "20. The nuclei ¹³₆C and ¹⁴₇N may be described as", img: "", opts: ["isobars", "isotopes of C", "isotones", "isotopes of N"], ans: 2, exp: "As, we know both have same number of neutrons, so they are described as isotones." },
+    { q: "21. If α-particles of higher energies are targeted over gold foil, then distance of closest approach will be", img: "", opts: ["smaller", "larger", "remains same", "zero, as an α-particle of high energy strikes the nucleus"], ans: 0, exp: "When a more energetic particle is used, it can penetrate more against Coulomb's repulsion." },
+    { q: "22. Two nuclei have their mass numbers in the ratio of 1 : 3. The ratio of their nuclear densities would be", img: "", opts: ["(3)^(1/3) : 1", "1 : 1", "1 : 3", "3 : 1"], ans: 1, exp: "A₁ : A₂ = 1 : 3. Their radii will be in the ratio R₀A₁^(1/3) : R₀A₂^(1/3) = 1 : 3^(1/3). Density ρ = A/(4/3πR³). Therefore, ρ_A₁ : ρ_A₂ = 1/(4/3πR₀³·1³) : 3/(4/3πR₀³(3^(1/3))³) = 1 : 1." },
+    { q: "23. The ratio of the nuclear radii of the gold isotope ¹⁹⁷₇₉Au and silver isotope ¹⁰⁷₄₇Ag is", img: "", opts: ["1.23", "0.216", "2.13", "3.46"], ans: 0, exp: "Here A₁ = 197, A₂ = 107. Therefore, R₁/R₂ = (A₁/A₂)^(1/3) = (197/107)^(1/3) = 1.225." },
+    { q: "24. Density of a nucleus is", img: "", opts: ["more for lighter elements and less for heavier elements", "more for heavier elements and less for lighter elements", "very less compared to ordinary matter", "a constant"], ans: 3, exp: "Density = Mass/Volume = mA/(4/3πR₀³A) = 3m/(4πR₀³), m = m_p = m_N ≈ 2.3 × 10¹⁷ kgm⁻³, which is a constant." },
+    { q: "25. If the nuclear radius of ²⁷Al is 3.6 Fermi, the approximate nuclear radius of ⁶⁴Cu in Fermi is", img: "", opts: ["2.4", "1.2", "4.8", "3.6"], ans: 2, exp: "Nuclear radius r ∝ A^(1/3), where A is mass number. r = r₀A^(1/3) = r₀(27)^(1/3) = 3r₀. r₀ = 3.6/3 = 1.2 fm. For ⁶⁴Cu, r = r₀ A^(1/3) = 1.2 fm (64)^(1/3) = 4.8 fm." },
+    { q: "26. If R is the radius and A is the mass number, then log R versus log A graph will be", img: "", opts: ["a straight line", "a parabola", "an ellipse", "None of these"], ans: 0, exp: "R = R₀A^(1/3). log R = log R₀ + (1/3)log A. Which is equation of a straight line with variables log A and log R." },
+    { q: "27. Surface area of a nucleus (assuming it to be a perfect sphere), is (where, A = mass number)", img: "", opts: ["(1.8 × 10⁻²⁹) A^(1/3)", "(1.8 × 10⁻²⁹) A²", "(1.8 × 10⁻²⁹) A^(2/3)", "(1.8 × 10⁻²⁹) A³"], ans: 2, exp: "Surface area = 4πR² = 4π(R₀A^(1/3))² = 4πR₀² · A^(2/3) = 4(3.14)(1.2 × 10⁻¹⁵)²A^(2/3) = (1.8 × 10⁻²⁹)A^(2/3)." },
+    { q: "28. Energy equivalent of 2 g of a substance is", img: "", opts: ["18 × 10¹³ mJ", "18 × 10¹³ J", "9 × 10¹³ mJ", "9 × 10¹³ J"], ans: 1, exp: "Energy, E = 2 × 10⁻³ × (3 × 10⁸)² J = 2 × 10⁻³ × 9 × 10¹⁶ = 18 × 10¹³ J." },
+    { q: "29. How much mass has to converted into energy to produce electric power of 200 MW for one hour?", img: "", opts: ["2 × 10⁻⁶ kg", "8 × 10⁻⁶ kg", "1 × 10⁻⁶ kg", "3 × 10⁻⁶ kg"], ans: 1, exp: "We have, P = 200 MW = 2 × 10⁸ W. t = 1h = 3600 s. E = P × t = 2 × 10⁸ × 3600 J. as E = mc². m = E/c² = (2 × 10⁸ × 3600)/(3 × 10⁸)² = 8 × 10⁻⁶ kg." },
+    { q: "30. Mass of nucleus is", img: "", opts: ["equal to mass of nucleons", "more than mass of nucleons", "less than mass of nucleons", "may be more or less, depends on size of nucleus"], ans: 2, exp: "Mass of nucleus is less than mass of nucleons. This difference is known as mass defect." },
+    { q: "31. Given, mass of a neutron = 1.00866 u, mass of a proton = 1.00727 u, mass of ¹⁶₈O = 15.99053 u Then, the energy required to separate ¹⁶₈O into its constituents is", img: "", opts: ["12.7 MeV", "Cannot be estimated from given data"], ans: 0, exp: "Mass of 8 neutrons = 8 × 1.00866 u. Mass of 8 protons = 8 × 1.00727 u. Therefore, the expected mass of ¹⁶₈O nucleus = 8 × 2.01593 u = 16.12744 u. The atomic mass of ¹⁶₈O found from mass spectroscopy experiments is seen to be 15.99493 u. Thus, ΔM = 16.12744 u - 15.99493 u = 0.13691 u." },
+    { q: "32. Binding energy (E_b) is", img: "", opts: ["energy required to separate nucleus from its atoms", "energy required to break a nucleus into its nucleons", "energy required to remove all electrons of the atom", "energy required to break an atom into electrons, protons and neutrons"], ans: 1, exp: "Binding energy (E_b) is energy required to break a nucleus into its nucleons." },
+    { q: "33. Correct plot of binding energy per nucleon (E_bn) with the mass number (A) is shown in", img: "images/phy28-q33.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 1, exp: "Correct plot of binding energy per nucleon (E_bn) with the mass number (A) is shown in option (b)." },
+    { q: "34. A gamma ray photon creates an electron-positron pair (pair creation). If the rest mass energy of an electron is 0.5 MeV and the total KE of electron-positron pair is 0.78 MeV, then the energy of the γ-ray photon must be", img: "", opts: ["0.78 MeV", "1.78 MeV", "1.28 MeV", "0.28 MeV"], ans: 1, exp: "Energy of γ-ray photon = KE of electron positron pair + Mass energy = 0.78 + 0.5 × 2 (an e⁻ and e⁺ are created) = 1.78 MeV." },
+    { q: "35. Given, m (⁵⁶₂₆Fe) = 55.934939 u and m (²⁰⁹₈₃Bi) = 208.980388 u m_proton = 1.007825 u, m_neutron = 1.008665 u. Then, BE per nucleon of Fe and Bi are respectively", img: "", opts: ["8.790 MeV, 7.848 MeV", "7.75 MeV, 6.84 MeV", "7.5 MeV, 6.5 MeV", "Data insufficient"], ans: 0, exp: "⁵⁶₂₆Fe nucleus has 26 protons and 30 neutrons. Therefore, Mass defect = (26m_p + 30m_n) - m(⁵⁶₂₆Fe) = 56.46340 - 55.934939 = 0.528461 amu. Total BE = 0.528461 × 931.5 MeV = 492.26 MeV. Therefore, Binding energy per nucleon = 492.26/56 = 8.790 MeV. Similarly for Bi, E_bn = 7.848 MeV." },
+    { q: "36. The binding energy per nucleon of ⁷₃Li and ⁴₂He nuclei are 5.60 MeV and 7.06 MeV, respectively. In the nuclear reaction ⁷₃Li + ¹₁H → 2 ⁴₂He + Q, the value of energy Q released is", img: "", opts: ["19.6 MeV", "2.4 MeV", "8.4 MeV", "17.3 MeV"], ans: 3, exp: "The binding energy for ¹₁H is around zero and also not given in the question so we can ignore it. Q = 2(4 × 7.06) - 7 × (5.60) = (8 × 7.60) - (7 × 5.60) = (56.48 - 39.2) MeV = 17.28 MeV ≈ 17.3 MeV." },
+    { q: "37. Correct order is", img: "", opts: ["F_gravitation > F_electrostatic > F_nuclear", "F_nuclear > F_gravitation > F_electrostatic", "F_nuclear > F_electrostatic > F_gravitation", "F_gravitation > F_nuclear > F_electrostatic"], ans: 2, exp: "Correct order is F_nuclear > F_electrostatic > F_gravitation." },
+    { q: "38. Which of the following is a correct graph of potential energy (U) of a pair of nucleons as a function of their separation (r)?", img: "images/phy28-q38.png", opts: ["Option (a)", "Option (b)", "Option (c)", "Option (d)"], ans: 1, exp: "Potential energy of a pair of nucleons as a function of their separation. For a separation greater than r₀, the force is attractive and for separations less than r₀, the force is strongly repulsive. For potential energy U, force F = -dU/dr." },
+    { q: "39. Nuclear force is", img: "", opts: ["larger for proton-proton pair", "larger for neutron-neutron pair", "larger for proton-neutron pair", "same for neutron-neutron, proton-proton or neutron-proton pairs"], ans: 3, exp: "Nuclear force is same for neutron-neutron, proton-proton or neutron-proton pairs." },
+    { q: "40. Two protons are attracting each other, then separation between them is", img: "", opts: ["10⁻¹⁰ m", "10⁻² m", "10⁻⁸ m", "10⁻¹⁵ m"], ans: 3, exp: "Nuclear force is attractive in nature and exists only for a short distance ~ 10⁻¹⁵ m. It becomes repulsive when nucleons come very close." },
+    { q: "41. Nuclear forces show saturation property, this can be explained by the fact that", img: "", opts: ["binding energy per nucleon versus mass number curve rises sharply with increase in mass number for ware mass numbers", "binding energy per nucleon versus mass number curve falls for heavier masses", "binding energy per nucleon versus mass number curve is flat for mass numbers 50 to 100", "binding energy per nucleon versus mass number curve has a maxima for A = 56"], ans: 0, exp: "The constancy of binding energy per nucleon can be understood in terms of its short-range. The nuclear force between two nucleons falls rapidly to zero as their distance is more than a few femtometres. This leads to saturation of forces in a medium or a large-sized nucleus, which is the reason for the constancy of the binding energy per nucleon." },
+    { q: "42. Emission of radiation from a salt of uranium potassium sulphate (irradiated by sunlight is)", img: "", opts: ["stopped by using a thin metal foil", "stopped by few centimetres of air", "stopped by using a thin metal plate wrapped by a thick paper", "Cannot be stopped by any of above methods"], ans: 0, exp: "Emission of radiation from a salt of uranium potassium sulphate (irradiated by sunlight is) stopped by using a thin metal foil." },
+    { q: "43. For any radioactive sample number of nuclei undergoing the decay per unit time is proportional to", img: "", opts: ["reciprocal of activity of sample", "mass of 1 mole of sample", "number of decayed nuclei in sample", "number of undecayed nuclei present at that time in the sample"], ans: 3, exp: "For any radioactive sample number of nuclei undergoing the decay per unit time is proportional to number of undecayed nuclei present at that time in the sample." },
+    { q: "44. Decay rate, R = -dN/dt, is the number of nuclei decaying in one second. It is also called as", img: "", opts: ["activity of sample", "disintegration constant", "half-life of sample", "mean life of sample"], ans: 0, exp: "Decay rate, R = -dN/dt, is the number of nuclei decaying in one second. It is also called as activity of sample." },
+    { q: "45. SI unit for activity is", img: "", opts: ["Curie", "Rutherford", "Pascal", "Becquerel"], ans: 3, exp: "SI unit for activity is Becquerel." },
+    { q: "46. The counting rate observed from a radioactive source at t = 0 s was 1600 count/s⁻¹ and at t = 8 s, it was 100 count/s⁻¹. The counting rate observed at t = 6 s was", img: "", opts: ["400", "300", "200", "150"], ans: 2, exp: "Number of half-lives n = 100 = 1600/2ⁿ or n = 4 => 4t₁/₂ = 8 s => t₁/₂ = 2s. N = N₀/2³ = 1600/8 = 200 (∵ 6s = 3t₁/₂)." },
+    { q: "47. For a radioactive sample half-life T₁/₂ and disintegration constant λ are related as", img: "", opts: ["T₁/₂ = log 2 · λ", "T₁/₂ = log 2/λ", "T₁/₂ × log 2 = λ", "None of these"], ans: 1, exp: "For a radioactive sample half-life T₁/₂ and disintegration constant λ are related as T₁/₂ = log 2/λ." },
+    { q: "48. In the earth, only those radioactive elements are found naturally which", img: "", opts: ["have less half-life time", "have more half-life time", "lie deep inside earth", "lie on the surface of earth"], ans: 1, exp: "Those radioactive elements whose half-life is short compared to the age of the universe (13.7 billion years) are not found in observable quantities in nature today. They have, however, been seen in the laboratory in nuclear reactions. Tritium and plutonium belong to this category." },
+    { q: "49. Out of the following radioactive substances which are not found in naturally on earth?\n(i) Tritium\n(ii) Deuterium\n(iii) Uranium\n(iv) Plutonium", img: "", opts: ["(i) and (ii)", "(ii) and (iii)", "(i) and (iv)", "(i) and (iii)"], ans: 2, exp: "(i) and (iv) are not found naturally on earth." },
+    { q: "50. Tritium has a half-life of 12.5 yr undergoing β-decay. Fraction of sample remaining undecayed after 25 yr will be", img: "", opts: ["1/8", "1/2", "1/4", "1/16"], ans: 2, exp: "Fraction of radioactive substance left = N/N₀ = (1/2)ⁿ. Therefore, N = N₀(1/2)^(t/T₁/₂) = N₀/4." },
+    { q: "51. In the α-decay of ²³⁸₉₂U → X + ⁴₂He. The nucleus X is", img: "", opts: ["²³⁴₉₀Th", "²³⁵₉₀U", "²³⁷₉₁Pa", "Cannot be determined"], ans: 0, exp: "When ²³⁸₉₂U undergoes α-decay, it transforms to ²³⁴₉₀Th. ²³⁸₉₂U → ²³⁴₉₀Th + ⁴₂He." },
+    { q: "52. Select the correct statement.", img: "", opts: ["β radioactivity is the process in which an electron is emitted from an unstable atom whose atomic number Z remains unchanged", "γ radioactivity is the process in which daughter nucleus has atomic number one unit more than the parent nucleus", "α radioactivity is the process in which an unstable atom emits helium atom", "α emission is the process in which a heavy atom emits electromagnetic radiation of very high frequency"], ans: 2, exp: "α radioactivity is the process in which an unstable atom emits helium atom." },
+    { q: "53. Complete the reaction ˣ_Z A → ...P... + ⁴₂He. Here, P refers to", img: "", opts: ["ˣ⁻⁴_Y", "ˣ_Y", "ˣ⁻²_Y", "ˣ⁻²_Y"], ans: 2, exp: "ˣ_Z A → ˣ⁻⁴_(Z-2) Y + ⁴₂He. Hence, P refers to ˣ⁻⁴_Y." },
+    { q: "54. In a nuclear reaction ²³⁸₉₂U → ᴬ_ZTh + ⁴₂He, the value of A and Z are", img: "", opts: ["A = 234, Z = 94", "A = 238, Z = 94", "A = 234, Z = 90", "A = 238, Z = 90"], ans: 2, exp: "²³⁸₉₂U → ²³⁴₉₀Th + ⁴₂He. When a α-particle is emitted mass number decreases by 4 and atomic number by 2." },
+    { q: "55. Q value of α-decay is", img: "", opts: ["ΔM · c², where ΔM = mass defect", "amount of heat required for disintegration", "amount of heat released in reaction", "energy shared by daughter nucleus"], ans: 0, exp: "Q value of α-decay is ΔM · c², where ΔM = mass defect." },
+    { q: "56. Energy released in α-decay is", img: "", opts: ["dissipated completely in form of heat in the atmosphere", "carried completely by helium nuclei emitted", "carried completely by daughter nucleus", "shared by daughter nucleus and the α-particles"], ans: 3, exp: "This energy is shared by the daughter nucleus ᴬ⁻⁴_(Z-2)Y and the α-particle, ⁴₂He in the form of kinetic energy." },
+    { q: "57. Given, atomic masses are ²³⁸₉₂U = 238.05079u ⁴₂He = 4.00260u, ²³⁴₉₀Th = 234.04363u, ¹₁H = 1.00783u. The energy released during the α-decay of ²³⁸₉₂U is", img: "", opts: ["4.25 MeV", "4.5 MeV", "6 MeV", "5 MeV"], ans: 0, exp: "The α-decay of ²³⁸₉₂U is given by equation. ²³⁸₉₂U → ²³⁴₉₀Th + ⁴₂He + Q. The energy released in this process is given by Q = (M_U - M_Th - M_He)c². Substituting the atomic masses as given in the data, we find Q = (238.05079 - 234.04363 - 4.00260)u × c² = (0.00456 u)c² = (0.00456 u)(931.5 MeV/u) = 4.25 MeV." },
+    { q: "58. Using data of previous problem, we can conclude that", img: "", opts: ["²³⁸₉₂U can decay into ²³⁷₉₁Pa", "²³⁸₉₂U can decay into ²³⁴₉₀Th", "²³⁸₉₂U can decay into either ²³⁴₉₀Th or into ²³⁷₉₁Pa", "Data not sufficient to analyse"], ans: 1, exp: "If ²³⁸₉₂U spontaneously emits a proton, the decay process would be ²³⁸₉₂U → ²³⁷₉₁Pa + ¹₁H. The Q for this process to happen is = (M_U - M_Pa - M_H)c² = (238.05079 - 237.05121 - 1.00783)u × c² = (- 0.00825 u)c² = (0.00825 u)(931.5 MeV/u) = - 7.68 MeV. Thus, the Q of the process is negative and therefore it cannot proceed spontaneously. We will have to supply an energy of 7.68 MeV to a ²³⁸₉₂U nucleus to make it emit a proton. Hence, ²³⁸₉₂U → ²³⁴₉₀Th + ⁴₂He + Q is more feasible/probable reaction." },
+    { q: "59. In beta (β⁻) decay, emission consists of", img: "", opts: ["⁴₂He", "⁰₋₁e", "⁰₊₁e", "¹₁H"], ans: 1, exp: "In beta (β⁻) decay, emission consists of ⁰₋₁e." },
+    { q: "60. In beta (β⁺) decay, emission consists of", img: "", opts: ["⁴₂He", "⁰₋₁e", "⁰₊₁e", "¹₁H"], ans: 2, exp: "In beta (β⁺) decay, emission consists of ⁰₊₁e." },
+    { q: "61. In case of beta minus (β⁻) decay an electron is emitted by the nucleus alongwith", img: "", opts: ["a neutrino", "an anti-neutrino", "a positron", "a neutron"], ans: 1, exp: "In case of beta minus (β⁻) decay an electron is emitted by the nucleus alongwith an anti-neutrino." },
+    { q: "62. In case of beta positive (β⁺) decay, a positron is emitted alongwith", img: "", opts: ["an electron", "a neutrino", "an anti-neutrino", "a positron"], ans: 1, exp: "In case of beta positive (β⁺) decay, a positron is emitted alongwith a neutrino." },
+    { q: "63. In β⁺-decay, process occurring inside the nucleus is", img: "", opts: ["n → p + e⁺ + v", "p → n + e⁺ + v", "e → n + p + ν̄", "p → n + e⁻ + ν̄"], ans: 1, exp: "In β⁺-decay, a proton transforms into neutron (inside the nucleus) by reaction p → n + e⁺ + v ..." },
+    { q: "64. When a nucleus is in an excited state", img: "", opts: ["it can stay in excited state", "it gives excess energy to surrounding electrons and comes to a lower energy state", "it can make a transition to a lower energy state by emission of electromagnetic radiation", "it can emit a proton or neutron with excess kinetic energy and so achieves a lower energy state"], ans: 2, exp: "When a nucleus is in an excited state, it can make a transition to a lower energy state by emission of electromagnetic radiation." },
+    { q: "65. Energy level diagram shown depicts", img: "images/phy28-q65.png", opts: ["emission of only one β⁻-particle", "emission of one β⁻-particle and two γ-ray photons of equal frequencies", "emission of one β⁻-particle and two γ-photons of different frequencies", "emission of two γ-ray photons"], ans: 2, exp: "By beta emission, the ⁶⁰₂₇Co nucleus transforms into ⁶⁰₂₈Ni nucleus in its excited state. The excited ⁶⁰₂₈Ni nucleus so formed, then de-excites to its ground state by successive emission of 1.17 MeV and 1.33 MeV gamma rays." },
+    { q: "66. Out of 80 kg of a radioactive substance 10 kg decays in 1 h. The decay constant of material is", img: "", opts: ["5.80 × 10⁻⁴ s⁻¹", "1.16 × 10⁻³ s⁻¹", "2.32 × 10⁻³ s⁻¹", "4.64 × 10⁻³ s⁻¹"], ans: 0, exp: "Fraction of material that remains undecayed N = N₀e^(-λt) => N = N₀e^(-t ln 2 / T₁/₂). Therefore, N/N₀ = (1/2)^(t/T₁/₂) => 10/80 = (1/2)^(1h/T₁/₂). Therefore, T₁/₂ = 1h/3 = 20 min = 1200 s. and λ = 0.693/T₁/₂ = 0.693/1200 = 5.8 × 10⁻⁴ s⁻¹." },
+    { q: "67. A sample of ⁶⁷Ga with a half-life of 78 h has a mass of 3.4 g. Initial decay rate of sample is", img: "", opts: ["8.00 × 10¹⁶ s⁻¹", "6.27 × 10¹⁶ s⁻¹", "7.53 × 10¹⁶ s⁻¹", "8.53 × 10¹⁵ s⁻¹"], ans: 2, exp: "Decay rate, R = λN. R₀ = λN₀. λ = log 2/T₁/₂ = log 2/78 h = 8.89 × 10⁻³ (h⁻¹) = 2.47 × 10⁻⁶ s⁻¹. N₀ = 3.4/67 × 6 × 10²³ = 3.05 × 10²². Therefore, R₀ = (2.47 × 10⁻⁶)(3.05 × 10²²) = 7.53 × 10¹⁶ s⁻¹." },
+    { q: "68. Activity of a radioactive sample reduces from 8 counts to 1 count in 3 h. Half-life of sample is", img: "", opts: ["2 h", "1 h", "3 h", "4 h"], ans: 1, exp: "A₀ = 8, A = 1, time = 3 h. (A/A₀) = (1/2)ⁿ => (1/8) = (1/2)ⁿ => n = 3. n = t/T₁/₂ or T₁/₂ = t/n = 3/3 = 1 h." },
+    { q: "69. Two radioactive substances A and B have decay constants 5λ and λ, respectively. At t = 0, they have the same number of nuclei. The ratio of number of nuclei of A to those of B will be (1/e)² after a time interval", img: "", opts: ["1/4 λ", "4λ", "2λ", "1/2 λ"], ans: 3, exp: "Number of nuclei after time t, N = N₀e^(-λt). Now, N₁ = N₀e^(-5λt), N₂ = N₀e^(-λt). Therefore, N₁/N₂ = e^((-5λ + λ)t) = e^(-4λt) = 1/e^(4λt). Given, N₁/N₂ = (1/e)² = 1/e². Therefore, 1/e² = 1/e^(4λt) => t = 1/2λ." },
+    { q: "70. If half-life of a radioactive substance is 1 month, then which of these are true?", img: "", opts: ["7/8th part of substance disintegrate in 3 months", "1/8th part of substance disintegrate in 4 months", "Substance disintegrates completely in 4 months", "The substance disintegrates completely in 2 months"], ans: 0, exp: "N/N₀ = (1/2)ⁿ = (1/2)^(t/T₁/₂) = (1/2)³. For t = 3 months, (N/N₀) = (1/2)³ = 1/8. Therefore, Disintegrated part in 3 months = 1 - 1/8 = 7/8 part." },
+    { q: "71. A radioactive isotope has a half-life of T years. It reduces to 3.125% of its original value in", img: "", opts: ["2T", "3T", "5T", "15T"], ans: 2, exp: "N = 3.125/100 N₀ = 1/32 N₀ => N = N₀e^(-λt) => 1/32 = N₀e^(-λt) => e^(λt) = 32 = 2⁵ => λt = 5 log_e 2 => (0.693/T)t = 5 × 0.693 => t = 5T yr." },
+    { q: "72. The half-life of a radioactive substance is 20 s, the time taken for the sample to decay by 7/8th of its initial value is", img: "", opts: ["20 s", "40 s", "60 s", "80 s"], ans: 2, exp: "After three half-lives, the fraction of undecayed nuclei = (1/2)³ = 1/8. Therefore, Time taken for the sample to decay by (1 - 1/8)th or 7/8 th of initial value = 3T₁/₂ = 3 × 20 = 60 s." },
+    { q: "73. A radio isotope X with a half life 1.4 × 10⁹ yr decays to Y which is stable. A sample of the rock from a cave was found to contain X and Y in the ratio 1 : 7. The age of the rock is", img: "", opts: ["1.96 × 10⁹ yr", "3.92 × 10⁹ yr", "4.20 × 10⁹ yr", "8.40 × 10⁹ yr"], ans: 2, exp: "Ratio of X : Y is given = 1 : 7. m_x/m_y = 1/7 => 7m_x = m_y. => Let the initial total mass is m. => m_x + m_y = m => m_x/7 + m_y = m => 8m_y/7 = m => m_y = 7/8 m only 1/8 part remains. => 1 → T₁/₂ → 1/2 → T₁/₂ → 1/4 → T₁/₂ → 1/8. So, time taken to become 1/8 unstable part = 3 × T₁/₂ = 3 × 1.4 × 10⁹ = 4.2 × 10⁹ yr." },
+    { q: "74. The half-life of a radioactive isotope X is 20 yr. It decays to another element Y which is stable. The two elements X and Y were found to be in the ratio 1 : 7 in a sample of a given rock. The age of the rock is estimated to be", img: "", opts: ["40 yr", "60 yr", "80 yr", "100 yr"], ans: 1, exp: "As N/N₀ = (1/2)ⁿ, N/N₀ = (1/2)³ = 1/8. Number of half-lives = 3. => T = 20 yr. Therefore, T = t/n or t = T × n = 20 × 3 yr = 60 yr." },
+    { q: "75. A mixture consists of two radioactive materials A₁ and A₂ with half-lives of 20 s and 10 s respectively. Initially the mixture has 40 g of A₁ and 160 g of A₂. The amount of the two in the mixture will become equal after", img: "", opts: ["60 s", "80 s", "20 s", "40 s"], ans: 3, exp: "For 40 g amount 40 g → 20 s → 20 g → 20 s → 10 g. For 160 g amount 160 g → 10 s → 80 g → 10 s → 40 g → 10 s → 20 g → 10 s → 10 g. So, after 40s, A₁ and A₂ remains same." },
+    { q: "76. Binding energy per nucleon (E_bn) is nearly constant (≥ 8.0 MeV) for elements whose mass number range is", img: "", opts: ["A < 30", "30 ≤ A ≤ 170", "A ≥ 170", "0 < A ≤ 56"], ans: 1, exp: "Binding energy per nucleon (E_bn) is nearly constant (≥ 8.0 MeV) for elements whose mass number range is 30 ≤ A ≤ 170." },
+    { q: "77. If a nucleus with mass number A = 240 with E_bn = 7.6 MeV breaks into two fragments of A = 120 and E_bn = 8.5 MeV, then released energy is around", img: "", opts: ["216 MeV", "200 MeV", "100 MeV", "Cannot be estimated from given data"], ans: 0, exp: "The energy released (i.e., Q value) in the fission reaction of nuclei like uranium is of the order of 200 MeV per fissioning nucleus. This is estimated as follows. Let us take a nucleus with A = 240 breaking into two fragments each of A = 120. Then, E_bn for A = 240 nucleus is about 7.6 MeV. E_bn for the two A = 120 fragment nuclei is about 8.5 MeV. So, gain in binding energy for nucleon is about 0.9 MeV. Hence, the total gain in binding energy is 240 × 0.9 or 216 MeV." },
+    { q: "78. In the fission of ²³⁵₉₂U, on an average number of neutrons (per fission) released is", img: "", opts: ["1", "2", "3", "2.5"], ans: 2, exp: "In the fission of ²³⁵₉₂U, on an average number of neutrons (per fission) released is 3." },
+    { q: "79. In fission reaction of a ²³⁵₉₂U sample, chain reaction is possible because", img: "", opts: ["released energy is of order 200 MeV", "fissionable nucleus ²³⁶₉₂U is formed", "more neutrons are released then consumed", "excessive amount of heat is released"], ans: 2, exp: "In fission reaction of a ²³⁵₉₂U sample, chain reaction is possible because more neutrons are released then consumed." },
+    { q: "80. For sustaining the chain reaction in a sample (of small size) of ²³⁵₉₂U, it is desirable to slow down fast neutrons by", img: "", opts: ["friction", "elastic damping/scattering", "absorption", "None of these"], ans: 1, exp: "Fast neutrons are slowed down by elastic scattering with light nuclei each collision takes away nearly 50% of energy." },
+    { q: "81. For maintaining sustained chain reaction, the following is required", img: "", opts: ["protons", "electrons", "neutrons", "positrons"], ans: 2, exp: "For maintaining sustained chain reaction, the neutrons is required." },
+    { q: "82. Operation of a reactor is said to be critical when K, the multiplication factor becomes", img: "", opts: ["0", "2", "∞", "1"], ans: 3, exp: "For K = 1, the operation of the reactor is said to be critical, which is what we wish it to be for steady power operation. If K becomes greater than one, the reaction rate and the reactor power increases exponentially. Unless the factor K is brought down very close to unity, the reactor will become supercritical and can even explode." },
+    { q: "83. A sample of uranium U contains", img: "", opts: ["more of isotope ²³⁵₉₂U and less of ²³⁸₉₂U", "more of impurities alongwith a small amount of ²³⁸₉₂U", "equal amounts of isotopes ²³⁵₉₂U and ²³⁸₉₂U", "more of isotope ²³⁸₉₂U and less of ²³⁵₉₂U"], ans: 3, exp: "Uranium are obtained naturally from earth contains only a very small part (0.01%) of U²³⁵ and remaining (99.9%) is U²³⁸." },
+    { q: "84. The abundant ²³⁸₉₂U isotope is non-fissionable but produces which radioactive element when captures neutron", img: "", opts: ["Thorium", "produces plutonium", "absorbs fast neutrons", "rejects slow neutrons"], ans: 1, exp: "The abundant ²³⁸₉₂U isotope, which does not fission, on capturing a neutron leads to the formation of plutonium. The series of reactions involved is ²³⁸₉₂U + n → ²³⁹₉₂U → ²³⁹₉₃Np + e⁻ + ν̄. ²³⁹₉₃Np → ²³⁹₉₄Pu + e⁻ + ν̄. Plutonium is highly radioactive and can also undergo fission under bombardment by slow neutrons." },
+    { q: "85. In any nuclear reactor amount of a radioactive substance required as a fuel is", img: "", opts: ["very less", "very large", "of moderate amounts", "None of these"], ans: 0, exp: "In any nuclear reactor amount of a radioactive substance required as a fuel is very less." },
+    { q: "86. On bombarding U²³⁵ by slow neutron, 200 MeV energy is released. If the power output of atomic reactor is 1.6 MW, then the rate of fission will be", img: "", opts: ["5 × 10²² s⁻¹", "5 × 10¹⁶ s⁻¹", "8 × 10¹⁶ s⁻¹", "20 × 10¹⁶ s⁻¹"], ans: 1, exp: "Energy released on bombarding U²³⁵ by neutron = 200 MeV. Power output of atomic reactor = 1.6 MW. Therefore, Rate of fission = (1.6 × 10⁶)/(200 × 10⁶ × 1.6 × 10⁻¹⁹) = 5 × 10¹⁶ s⁻¹." },
+    { q: "87. In any fission process, ratio of mass of daughter nucleus to mass of parent nucleus is", img: "", opts: ["less than 1", "greater than 1", "equal to 1", "depends on the mass of parent nucleus"], ans: 0, exp: "In fission process, when a parent nucleus breaks into daughter products, then some mass is lost in the form of energy. Thus, mass of fission products < mass of parent nucleus. Therefore, Mass of fission products/Mass of parent nucleus < 1." },
+    { q: "88. For a nuclear to be in critical condition, the value of neutron multiplication factor (K) must be", img: "", opts: ["K > 1", "K < 1", "K = 1", "K = 0"], ans: 2, exp: "In critical condition, K = 1. The chain reaction will be steady. The size of the fissionable material used is said to be critical size and its mass the critical mass." },
+    { q: "89. Heavy water is used in a nuclear reactor to", img: "", opts: ["absorb the neutrons", "slow down the neutrons", "act as coolant", "None of these"], ans: 1, exp: "Heavy water is used in a nuclear reactor to slow down the neutrons." },
+    { q: "90. An atomic power nuclear reactor can deliver 300 MW. The energy released due to fission of each nucleus of uranium atom U²³⁸ is 170 MeV. The number of uranium atoms fissioned per hour will be", img: "", opts: ["30 × 10²⁵", "4 × 10²²", "10 × 10²⁰", "(d) 5 × 10¹⁵"], ans: 1, exp: "Power = Energy/Time = 300 × 10⁶ W = 3 × 10⁸ Js⁻¹. 170 MeV = 170 × 10⁶ × 1.6 × 10⁻¹⁹ = 27.2 × 10⁻¹² J. Number of atoms fissioned per second = (3 × 10⁸)/(27.2 × 10⁻¹²) = (3 × 10²⁰)/27.2. Number of atoms fissioned per hour = (3 × 10²⁰ × 3600)/27.2 = (3 × 36)/27.2 × 10²² = 4 × 10²²." },
+    { q: "91. In a nuclear reactor, the fuel is consumed at the rate of 1 mgs⁻¹. The power generate (in kW) is", img: "", opts: ["9 × 10¹⁴", "9 × 10⁷", "9 × 10⁵", "9 × 10¹²"], ans: 1, exp: "From Einstein's mass energy relation the energy releases is ΔE = Δmc². where, Δm is mass and c is speed of light. Given, Δm = 1 mg = 1 × 10⁻⁶ kg, c = 3 × 10⁸ ms⁻¹. Therefore, ΔE = 1 × 10⁻⁶ × (3 × 10⁸)² = 9 × 10¹⁰ J. The rate at which energy is dissipated is known as power, i.e., P = ΔE/t = (9 × 10¹⁰)/1 = 9 × 10¹⁰ W. Therefore, P = 9 × 10⁷ kW." },
+    { q: "92. A nucleus of uranium decays at rest into nuclei of thorium and helium. Then,", img: "", opts: ["the helium nucleus has more kinetic energy than the thorium nucleus", "the helium nucleus has less momentum than the thorium nucleus", "the helium nucleus has more momentum than the thorium nucleus", "the helium nucleus has less kinetic energy than the thorium nucleus"], ans: 0, exp: "According to law of conservation of linear momentum, we have |p_Th| = |p_He| = p. => As, kinetic energy of an element, KE = p²/2m. where, m is mass of an element. Thus, KE ∝ 1/M. So, M_He < M_Th => K_He > K_Th." },
+    { q: "93. Thermonuclear fusion is", img: "", opts: ["fusion due to high temperatures", "fusion due to high pressures", "fusion due to high volumes", "fusion due to high velocities"], ans: 0, exp: "Thermonuclear fusion is fusion due to high temperatures." },
+    { q: "94. For thermonuclear fusion to occur between two protons at rest,", img: "", opts: ["temperature on the surface of sun is sufficient", "temperature inside the core of sun is sufficient", "temperature much higher than the core temperature of sun is required", "room temperature is sufficient"], ans: 2, exp: "For thermonuclear fusion to occur between two protons at rest, temperature much higher than the core temperature of sun is required." },
+    { q: "95. In fusion reaction occurring in the sun,", img: "", opts: ["hydrogen is converted into carbon", "hydrogen and helium are converted into carbon and other heavier metals/elements", "helium is converted into hydrogen", "hydrogen is converted into helium"], ans: 3, exp: "In fusion reaction occurring in the sun, hydrogen is converted into helium." },
+    { q: "96. Which of the following are suitable for the fusion process?", img: "", opts: ["Light nuclei", "Heavy nuclei", "Elements lying in the middle of periodic table", "Elements lying in the middle of binding energy curve"], ans: 0, exp: "Light nuclei are suitable for the fusion process." },
+    { q: "97. The fusion process is possible at high temperature, because at higher temperatures", img: "", opts: ["the nucleus disintegrates", "the molecules disintegrates", "atoms become ionised", "the nucleus get sufficient energy to overcome the strong force of repulsion"], ans: 3, exp: "The fusion process is possible at high temperature, because at higher temperatures the nucleus get sufficient energy to overcome the strong force of repulsion." },
+    { q: "98. Nuclear winter is", img: "", opts: ["winter caused by absorption of heat energy by a fusion reaction on earth's surface", "winter caused by radioactive waste blocking sunlight to reach earth's surface", "winter caused due to cooling of sun's core", "winter caused due to collapse of sun's core"], ans: 1, exp: "High temperature conditions for fusion reactions can be created by exploding a fission bomb. Super-explosions equivalent to 10 megatons of explosive power of TNT were tested in 1954. Such bombs which involve fusion of isotopes of hydrogen, deuterium and tritium are called hydrogen bombs. It is estimated that a nuclear arsenal sufficient to destroy every form of life on this planet several times over is in position to be triggered by the press of a button. Such a nuclear holocaust will not only destroy the life that exists now but its radioactive fallout will make this planet unfit for life for all times. Scenarios based on theoretical calculations predict a long nuclear winter, as the radioactive waste will hang like a cloud in the earth's atmosphere and will absorb the sun's radiation." },
+    { q: "99. Assertion Nuclear force between neutron-neutron, proton-neutron and proton-proton is approximately the same.\nReason The nuclear force does not depend on the electric charge.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "The nuclear force is not same between two protons or two neutrons or proton-neutron. The nuclear force is same between neutron-neutron, proton-neutron and proton-proton because nuclear force is independent of charge." },
+    { q: "100. Assertion The detection of neutrinos is extremely difficult.\nReason Neutrinos interact only very weakly with matter.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Neutrinos interact only very weakly with matter, they can even penetrate the earth without being absorbed. It is for this reason that their detection is extremely difficult and their presence went unnoticed for long." },
+    { q: "101. Assertion A free neutron is unstable.\nReason Free neutron disintegrates into proton, electron and an anti-neutrino i.e., n → p + e⁻ + v̄", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "A free neutron, unlike a free proton, is unstable. It decays into a proton, an electron and a anti-neutrino (another elementary particle), n → p + e⁻ + v̄." },
+    { q: "102. Assertion An α-particle is emitted when uranium 238 decays into thorium.\nReason The decay of uranium 238 to thorium is represented by ²³⁸₉₂U → ²³⁴₉₀Th + ⁴₂He. The helium nuclei is called an alpha particle.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "The decay of uranium 238 to thorium is represented by ²³⁸₉₂U → ²³⁴₉₀Th + ⁴₂He. The helium nuclei is called an alpha particle. Both statements are correct." },
+    { q: "103. Assertion Naturally, thermonuclear fusion reaction is not possible on earth.\nReason For thermonuclear fusion to take place, extreme condition of temperature and pressure are required.", img: "", opts: ["Both Assertion and Reason are correct and Reason is the correct explanation of Assertion.", "Both Assertion and Reason are correct but Reason is not the correct explanation of Assertion.", "Assertion is correct but Reason is incorrect.", "Assertion is incorrect but Reason is correct."], ans: 0, exp: "Both Assertion and Reason are correct and Reason is the correct explanation of Assertion." },
+    { q: "104. Statement I Kilogram is not a convenient unit to measure mass of an atom.\nStatement II The mass of an atom is very small.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "It was presumed that mass and energy were conserved separately in a reaction. However, Einstein showed that mass is another form of energy and one can convert mass-energy into other forms. Both statements are correct." },
+    { q: "105. Statement I Mass and energy are separately conserved in a reaction.\nStatement II Law of conservation of mass and law of conservation of energy are valid for every reaction.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 1, exp: "It was presumed that mass and energy were conserved separately in a reaction. However, Einstein showed that mass is another form of energy and one can convert mass-energy into other forms. Both statements are correct." },
+    { q: "106. Statement I Binding energy per nucleon is a constant for average mass numbers.\nStatement II Nuclear forces are short range forces and so they are saturated for a medium or large sized nucleus.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "The constancy of binding energy per nucleon can be understood in terms of its short-range. The nuclear force between two nucleons falls rapidly to zero as their distance is more than a few femtometres. This leads to saturation of forces in a medium or a large-sized nucleus, which is the reason for the constancy of the binding energy per nucleon." },
+    { q: "107. Statement I Energy always releases in fission (splitting of a heavy nucleus into lighter nuclei), (A > 170).\nStatement II Nucleons of lighter nuclei are more tightly bound, (30 < A < 170).", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "Two very light nuclei (A ≤ 10) joining to form a heavier nucleus. The binding energy per nucleon of the fused heavier nuclei is more than the binding energy per nucleon of the lighter nuclei. This means that the final system is more tightly bound than the initial system." },
+    { q: "108. Statement I On an average 2 1/2 neutrons are liberated per fission of ²³⁵₉₂U but a chain reaction in a sample of ²³⁵₉₂U is still not possible.\nStatement II Neutrons liberated are readily absorbed by other ²³⁵₉₂U atoms present in the sample.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 1, exp: "For K = 1, the operation of the reactor is said to be critical, which is what we wish it to be for steady power operation. If K becomes greater than one, the reaction rate and the reactor power increases exponentially. Unless the factor K is brought down very close to unity, the reactor will become supercritical and can even explode." },
+    { q: "109. Statement I Energy is released when two lighter nuclei are fused together (A < 30).\nStatement II Binding energy per nucleon of heavy nuclei is less than that of lighter nuclei. (30 < A < 170).", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 2, exp: "Heavier elements are formed by fusion but elements massive than iron cannot be produced by fusion, because iron has highest E_bn." },
+    { q: "110. Statement I In a fusion reaction, two lighter nuclei combine to form a single nucleus with release of energy.\nStatement II Elements more heavier than iron are not produced by fusion.", img: "", opts: ["Both Statement I and Statement II are correct and Statement II is the correct explanation of Statement I.", "Both Statement I and Statement II are correct but Statement II is not the correct explanation of Statement I.", "Statement I is correct but Statement II is incorrect.", "Statement I is incorrect but Statement II is correct."], ans: 0, exp: "Heavier elements are formed by fusion but elements massive than iron cannot be produced by fusion, because iron has highest E_bn." },
+    { q: "111. Which of the following statements are correct?\nI. Atoms of isotopes have same electronic structure.\nII. Atoms of isotopes occupies same place in periodic table.\nIII. Atoms of isotopes have same number of protons.\nIV. Atoms of isotopes have same number of neutrons.", img: "", opts: ["I and II", "I, II and III", "I, II, III and IV", "II and IV"], ans: 1, exp: "The chemical properties of elements depend on their electronic structure. As the atoms of isotopes have identical electronic structure they have identical chemical behaviour and are placed in the same location in the periodic table." },
+    { q: "112. Which of the following are correct?\nI. Nuclear density is a constant for all matter.\nII. Nuclear density is around 2.3 × 10¹⁷ kg/m³.\nIII. Nuclear density is very large compared to ordinary matter.\nIV. Mass of ordinary matter is mainly due to nucleus.", img: "", opts: ["I, II and III", "II and III", "I and II", "I, II, III and IV"], ans: 3, exp: "All the given statements are correct." },
+    { q: "113. For binding energy per nucleon versus mass number curve, which of the following are correct?\nI. Binding energy per nucleon E_bn is independent of mass number in range 30 < A < 170.\nII. Binding energy is lower for both light nuclei (A < 30) and heavy nuclei (A > 170).\nIII. Binding energy is maximum of about 8.75 MeV for A = 56.\nIV. In region 0 < A < 80, binding energy increases with mass number.", img: "", opts: ["I, II, III and IV", "I, II and IV", "II, III and IV", "I, II and III"], ans: 3, exp: "I, II and III statements are correct." },
+    { q: "114. Plot of binding energy per nucleon E_bn against the nuclear mass M is shown. For masses A, B, C, D, E and F corresponding to different nuclei. Consider reactions\nI. A + B → C + ε\nII. C → A + B + ε\nIII. D + E → F + ε\nIV. F → D + E + ε\nwhere, ε is the energy released.\nIn which reaction ε is positive?", img: "images/phy28-q114.png", opts: ["I and IV", "I and III", "II and IV", "(d) II and III"], ans: 0, exp: "In reaction I, A + B → C + ε. It is a fusion reaction and reaction e.g., F → D + E + ε. So, it is a fission reaction. Hence, energy is released in both." },
+    { q: "115. In one half-life time duration\nI. activity of a sample reduced to half of its initial value.\nII. total number of nuclei present are reduced to half of its initial value.\nIII. number of radio active nuclei present is reduced to half of its initial value.\nIV. mass of sample is reduced to half of its initial value.\nOut of these, correct statements are", img: "", opts: ["I and II", "I and III", "II and IV", "II and III"], ans: 1, exp: "I and III statements are correct." },
+    { q: "116. Which of the following are fission reactions?\nI. ¹₀n + ²³⁵₉₂U → ²³⁶₉₂U → ¹⁴⁴₅₆Ba + ⁸⁹₃₆Kr + 3¹₀n\nII. ¹₀n + ²³⁵₉₂U → ²³⁶₉₂U → ¹³³₅₁Sb + ⁹⁹₄₁Nb + 4¹₀n\nIII. ¹₀n + ²³⁵₉₂U → ¹⁴⁰₅₄Xe + ⁹⁴₃₈Sr + 2¹₀n\nIV. ²₁H + ²₁H → ³₂He + n", img: "", opts: ["I, II and IV", "III and IV", "II, III and IV", "I, II and III"], ans: 3, exp: "I, II and III are fission reactions." },
+    { q: "117. In α-decay which of these are true?\nI. ⁴₂He is emitted.\nII. Mass number of daughter nucleus decreases by 4.\nIII. Atomic number of daughter nucleus decreases by 2.\nIV. ⁴₂He is electrically neutral.", img: "", opts: ["I and II", "I, II and IV", "I, II and III", "I, II, III and IV"], ans: 2, exp: "I, II and III statements are correct." },
+    { q: "118. Nuclear force is a strong attractive force which\nI. is responsible for high value of binding energy per nucleon.\nII. overcomes the repulsive force of proton and proton.\nIII. binds protons and neutrons into the nucleus.\nIV. is very short range.\nWhich of the above statements are correct?", img: "", opts: ["I and II", "II and IV", "II, III and IV", "I, II, III and IV"], ans: 3, exp: "All the given statements are correct." },
+    { q: "119. For a fusion reaction to takes place, conditions required are\nI. large amount of fusing material.\nII. high temperature.\nIII. large nucleus sizes of fusing material.\nIV. small nuclear sizes of fusing material.", img: "", opts: ["I, II and III", "II, III and IV", "I, III and IV", "I, II and IV"], ans: 3, exp: "To generate useful amount of energy, nuclear fusion must occur in bulk matter. Heat is needed is raise the temperature of the material until the particles have enough energy - due to their thermal motions alone - to penetrate the Coulomb barrier. This process is called thermonuclear fusion. Fusion occurs among small size nuclei." },
+    { q: "120. β-decay of ¹⁹⁸₇₉Au is shown. Frequency of γ-ray photons emitted will be\nI. 2.626 × 10²⁰ Hz\nII. 0.944 × 10²⁰ Hz\nIII. 1.631 × 10²⁰ Hz\nIV. 0.564 × 10²⁰ Hz", img: "images/phy28-q120.png", opts: ["I, II and IV", "II, III and IV", "II and III", "I, II and III"], ans: 3, exp: "Frequency of emitted γ-rays, v = (E₂ - E₁)/h. Therefore, v(γ₁) = ((1.088) × 1.6 × 10⁻¹³)/(6.63 × 10⁻³⁴) = 2.626 × 10²⁰ Hz. v(γ₂) = ((0.412 - 0) × 1.6 × 10⁻¹³)/(6.63 × 10⁻³⁴) = 0.994 × 10²⁰ Hz. v(γ₃) = ((1.088 - 0.412) × 1.6 × 10⁻¹³)/(6.63 × 10⁻³⁴) = 1.631 × 10²⁰ Hz." },
+    { q: "121. If a nuclear power reactor is highly polluting, why then they are built\nI. they produce lots of stable elements for a small amount of fuel.\nII. they reduce green house effect by producing steam.\nIII. they reduce green house effect by saving fossil fuels.\nIV. they produce power to meet our growing demands.", img: "", opts: ["I and II", "II and III", "I and III", "III and IV"], ans: 3, exp: "III and IV statements are correct." },
+    { q: "122. Match the following nuclei with the type of characteristic shown.\nColumn I:\nA. Isotopes\nB. Isobars\nC. Isotones\nD. Mirror nuclei\n\nColumn II:\n1. ⁷₃Li, ⁷₄Be\n2. ¹⁸₈O, ¹⁹₉F\n3. ¹⁷₈O, ¹⁷₉F\n4. ⁹²U²³⁵, ⁹²U²³⁸", img: "", opts: ["A-3, B-4, C-2, D-1", "A-4, B-1, C-3, D-2", "A-4, B-3, C-2, D-1", "A-3, B-4, C-2, D-1"], ans: 2, exp: "A → 4, B → 3, C → 2, D → 1. For ²³⁵₉₂U and ²³⁸₉₂U, Z = 92; Number of protons equal are isotopes. In ¹⁸₈O and ¹⁹₉F, A = 17, Mass number are same => Isobars. In ¹⁸₈O and ¹⁹₉F, N = A - Z = 10 for both. Since, number of neutrons are same, so there are isotones. In ⁷₃Li A = 7, Z = 3 => N = 4 of in ⁷₄Be; A = 7, Z = 4 => N = 3. As in both N and Z values are interchanged (lateral inversion of image of a plane mirror). So, they are mirror nuclei." },
+    { q: "123. A rough plot of the potential energy between two nucleons as a function of distance shows that the potential energy is a minimum at a distance r₀ of about 0.8 fm. This means that the force is attractive for distances larger than 0.8 fm and repulsive if they are separated by distances less than 0.8 fm.", img: "images/phy28-q123.png", opts: ["A-1, B-2, C-3, D-4", "A-3, B-1, C-2, D-4", "A-2, B-3, C-4, D-1", "A-4, B-3, C-2, D-1"], ans: 0, exp: "A → 1, B → 2, C → 3, D → 4. A. Force between nucleons is zero -> r > 0.8 fm. B. Force between nucleons is attractive -> r > 0.8 fm. C. Force between nucleons is repulsive -> r < 0.8 fm. D. Potential energy is minimum -> r = 0." },
+    { q: "124. Match the following columns with type of decay and their products.\nColumn I:\nA. α-decay\nB. β⁺-decay\nC. γ-decay\nD. K-electron-capture\n\nColumn II:\n1. X-rays\n2. Electromagnetic waves\n3. Electrons\n4. ⁴₂He, Helium nucleus", img: "", opts: ["A-4, B-3, C-2, D-1", "A-4, B-2, C-3, D-1", "A-4, B-1, C-3, D-2", "A-4, B-3, C-2, D-1"], ans: 0, exp: "A → 4, B → 3, C → 2, D → 1. α-decay in which a helium nucleus ⁴₂He is emitted. β-decay in which electrons or positrons are emitted. γ-decay in which high energy photons are emitted, K electrons capture, high energy radiations are emitted." },
+    { q: "125. Match the following columns.\nColumn I:\nA. ²⁴²₉₄Pu → ²³⁸₉₂U + ⁴₂He\nB. ²¹⁰₈₃Bi → ²¹⁰₈₄Po + e⁻ + ν̄\nC. ⁹⁷₄₃Tc → ⁹⁷₄₂Mo + e⁺ + v\nD. ¹²⁰₅₄Xe + e⁻ → ¹²⁰₅₃I + v\n\nColumn II:\n1. K-electron capture\n2. β⁺-decay\n3. β⁻-decay\n4. α-decay", img: "", opts: ["A-4, B-3, C-2, D-1", "A-1, B-4, C-2, D-3", "A-4, B-2, C-3, D-1", "A-4, B-1, C-2, D-3"], ans: 0, exp: "A → 4, B → 3, C → 2, D → 1. A. ²⁴²₉₄Pu → ²³⁸₉₂U + ⁴₂He (α-decay). B. ²¹⁰₈₃Bi → ²¹⁰₈₄Po + e⁻ + ν̄ (β⁻-decay). C. ⁹⁷₄₃Tc → ⁹⁷₄₂Mo + e⁺ + v (β⁺-decay). D. ¹²⁰₅₄Xe + e⁻ → ¹²⁰₅₃I + v (K-electron capture)." },
+    { q: "126. Match the nuclear processes given in Column I with the appropriate option (s) in Column II. [JEE Advanced 2015]\nColumn I:\nA. Nuclear fusion\nB. Fission in a nuclear reactor\nC. β-decay\nD. γ-ray emission\n\nColumn II:\nP. Absorption of thermal neutrons by ²³⁵₉₂U\nQ. ⁶⁰₂₇Co nucleus\nR. Energy production in stars via hydrogen conversion to helium\nS. Heavy water\nT. Neutrino emission", img: "", opts: ["A- PT, B- QR, C- RT, D- SQ", "A- RS, B- PT, C- QR, D- S", "A- R, B- PS, C- QT, D- Q", "A- S, B- RT, C- QP, D- RS"], ans: 1, exp: "A → RS, B → PT, C → QR, D → S. Nuclear fusion -> Energy production in stars via hydrogen conversion to helium, Heavy water. Fission in a nuclear reactor -> Absorption of thermal neutrons by ²³⁵₉₂U, Neutrino emission. β-decay -> ⁶⁰₂₇Co nucleus, Energy production in stars via hydrogen conversion to helium. γ-ray emission -> Heavy water." },
+    { q: "127. Match Column I of the nuclear processes with Column II containing parent nucleus and one of the end products of each process and then select the correct answer using the codes given below the Column.\nColumn I:\nA. α-decay\nB. β⁺-decay\nC. Fission\nD. Proton emission\n\nColumn II:\n1. ¹⁵₈O → ¹⁵₇O + ...\n2. ²³⁸₉₂U → ²³⁴₉₀Th + ...\n3. ¹⁸⁵₈₃Bi → ¹⁸⁴₈₂Pb + ...\n4. ²³⁹₉₄Pu → ¹⁴⁰₅₇La + ...", img: "", opts: ["A-2, B-1, C-4, D-3", "A-4, B-2, C-3, D-1", "A-1, B-2, C-3, D-4", "A-4, B-2, C-1, D-3"], ans: 0, exp: "A → 2, B → 1, C → 4, D → 3. A. α-decay -> ²³⁸₉₂U → ²³⁴₉₀Th + ... B. β⁺-decay -> ¹⁵₈O → ¹⁵₇O + ... C. Fission -> ²³⁹₉₄Pu → ¹⁴⁰₅₇La + ... D. Proton emission -> ¹⁸⁵₈₃Bi → ¹⁸⁴₈₂Pb + ..." },
+    { q: "128. [Passage: In an experiment on two radioactive isotopes of an element (which do not decay into one another), their mass ratio at a given instant was formed to be 3. The decaying isotope has a large mass and activity of 1.0 curie initially. The half-lives of the two radioactive isotopes are known to be 12 h and 16 h. Activity of the each isotope and their mass ratio after 2 days was studied.] Ratio of number of atoms of first isotope to that of the other isotope is", img: "", opts: ["2", "1.5", "1", "1.75"], ans: 1, exp: "As, A₁ = λ₁N₁ and A₂ = λ₂N₂. λ₁N₁ = λ₂N₂ ...(i). Therefore, N₁/N₂ = 3 (∵ N₁ > N₂). T₁ = 12 h and T₂ = 16 h. After 2 days, i.e., 2 × 24 = 48 h. N₁' = N₁(1/2)^(t/T) (But t/T = 48/12 = 4). Therefore, N₁' = N₁(1/2)⁴. Also, N₂' = N₂(1/2)³ ...(iii). Therefore, N₁'/N₂' = (N₁/N₂) × (1/2)⁴ / (1/2)³ = 3 × 8/16 = 3/2 = 1.5." },
+    { q: "129. [Passage: In an experiment on two radioactive isotopes of an element (which do not decay into one another), their mass ratio at a given instant was formed to be 3. The decaying isotope has a large mass and activity of 1.0 curie initially. The half-lives of the two radioactive isotopes are known to be 12 h and 16 h. Activity of the each isotope and their mass ratio after 2 days was studied.] Activity of first isotope is", img: "", opts: ["(3/2)μCi", "(1/4)μCi", "(1/8)μCi", "(1/16)μCi"], ans: 3, exp: "Activity of rapidly decaying isotope after 2 days A₁' = λ₁N₁' = λ₁N₁(1/2)⁴ = 1μC/16." },
+    { q: "130. [Passage: In an experiment on two radioactive isotopes of an element (which do not decay into one another), their mass ratio at a given instant was formed to be 3. The decaying isotope has a large mass and activity of 1.0 curie initially. The half-lives of the two radioactive isotopes are known to be 12 h and 16 h. Activity of the each isotope and their mass ratio after 2 days was studied.] Activity of second isotope is", img: "", opts: ["(1/8)μCi", "(1/32)μCi", "(1/2)μCi", "(1/48)μCi"], ans: 1, exp: "Activity of the other isotope after 2 days A₂' = λ₂N₂'. Now, T₁ = 0.6931/λ₁ and T₂ = 0.6931/λ₂. Therefore, λ₁/λ₂ = T₂/T₁ = 16/12 = 4/3. Therefore, λ₂ = 3/4 λ₁. After N₁'/N₂' = 3/2 or N₂' = 2/3 N₁. Equation becomes A₂' = 3/4 λ₁ × 2/3 N₁' = 1/2 λN₁' = 1/2 × 1/16 μCi = 1/32 μCi." },
+    { q: "131. [Passage: A nucleus of mass M + Δm is at rest and decays into two daughter nuclei of equal mass M/2 each. Speed of light is c.] The speed of daughter nuclei is", img: "", opts: ["c√(Δm/(M + Δm))", "c(Δm/(M + Δm))", "c√(2Δm/M)", "c√(Δm/M)"], ans: 2, exp: "Total kinetic energy of products = Total energy released. p²/2m + p²/2m = (mass defect)c² (where, m = M/2 given). Therefore, 2(p²/2m) = [(M + Δm) - (M/2 + M/2)]c². Therefore, 2[p²/(2(M/2))] = (Δm)c². Therefore, 2((M/2)v²)/M = (Δm)c². Therefore, v = c√(2Δm/M)." },
+    { q: "132. [Passage: A nucleus of mass M + Δm is at rest and decays into two daughter nuclei of equal mass M/2 each. Speed of light is c.] The binding energy per nucleon for the parent nucleus is E₁ and that for daughter nuclei is E₂. Then", img: "", opts: ["E₁ = 2E₂", "E₂ = 2E₁", "E₁ > E₂", "E₂ > E₁"], ans: 3, exp: "Because energy is releasing. Binding energy per nucleon of product > that of parent. Therefore, E₂ > E₁." },
+    { q: "133. [Passage: Suppose that a reactor using uranium-235 has an output of 700 MW and is 20% efficient. An atom of U²³⁵ undergoes fission in a reactor liberated 200 MeV energy.] Energy generated from the reactor per fission is", img: "", opts: ["3.2 × 10⁻¹¹ J", "6.4 × 10⁻¹¹ J", "3.2 × 10⁻¹² J", "6.4 × 10⁻¹² J"], ans: 3, exp: "Energy released in each fission of U²³⁵ = 200 MeV = 200 × 10⁶ × 1.6 × 10⁻¹⁹ J = 3.2 × 10⁻¹¹ J. Since, only 20% of this is utilized efficiently, therefore energy generated from the reactor per fission = 3.2 × 10⁻¹¹ × 0.20 = 6.4 × 10⁻¹² J." },
+    { q: "134. [Passage: Suppose that a reactor using uranium-235 has an output of 700 MW and is 20% efficient. An atom of U²³⁵ undergoes fission in a reactor liberated 200 MeV energy.] How many uranium atoms does it consume in 24 h?", img: "", opts: ["9.5 × 10²¹", "9.5 × 10²²", "9.5 × 10²³", "9.5 × 10²⁴"], ans: 3, exp: "Since, the output of the reactor is 700 × 10⁶ Js⁻¹, the number of fission required per second is = (700 × 10⁶)/(6.4 × 10⁻¹² J) = 11 × 10²⁰ s⁻¹. The number of uranium-235 atoms consumed in 24 hours. = 24 × 60 × 60 × 1.1 × 10²⁰ = 9.5 × 10²⁴." },
+    { q: "135. [Passage: Suppose that a reactor using uranium-235 has an output of 700 MW and is 20% efficient. An atom of U²³⁵ undergoes fission in a reactor liberated 200 MeV energy.] What mass of uranium does it consume during 24 h?", img: "", opts: ["2.5 kg", "3.7 kg", "2.5 g", "3.7 g"], ans: 1, exp: "There are 6.02 × 10²⁶ atoms in 235 kg of U-235. Therefore, the mass of U-235 consumed during 24 hours is = (9.5 × 10²⁴)/(6.02 × 10²⁶) × 235 kg = 3.7 kg." },
+    { q: "136. If the binding energy per nucleon in ⁷₃Li and ⁴₂He nuclei are respectively 5.60 MeV and 7.06 MeV respectively, then", img: "", opts: ["the energy of proton in the reaction ⁷₃Li + p → 2 ⁴₂He is 18.3 MeV", "total BE of nucleons in ⁷₃Li is 39.20 MeV", "total BE of nucleons in 2(⁴₂He) is 56.48 MeV", "Both (a) and (b) are correct"], ans: 3, exp: "Total BE of nucleons in ⁷₃Li = 7 × 5.60 = 39.20 MeV. Total BE of nucleons in 2(⁴₂He) = (4 × 7.06) × 2 = 56.48 MeV. Therefore, energy of protons in the reaction = difference of BE's = 56.48 - 39.20 = 17.3 MeV." },
+    { q: "137. Consider the following reaction\nˣ_Z A → ˣ_(Z+1) Y^A → ˣ_(Z-1) K^(A-4) → ˣ_(Z-1) K^(A-4)\nRadioactive radiations emitted is/are", img: "", opts: ["α and β", "α and γ", "α, β and γ", "Only α and β"], ans: 2, exp: "The given reaction ˣ_Z A → ˣ_(Z+1) Y^A → ˣ_(Z-1) K^(A-4) → ˣ_(Z-1) K^(A-4). First β-decay, then α-decay, then γ-decay." },
+    { q: "138. The variation of decay rate of two radioactive samples A and B with time is shown in figure. Which of the following statements are true?", img: "images/phy28-q138.png", opts: ["Decay constant of A is greater than that of B, hence A always decays faster than B", "Decay constant of B is greater than that of A but its decay rate is always smaller than that of A", "Decay constant of A is greater than that of B but it does not always decay faster than B", "Decay constant of B is smaller than that of A but still its decay rate becomes equal to that of A at a later instant"], ans: 3, exp: "dN/dt at t=0 = Initial decay rate of A is more than that of B but B finally have a decay rate more than that of A..Also, decay rate of B is equal to that of A at a later instant (intersection point). A has a smaller half-life which imply A has greater decay constant." },
+    { q: "139. The three stable isotopes of neon, ²⁰₁₀Ne, ²¹₁₀Ne and ²²₁₀Ne have respective abundances of 90.51%, 0.27% and 9.22%. The atomic masses of the three isotopes are 19.99 u, 20.99 u and 21.99 u, respectively. Obtain the average atomic mass of neon.", img: "", opts: ["20.18 u", "12.5 u", "8.55 u", "1.257 u"], ans: 0, exp: "Average atomic mass (m) = Weighted average of all isotopes = (90.51 × 19.99 + 0.27 × 20.99 + 9.22 × 21.99)/(90.51 + 0.27 + 9.22) = (1809.29 + 5.67 + 202.75)/100 = 2017.7/100 = 20.18 u. Thus, the average atomic mass of neon is 20.18 u." },
+    { q: "140. Obtain the binding energy (in MeV) of a nitrogen nucleus (¹⁴₇N), given m(¹⁴₇N) = 14.00307 u.", img: "", opts: ["210", "104.67", "83.5", "75.25"], ans: 1, exp: "Given, mass of proton, m_p = 1.007834. Mass of neutron, m_n = 1.00867 u. ¹⁴₇N nucleus contains 7 protons and 7 neutrons. Mass defect (Δm) = mass of nucleons - mass of nucleus = 7m_p + 7m_n - m_N = 7 × 1.00783 + 7 × 1.00867 - 14.00307 = 7.05481 + 7.06069 - 14.00307 = 0.11243 u. Binding energy of nitrogen nucleus = Δm × 931 MeV = 0.11243 × 931 MeV = 104.67 MeV. Thus, the binding energy is 104.67 MeV." },
+    { q: "141. A given coin has a mass of 3.0 g. Calculate the nuclear energy that would be required to separate all the neutrons and protons from each other. For simplicity, assume that the coin is entirely made of ⁶³₂₉Cu atoms (of mass 62.92960 u).", img: "", opts: ["2.5 × 10²⁵ MeV", "0.5 × 10¹² MeV", "1.58 × 10²⁵ MeV", "7.5 × 10¹² MeV"], ans: 2, exp: "Given, mass of coin = 3 g. Number of atoms in 1 g of Cu = (6.023 × 10²³)/63. Number of atoms in 3 g of Cu = (6.023 × 10²³)/63 × 3 = 2.868 × 10²². Number of protons in Cu atom, = 29. Number of neutrons in Cu atom = 63 - 29 = 34. Mass defect in each atom, Δm = 29 × m_p + 34 × m_n - m_Cu = 29 × 1.00783 + 34 × 1.00867 - 62.9260 = 0.59225 u. Therefore, Total mass defect in all atoms = 0.59225 × 2.868 × 10²² = 1.6985 × 10²² u. Binding energy = Mass defect × 931 MeV = 1.6985 × 10²² × 931 = 1.58 × 10²⁵ MeV. Thus, the energy required to separate all the neutrons and protons is 1.58 × 10²⁵ MeV i.e., equal to binding energy." },
+    { q: "142. Obtain the amount of ⁶⁰₂₇Co necessary to provide a radioactive source of 8.0 mCi strength. The half-life of ⁶⁰₂₇Co is 5.3 yr.", img: "", opts: ["7.12 × 10⁻⁶ g", "1.2 × 10⁻⁵ g", "4.5 × 10⁻⁶ g", "3.5 × 10⁻⁵ g"], ans: 0, exp: "Activity, dN/dt = 8 mCi = 8 × 10⁻³ × 3.7 × 10¹⁰ = 8 × 3.7 × 10⁷ disintegration/s (∵ 1 Ci = 3.7 × 10¹⁰ disintegration/s). Half-life of ⁶⁰₂₇Co, T₁/₂ = 5.3 yr = 5.3 × 365 × 24 × 60 × 60 = 1.67 × 10⁸ s." },
+    { q: "143. The half-life of ⁹⁰₃₈Sr is 28 yr. What is the disintegration rate of 15 mg of this isotope?", img: "", opts: ["5.7 × 10¹⁰ Bq", "7.877 × 10¹⁰ Bq", "4.3 × 10¹⁰ Bq", "2.34 × 10¹⁰ Bq"], ans: 1, exp: "Given, half-life of ⁹⁰₃₈Sr, T₁/₂ = 28 yr. According to Avogadro number concept, 90 g of Sr contains = 6.023 × 10²³ atom. 15 mg of Sr contains = (6.023 × 10²³ × 15 × 10⁻³)/90. Number of atoms, N = 1.0038 × 10²⁰. Activity, dN/dt = λN or dN/dt = (0.6931/T₁/₂)N = (0.6931 × 1.0038 × 10²⁰)/(28 × 365 × 24 × 60 × 60) (∵ λ = 0.693/T₁/₂) = 7.877 × 10¹⁰ disintegration/s = 7.877 × 10¹⁰ Bq." },
+    { q: "144. The fission properties of ²³⁹₉₄Pu are very similar to those of ²³⁵₉₂U. The average energy released per fission is 180 MeV. How much energy, in MeV is released if all the atoms in 1 kg of pure ²³⁹₉₄Pu undergo fission?", img: "", opts: ["4.53 × 10²⁶ eV", "1.25 × 10²⁶ eV", "8.06 × 10²⁶ eV", "3.75 × 10²⁶ eV"], ans: 0, exp: "According to the concept of Avogadro number. The number of atoms in 239 g of ²³⁹₉₄Pu = 6.023 × 10²³. Number of atoms in 1 kg of ²³⁹₉₄Pu = (6.023 × 10²³ × 1000)/239 = 2.52 × 10²⁴. The average energy released in one fission = 180 MeV. So, total energy released in fission of 1 kg of ²³⁹₉₄Pu = 180 × 2.52 × 10²⁴ = 4.53 × 10²⁶ MeV." },
+    { q: "145. Calculate the height of the potential barrier for a head on collision of two deuterons. [Hint: The height of the potential barrier is given by the Coulomb repulsion between the two deuterons when they just touch each other. Assume that they can be taken as hard spheres of radius 2.0 fm.]", img: "", opts: ["215 kV", "360 kV", "120 kV", "450 kV"], ans: 1, exp: "Given, radius r = 2 fm = 2 × 10⁻¹⁵ m. For head on collision, the distance between the centres of two deuterons d = 2r => d = 4 × 10⁻¹⁵ = 4 × 10⁻¹⁵ m. Charge on each deuteron, e = 1.6 × 10⁻¹⁹ C. Potential energy = (1/4πε₀)(q₁q₂/d) = (9 × 10⁹ × 1.6 × 10⁻¹⁹ × 1.6 × 10⁻¹⁹)/(4 × 10⁻¹⁵) (∵ 1/4πε₀ = 9 × 10⁹) = (5.76 × 10⁻¹⁴)/(1.6 × 10⁻¹⁹) = 360 keV." },
+    { q: "146. Boron has two stable isotopes ¹⁰₅B and ¹¹₅B. Their respective masses are 10.01294 u and 11.00931 u and the atomic mass of boron is 10.811 u. Then, the abundances of ¹⁰₅B and ¹¹₅B are", img: "", opts: ["19.9, 80.1", "80.1, 19.9", "92.5, 7.5", "7.5, 92.5"], ans: 0, exp: "Given, mass of ¹⁰B = 10.01294 u. Mass of ¹¹B = 11.00931 u. Atomic mass of boron = 10.811 u. Let the abundance of ¹⁰B be x%. So, the abundance of ¹¹B be (100 - x)%. Atomic mass = Weighted average of the isotopes. 10.811 = (x × 10.01294 + (100 - x) × 11.00931)/(x + 100 - x). Abundance of ¹⁰B, x = 19.9%. Abundance of ¹¹B, (100 - x) = 100 - 19.9 = 80.1%." },
+    { q: "147. The binding energy of the nuclei ⁵⁶₂₆Fe in units of MeV is [m(⁵⁶₂₆Fe) = 55.934939 u]", img: "", opts: ["7.20 MeV", "8.79 MeV", "10.2 MeV", "13.6 MeV"], ans: 1, exp: "Given, mass of proton m_p = 1.00783 u. Mass of neutron, m_n = 1.00867 u. For ⁵⁶₂₆Fe, ⁵⁶₂₆Fe contains 26 protons and (56 - 26) = 30 neutrons. Mass defect (Δm) = mass of nucleons - mass of nucleus of ⁵⁶₂₆Fe. Mass defect (Δm) = 26 × m_p + 30 × m_n - m_N = 26 × 1.00783 + 30 × 1.00867 - 55.934939 = 26.20345 + 30.25995 - 55.934939 = 0.528461 u. Total binding energy = Δm × 931 MeV = 0.528461 × 931.5 = 492.26 MeV. Average binding energy per nucleon of ⁵⁶₂₆Fe = Binding energy/Total number of nucleons = 492.26/56 = 8.790 MeV." },
+    { q: "148. A 1000 MW fission reactor consumes half of its fuel in 5 yr. The reactor operates 80% of the time that all the energy generated arises from the fission of ²³⁵₉₂U and this nuclide is consumed only by the fission process. The power of reactor P = 1000 MW. How much ²³⁵₉₂U did it contain initially?", img: "", opts: ["2050 kg", "3070 kg", "4000 kg", "5000 kg"], ans: 1, exp: "Use the concept that the energy generated in one fission of ²³⁵₉₂U is 200 MeV. Let x kg of ²³⁵U is used. According to Avogadro number concept, 235 g of ²³⁵U contains = 6.023 × 10²³ atoms. Therefore, x kg of ²³⁵U contains = (6.023 × 10²³)/(235 × 10⁻³) × x atoms. As half fuel is used in 5 yr and each atom gives energy of 200 MeV, so energy given by fuel is = (6.023 × 10²³ × x × 200 × 1.6 × 10⁻¹³)/(235 × 2 × 10⁻³) J ...(i). Energy produced in reactor in 5 yr as 80% = 1000 × 10⁶ × 5 × 365 × 24 × 60 × 60 × 80/100 (From formula E = Pt) ...(ii). Equate Eqs. (i) and (ii), we get (6.023 × 10²³ × 200 × 1.6 × 10⁻¹³ x)/(235 × 2 × 10⁻³) = (10⁹ × 5 × 365 × 24 × 3600 × 80)/100. Therefore, x = (5 × 365 × 24 × 36 × 80 × 235 × 2 × 10⁻³ × 10⁹)/(6.023 × 10¹⁰ × 200 × 1.6) = 3071.5 kg. The initial amount of ²³⁵U is 3071.5 kg." },
+    { q: "149. How long can an electric lamp of 100 W be kept glowing by fusion of 2.0 kg of deuterium? Take the fusion reaction as ²₁H + ²₁H → ³₂He + n + 3.27 MeV", img: "", opts: ["6 × 10³ yr", "5 × 10⁴ yr", "(c) 7 × 10⁵ yr", "(d) 10 × 10⁶ yr"], ans: 1, exp: "Let t be the time. According to the Avogadro number concept. Number of atoms in 2 g of deuterium = 6.023 × 10²³. Number of atoms in 2 kg of deuterium = (6.023 × 10²³ × 2 × 10³)/2 = 6.023 × 10²⁶ nuclei. From given equation, energy released during fusion of two deuterium = 3.27 MeV. Therefore, Energy released by one deuterium = 3.27/2 = 1.635 MeV. Energy released in 6.023 × 10²⁶ deuterium atoms = 1.635 × 6.023 × 10²⁶ = 9.848 × 10²⁶ MeV = 9.848 × 10²⁶ × 1.6 × 10⁻¹³ = 15.75 × 10¹³ J. Energy used by bulb in 1s = 100 J. 15.75 × 10¹³ J energy used in time = (1 × 15.75 × 10¹³)/100 = 15.75 × 10¹¹ s (∵ We know that 1 yr = 60 × 24 × 60 × 365 s) = (15.75 × 10¹¹)/(60 × 24 × 60 × 365) yr = 4.99 × 10⁴ yr. Thus, the bulbs glow for 4.99 × 10⁴ yr." },
+    { q: "150. Suppose India had a target of producing by 2020 AD, 200000 MW of electric power, ten percent of which was to be obtained from nuclear power plants. Suppose we are given that, on an average, the efficiency of utilization (i.e., conversion to electric energy) of thermal energy produced in a reactor was 25%. How much amount of fissionable uranium would our country need per year by 2020? Take the heat energy per fission of ²³⁵U to be about 200 MeV.", img: "", opts: ["2 × 10⁵ kg", "3 × 10⁵ kg", "2 × 10³ kg", "3 × 10⁴ kg"], ans: 3, exp: "Total target power = 200000 = 2 × 10⁵ MW. Total nuclear power = 10% of total = (10/100) × 2 × 10⁵ = 2 × 10⁴ MW. Energy produced/fission = 200 MeV. Efficiency of power plant = 25%. Energy converted into electrical energy per fission = (25/100) × 200 = 50 MeV = 50 × 1.6 × 10⁻¹³ J. Total electrical energy to be produced in per year = 2 × 10⁴ MW = 2 × 10⁴ × 10⁶ W = 2 × 10¹⁰ W = 2 × 10¹⁰ J/s = 2 × 10¹⁰ × 60 × 60 × 24 × 365 J/yr." },
+    { q: "151. Suppose we have a large number of containers each containing initially 10000 atoms of a radioactive material with a half-life of 1 yr. After 1 yr", img: "", opts: ["all containers will have 5000 atoms of the material", "all containers will contains same number of atoms of the material but that number will only be approximately 5000", "the containers will general have different number of the atoms but their average is around 5000", "None of the containers have more than 5000 atoms"], ans: 2, exp: "Disintegration laws are based on a statistical model and give average values." },
+    { q: "152. When nucleus in an atom undergoes a radioactive decay, the electronic energy level of the atom", img: "", opts: ["do not change for any type of radioactivity", "change for α and β-radioactivity but not for γ-radioactivity", "change for α-radioactivity but not for others", "change for β-radioactivity but not for others"], ans: 1, exp: "γ-decay occurs due to de-excitation of a nucleus and energies involves is essentially in MeV. Electronic energy levels have values only in eV." },
+    { q: "153. M_X and M_Y denote the atomic masses of the parent and the daughter nuclei, respectively in a radioactive decay. The Q value for a β⁻-decay is Q₁ and that for a β⁺-decay is Q₂. If m_e denotes the mass of an electron, then which of the following statements is correct?", img: "", opts: ["Q₁ = (M_X - M_Y)c² and Q₂ = (M_X - M_Y - 2m_e)c²", "Q₁ = (M_X - M_Y)c² and Q₂ = (M_X - M_Y)c²", "Q₁ = (M_X - M_Y - 2m_e)c² and Q₂ = (M_X - M_Y + 2m_e)c²", "Q₁ = (M_X - M_Y + 2m_e)c² and Q₂ = (M_X - M_Y + 2m_e)c²"], ans: 0, exp: "For a β⁻-decay, ˣ_Z A → ˣ_(Z+1) Y^A + ⁰₋₁e + ν̄. Therefore, Q₁ value of decay = [(M_X - ZM_e) - {M_Y - (Z + 1)M_e} - M_e]c² = (M_X - M_Y)c². For β⁺-decay, ˣ_Z A → ˣ_(Z-1) Y^A + ⁰₊₁e + v. Therefore, Q₂ value of decay = [(M_X - ZM_e) - {M_Y - (Z - 1)M_e} - M_e]c² = (M_X - M_Y - 2M_e)c²." },
+    { q: "154. Heavy stable nuclei have more neutrons than protons. This is because of the fact that", img: "", opts: ["neutrons are heavier than protons", "electrostatic force between protons is repulsive", "neutrons decay into protons by beta decay", "nuclear force between neutrons is weaker than protons"], ans: 1, exp: "Force between neutrons is only attractive. Nuclear force which is short range force. Therefore, For stable nuclides, either N/Z = 1 or N/Z > 1. Nuclides with N/Z < 1 are least stable." },
+    { q: "155. In a nuclear reactor, moderator slow down the neutrons which come out in a fission process. The moderator have light nuclei. Heavy nucleus will not serve the purpose because", img: "", opts: ["they will break up", "elastic collision with neutrons with heavy nuclei will not slow them down", "weight of reactor is appreciably high", "substances with heavy nuclei are not liquids or gases at room temperature"], ans: 1, exp: "For efficient energy transfer between 2 bodies, both must be of comparable masses. If a heavy nucleus is taken, then neutron rebounds with nearly same energy." },
+    { q: "156. Fusion processes like combining two deuterons to form a He nucleus are impossible at ordinary temperatures and pressures. The reason for this can be traced to the fact that", img: "", opts: ["nuclear forces are long-range", "nuclei are positively charged", "the original nuclei must be completely ionised before fusion can takes place", "the original nuclei must break up from combining with each other"], ans: 1, exp: "For efficient energy transfer between 2 bodies, both must be of comparable masses. If a heavy nucleus is taken, then neutron rebounds with nearly same energy." },
+    { q: "157. Samples of two radioactive nuclides A and B are taken. λ_A and λ_B are the disintegration constants of A and B, respectively. In which of the following cases, the two samples can simultaneously have the same decay rate at any time?", img: "", opts: ["Initial rate of decay of A is twice the initial rate of decay of B and λ_A = λ_B", "Initial rate of decay of A is twice the initial rate of decay of B and λ_A > λ_B", "Initial rate of decay of B is twice the initial rate of decay of A and λ_A > λ_B", "λ_A = λ_B and NB/NA = NA/NB"], ans: 3, exp: "λ_A N_OA = λ_B N_OB." },
+    { q: "158. The gravitational force between a H-atom and another particle of mass m will be given by Newton's law F = G M·m/r², where r is in km and", img: "", opts: ["M = m_proton + m_electron", "M = m_proton + m_electron - B/c² (B = 13.6 eV).", "M is not related to the mass of the hydrogen atom.", "M = m_proton + m_electron - |V|/c² (|V| = magnitude of the potential energy of electron in the H-atom."], ans: 1, exp: "Given, F = GMm/r². M = effective mass of hydrogen atom = mass of electron + mass of proton - B/c² where, B is BE of hydrogen atom = 13.6 eV." }
+];
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+const totalQ = questions.length;
+let currentQ = 0;
+const userAnswers = new Array(totalQ).fill(null);
+const marked = new Array(totalQ).fill(false);
+const visited = new Array(totalQ).fill(false);
+let correctCount = 0;
+let wrongCount = 0;
+
+const questionBox = document.getElementById('questionBox');
+const palette = document.getElementById('palette');
+
+function renderPalette() {
+    palette.innerHTML = '';
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+        btn.id = 'pal-' + i;
+        btn.onclick = () => goToQuestion(i);
+        palette.appendChild(btn);
+    }
+}
+
+function updatePalette() {
+    for (let i = 0; i < totalQ; i++) {
+        const btn = document.getElementById('pal-' + i);
+        if (!btn) continue;
+        btn.className = 'palette-btn';
+        if (userAnswers[i] !== null && marked[i]) btn.classList.add('answered-marked');
+        else if (marked[i]) btn.classList.add('marked');
+        else if (userAnswers[i] !== null) btn.classList.add('attempted');
+        else if (visited[i]) btn.classList.add('not-answered');
+        else btn.classList.add('not-visited');
+        if (i === currentQ) btn.classList.add('current');
+    }
+}
+
+function updateStats() {
+    let attempted = 0, notAnswered = 0, notVisited = 0, markedCount = 0;
+    for (let i = 0; i < totalQ; i++) {
+        if (userAnswers[i] !== null) attempted++;
+        else if (visited[i]) notAnswered++;
+        else notVisited++;
+        if (marked[i]) markedCount++;
+    }
+    document.getElementById('sbTotal').textContent = totalQ;
+    document.getElementById('sbAttempted').textContent = attempted;
+    document.getElementById('sbNotAnswered').textContent = notAnswered;
+    document.getElementById('sbNotVisited').textContent = notVisited;
+    document.getElementById('sbMarked').textContent = markedCount;
+    document.getElementById('sbCorrect').textContent = correctCount;
+    document.getElementById('sbWrong').textContent = wrongCount;
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    document.getElementById('sbMarks').textContent = marks.toFixed(2);
+}
+
+function renderQuestion() {
+    visited[currentQ] = true;
+    const q = questions[currentQ];
+    let optsHTML = '';
+    q.opts.forEach((opt, oi) => {
+        let cls = 'option';
+        if (userAnswers[currentQ] !== null) {
+            cls += ' disabled';
+            if (oi === q.ans) cls += ' correct-ans';
+            else if (oi === userAnswers[currentQ]) cls += ' wrong-ans';
+        }
+        optsHTML += `<div class="${cls}" id="opt-${currentQ}-${oi}" onclick="selectAnswer(${oi})"><strong>${String.fromCharCode(65 + oi)}.</strong> ${opt}</div>`;
+    });
+
+    let fbHTML = '';
+    if (userAnswers[currentQ] !== null) {
+        const isCorrect = userAnswers[currentQ] === q.ans;
+        fbHTML = `<div class="feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            ${isCorrect ? '✅ <strong>Sahi Jawab!</strong>' : '❌ <strong>Galat Jawab.</strong> Sahi jawab: <strong>' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans] + '</strong>'}
+            ${q.exp ? '<div class="exp">📖 ' + q.exp + '</div>' : ''}
+        </div>`;
+    }
+
+    // Add image if exists
+    let imgHTML = '';
+    if (q.img) {
+        imgHTML = `<img src="${q.img}" class="q-image" alt="Question Diagram" onerror="this.style.display='none'">`;
+    }
+
+    questionBox.innerHTML = `
+        <div class="q-text"><span class="q-num-badge">${currentQ + 1}</span>${q.q}</div>
+        ${imgHTML}
+        <div>${optsHTML}</div>
+        ${fbHTML}
+    `;
+
+    document.getElementById('qCounter').textContent = `Q ${currentQ + 1} / ${totalQ}`;
+    document.getElementById('btnPrev').disabled = currentQ === 0;
+    document.getElementById('btnNext').disabled = currentQ === totalQ - 1;
+    document.getElementById('btnMark').textContent = marked[currentQ] ? '🔖 Unmark' : '🔖 Mark for Review';
+    document.getElementById('btnMark').className = marked[currentQ] ? 'btn btn-marked' : 'btn btn-warning';
+
+    updatePalette();
+    updateStats();
+}
+
+function selectAnswer(optIdx) {
+    if (userAnswers[currentQ] !== null) return;
+    userAnswers[currentQ] = optIdx;
+    if (optIdx === questions[currentQ].ans) correctCount++;
+    else wrongCount++;
+    renderQuestion();
+}
+
+function goToQuestion(idx) { currentQ = idx; renderQuestion(); document.querySelector('.sidebar').classList.remove('open'); }
+function nextQuestion() { if (currentQ < totalQ - 1) { currentQ++; renderQuestion(); } }
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function toggleMark() { marked[currentQ] = !marked[currentQ]; renderQuestion(); }
+
+function showResult() {
+    const marks = correctCount * 1 - wrongCount * 0.25;
+    const percent = ((marks / totalQ) * 100).toFixed(2);
+    document.getElementById('rTotal').textContent = totalQ;
+    document.getElementById('rCorrect').textContent = correctCount;
+    document.getElementById('rWrong').textContent = wrongCount;
+    document.getElementById('rMarks').textContent = marks.toFixed(2);
+    document.getElementById('rPercent').textContent = percent + '%';
+    document.getElementById('resultModal').classList.add('show');
+}
+
+function resetQuiz() {
+    if (!confirm('Are you sure you want to reset the quiz?')) return;
+    for (let i = 0; i < totalQ; i++) { userAnswers[i] = null; marked[i] = false; visited[i] = false; }
+    correctCount = 0; wrongCount = 0; currentQ = 0;
+    document.getElementById('resultModal').classList.remove('show');
+    renderQuestion();
+}
+
+renderPalette();
+renderQuestion();
+// ========================================
+// NEET CBT - Firebase Result Save + Back Button
+// ========================================
+const CHAPTER_NUM = 60; // ⚠️ Set to 60 as requested
+
+// Check login
+const _userData = localStorage.getItem('cbt_user');
+if (!_userData) {
+  window.location.href = 'index.html';
+}
+const _currentUser = JSON.parse(_userData);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // Add Back button
+    const container = document.querySelector('.main-container');
+    if (container && !document.getElementById('topBackBtn')) {
+      const topBtn = document.createElement('div');
+      topBtn.id = 'topBackBtn';
+      topBtn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999;';
+      topBtn.innerHTML = '<a href="dashboard.html" style="display:inline-block; padding:10px 20px; background:#4299e1; color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">← Back to Dashboard</a>';
+      document.body.appendChild(topBtn);
+    }
+
+    // Override showResult to save to localStorage + Firebase
+    if (typeof window.showResult === 'function') {
+      const _originalShowResult = window.showResult;
+      window.showResult = function() {
+        _originalShowResult();
+        
+        const marks = correctCount * 1 - wrongCount * 0.25;
+        const percent = parseFloat(((marks / totalQ) * 100).toFixed(2));
+        
+        const attemptData = {
+          userName: _currentUser.name,
+          userRole: _currentUser.role,
+          chapterNum: CHAPTER_NUM,
+          correct: correctCount,
+          wrong: wrongCount,
+          total: totalQ,
+          marks: parseFloat(marks.toFixed(2)),
+          percent: percent,
+          timestamp: new Date().toISOString()
+        };
+        
+        // 1. Save to localStorage
+        const results = JSON.parse(localStorage.getItem('cbt_results') || '{}');
+        const key = _currentUser.name + '_chapter' + CHAPTER_NUM;
+        if (!results[key]) results[key] = { attempts: [], totalAttempts: 0 };
+        results[key].attempts.push(attemptData);
+        if (results[key].attempts.length > 10) {
+          results[key].attempts = results[key].attempts.slice(-10);
+        }
+        const bestPercent = Math.max(...results[key].attempts.map(a => a.percent));
+        results[key].best = results[key].attempts.find(a => a.percent === bestPercent);
+        localStorage.setItem('cbt_results', JSON.stringify(results));
+        console.log('✅ Saved to localStorage');
+        
+        // 2. Save to Firebase
+        saveToFirebase(attemptData);
+      };
+    }
+  }, 500);
+});
+
+// Firebase Save Function
+async function saveToFirebase(data) {
+  try {
+    console.log('🔥 Firebase: Starting save...');
+    if (typeof firebaseConfig === 'undefined') {
+      console.error('❌ firebaseConfig is undefined! Check keys.js');
+      return;
+    }
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    
+    const app = initializeApp(firebaseConfig, 'chapter' + CHAPTER_NUM);
+    const db = getFirestore(app);
+    
+    await addDoc(collection(db, "results"), data);
+    console.log('✅ Saved to Firebase!');
+  } catch(e) {
+    console.error('❌ Firebase save error:', e);
+  }
+}
+</script>
+<script src="results-save.js"></script>
+</body>
+</html>
