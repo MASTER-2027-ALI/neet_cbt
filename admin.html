@@ -104,7 +104,7 @@
     <div id="historyTable"></div>
   </div>
 
-  <div class="admin-card">
+    <div class="admin-card">
     <h2>🔑 All Passkeys</h2>
     <div class="table-scroll">
       <table class="admin-table">
@@ -119,6 +119,17 @@
       </table>
     </div>
   </div>
+
+  <!-- 👇 YAHAN SE NAYA SECTION SHURU HUA HAI 👇 -->
+  <div class="admin-card" style="margin-top: 30px;">
+    <h2>📉 Chapter-wise Performance (All Students)</h2>
+    <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">Isme har chapter ka overall average score dikhega (Saare doston ka milakar).</p>
+    <div id="chapterPerformanceGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+      <!-- Cards yahan automatically aayenge -->
+    </div>
+  </div>
+  <!-- 👆 NAYA SECTION KHATAM 👆 -->
+
 </div>
 
 <script src="keys.js"></script>
@@ -239,12 +250,66 @@ async function loadResults() {
     tableHTML += `</tbody></table></div>`;
     historyDiv.innerHTML = tableHTML;
     
-    // Statistics Update karein
+        // Statistics Update karein
     document.getElementById('totalAttempts').textContent = totalAttempts;
     document.getElementById('attemptedChapters').textContent = attemptedChaptersSet.size;
     document.getElementById('avgScore').textContent = totalAttempts > 0 
       ? (totalPercent / totalAttempts).toFixed(1) + '%' 
       : '0%';
+
+    // ========================================
+    // 👇 NAYA LOGIC YAHAN SE SHURU HUA 👇
+    // Chapter-wise Performance Calculate karo
+    // ========================================
+    const chapterStats = {}; 
+    
+    // Firebase se saara data nikaal kar chapter ke hisaab se group karo
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const ch = data.chapterNum;
+        const pct = Math.max(0, data.percent); // Negative percent fix
+
+        if (!chapterStats[ch]) {
+            chapterStats[ch] = { totalPercent: 0, attempts: 0 };
+        }
+        chapterStats[ch].totalPercent += pct;
+        chapterStats[ch].attempts += 1;
+    });
+
+    let chapterHTML = '';
+    const sortedChapters = Object.keys(chapterStats).sort((a, b) => parseInt(a) - parseInt(b));
+
+    sortedChapters.forEach(ch => {
+        const stats = chapterStats[ch];
+        const avg = (stats.totalPercent / stats.attempts).toFixed(1);
+        
+        // Chapter ka naam nikaalo
+        const chName = chapterNames[ch - 1] || "Chapter " + ch;
+
+        // Score ke hisaab se color choose karo
+        let color = '#4ade80'; // Green (Strong)
+        if (avg < 40) color = '#f87171'; // Red (Weak)
+        else if (avg < 70) color = '#fbbf24'; // Yellow (Average)
+
+        chapterHTML += `
+            <div style="background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(148, 163, 184, 0.2); border-left: 4px solid ${color}; border-radius: 10px; padding: 15px;">
+                <div style="font-weight: 600; color: #e2e8f0; margin-bottom: 5px;">${chName}</div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                    <span style="color: #94a3b8;">Avg Score:</span>
+                    <span style="font-weight: 700; color: ${color};">${avg}%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 4px;">
+                    <span style="color: #94a3b8;">Total Attempts:</span>
+                    <span style="color: #e2e8f0;">${stats.attempts}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    document.getElementById('chapterPerformanceGrid').innerHTML = chapterHTML || '<p style="color:#94a3b8;">Abhi tak koi data nahi hai.</p>';
+    // ========================================
+    // 👆 NAYA LOGIC YAHAN KHATAM 👆
+    // ========================================
       
   } catch (e) {
     console.error("Error loading admin data:", e);
