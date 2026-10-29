@@ -3,7 +3,7 @@
 // ========================================
 
 // 👑 Master Key (Admin)
-const MASTER_KEY = "Sr-2008-ALI";
+const MASTER_KEY = "SR.-2008-ALI";
 
 // 👥 12 Friend Keys
 const FRIEND_KEYS = {
