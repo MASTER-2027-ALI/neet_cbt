@@ -123,11 +123,30 @@
     <h2 class="class-heading">📚 Class 11 Physics <span>15 Chapters</span></h2>
     <div class="chapters-grid" id="phy11Grid"></div>
 
-    <h2 class="class-heading">📚 Class 12 Physics <span>14 Chapters</span></h2>
+        <h2 class="class-heading">📚 Class 12 Physics <span>14 Chapters</span></h2>
     <div class="chapters-grid" id="phy12Grid"></div>
   </div>
 
+</div> <!-- Ye dashboard-container ko band karta hai -->
+
+<!-- 👇 NAYA POPUP CODE YAHAN ADD HUA HAI 👇 -->
+<div class="modal-overlay" id="chapterModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+  <div class="modal-box" style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 30px; max-width: 400px; width: 100%; text-align: center; position: relative;">
+    <button onclick="document.getElementById('chapterModal').style.display='none'" style="position: absolute; top: 15px; right: 20px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold;">×</button>
+    
+    <h2 id="modalChapterName" style="color: #60a5fa; margin-bottom: 25px;">Chapter Title</h2>
+    
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+      <button id="btnReadNotes" style="padding: 15px; font-size: 16px; font-weight: 600; border-radius: 10px; border: 2px solid #8b5cf6; background: rgba(139, 92, 246, 0.15); color: #a78bfa; cursor: pointer; transition: 0.2s;">
+        📖 Read Notes
+      </button>
+      <button id="btnTakeTest" style="padding: 15px; font-size: 16px; font-weight: 600; border-radius: 10px; border: 2px solid #3b82f6; background: rgba(59, 130, 246, 0.15); color: #60a5fa; cursor: pointer; transition: 0.2s;">
+        📝 Take Test (CBT)
+      </button>
+    </div>
+  </div>
 </div>
+<!-- 👆 NAYA POPUP CODE KHATAM 👆 -->
 
 <script src="keys.js"></script>
 <script type="module">
@@ -332,9 +351,27 @@ function renderGrid(chapters, gridId, userResults) {
   grid.innerHTML = '';
   
   chapters.forEach(ch => {
-    const card = document.createElement('a');
+    const card = document.createElement('div'); // Ab ye 'div' hai
     card.className = 'chapter-card';
-    card.href = ch.file;
+    card.style.cursor = 'pointer';
+    
+    // Click karne par popup khulega
+    card.onclick = () => {
+      document.getElementById('modalChapterName').textContent = `Chapter ${ch.num}: ${ch.name}`;
+      
+      // Notes wala button
+      const sub = ch.num <= 32 ? 'bio' : 'phy';
+      document.getElementById('btnReadNotes').onclick = () => {
+        window.location.href = `notes.html?subject=${sub}&chapter=${ch.num}`;
+      };
+
+      // Test wala button
+      document.getElementById('btnTakeTest').onclick = () => {
+        window.location.href = ch.file;
+      };
+
+      document.getElementById('chapterModal').style.display = 'flex';
+    };
     
     const result = userResults[ch.num];
     let statusHTML = '';
