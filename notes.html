@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notes - NEET 2027</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .notes-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+  .notes-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px; padding: 20px 30px; margin-bottom: 25px;
+  }
+  .notes-header h1 { color: #60a5fa; font-size: 24px; }
+  .back-btn {
+    padding: 10px 20px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd; text-decoration: none; border-radius: 8px; font-weight: 600; transition: all 0.3s;
+  }
+  .back-btn:hover { background: rgba(59, 130, 246, 0.3); }
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+    padding: 30px; max-width: 850px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 15px; right: 20px; background: #ef4444; color: white;
+    border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold;
+  }
+  .modal-box h2 { color: #60a5fa; margin-bottom: 15px; padding-right: 30px; }
+</style>
+</head>
+<body>
+<div class="notes-container">
+  <div class="notes-header">
+    <h1>📚 Formula Sheets & Notes</h1>
+    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+  </div>
+  <div id="loading" style="text-align:center; color:#94a3b8; padding: 50px;">Loading notes...</div>
+</div>
+
+<!-- Modal for Notes -->
+<div class="modal-overlay" id="notesModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <h2 id="modalTitle">Chapter Title</h2>
+    <div id="modalContent" style="color: #e2e8f0; font-size: 15px;"></div>
+  </div>
+</div>
+
+<script>
+  // ========================================
+  // NOTES IMAGES DATA (Yahan aap images ke path daalenge)
+  // ========================================
+  // Example ke liye maine kuch paths daale hain. 
+  // Aap apne screenshots ke naam yahan daal dena.
+  const chapterNotes = {
+    "phy_37": [
+      "notes_images/phy37_page1.jpg",
+      "notes_images/phy37_page2.jpg"
+    ],
+    "bio_1": [
+      "notes_images/bio1_page1.jpg"
+    ],
+    "bio_8": [
+      "notes_images/bio8_page1.jpg",
+      "notes_images/bio8_page2.jpg"
+    ]
+  };
+
+  // ========================================
+  // URL se data nikaalo aur notes kholo
+  // ========================================
+  function loadNotesFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const subject = urlParams.get('subject');
+    const chapter = parseInt(urlParams.get('chapter'));
+    
+    const chapterNames = {
+      37: "Laws of Motion",
+      1: "The Living World",
+      8: "Cell: The Unit of Life"
+      // (Aap aur bhi naam yahan add kar sakte hain agar chahein)
+    };
+
+    const chName = chapterNames[chapter] || `Chapter ${chapter}`;
+
+    document.getElementById('loading').style.display = 'none';
+
+    if (subject && chapter) {
+      document.getElementById('modalTitle').textContent = `Chapter ${chapter}: ${chName}`;
+      const key = `${subject}_${chapter}`;
+      
+      const notesImages = chapterNotes[key];
+
+      if (notesImages && notesImages.length > 0) {
+        let imagesHTML = '';
+        notesImages.forEach(imgSrc => {
+          imagesHTML += `
+            <div style="margin-bottom: 20px;">
+              <img src="${imgSrc}" alt="Notes Page" style="width: 100%; border-radius: 8px; border: 1px solid #334155;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+              <p style="display: none; color: #f87171; text-align: center; font-size: 14px; margin-top: 5px;">⚠️ Image load nahi hui (Path check karein)</p>
+            </div>
+          `;
+        });
+        document.getElementById('modalContent').innerHTML = imagesHTML;
+      } else {
+        document.getElementById('modalContent').innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #94a3b8;">
+            <h3 style="color: #fbbf24; margin-bottom: 10px;">📝 Notes Coming Soon!</h3>
+            <p>Is chapter ke notes abhi add nahi kiye gaye hain.</p>
+          </div>
+        `;
+      }
+      
+      document.getElementById('notesModal').classList.add('show');
+    } else {
+      document.getElementById('loading').innerHTML = '<p style="color:#f87171;">⚠️ URL mein chapter aur subject nahi mile.</p>';
+    }
+  }
+
+  window.closeModal = function() {
+    document.getElementById('notesModal').classList.remove('show');
+    // Optional: Wapas dashboard par bhej do
+    window.location.href = 'dashboard.html';
+  }
+
+  loadNotesFromURL();
+</script>
+</body>
+</html>
