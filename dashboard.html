@@ -264,9 +264,9 @@ window.logout = async function() {
 };
 
 // ========================================
-// AI CHAT LOGIC (Gemini)
+// AI CHAT LOGIC (Gemini) - UPDATED SDK
 // ========================================
-// ⚠️ Yahan apni NAYI "AIzaSy..." wali key paste karo
+// Aapki di hui key yahan hai
 const GEMINI_API_KEY = "AQ.Ab8RN6K9kt42MW0djO592qGWxU9EStCHWoNxx3jvWtVJsEyTag";
 
 window.toggleAIChat = function() {
@@ -283,28 +283,30 @@ window.sendAIMessage = async function() {
     const loadingId = addMessageToChat('Soch raha hoon...', 'ai');
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: message }] }] })
-        });
-        const data = await response.json();
+        // Naya SDK import karo (AQ. keys ke liye)
+        const { GoogleGenAI } = await import("https://esm.sh/@google/genai");
         
+        // Client banao key ke saath
+        const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+        
+        // AI se jawab maango
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: message
+        });
+
         if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
         
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
-            let aiReply = data.candidates[0].content.parts[0].text;
-            addMessageToChat(aiReply, 'ai');
-        } else if (data.error) {
-            // Agar key galat hai to error message dikhao
-            addMessageToChat('⚠️ Error: ' + data.error.message + ' (API Key check karo)', 'ai');
+        if (response && response.text) {
+            addMessageToChat(response.text, 'ai');
         } else {
-            addMessageToChat('AI se jawab nahi mila. Error aaya hai.', 'ai');
+            addMessageToChat('AI se jawab nahi mila.', 'ai');
         }
+
     } catch (error) {
         console.error("AI Error:", error);
         if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-        addMessageToChat('Sorry, internet ya API me dikkat hai. Error: ' + error.message, 'ai');
+        addMessageToChat('Sorry, AI se baat nahi ho payi. Error: ' + error.message, 'ai');
     }
 };
 
