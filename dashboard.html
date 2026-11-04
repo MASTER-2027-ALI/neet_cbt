@@ -34,13 +34,8 @@
     <div class="user-info">
       <span class="user-badge" id="userBadge">👤 User</span>
       
-      <!-- Leaderboard Button -->
       <a href="leaderboard.html" class="btn-logout" style="text-decoration:none; background:rgba(251, 191, 36, 0.15); border-color:rgba(251, 191, 36, 0.4); color:#fbbf24;">🏆 Leaderboard</a>
-
-      <!-- Diary Button -->
       <a href="diary.html" class="btn-logout" style="text-decoration:none; background:rgba(34, 197, 94, 0.15); border-color:rgba(34, 197, 94, 0.4); color:#4ade80;">📔 My Diary</a>
-      
-      <!-- AI Chat Button -->
       <a href="#" onclick="toggleAIChat(); return false;" class="btn-logout" style="text-decoration:none; background:rgba(236, 72, 153, 0.15); border-color:rgba(236, 72, 153, 0.4); color:#f472b6;">🤖 Ask AI</a>
       
       <a href="admin.html" class="btn-logout" id="adminBtn" style="display:none; background:rgba(168,85,247,0.15); border-color:rgba(168,85,247,0.4); color:#c4b5fd; text-decoration:none;">👑 Admin Panel</a>
@@ -49,18 +44,9 @@
   </div>
 
   <div class="stats-bar">
-    <div class="stat-card">
-      <div class="num" id="totalChaptersCount">61</div>
-      <div class="label">Total Chapters</div>
-    </div>
-    <div class="stat-card">
-      <div class="num" id="attemptedCount">0</div>
-      <div class="label">Attempted</div>
-    </div>
-    <div class="stat-card">
-      <div class="num" id="avgScore">0%</div>
-      <div class="label">Average Score</div>
-    </div>
+    <div class="stat-card"><div class="num" id="totalChaptersCount">61</div><div class="label">Total Chapters</div></div>
+    <div class="stat-card"><div class="num" id="attemptedCount">0</div><div class="label">Attempted</div></div>
+    <div class="stat-card"><div class="num" id="avgScore">0%</div><div class="label">Average Score</div></div>
   </div>
 
   <div class="subject-tabs">
@@ -71,7 +57,6 @@
   <div id="section-bio" class="subject-section active">
     <h2 class="class-heading">📚 Class 11 Biology <span>19 Chapters</span></h2>
     <div class="chapters-grid" id="bio11Grid"></div>
-
     <h2 class="class-heading">📚 Class 12 Biology <span>13 Chapters</span></h2>
     <div class="chapters-grid" id="bio12Grid"></div>
   </div>
@@ -79,7 +64,6 @@
   <div id="section-phy" class="subject-section">
     <h2 class="class-heading">📚 Class 11 Physics <span>15 Chapters</span></h2>
     <div class="chapters-grid" id="phy11Grid"></div>
-
     <h2 class="class-heading">📚 Class 12 Physics <span>14 Chapters</span></h2>
     <div class="chapters-grid" id="phy12Grid"></div>
   </div>
@@ -104,9 +88,7 @@
         <button onclick="toggleAIChat()" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 20px;">×</button>
     </div>
     <div id="aiChatMessages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-        <div style="background: rgba(59, 130, 246, 0.2); padding: 10px; border-radius: 8px; color: #e2e8f0; font-size: 14px; align-self: flex-start; max-width: 80%;">
-            Namaste! Main aapka AI Doubt Solver hoon. Padhai se judi koi bhi sawaal pucho.
-        </div>
+        <div style="background: rgba(59, 130, 246, 0.2); padding: 10px; border-radius: 8px; color: #e2e8f0; font-size: 14px; align-self: flex-start; max-width: 80%;">Namaste! Main aapka AI Doubt Solver hoon. Padhai se judi koi bhi sawaal pucho.</div>
     </div>
     <div style="padding: 10px; border-top: 1px solid #334155; display: flex; gap: 8px;">
         <input type="text" id="aiChatInput" placeholder="Apna doubt likho..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 14px; outline: none;" onkeypress="if(event.key === 'Enter') sendAIMessage()">
@@ -127,9 +109,7 @@ if (!userData) { window.location.href = 'index.html'; }
 const user = JSON.parse(userData);
 document.getElementById('userBadge').textContent = '👤 ' + user.name;
 
-if (user.role === 'master') {
-  document.getElementById('adminBtn').style.display = 'inline-block';
-}
+if (user.role === 'master') { document.getElementById('adminBtn').style.display = 'inline-block'; }
 
 function listenForSession() {
   if (!user.uid) return;
@@ -167,43 +147,20 @@ window.switchSubject = function(sub) {
 };
 
 const bio11Chapters = [
-  { num: 1, name: "The Living World", file: "chapter1.html" },
-  { num: 2, name: "Biological Classification", file: "chapter2.html" },
-  { num: 3, name: "Plant Kingdom", file: "chapter3.html" },
-  { num: 4, name: "Animal Kingdom", file: "chapter4.html" },
-  { num: 5, name: "Morphology of Flowering Plants", file: "chapter5.html" },
-  { num: 6, name: "Anatomy of Flowering Plants", file: "chapter6.html" },
-  { num: 7, name: "Structural Organisation in Animals", file: "chapter7.html" },
-  { num: 8, name: "Cell: The Unit of Life", file: "chapter8.html" },
-  { num: 9, name: "Biomolecules", file: "chapter9.html" },
-  { num: 10, name: "Cell Cycle and Cell Division", file: "chapter10.html" },
-  { num: 11, name: "Photosynthesis in Higher Plants", file: "chapter11.html" },
-  { num: 12, name: "Respiration in Plants", file: "chapter12.html" },
-  { num: 13, name: "Plant Growth and Development", file: "chapter13.html" },
-  { num: 14, name: "Breathing and Exchange of Gases", file: "chapter14.html" },
-  { num: 15, name: "Body Fluids and Circulation", file: "chapter15.html" },
-  { num: 16, name: "Excretory Products and their Elimination", file: "chapter16.html" },
-  { num: 17, name: "Locomotion and Movement", file: "chapter17.html" },
-  { num: 18, name: "Neural Control and Coordination", file: "chapter18.html" },
+  { num: 1, name: "The Living World", file: "chapter1.html" }, { num: 2, name: "Biological Classification", file: "chapter2.html" }, { num: 3, name: "Plant Kingdom", file: "chapter3.html" },
+  { num: 4, name: "Animal Kingdom", file: "chapter4.html" }, { num: 5, name: "Morphology of Flowering Plants", file: "chapter5.html" }, { num: 6, name: "Anatomy of Flowering Plants", file: "chapter6.html" },
+  { num: 7, name: "Structural Organisation in Animals", file: "chapter7.html" }, { num: 8, name: "Cell: The Unit of Life", file: "chapter8.html" }, { num: 9, name: "Biomolecules", file: "chapter9.html" },
+  { num: 10, name: "Cell Cycle and Cell Division", file: "chapter10.html" }, { num: 11, name: "Photosynthesis in Higher Plants", file: "chapter11.html" }, { num: 12, name: "Respiration in Plants", file: "chapter12.html" },
+  { num: 13, name: "Plant Growth and Development", file: "chapter13.html" }, { num: 14, name: "Breathing and Exchange of Gases", file: "chapter14.html" }, { num: 15, name: "Body Fluids and Circulation", file: "chapter15.html" },
+  { num: 16, name: "Excretory Products and their Elimination", file: "chapter16.html" }, { num: 17, name: "Locomotion and Movement", file: "chapter17.html" }, { num: 18, name: "Neural Control and Coordination", file: "chapter18.html" },
   { num: 19, name: "Chemical Coordination and Integration", file: "chapter19.html" }
 ];
-
 const bio12Chapters = [
-  { num: 20, name: "Sexual Reproduction in Flowering Plants", file: "chapter20.html" },
-  { num: 21, name: "Human Reproduction", file: "chapter21.html" },
-  { num: 22, name: "Reproductive Health", file: "chapter22.html" },
-  { num: 23, name: "Principles of Inheritance and Variation", file: "chapter23.html" },
-  { num: 24, name: "Molecular Basis of Inheritance", file: "chapter24.html" },
-  { num: 25, name: "Evolution", file: "chapter25.html" },
-  { num: 26, name: "Human Health and Disease", file: "chapter26.html" },
-  { num: 27, name: "Microbes in Human Welfare", file: "chapter27.html" },
-  { num: 28, name: "Biotechnology: Principles and Processes", file: "chapter28.html" },
-  { num: 29, name: "Biotechnology and its Applications", file: "chapter29.html" },
-  { num: 30, name: "Organisms and Populations", file: "chapter30.html" },
-  { num: 31, name: "Ecosystem", file: "chapter31.html" },
-  { num: 32, name: "Biodiversity and Conservation", file: "chapter32.html" }
+  { num: 20, name: "Sexual Reproduction in Flowering Plants", file: "chapter20.html" }, { num: 21, name: "Human Reproduction", file: "chapter21.html" }, { num: 22, name: "Reproductive Health", file: "chapter22.html" },
+  { num: 23, name: "Principles of Inheritance and Variation", file: "chapter23.html" }, { num: 24, name: "Molecular Basis of Inheritance", file: "chapter24.html" }, { num: 25, name: "Evolution", file: "chapter25.html" },
+  { num: 26, name: "Human Health and Disease", file: "chapter26.html" }, { num: 27, name: "Microbes in Human Welfare", file: "chapter27.html" }, { num: 28, name: "Biotechnology: Principles and Processes", file: "chapter28.html" },
+  { num: 29, name: "Biotechnology and its Applications", file: "chapter29.html" }, { num: 30, name: "Organisms and Populations", file: "chapter30.html" }, { num: 31, name: "Ecosystem", file: "chapter31.html" }, { num: 32, name: "Biodiversity and Conservation", file: "chapter32.html" }
 ];
-
 const phy11Chapters = [
   { num: 33, name: "Physical World", file: "phy1.html" }, { num: 34, name: "Units and Measurements", file: "phy2.html" }, { num: 35, name: "Motion in a Straight Line", file: "phy3.html" },
   { num: 36, name: "Motion in a Plane", file: "phy4.html" }, { num: 37, name: "Laws of Motion", file: "phy5.html" }, { num: 38, name: "Work, Energy and Power", file: "phy6.html" },
@@ -211,7 +168,6 @@ const phy11Chapters = [
   { num: 42, name: "Mechanical Properties of Fluids", file: "phy10.html" }, { num: 43, name: "Thermal Properties of Matter", file: "phy11.html" }, { num: 44, name: "Thermodynamics", file: "phy12.html" },
   { num: 45, name: "Kinetic Theory", file: "phy13.html" }, { num: 46, name: "Oscillations", file: "phy14.html" }, { num: 47, name: "Waves", file: "phy15.html" }
 ];
-
 const phy12Chapters = [
   { num: 48, name: "Electric Charges and Fields", file: "phy16.html" }, { num: 49, name: "Electrostatic Potential and Capacitance", file: "phy17.html" }, { num: 50, name: "Current Electricity", file: "phy18.html" },
   { num: 51, name: "Moving Charges and Magnetism", file: "phy19.html" }, { num: 52, name: "Magnetism and Matter", file: "phy20.html" }, { num: 53, name: "Electromagnetic Induction", file: "phy21.html" },
@@ -231,7 +187,6 @@ async function loadResults() {
       if (!userResults[chNum]) userResults[chNum] = { attempts: [], best: null };
       userResults[chNum].attempts.push(data);
     });
-    
     for (const chNum in userResults) {
       userResults[chNum].attempts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
       const attempts = userResults[chNum].attempts;
@@ -250,7 +205,6 @@ function renderAll(userResults) {
   renderGrid(bio12Chapters, 'bio12Grid', userResults);
   renderGrid(phy11Chapters, 'phy11Grid', userResults);
   renderGrid(phy12Chapters, 'phy12Grid', userResults);
-  
   let totalAttempted = 0; let totalPercent = 0;
   const allChapters = [...bio11Chapters, ...bio12Chapters, ...phy11Chapters, ...phy12Chapters];
   allChapters.forEach(ch => {
@@ -265,7 +219,6 @@ function renderGrid(chapters, gridId, userResults) {
   const grid = document.getElementById(gridId);
   if (!grid) return;
   grid.innerHTML = '';
-  
   chapters.forEach(ch => {
     const card = document.createElement('div');
     card.className = 'chapter-card';
@@ -277,7 +230,6 @@ function renderGrid(chapters, gridId, userResults) {
       document.getElementById('btnTakeTest').onclick = () => { window.location.href = ch.file; };
       document.getElementById('chapterModal').style.display = 'flex';
     };
-    
     const result = userResults[ch.num];
     let statusHTML = '';
     if (result && result.attempts.length > 0) {
@@ -292,7 +244,6 @@ function renderGrid(chapters, gridId, userResults) {
         <div class="chapter-status" style="color:#94a3b8; font-size:12px; margin-top:4px;">📊 Last: ${displayLastPercent}% &nbsp;|&nbsp; 🔁 Attempts: <strong>${attemptsCount}</strong></div>
       `;
     } else { statusHTML = `<div class="chapter-status">📝 Not attempted yet</div>`; }
-    
     card.innerHTML = `
       <div class="chapter-num">CHAPTER ${ch.num}</div>
       <div class="chapter-name">${ch.name}</div>
@@ -315,8 +266,8 @@ window.logout = async function() {
 // ========================================
 // AI CHAT LOGIC (Gemini)
 // ========================================
-// ⚠️ Yahan apni Gemini API Key daalo (Google AI Studio se milegi)
-const GEMINI_API_KEY = "AQ.Ab8RN6LaiIU4vs0A9ama3YWAeNXnVtjUF8fIDZ_mMLwCCJKPhwd";
+// ⚠️ Yahan apni NAYI "AIzaSy..." wali key paste karo
+const GEMINI_API_KEY = "AQ.Ab8RN6K9kt42MW0djO592qGWxU9EStCHWoNxx3jvWtVJsEyTag";
 
 window.toggleAIChat = function() {
     const popup = document.getElementById('aiChatPopup');
@@ -330,6 +281,7 @@ window.sendAIMessage = async function() {
     addMessageToChat(message, 'user');
     input.value = '';
     const loadingId = addMessageToChat('Soch raha hoon...', 'ai');
+
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
@@ -337,17 +289,22 @@ window.sendAIMessage = async function() {
             body: JSON.stringify({ contents: [{ parts: [{ text: message }] }] })
         });
         const data = await response.json();
+        
         if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+        
         if (data.candidates && data.candidates[0].content.parts[0].text) {
             let aiReply = data.candidates[0].content.parts[0].text;
             addMessageToChat(aiReply, 'ai');
+        } else if (data.error) {
+            // Agar key galat hai to error message dikhao
+            addMessageToChat('⚠️ Error: ' + data.error.message + ' (API Key check karo)', 'ai');
         } else {
-            addMessageToChat('AI se jawab nahi mila. Error aaya hai (API Key check karein).', 'ai');
+            addMessageToChat('AI se jawab nahi mila. Error aaya hai.', 'ai');
         }
     } catch (error) {
         console.error("AI Error:", error);
         if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-        addMessageToChat('Sorry, internet ya API me dikkat hai. Thodi der baad try karo.', 'ai');
+        addMessageToChat('Sorry, internet ya API me dikkat hai. Error: ' + error.message, 'ai');
     }
 };
 
