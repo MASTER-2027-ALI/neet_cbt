@@ -264,10 +264,10 @@ window.logout = async function() {
 };
 
 // ========================================
-// AI CHAT LOGIC (Gemini) - UPDATED SDK
+// AI CHAT LOGIC (Gemini) - NAYA SDK
 // ========================================
-// Aapki di hui key yahan hai
-const GEMINI_API_KEY = "AIzaSyAb8RN6K9kt42MW0djO592qGWxU9EStCHWoNxx3jvWtVJsEyTag";
+// Aapki key yahan hai
+const GEMINI_API_KEY = "AQ.Ab8RN6K9kt42MW0djO592qGWxU9EStCHWoNxx3jvWtVJsEyTag";
 
 window.toggleAIChat = function() {
     const popup = document.getElementById('aiChatPopup');
@@ -283,13 +283,11 @@ window.sendAIMessage = async function() {
     const loadingId = addMessageToChat('Soch raha hoon...', 'ai');
 
     try {
-        // Naya SDK import karo (AQ. keys ke liye)
+        // Naya SDK import karo jo AQ. keys support karta hai
         const { GoogleGenAI } = await import("https://esm.sh/@google/genai");
         
-        // Client banao key ke saath
         const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
         
-        // AI se jawab maango
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: message
